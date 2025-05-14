@@ -2,16 +2,19 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
+
 const userRoutes = require('./routes/userRoutes');
+const classRoutes = require('./routes/classRoutes'); // ✅ Must match file name
 
 dotenv.config();
 connectDB();
 
 const app = express();
 app.use(cors());
-app.use(express.json()); // to parse JSON
+app.use(express.json());
 
 app.use('/api/users', userRoutes);
+app.use('/api/classes', classRoutes); // ✅ Make sure this is defined after import
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
