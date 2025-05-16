@@ -5,10 +5,10 @@ const connectDB = require('./config/db');
 
 // Import Routes
 const userRoutes = require('./routes/userRoutes');
-const classRoutes = require('./routes/classRoutes'); // ✅ Make sure to use the correct filename
-const taskRoutes = require('./routes/taskRoutes'); // Import task-related routes
+const classRoutes = require('./routes/classRoutes'); // Import class routes
+const taskRoutes = require('./routes/taskRoutes'); // Import task routes
 
-// Load environment variables from .env file
+// Load environment variables
 dotenv.config();
 
 // Connect to the MongoDB database
@@ -17,17 +17,17 @@ connectDB();
 // Initialize Express app
 const app = express();
 
-// Middlewares
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Parse incoming JSON requests
+// Middleware
+app.use(cors());  // Enable Cross-Origin Resource Sharing
+app.use(express.json());  // Parse incoming JSON requests
 
-// Define routes
-app.use('/api/users', userRoutes);  // User-related routes
-app.use('/api/classes', classRoutes);  // Class-related routes
-app.use('/api/tasks', taskRoutes);  // Task-related routes
+// Use routes
+app.use('/api/users', userRoutes);
+app.use('/api/classes', classRoutes);  // Use class routes
+app.use('/api/tasks', taskRoutes);  // Use task routes
 
 // Start the server
-const PORT = process.env.PORT || 5000;  // Use the port from .env or default to 5000
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

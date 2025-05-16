@@ -1,21 +1,26 @@
 const express = require('express');
-const router = express.Router();
-const { addTask, getTasks } = require('../controllers/taskController');
 const multer = require('multer');
+const { addTask, getTasks, getTaskById } = require('../controllers/taskController');  // Import the correct controller methods
+const router = express.Router();
 
 // Set up multer for file upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, 'uploads/');  // Store files in the "uploads" folder
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + file.originalname);
+    cb(null, Date.now() + file.originalname);  // Unique filename
   }
 });
 const upload = multer({ storage: storage });
 
-// Task routes
-router.post('/:classId', upload.single('file'), addTask); // POST: Add a task to a class
-router.get('/:classId', getTasks); // GET: Get all tasks for a class
+// POST /api/tasks/:classId - Add a task to a class
+router.post('/:classId', upload.single('file'), addTask);
+
+// GET /api/tasks/:classId - Get all tasks for a class
+router.get('/:classId', getTasks);
+
+// GET /api/tasks/task/:id - Get task details by task ID
+router.get('/task/:id', getTaskById);
 
 module.exports = router;

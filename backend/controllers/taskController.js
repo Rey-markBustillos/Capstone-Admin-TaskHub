@@ -41,4 +41,23 @@ const getTasks = async (req, res) => {
   }
 };
 
-module.exports = { addTask, getTasks };
+// Get task details by task ID
+const getTaskById = async (req, res) => {
+  const { id } = req.params; // Task ID passed in the URL
+
+  try {
+    // Find the task by its ID
+    const task = await Task.findById(id).populate('classId', 'className teacherName'); // Populate with class details
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    // Return task details
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching task details', error: error.message });
+  }
+};
+
+module.exports = { addTask, getTasks, getTaskById };
