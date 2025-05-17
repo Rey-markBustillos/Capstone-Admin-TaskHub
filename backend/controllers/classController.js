@@ -1,12 +1,11 @@
-// controllers/classController.js
-const Class = require('../models/Class'); // Import Class model
-const User = require('../models/User'); // If you need User model for adding students
+const Class = require('../models/Class');
+const User = require('../models/User'); // User model to fetch students
 
-// Get all classes
+// Get all classes with populated students
 const getClasses = async (req, res) => {
   try {
-    const classes = await Class.find(); // Find all classes in the database
-    res.json(classes); // Send the classes as a response
+    const classes = await Class.find().populate('students', 'name email');
+    res.json(classes);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching classes', error: error.message });
   }
@@ -15,11 +14,10 @@ const getClasses = async (req, res) => {
 // Add a new class
 const addClass = async (req, res) => {
   const { teacherName, className, time, roomNumber, profilePic } = req.body;
-
   try {
     const newClass = new Class({ teacherName, className, time, roomNumber, profilePic });
     const savedClass = await newClass.save();
-    res.status(201).json(savedClass); // Send the saved class as a response
+    res.status(201).json(savedClass);
   } catch (error) {
     res.status(400).json({ message: 'Error adding class', error: error.message });
   }
@@ -28,7 +26,7 @@ const addClass = async (req, res) => {
 // Delete a class by ID
 const deleteClass = async (req, res) => {
   try {
-    const deleted = await Class.findByIdAndDelete(req.params.id); // Delete class by ID
+    const deleted = await Class.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ message: 'Class not found' });
     res.json({ message: 'Class deleted successfully' });
   } catch (error) {
@@ -36,51 +34,34 @@ const deleteClass = async (req, res) => {
   }
 };
 
-// Add a student to a class
-const addStudentToClass = async (req, res) => {
-  const { classId, studentEmail } = req.body;
+// Add multiple students to a class by their IDs
+const addStudentsToClass = async (req, res) => {
+  const classId = req.params.id;
+  const { studentIds } = req.body; // expect array of student ObjectIds
 
   try {
-    const classFound = await Class.findById(classId); // Find the class
-    if (!classFound) {
-      return res.status(404).json({ message: 'Class not found' });
-    }
+    const classFound = await Class.findById(classId);
+    if (!classFound) return res.status(404).json({ message: 'Class not found' });
 
-    // Find the student by email
-    const student = await User.findOne({ email: studentEmail });
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
-    }
+    // Add students if not already present
+    studentIds.forEach(studentId => {
+      if (!classFound.students.includes(studentId)) {
+        classFound.students.push(studentId);
+      }
+    });
 
-    // Check if the student is already added to this class
-    if (classFound.students.includes(student._id)) {
-      return res.status(400).json({ message: 'Student is already in the class' });
-    }
+    await classFound.save();
 
-    classFound.students.push(student._id); // Add student to class
-    await classFound.save(); // Save the updated class
-
-    res.status(200).json({ message: 'Student added to class successfully', class: classFound });
+    const populatedClass = await Class.findById(classId).populate('students', 'name email');
+    res.status(200).json({ message: 'Students added to class successfully', class: populatedClass });
   } catch (error) {
-    res.status(500).json({ message: 'Error adding student to class', error: error.message });
+    res.status(500).json({ message: 'Error adding students to class', error: error.message });
   }
 };
 
-// Get all students in a class
-const getStudentsInClass = async (req, res) => {
-  const { classId } = req.params;
-
-  try {
-    const classFound = await Class.findById(classId).populate('students', 'name email'); // Populate students
-    if (!classFound) {
-      return res.status(404).json({ message: 'Class not found' });
-    }
-
-    res.status(200).json(classFound.students); // Return students
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching students in class', error: error.message });
-  }
+module.exports = {
+  getClasses,
+  addClass,
+  deleteClass,
+  addStudentsToClass,
 };
-
-// Export functions to be used in the routes
-module.exports = { getClasses, addClass, deleteClass, addStudentToClass, getStudentsInClass };

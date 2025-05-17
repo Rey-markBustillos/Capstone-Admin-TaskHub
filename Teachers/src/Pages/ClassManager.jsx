@@ -1,146 +1,157 @@
 import React, { useState, useEffect } from "react";
-import AddClass from "./Addclass";
+import CreateActivityModal from "./CreateActivityModal"; // Your separate modal component
+import AddClass from "./AddClass"; // Your separate add class component
 
 const ClassManager = () => {
-  const [classes, setClasses] = useState([]); // Store classes
-  const [students, setStudents] = useState([]); // Store students
-  const [showClassModal, setShowClassModal] = useState(false); // For AddClass modal
-  const [showStudentModal, setShowStudentModal] = useState(false); // For Add Student modal
-  const [showTaskModal, setShowTaskModal] = useState(false); // For Add Task modal
-  const [selectedClassId, setSelectedClassId] = useState(null); // Store selected class ID
-  const [selectedStudentId, setSelectedStudentId] = useState(null); // Store selected student ID
-  const [taskDescription, setTaskDescription] = useState(""); // Task description input
-  const [taskFile, setTaskFile] = useState(null); // File to be uploaded
-  const [taskDeadline, setTaskDeadline] = useState(""); // Deadline input
-  const [taskPoints, setTaskPoints] = useState(""); // Points input
-  const [startDateTime, setStartDateTime] = useState(""); // Start date and time input
+  const [classes, setClasses] = useState([]);
+  const [showClassModal, setShowClassModal] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [showManageStudentsModal, setShowManageStudentsModal] = useState(false);
+  const [selectedClassId, setSelectedClassId] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [studentSearch, setStudentSearch] = useState("");
+  const [students, setStudents] = useState([]);
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [activityForm, setActivityForm] = useState({
+    title: "",
+    instructions: "",
+    deadline: "",
+    classId: "",
+    className: "",
+    submissionGuidelines: {
+      allowedFileTypes: "",
+      maxFileSizeMB: "",
+    },
+  });
 
-  // Fetch classes and students
+  // Fetch classes on mount
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/classes");
-        const data = await response.json();
+        const res = await fetch("http://localhost:5000/api/classes");
+        if (!res.ok) throw new Error("Failed to fetch classes");
+        const data = await res.json();
         setClasses(data);
-      } catch (error) {
-        console.error("Error fetching classes:", error);
+      } catch (err) {
+        console.error("Failed to fetch classes", err);
       }
     };
+    fetchClasses();
+  }, []);
+
+  // Fetch students when Manage Students modal opens
+  useEffect(() => {
+    if (!selectedClassId) return;
 
     const fetchStudents = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/students");
-        const data = await response.json();
+        const res = await fetch("http://localhost:5000/api/students");
+        if (!res.ok) throw new Error("Failed to fetch students");
+        const data = await res.json();
         setStudents(data);
-      } catch (error) {
-        console.error("Error fetching students:", error);
+      } catch (err) {
+        console.error("Failed to fetch students", err);
       }
     };
 
-    fetchClasses();
     fetchStudents();
-  }, []);
+  }, [selectedClassId]);
 
-  // Handle adding a new class
-  const handleAddClass = async (newClass) => {
-    try {
-      const response = await fetch("http://localhost:5000/api/classes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newClass),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add class");
-      }
-
-      const savedClass = await response.json();
-      setClasses((prev) => [...prev, savedClass]);
-      setShowClassModal(false); // Close the modal
-    } catch (error) {
-      console.error("Error adding class:", error);
-      alert("Failed to add class. Please try again.");
-    }
+  // Open activity modal
+  const openNewActivityModal = (cls) => {
+    setActivityForm({
+      title: "",
+      instructions: "",
+      deadline: "",
+      classId: cls._id,
+      className: cls.className,
+      submissionGuidelines: {
+        allowedFileTypes: "",
+        maxFileSizeMB: "",
+      },
+    });
+    setShowActivityModal(true);
   };
 
-  // Handle deleting a class
-  const handleDeleteClass = async (classId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this class?");
-    if (!confirmDelete) return;
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/classes/${classId}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete class");
-      }
-
-      setClasses((prev) => prev.filter((cls) => cls._id !== classId));
-    } catch (error) {
-      console.error("Error deleting class:", error.message);
-      alert("Failed to delete class. Please try again.");
-    }
+  // Open manage students modal
+  const openManageStudentsModal = (clsId) => {
+    setSelectedClassId(clsId);
+    setSelectedClass(classes.find((cls) => cls._id === clsId));
+    setShowManageStudentsModal(true);
   };
 
-  // Handle adding a student to a class
-  const handleAddStudentToClass = async () => {
-    if (!selectedClassId || !selectedStudentId) return;
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/classes/${selectedClassId}/add-student`, {
-        method: "PUT",
-        body: JSON.stringify({ studentId: selectedStudentId }),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add student to class");
-      }
-
-      alert("Student added successfully to the class!");
-      setShowStudentModal(false); // Close the student modal after success
-    } catch (error) {
-      console.error("Error adding student to class:", error);
-      alert("Failed to add student. Please try again.");
-    }
+  // Close activity modal
+  const closeActivityModal = () => {
+    setShowActivityModal(false);
   };
 
-  // Handle adding a task to a class
-  const handleAddTask = async () => {
-    if (!taskDescription || !taskFile || !taskDeadline || !taskPoints || !selectedClassId) {
-      alert("Please fill in all fields.");
+  // Handle create activity form submission
+  const handleActivitySubmit = async (e) => {
+    e.preventDefault();
+
+    if (!activityForm.title || !activityForm.deadline || !activityForm.classId) {
+      alert("Please fill all required fields");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("description", taskDescription);
-    formData.append("file", taskFile);
-    formData.append("deadline", taskDeadline);
-    formData.append("points", taskPoints);
+    try {
+      const res = await fetch("http://localhost:5000/api/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(activityForm),
+      });
+      if (!res.ok) throw new Error("Failed to create activity");
+
+      alert("Activity created successfully!");
+      closeActivityModal();
+    } catch (err) {
+      alert(err.message || "Error saving activity");
+      console.error(err);
+    }
+  };
+
+  // Toggle student selection
+  const toggleStudentSelection = (studentId) => {
+    setSelectedStudentIds((prev) =>
+      prev.includes(studentId)
+        ? prev.filter((id) => id !== studentId)
+        : [...prev, studentId]
+    );
+  };
+
+  // Add selected students to class
+  const handleAddStudentsToClass = async () => {
+    if (selectedStudentIds.length === 0) {
+      alert("Please select at least one student to add.");
+      return;
+    }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/tasks/${selectedClassId}`, {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/classes/${selectedClassId}/add-students`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ studentIds: selectedStudentIds }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed to add students");
 
-      if (!response.ok) {
-        throw new Error("Failed to add task");
-      }
+      alert("Students added successfully!");
+      setSelectedStudentIds([]);
 
-      alert("Task added successfully!");
-      setShowTaskModal(false); // Close task modal
-      setTaskDescription(""); // Reset task description
-      setTaskFile(null); // Reset file
-      setTaskDeadline(""); // Reset deadline
-      setTaskPoints(""); // Reset points
-    } catch (error) {
-      console.error("Error adding task:", error);
-      alert("Failed to add task. Please try again.");
+      // Refresh all classes
+      const allClassesRes = await fetch("http://localhost:5000/api/classes");
+      if (!allClassesRes.ok) throw new Error("Failed to refresh classes");
+      const allClasses = await allClassesRes.json();
+      setClasses(allClasses);
+
+      // Update selectedClass with refreshed data
+      const refreshedClass = allClasses.find((cls) => cls._id === selectedClassId);
+      setSelectedClass(refreshedClass);
+    } catch (err) {
+      alert(err.message || "Error adding students");
+      console.error(err);
     }
   };
 
@@ -166,12 +177,12 @@ const ClassManager = () => {
         </div>
 
         <div className="space-y-4">
-          {classes.map((cls, index) => (
+          {classes.map((cls) => (
             <div
-              key={cls._id || index}
+              key={cls._id}
               className="grid grid-cols-5 items-center bg-white rounded-lg shadow-md px-6 py-4 hover:bg-gray-50 transition-all duration-200"
             >
-              <div>{new Date(cls.time).toLocaleString()}</div>
+              <div className="text-black">{new Date(cls.time).toLocaleString()}</div> {/* Ensuring Start Date is black */}
               <div className="font-medium text-gray-700">{cls.className}</div>
               <div className="font-medium text-gray-600">{cls.roomNumber}</div>
               <div className="flex items-center space-x-3">
@@ -184,20 +195,21 @@ const ClassManager = () => {
               </div>
               <div className="flex space-x-3">
                 <button
-                  onClick={() => {
-                    setSelectedClassId(cls._id);
-                    setShowStudentModal(true);
-                  }}
-                  className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold px-5 py-2 rounded-md transition-all duration-300"
-                >
-                  Enter
-                </button>
-                <button
-                  onClick={() => handleDeleteClass(cls._id)}
-                  className="bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2 rounded-md transition-all duration-300"
-                >
-                  Delete
-                </button>
+  onClick={() => openManageStudentsModal(cls._id)}
+  className="!bg-green-600 hover:!bg-green-700 text-white font-semibold !px-2 !py-2 !text-sm rounded-md transition-all duration-300"
+>
+  Manage Students
+</button>
+
+<button
+  onClick={() => openNewActivityModal(cls)}
+  className="!bg-blue-600 hover:!bg-blue-700 text-white font-semibold !px-2 !py-2 !text-sm rounded-md transition-all duration-300"
+>
+  Create Activity
+</button>
+
+
+
               </div>
             </div>
           ))}
@@ -215,116 +227,90 @@ const ClassManager = () => {
               ✕
             </button>
             <h2 className="text-2xl font-semibold mb-6 text-gray-800">Add New Class</h2>
-            <div className="mb-4">
-              <label className="block text-gray-600 mb-2">Start Date and Time</label>
-              <input
-                type="datetime-local"
-                value={startDateTime}
-                onChange={(e) => setStartDateTime(e.target.value)}
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
-            <AddClass onAdd={handleAddClass} />
+            <AddClass
+              onAdd={(newClass) => {
+                setClasses((prev) => [...prev, newClass]);
+                setShowClassModal(false);
+              }}
+            />
           </div>
         </div>
       )}
 
-      {/* Add Student Modal */}
-      {showStudentModal && (
+      {/* Manage Students Modal */}
+      {showManageStudentsModal && selectedClassId && (
         <div className="fixed inset-0 bg-[#FFDAB9] bg-opacity-50 flex justify-center items-center z-50 transition-opacity duration-300">
-          <div className="bg-white rounded-lg p-8 w-full max-w-2xl relative shadow-lg">
+          <div className="bg-white rounded-lg p-8 w-full max-w-2xl relative shadow-lg text-black">
             <button
               className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl"
-              onClick={() => setShowStudentModal(false)}
+              onClick={() => setShowManageStudentsModal(false)}
             >
               ✕
             </button>
-            <h2 className="text-2xl font-semibold mb-6 text-black">Add Student to Class</h2>
-            <select
-              className="border border-gray-300 rounded-md p-2 w-full mb-4 text-black"
-              value={selectedStudentId}
-              onChange={(e) => setSelectedStudentId(e.target.value)}
-            >
-              <option value="">Select Student</option>
-              {students.map((student) => (
-                <option key={student._id} value={student._id}>
-                  {student.name}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={handleAddStudentToClass}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300"
-            >
-              Add Student
-            </button>
+            <h2 className="text-2xl font-semibold mb-6">
+              Manage Students in {selectedClass?.className || ""}
+            </h2>
+
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search students"
+                value={studentSearch}
+                onChange={(e) => setStudentSearch(e.target.value)}
+                className="mb-4 px-3 py-2 border border-gray-300 rounded w-full"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-64 overflow-y-auto border border-gray-300 rounded p-4">
+              {students
+                .filter((student) =>
+                  student.name.toLowerCase().includes(studentSearch.toLowerCase())
+                )
+                .map((student) => (
+                  <div
+                    key={student._id}
+                    className="p-2 cursor-pointer bg-gray-100 rounded hover:bg-gray-200"
+                    onClick={() => toggleStudentSelection(student._id)}
+                  >
+                    {student.name}
+                    {selectedStudentIds.includes(student._id) && (
+                      <span className="text-green-500 ml-2">✓</span>
+                    )}
+                  </div>
+                ))}
+            </div>
 
             <button
-              onClick={() => setShowTaskModal(true)}
-              className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-3 rounded-lg mt-4 transition-all duration-300"
+              onClick={handleAddStudentsToClass}
+              className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded transition-all duration-300"
             >
-              Add Task
+              Add Selected Students
             </button>
+
+            <h3 className="font-semibold mt-6">Current Students</h3>
+            {selectedClass?.students?.length === 0 ? (
+              <p>No students in this class.</p>
+            ) : (
+              <ul className="list-disc pl-5 space-y-1">
+                {selectedClass.students.map((stu) => (
+                  <li key={stu._id || stu.id}>{stu.name}</li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}
 
-      {/* Add Task Modal */}
-      {showTaskModal && (
-        <div className="fixed inset-0 bg-[#FFDAB9] bg-opacity-50 flex justify-center items-center z-50 transition-opacity duration-300">
-          <div className="bg-white rounded-lg p-8 w-full max-w-2xl relative shadow-lg">
-            <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-2xl"
-              onClick={() => setShowTaskModal(false)}
-            >
-              ✕
-            </button>
-            <h2 className="text-2xl font-semibold mb-6 text-gray-800">Assign Task to Class</h2>
-            <div className="mb-4">
-              <label className="block text-black mb-2">Task Description</label>
-              <textarea
-                className="border border-gray-300 rounded-md p-3 w-full mb-4 text-black"
-                value={taskDescription}
-                onChange={(e) => setTaskDescription(e.target.value)}
-                placeholder="Enter task description"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-black mb-2">Attach File</label>
-              <input
-                type="file"
-                className="border border-gray-300 rounded-md p-2 w-full mb-4 text-black"
-                onChange={(e) => setTaskFile(e.target.files[0])}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-black mb-2">Deadline</label>
-              <input
-                type="date"
-                className="border border-gray-300 rounded-md p-2 w-full mb-4 text-black"
-                value={taskDeadline}
-                onChange={(e) => setTaskDeadline(e.target.value)}
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-black mb-2">Task Points</label>
-              <input
-                type="number"
-                className="border border-gray-300 rounded-md p-2 w-full mb-4 text-black"
-                placeholder="Enter task points"
-                value={taskPoints}
-                onChange={(e) => setTaskPoints(e.target.value)}
-              />
-            </div>
-            <button
-              onClick={handleAddTask}
-              className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300"
-            >
-              Add Task
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Create Activity Modal */}
+      <CreateActivityModal
+        showModal={showActivityModal}
+        closeModal={closeActivityModal}
+        activityForm={activityForm}
+        handleActivityFormChange={(field, value) =>
+          setActivityForm((prev) => ({ ...prev, [field]: value }))
+        }
+        handleActivitySubmit={handleActivitySubmit}
+      />
     </div>
   );
 };

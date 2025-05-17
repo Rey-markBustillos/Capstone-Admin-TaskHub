@@ -5,28 +5,35 @@ const connectDB = require('./config/db');
 
 // Import Routes
 const userRoutes = require('./routes/userRoutes');
-const classRoutes = require('./routes/classRoutes'); // Import class routes
-const taskRoutes = require('./routes/taskRoutes'); // Import task routes
+const classRoutes = require('./routes/classRoutes');
+const taskRoutes = require('./routes/taskRoutes');
+const studentRoutes = require('./routes/studentRoutes'); // Import student routes
+const activityRoutes = require('./routes/activityRoutes'); // Import activity routes
 
 // Load environment variables
 dotenv.config();
 
-// Connect to the MongoDB database
+// Connect to MongoDB
 connectDB();
 
 // Initialize Express app
 const app = express();
 
 // Middleware
-app.use(cors());  // Enable Cross-Origin Resource Sharing
-app.use(express.json());  // Parse incoming JSON requests
+app.use(cors());
+app.use(express.json());
 
-// Use routes
+// Serve uploaded files statically
+app.use('/uploads', express.static('uploads'));
+
+// Use Routes
 app.use('/api/users', userRoutes);
-app.use('/api/classes', classRoutes);  // Use class routes
-app.use('/api/tasks', taskRoutes);  // Use task routes
+app.use('/api/classes', classRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/students', studentRoutes); // Register student routes here
+app.use('/api/activities', activityRoutes); // Register activity routes here
 
-// Start the server
+// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

@@ -1,0 +1,29 @@
+.sidenav {
+  width: 220px;
+  background: #222;
+  color: #fff;
+  min-height: 100vh;
+  padding-top: 30px;
+}
+
+.sidenav ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidenav li {
+  margin: 20px 0;
+}
+
+.sidenav a {
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 20px;
+  display: block;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.sidenav a:hover {
+  background: #444;
+}

@@ -24,6 +24,10 @@ const classSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  students: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // assuming you have a User model
+  }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Class', classSchema);

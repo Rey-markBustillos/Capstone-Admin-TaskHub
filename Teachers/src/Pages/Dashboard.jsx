@@ -1,60 +1,79 @@
 import React from "react";
-import "../Css/Dashboard.css";
-import { Bar } from "react-chartjs-2";
-import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 
-Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+const mockStats = {
+  totalClasses: 4,
+  totalAssignments: 12,
+  totalSubmissions: 98,
+  pendingGrading: 15,
+};
+
+const mockNotifications = [
+  {
+    id: 1,
+    message: "Assignment 3 deadline in 2 days",
+    date: "2025-05-18",
+  },
+  {
+    id: 2,
+    message: "New announcement posted in Class 2",
+    date: "2025-05-16",
+  },
+  {
+    id: 3,
+    message: "Reminder: Grade submission deadline is next week",
+    date: "2025-05-15",
+  },
+];
 
 const Dashboard = () => {
-  // Sample data
-  const totalStudents = 100;
-  const totalActivities = 10;
-  const totalClasses = 5;
-  const studentsCompletedActivity = 85;
-  const completionRate = ((studentsCompletedActivity / totalStudents) * 100).toFixed(2);
-
-  const chartData = {
-    labels: ["Students", "Activities", "Classes", "Completion %"],
-    datasets: [
-      {
-        label: "Counts",
-        data: [totalStudents, totalActivities, totalClasses, completionRate],
-        backgroundColor: ["#3B82F6", "#10B981", "#EF4444", "#F59E0B"],
-      },
-    ],
-  };
-
   return (
-    <div className="bg-gray-100 min-h-screen flex flex-col items-start p-6 w-450">
-      <h1 className="text-black font-bold mb-4 ml-200">Dashboard</h1>
-      
-      {/* Top Summary Boxes */}
-      <div className="flex flex-wrap gap-4 ml-100">
-        <div className="bg-blue-500 text-white p-6 shadow rounded-lg text-center w-60">
-          <h2 className="text-lg font-semibold">Total Students</h2>
-          <p className="text-3xl font-bold">{totalStudents}</p>
+    <div className="bg-[#FFDAB9] w-420 h-190">
+    <div className="w-400 ml-20 mx-auto p-6 font-sans">
+      <h1 className="text-3xl font-bold mb-6">Teacher Dashboard Overview</h1>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-blue-600 text-white p-6 rounded shadow">
+          <h2 className="text-xl">Total Classes</h2>
+          <p className="text-4xl font-bold">{mockStats.totalClasses}</p>
         </div>
-        <div className="bg-green-500 text-white p-6 shadow rounded-lg text-center w-60">
-          <h2 className="text-lg font-semibold">Total Activities</h2>
-          <p className="text-3xl font-bold">{totalActivities}</p>
+        <div className="bg-green-600 text-white p-6 rounded shadow">
+          <h2 className="text-xl">Assignments</h2>
+          <p className="text-4xl font-bold">{mockStats.totalAssignments}</p>
         </div>
-        <div className="bg-red-500 text-white p-6 shadow rounded-lg text-center w-60">
-          <h2 className="text-lg font-semibold">Total Classes</h2>
-          <p className="text-3xl font-bold">{totalClasses}</p>
+        <div className="bg-purple-600 text-white p-6 rounded shadow">
+          <h2 className="text-xl">Submissions</h2>
+          <p className="text-4xl font-bold">{mockStats.totalSubmissions}</p>
         </div>
-        <div className="bg-yellow-500 text-white p-6 shadow rounded-lg text-center w-60">
-          <h2 className="text-lg font-semibold">Completion Rate</h2>
-          <p className="text-3xl font-bold">{completionRate}%</p>
-        </div>
-      </div>
-      
-      {/* Chart Section */}
-      <div className="mt-6 w-full flex justify-center">
-        <div className="bg-white p-6 shadow rounded-lg w-3/4">
-          <h2 className="text-lg font-semibold text-center mb-4">Performance Chart</h2>
-          <Bar data={chartData} />
+        <div className="bg-red-600 text-white p-6 rounded shadow">
+          <h2 className="text-xl">Pending Grading</h2>
+          <p className="text-4xl font-bold">{mockStats.pendingGrading}</p>
         </div>
       </div>
+
+      {/* Notifications */}
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Notifications</h2>
+        {mockNotifications.length === 0 ? (
+          <p className="text-gray-600" style={{ color: "#000" }}>No new notifications</p>
+        ) : (
+          <ul className="space-y-4">
+            {mockNotifications.map((note) => (
+              <li
+                key={note.id}
+                className="p-4 bg-white rounded shadow border border-gray-200"
+                style={{ color: "#000" }}
+              >
+                <p className="font-medium">{note.message}</p>
+                <p className="text-gray-500 text-sm" style={{ color: "#222" }}>
+                  {new Date(note.date).toLocaleDateString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
     </div>
   );
 };

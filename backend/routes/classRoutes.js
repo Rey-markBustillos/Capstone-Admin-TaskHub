@@ -1,20 +1,22 @@
 const express = require('express');
-const { getClasses, addClass, deleteClass, addStudentToClass, getStudentsInClass } = require('../controllers/classController'); // Correctly import controller functions
 const router = express.Router();
+const {
+  getClasses,
+  addClass,
+  deleteClass,
+  addStudentsToClass,
+} = require('../controllers/classController');
 
-// GET /api/classes - Get all classes
+// GET all classes
 router.get('/', getClasses);
 
-// POST /api/classes - Add a new class
+// POST add new class
 router.post('/', addClass);
 
-// DELETE /api/classes/:id - Delete a class by ID
+// DELETE a class by ID
 router.delete('/:id', deleteClass);
 
-// POST /api/classes/:classId/addStudent - Add a student to a class
-router.post('/:classId/addStudent', addStudentToClass);
-
-// GET /api/classes/:classId/students - Get all students in a class
-router.get('/:classId/students', getStudentsInClass);
+// PUT add students to class
+router.put('/:id/add-students', addStudentsToClass);
 
 module.exports = router;
