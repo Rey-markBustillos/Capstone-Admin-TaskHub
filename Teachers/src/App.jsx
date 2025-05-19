@@ -9,6 +9,7 @@ import ClassFeed from "./Pages/Classfeed";
 import CreateTask from "./Pages/Createtask";
 import SubjectList from "./Pages/Subjectnav";
 import ClassManager from "./Pages/ClassManager";
+import ClassSubmissions from "./Pages/Submission Monitoring";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="classfeed/:id" element={<ClassFeed />} />
         <Route path="createtask" element={<CreateTask />} />
         <Route path="subjectnav" element={<SubjectList />} />
+        <Route path="classsubmissions" element={<ClassSubmissions />} />
       </Routes>
     </div>
   );

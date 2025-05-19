@@ -1,11 +1,12 @@
 const Activity = require('../models/Activity');
-const path = require('path');
-const fs = require('fs');
 
 const createActivity = async (req, res) => {
   try {
-    // Multer saves the file info in req.file
     const { title, instructions, deadline, classId, className, points } = req.body;
+
+    if (!title || !deadline || !classId || !className) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
 
     const activityData = {
       title,
@@ -28,13 +29,22 @@ const createActivity = async (req, res) => {
     const newActivity = new Activity(activityData);
     const savedActivity = await newActivity.save();
 
-    res.status(201).json(savedActivity);
+    return res.status(201).json(savedActivity);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error creating activity', error: error.message });
+    return res.status(500).json({ message: 'Error creating activity', error: error.message });
   }
 };
 
-// You can add other CRUD controllers here...
+const getActivitiesByClass = async (req, res) => {
+  try {
+    const classId = req.query.classId;
+    if (!classId) return res.status(400).json({ message: 'classId query parameter required' });
 
-module.exports = { createActivity };
+    const activities = await Activity.find({ classId }).lean();
+    res.json(activities);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching activities', error: error.message });
+  }
+};
+
+module.exports = { createActivity, getActivitiesByClass };

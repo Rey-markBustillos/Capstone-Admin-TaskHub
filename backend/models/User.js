@@ -18,8 +18,8 @@ const userSchema = new mongoose.Schema({
   students: [studentSchema],
 }, { timestamps: true });
 
-// Hash password before saving
-userSchema.pre('save', async function (next) {
+// Password hashing middleware
+userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   try {
     this.password = await bcrypt.hash(this.password, 10);

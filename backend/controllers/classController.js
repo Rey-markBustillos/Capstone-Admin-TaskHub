@@ -1,7 +1,6 @@
 const Class = require('../models/Class');
-const User = require('../models/User'); // User model to fetch students
 
-// Get all classes with populated students
+// Get all classes with students populated (name, email)
 const getClasses = async (req, res) => {
   try {
     const classes = await Class.find().populate('students', 'name email');
@@ -34,16 +33,15 @@ const deleteClass = async (req, res) => {
   }
 };
 
-// Add multiple students to a class by their IDs
+// Add students to a class
 const addStudentsToClass = async (req, res) => {
   const classId = req.params.id;
-  const { studentIds } = req.body; // expect array of student ObjectIds
+  const { studentIds } = req.body;
 
   try {
     const classFound = await Class.findById(classId);
     if (!classFound) return res.status(404).json({ message: 'Class not found' });
 
-    // Add students if not already present
     studentIds.forEach(studentId => {
       if (!classFound.students.includes(studentId)) {
         classFound.students.push(studentId);

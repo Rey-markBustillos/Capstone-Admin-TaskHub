@@ -1,24 +1,21 @@
 const express = require('express');
-const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const { createActivity } = require('../controllers/activityController');
+const { createActivity, getActivitiesByClass } = require('../controllers/activityController');
 
-// Configure multer storage
+const router = express.Router();
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Make sure this folder exists or create it
-  },
+  destination: (req, file, cb) => cb(null, 'uploads/'),
   filename: (req, file, cb) => {
-    // Unique filename: timestamp + original name
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
 
 const upload = multer({ storage });
 
-// POST create activity with file upload
 router.post('/', upload.single('attachedFile'), createActivity);
+router.get('/', getActivitiesByClass);
 
 module.exports = router;

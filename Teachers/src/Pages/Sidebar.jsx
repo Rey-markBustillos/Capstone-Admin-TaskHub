@@ -32,6 +32,11 @@ const Sidebar = () => {
             <Upload size={20} /> {isOpen && "Upload Task  "}
           </Link>
         </li>
+          <li>
+          <Link to="/classsubmissions" style={styles.link}>
+            <Book size={20} /> {isOpen && "Submission"}
+          </Link>
+        </li>
       </ul>
     </div>
   );
