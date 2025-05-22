@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 const API_BASE = 'http://localhost:5000'; // Change if your backend URL differs
 
-export default function Dashboard() {
+export default function TeacherDashboard() {
   const [stats, setStats] = useState({
     totalClasses: 0,
     totalAssignments: 0,

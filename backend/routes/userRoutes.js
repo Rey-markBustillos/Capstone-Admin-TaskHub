@@ -8,24 +8,28 @@ const {
   toggleActiveStatus,
   deleteUser,
   addStudent,
+  loginUser,
 } = require('../controllers/userController');
 
 // Get all users
 router.get('/', getUsers);
 
-// Create new user
+// Create a new user
 router.post('/', createUser);
 
-// Update user
+// User login
+router.post('/login', loginUser);
+
+// Update a user by ID
 router.put('/:id', updateUser);
 
-// Toggle active status
+// Toggle user active status by ID
 router.patch('/:id/toggle', toggleActiveStatus);
 
-// Delete user
+// Delete a user by ID
 router.delete('/:id', deleteUser);
 
-// Add student to a user
+// Add a student to a user
 router.post('/add-student', addStudent);
 
 module.exports = router;

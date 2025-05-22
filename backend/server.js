@@ -10,31 +10,37 @@ const classRoutes = require('./routes/classRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const activityRoutes = require('./routes/activityRoutes');
-const teacherRoutes = require('./routes/teacherRoutes'); // Import teacher routes
+const teacherRoutes = require('./routes/teacherRoutes');
 
-dotenv.config();  // Load environment variables
-connectDB();  // Connect to the database
+dotenv.config();  // Load environment variables from .env file
+connectDB();      // Connect to MongoDB
 
 const app = express();
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors());           // Enable CORS for all origins (adjust for security in production)
+app.use(express.json());   // Parse JSON request bodies
 
-// Serve uploaded files statically
+// Serve static files from /uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// API routes
-app.use('/api/users', userRoutes);
+// Mount API routes
+app.use('/api/users', userRoutes);        // User routes including /login
 app.use('/api/classes', classRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/activities', activityRoutes);
-app.use('/api/teacher', teacherRoutes);  // Register teacher routes
+app.use('/api/teacher', teacherRoutes);
 
-// 404 handler for undefined routes
+// 404 handler for any undefined route
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
+});
+
+// Global error handler (optional, improves error responses)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Internal Server Error' });
 });
 
 const PORT = process.env.PORT || 5000;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import SideNav from './components/SideNav';
-import Dashboard from './Pages/Dashboard';
+import StudentDashboard from './Pages/Dashboard';
 import ClassEnrollmentInfo from './Pages/ClassEnrollmentInfo';
 import StudentActivitySubmission from './Pages/Submit Act';
 
@@ -12,7 +12,7 @@ function App() {
       <SideNav />
       <div className="p-6">
         <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<StudentDashboard />} />
           <Route path="/classes" element={<ClassEnrollmentInfo />} />
           <Route path="/submitact" element={<StudentActivitySubmission />} />
         </Routes>

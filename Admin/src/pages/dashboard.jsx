@@ -115,7 +115,7 @@ const lineOptions = {
 
 const API_BASE = "http://localhost:5000/api";
 
-const Dashboard = () => {
+const AdminDashboard = () => {
   const [selectedMenu, setSelectedMenu] = useState("User Management");
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -326,4 +326,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;

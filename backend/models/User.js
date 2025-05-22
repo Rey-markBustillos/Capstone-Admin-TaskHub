@@ -18,7 +18,6 @@ const userSchema = new mongoose.Schema({
   students: [studentSchema],
 }, { timestamps: true });
 
-// Password hashing middleware
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   try {

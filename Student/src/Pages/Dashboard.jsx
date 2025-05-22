@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import ClipLoader from "react-spinners/ClipLoader";
 import "../Css/Dashboard.css"; // Your custom CSS if any
 
 const API_BASE = 'http://localhost:5000'; // Backend URL
 
-export default function Dashboard() {
+export default function StudentDashboard() {
   const [classes, setClasses] = useState([]);
   const [activities, setActivities] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
@@ -70,22 +71,51 @@ export default function Dashboard() {
     missing: 0,
   };
 
+  // Show error message
   if (error)
     return (
       <p className="text-red-600 p-6 text-center text-lg font-semibold">{error}</p>
     );
 
+  // Show spinner if loading classes or activities
   if (loadingClasses || loadingActivities)
     return (
-      <p className="p-6 text-center text-lg font-medium">Loading dashboard...</p>
+      <div className="flex justify-center ml-200 items-center h-screen">
+        <ClipLoader size={70} color={"#4F46E5"} loading={true} />
+      </div>
     );
 
   return (
-    <div className='bg-[#FFDAB9] w-450 h-330 min-h-screen'>
-      <div className="p-8 w-300 ml-20 mx-auto font-sans text-gray-900">
+    <div className='bg-[#FFDAB9] w-450 h-380 min-h-screen'>
+      <div className="p-8 w-300 ml-50 bg-white mx-auto font-sans text-gray-900">
         <h1 className="text-5xl font-extrabold mb-12 text-center tracking-tight">
           Student Dashboard
         </h1>
+
+        {/* Quick Stats */}
+        <section className="mb-20">
+          <h2 className="text-3xl font-semibold mb-8 border-b border-indigo-500 pb-3">
+            Quick Stats
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <div className="bg-indigo-50 p-8 rounded-xl shadow-md text-center flex flex-col justify-center items-center">
+              <p className="text-4xl font-extrabold text-indigo-700">{upcomingDeadlines.length}</p>
+              <p className="mt-2 text-indigo-900 font-semibold tracking-wide">Assignments Due</p>
+            </div>
+            <div className="bg-green-50 p-8 rounded-xl shadow-md text-center flex flex-col justify-center items-center">
+              <p className="text-4xl font-extrabold text-green-700">{statuses.submitted}</p>
+              <p className="mt-2 text-green-900 font-semibold tracking-wide">Submitted</p>
+            </div>
+            <div className="bg-yellow-50 p-8 rounded-xl shadow-md text-center flex flex-col justify-center items-center">
+              <p className="text-4xl font-extrabold text-yellow-700">{statuses.late}</p>
+              <p className="mt-2 text-yellow-900 font-semibold tracking-wide">Late</p>
+            </div>
+            <div className="bg-red-50 p-8 rounded-xl shadow-md text-center flex flex-col justify-center items-center">
+              <p className="text-4xl font-extrabold text-red-700">{statuses.missing}</p>
+              <p className="mt-2 text-red-900 font-semibold tracking-wide">Missing</p>
+            </div>
+          </div>
+        </section>
 
         {/* Enrolled Classes */}
         <section className="mb-16">
@@ -93,36 +123,23 @@ export default function Dashboard() {
             Enrolled Classes
           </h2>
           {classes.length === 0 ? (
-            <p className="text-gray-600 italic text-lg">No enrolled classes.</p>
+            <p className="text-gray-600 italic text-lg text-center">No enrolled classes.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-300 rounded-lg">
-                <thead className="bg-indigo-50">
-                  <tr>
-                    <th className="text-left px-6 py-3 text-indigo-700 font-semibold uppercase text-sm border-b border-indigo-200">
-                      Class Name
-                    </th>
-                    <th className="text-left px-6 py-3 text-indigo-700 font-semibold uppercase text-sm border-b border-indigo-200">
-                      Teacher
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {classes.map(cls => (
-                    <tr
-                      key={cls._id}
-                      className="hover:bg-indigo-100 transition-colors cursor-pointer"
-                    >
-                      <td className="px-6 py-4 border-b border-gray-200 font-semibold text-gray-900">
-                        {cls.className}
-                      </td>
-                      <td className="px-6 py-4 border-b border-gray-200 text-gray-700">
-                        {cls.teacherName}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {classes.map(cls => (
+                <div
+                  key={cls._id}
+                  className="bg-indigo-50 border border-indigo-200 rounded-xl shadow p-6 flex flex-col justify-between hover:shadow-lg transition cursor-pointer"
+                >
+                  <div>
+                    <p className="text-xl font-bold text-indigo-700 mb-2">{cls.className}</p>
+                    <p className="text-gray-700 mb-1">
+                      <span className="font-semibold">Teacher:</span>{" "}
+                      <span className="italic">{cls.teacherName}</span>
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </section>
@@ -133,48 +150,27 @@ export default function Dashboard() {
             Upcoming Deadlines
           </h2>
           {upcomingDeadlines.length === 0 ? (
-            <p className="text-gray-600 italic text-lg">No upcoming deadlines.</p>
+            <p className="text-gray-600 italic text-lg text-center">No upcoming deadlines.</p>
           ) : (
-            <ul className="list-disc list-inside space-y-3 text-lg text-gray-800">
+            <ul className="divide-y divide-indigo-200">
               {upcomingDeadlines
                 .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
                 .map(act => (
                   <li
                     key={act._id}
-                    className="hover:text-indigo-600 transition-colors cursor-pointer"
+                    className="flex flex-col sm:flex-row sm:items-center gap-2 py-4 px-2"
                   >
-                    <strong className="font-semibold">{act.title}</strong> for{' '}
-                    <em className="italic">{act.className}</em> — Due:{' '}
-                    {new Date(act.deadline).toLocaleDateString()}
+                    <span className="font-semibold text-indigo-700 text-lg">{act.title}</span>
+                    <span className="text-gray-500 text-base">for</span>
+                    <span className="italic text-indigo-900 text-base">{act.className}</span>
+                    <span className="text-gray-500 text-base">— Due:</span>
+                    <span className="font-medium text-red-600 text-base">
+                      {new Date(act.deadline).toLocaleDateString()}
+                    </span>
                   </li>
                 ))}
             </ul>
           )}
-        </section>
-
-        {/* Quick Stats */}
-        <section className="mb-20">
-          <h2 className="text-3xl font-semibold mb-8 border-b border-indigo-500 pb-3">
-            Quick Stats
-          </h2>
-          <div className="grid grid-cols-4 gap-8 max-w-md mx-auto">
-            <div className="bg-indigo-50 p-8 rounded-xl shadow-md text-center">
-              <p className="text-4xl font-extrabold text-indigo-700">{upcomingDeadlines.length}</p>
-              <p className="mt-2 text-indigo-900 font-semibold tracking-wide">Assignments Due</p>
-            </div>
-            <div className="bg-green-50 p-8 rounded-xl shadow-md text-center">
-              <p className="text-4xl font-extrabold text-green-700">{statuses.submitted}</p>
-              <p className="mt-2 text-green-900 font-semibold tracking-wide">Submitted</p>
-            </div>
-            <div className="bg-yellow-50 p-8 rounded-xl shadow-md text-center">
-              <p className="text-4xl font-extrabold text-yellow-700">{statuses.late}</p>
-              <p className="mt-2 text-yellow-900 font-semibold tracking-wide">Late</p>
-            </div>
-            <div className="bg-red-50 p-8 rounded-xl shadow-md text-center">
-              <p className="text-4xl font-extrabold text-red-700">{statuses.missing}</p>
-              <p className="mt-2 text-red-900 font-semibold tracking-wide">Missing</p>
-            </div>
-          </div>
         </section>
 
         {/* Recent Announcements */}

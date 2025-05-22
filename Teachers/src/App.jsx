@@ -2,7 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Login from "./Login/Login"; 
 import Register from "./Register/Register";
-import Dashboard from "./Pages/Dashboard";
+import TeacherDashboard from "./Pages/Dashboard";
 import Sidebar from "./Pages/Sidebar";
 import AddClass from "./Pages/AddClass";
 import ClassFeed from "./Pages/Classfeed";
@@ -18,7 +18,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="register" element={<Register />} />
-        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="dashboard" element={<TeacherDashboard />} />
          <Route path="addclass" element={<ClassManager />} /> 
         <Route path="classfeed/:id" element={<ClassFeed />} />
         <Route path="createtask" element={<CreateTask />} />
