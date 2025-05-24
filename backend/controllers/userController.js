@@ -19,7 +19,7 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-// POST /api/users - Create a new user with hashed password
+// POST /api/users - Create a new user (password will be hashed by model)
 exports.createUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -33,7 +33,7 @@ exports.createUser = async (req, res) => {
       return res.status(409).json({ message: "Email already exists" });
     }
 
-    // Create new user instance, password hashing handled in pre-save middleware
+    // Do NOT hash password here! Let the model pre-save hook handle it.
     const user = new User({ name, email: email.toLowerCase(), password, role, active: true });
     await user.save();
 
@@ -52,6 +52,7 @@ exports.updateUser = async (req, res) => {
 
     // Hash password if it's being updated
     if (updates.password) {
+      // Let the pre-save hook handle hashing if you use save(), but for findByIdAndUpdate you must hash manually:
       const salt = await bcrypt.genSalt(10);
       updates.password = await bcrypt.hash(updates.password, salt);
     }
@@ -138,12 +139,15 @@ exports.addStudent = async (req, res) => {
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log("Login payload:", req.body);
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
+    console.log("User found:", user);
+
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -153,6 +157,8 @@ exports.loginUser = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Password match:", isMatch);
+
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }

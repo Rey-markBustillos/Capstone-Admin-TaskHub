@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import StudentDashboard from "../Students/Dashboard";
+import AdminDashboard from "../pages/dashboard";
 
 // LandingPage component
 const LandingPage = ({ onContinue }) => (
@@ -55,9 +57,10 @@ function Login({ onBack, onLoginSuccess }) {
       if (!res.ok) {
         setError(data.message || "Invalid email or password.");
       } else {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        onLoginSuccess();
+        // Store user object directly
+        localStorage.setItem("user", JSON.stringify(data));
+        // Pass user object to parent handler
+        onLoginSuccess(data);
       }
     } catch (error) {
       setError("Server error. Please try again later.");
@@ -71,7 +74,11 @@ function Login({ onBack, onLoginSuccess }) {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-left">
         <h2 className="text-2xl font-semibold mb-6 text-center">Login</h2>
-        {error && <p className="mb-4 text-red-600" role="alert">{error}</p>}
+        {error && (
+          <p className="mb-4 text-red-600" role="alert">
+            {error}
+          </p>
+        )}
         <form onSubmit={handleSubmit}>
           <label htmlFor="email" className="block mb-1 font-medium text-gray-700">
             Email
@@ -126,23 +133,30 @@ function Login({ onBack, onLoginSuccess }) {
     </div>
   );
 }
+
 // Main App component
 export default function App() {
-  const [currentPage, setCurrentPage] = useState("landingpage"); // 'landingpage', 'login', 'studentdashboard'
+  const [currentPage, setCurrentPage] = useState("landingpage"); // 'landingpage', 'login', 'studentdashboard', 'admindashboard'
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleLoginSuccess = () => {
+  // Updated to receive user and redirect based on role
+  const handleLoginSuccess = (user) => {
     setIsLoggedIn(true);
-    setCurrentPage("studentdashboard");
+    if (user.role === "student") {
+      setCurrentPage("studentdashboard");
+    } else if (user.role === "admin") {
+      setCurrentPage("admindashboard");
+    } else {
+      // Default fallback for other roles (add your logic)
+      setCurrentPage("landingpage");
+    }
   };
 
   if (isLoggedIn && currentPage === "studentdashboard") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <h1 className="text-center text-4xl font-bold">Welcome to your dashboard!</h1>
-      </div>
-    );
-    // Replace the above with your full StudentDashboard component when ready
+    return <StudentDashboard />;
+  }
+  if (isLoggedIn && currentPage === "admindashboard") {
+    return <AdminDashboard />;
   }
 
   return (
