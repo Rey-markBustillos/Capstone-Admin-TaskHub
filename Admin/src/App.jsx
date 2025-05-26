@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
-import SidebarLayout from './components/SidebarLayout';
-import SimpleLayout from './components/SimpleLayout';
-import ProtectedRoute from './components/ProtectedRoute';
+import AdminLayout from './layouts/AdminLayout';
+import StudentLayout from './layouts/StudentLayout';
+import TeacherLayout from './layouts/TeacherLayout';
 
-// Your real page components
 import AdminDashboard from './pages/dashboard';
 import ActivityManagement from './pages/ActivityManagement';
 import GradingAndFeedback from './pages/GradingAndFeedback';
@@ -13,118 +12,118 @@ import SubmissionMonitoring from './pages/SubmissionMonitoring';
 import UserManagement from './pages/UserManagement';
 import ClassManagement from './pages/ClassManagement';
 
-import LandingPage from './LandingPage/LandingPage';
 import StudentDashboard from './Students/Dashboard';
-import LoginPage from './LandingPage/LandingPage'; // Assuming your Login component is here
-import StudentActivitySubmission from './Students/Submit Act';    
+import ViewTask from './Students/SubmitAct';
+import ClassEnrollmentInfo from './Students/ClassEnrollmentInfo';
+
+import TeacherDashboard from './Teachers/Dashboard';
+import AddClass from './Teachers/Addclass';
+import CreateTask from './Teachers/Createtask';
+import CreateActivityModal from './Teachers/CreateActivityModal';
+import ClassFeed from './Teachers/Classfeed';
+import ClassManager from './Teachers/ClassManager';
+
+import LandingPage from './LandingPage/LandingPage';
+import Login from './LandingPage/Login';
+
+function AppRoutes({ user, onLogout }) {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user.role === 'admin') {
+    return (
+      <AdminLayout onLogout={onLogout}>
+        <Routes>
+          <Route path="/admindashboard" element={<AdminDashboard />} />
+          <Route path="/activitymanagement" element={<ActivityManagement />} />
+          <Route path="/gradingandfeedback" element={<GradingAndFeedback />} />
+          <Route path="/submissionmonitoring" element={<SubmissionMonitoring />} />
+          <Route path="/usermanagement" element={<UserManagement />} />
+          <Route path="/classmanagement" element={<ClassManagement />} />
+          <Route path="/" element={<Navigate to="/admindashboard" replace />} />
+          <Route path="*" element={<Navigate to="/admindashboard" replace />} />
+        </Routes>
+      </AdminLayout>
+    );
+  }
+
+  if (user.role === 'student') {
+    return (
+      <StudentLayout onLogout={onLogout}>
+        <Routes>
+          <Route path="/studentdashboard" element={<StudentDashboard />} />
+          <Route path="/studentactivitysubmission" element={<ViewTask />} />
+          <Route path="/classenrollmentinfo" element={<ClassEnrollmentInfo />} />
+          <Route path="/" element={<Navigate to="/studentdashboard" replace />} />
+          <Route path="*" element={<Navigate to="/studentdashboard" replace />} />
+        </Routes>
+      </StudentLayout>
+    );
+  }
+
+  if (user.role === 'teacher') {
+    return (
+      <TeacherLayout onLogout={onLogout}>
+        <Routes>
+          <Route path="/teacherdashboard" element={<TeacherDashboard />} />
+          <Route path="/addclass" element={<AddClass />} />
+          <Route path="/createtask" element={<CreateTask />} />
+          <Route path="/createactivitymodal" element={<CreateActivityModal />} />
+          <Route path="/classfeed" element={<ClassFeed />} />
+          <Route path="/classmanager" element={<ClassManager />} />
+          <Route path="/" element={<Navigate to="/teacherdashboard" replace />} />
+          <Route path="*" element={<Navigate to="/teacherdashboard" replace />} />
+        </Routes>
+      </TeacherLayout>
+    );
+  }
+
+  // Default fallback if user role is unknown
+  return <Navigate to="/login" replace />;
+}
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
   const handleLoginSuccess = (loggedInUser) => {
-    setIsLoggedIn(true);
+    localStorage.setItem('user', JSON.stringify(loggedInUser));
     setUser(loggedInUser);
 
-    if (loggedInUser.role === 'student') {
-      navigate('/studentdashboard');
-    } else if (loggedInUser.role === 'admin') {
+    if (loggedInUser.role === 'admin') {
       navigate('/admindashboard');
+    } else if (loggedInUser.role === 'student') {
+      navigate('/studentdashboard');
+    } else if (loggedInUser.role === 'teacher') {
+      navigate('/teacherdashboard');
     } else {
-      navigate('/');
+      navigate('/login');
     }
   };
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    localStorage.removeItem('user');
     setUser(null);
     navigate('/login');
   };
 
   return (
     <Routes>
-      {/* Admin routes with sidebar */}
-      <Route element={<SidebarLayout />}>
-        <Route
-          path="/admindashboard"
-          element={
-            <ProtectedRoute isAuthenticated={isLoggedIn && user?.role === 'admin'}>
-              <AdminDashboard onLogout={handleLogout} />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/activitymanagement"
-          element={
-            <ProtectedRoute isAuthenticated={isLoggedIn && user?.role === 'admin'}>
-              <ActivityManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/gradingandfeedback"
-          element={
-            <ProtectedRoute isAuthenticated={isLoggedIn && user?.role === 'admin'}>
-              <GradingAndFeedback />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/submissionmonitoring"
-          element={
-            <ProtectedRoute isAuthenticated={isLoggedIn && user?.role === 'admin'}>
-              <SubmissionMonitoring />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/usermanagement"
-          element={
-            <ProtectedRoute isAuthenticated={isLoggedIn && user?.role === 'admin'}>
-              <UserManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/classmanagement"
-          element={
-            <ProtectedRoute isAuthenticated={isLoggedIn && user?.role === 'admin'}>
-              <ClassManagement />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
+      <Route path="/" element={<LandingPage onContinue={() => navigate('/login')} />} />
+      <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
 
-      {/* Public / student routes without sidebar */}
-      <Route element={<SimpleLayout />}>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage onLoginSuccess={handleLoginSuccess} />} />
-        <Route
-          path="/studentdashboard"
-          element={
-            <ProtectedRoute isAuthenticated={isLoggedIn && user?.role === 'student'}>
-              <StudentDashboard onLogout={handleLogout} />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
-       <Route
-          path="/studentactivitysubmission"
-          element={
-            <ProtectedRoute isAuthenticated={isLoggedIn && user?.role === 'student'}>
-              <StudentActivitySubmission onLogout={handleLogout} />
-            </ProtectedRoute>
-          }
-          element={
-            <ProtectedRoute isAuthenticated={isLoggedIn && user?.role === 'student'}>
-              <StudentDashboard onLogout={handleLogout} />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
+      {/* Protected routes */}
+      <Route path="/*" element={<AppRoutes user={user} onLogout={handleLogout} />} />
 
-      {/* Redirect unknown routes to landing */}
+      {/* Catch all unknown */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

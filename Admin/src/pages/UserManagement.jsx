@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "../Css/usermanagement.css"
+import "../Css/usermanagement.css";
 
 const API_BASE = "http://localhost:5000/api/users";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
-  const [showLogsFor, setShowLogsFor] = useState(null);
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
     password: "",
     role: "student",
+    studentId: "",
+    teacherId: "",
+    adminId: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -41,8 +43,24 @@ const UserManagement = () => {
     }
     setLoading(true);
     try {
-      await axios.post(API_BASE, newUser);
-      setNewUser({ name: "", email: "", password: "", role: "student" });
+      await axios.post(API_BASE, {
+        name: newUser.name,
+        email: newUser.email,
+        password: newUser.password,
+        role: newUser.role,
+        studentId: newUser.studentId || null,
+        teacherId: newUser.teacherId || null,
+        adminId: newUser.adminId || null,
+      });
+      setNewUser({
+        name: "",
+        email: "",
+        password: "",
+        role: "student",
+        studentId: "",
+        teacherId: "",
+        adminId: "",
+      });
       fetchUsers();
       setError(null);
     } catch (err) {
@@ -57,24 +75,10 @@ const UserManagement = () => {
     setLoading(true);
     try {
       await axios.delete(`${API_BASE}/${id}`);
-      if (showLogsFor === id) setShowLogsFor(null);
       fetchUsers();
       setError(null);
     } catch (err) {
       alert(err.response?.data?.message || "Failed to delete user");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleActive = async (id) => {
-    setLoading(true);
-    try {
-      await axios.patch(`${API_BASE}/${id}/toggle`);
-      fetchUsers();
-      setError(null);
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to toggle user status");
     } finally {
       setLoading(false);
     }
@@ -139,6 +143,33 @@ const UserManagement = () => {
             <option value="teacher">Teacher</option>
             <option value="admin">Admin</option>
           </select>
+          {newUser.role === "student" && (
+            <input
+              type="text"
+              placeholder="Student ID"
+              value={newUser.studentId}
+              onChange={(e) => setNewUser({ ...newUser, studentId: e.target.value })}
+              className="flex-grow min-w-[200px] px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          )}
+          {newUser.role === "teacher" && (
+            <input
+              type="text"
+              placeholder="Teacher ID"
+              value={newUser.teacherId}
+              onChange={(e) => setNewUser({ ...newUser, teacherId: e.target.value })}
+              className="flex-grow min-w-[200px] px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          )}
+          {newUser.role === "admin" && (
+            <input
+              type="text"
+              placeholder="Admin ID"
+              value={newUser.adminId}
+              onChange={(e) => setNewUser({ ...newUser, adminId: e.target.value })}
+              className="flex-grow min-w-[200px] px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          )}
           <button
             onClick={handleAddUser}
             className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
@@ -153,7 +184,7 @@ const UserManagement = () => {
         <table className="w-full border-collapse border border-gray-300">
           <thead className="bg-gray-100">
             <tr>
-              {["Name", "Email", "Role", "Active", "Actions", "Activity Logs"].map((title) => (
+              {["Name", "Email", "Role", "Active", "Actions"].map((title) => (
                 <th
                   key={title}
                   className="border border-gray-300 px-4 py-2 text-left text-gray-700"
@@ -192,7 +223,9 @@ const UserManagement = () => {
                       <option value="admin">Admin</option>
                     </select>
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">{user.active ? "Yes" : "No"}</td>
+                  <td className="border border-gray-300 px-4 py-2">
+                    {user.active ? "Yes" : "No"}
+                  </td>
                   <td className="border border-gray-300 px-4 py-2 space-x-2">
                     <button
                       onClick={handleSaveEdit}
@@ -207,24 +240,15 @@ const UserManagement = () => {
                       Cancel
                     </button>
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <button
-                      onClick={() => setShowLogsFor(user._id || user.id)}
-                      className="text-blue-600 underline hover:text-blue-800"
-                    >
-                      View Logs
-                    </button>
-                  </td>
                 </tr>
               ) : (
-                <tr
-                  key={user._id || user.id}
-                  className={user.active ? "" : "bg-red-100 text-gray-500"}
-                >
+                <tr key={user._id || user.id}>
                   <td className="border border-gray-300 px-4 py-2">{user.name}</td>
                   <td className="border border-gray-300 px-4 py-2">{user.email}</td>
                   <td className="border border-gray-300 px-4 py-2">{user.role}</td>
-                  <td className="border border-gray-300 px-4 py-2">{user.active ? "Yes" : "No"}</td>
+                  <td className="border border-gray-300 px-4 py-2">
+                    {user.active ? "Yes" : "No"}
+                  </td>
                   <td className="border border-gray-300 px-4 py-2 space-x-2">
                     <button
                       onClick={() => setEditingUser(user)}
@@ -233,24 +257,10 @@ const UserManagement = () => {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleToggleActive(user._id || user.id)}
-                      className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700"
-                    >
-                      {user.active ? "Deactivate" : "Activate"}
-                    </button>
-                    <button
                       onClick={() => handleDeleteUser(user._id || user.id)}
                       className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
                     >
                       Delete
-                    </button>
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <button
-                      onClick={() => setShowLogsFor(user._id || user.id)}
-                      className="text-blue-600 underline hover:text-blue-800"
-                    >
-                      View Logs
                     </button>
                   </td>
                 </tr>
@@ -259,34 +269,6 @@ const UserManagement = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Activity Logs Modal */}
-      {showLogsFor && (
-        <div
-          onClick={() => setShowLogsFor(null)}
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white p-6 rounded shadow-lg max-w-md max-h-[80vh] overflow-y-auto"
-          >
-            <h3 className="text-xl font-semibold mb-4">Activity Logs</h3>
-            <button
-              onClick={() => setShowLogsFor(null)}
-              className="float-right mb-4 text-gray-600 hover:text-gray-900"
-            >
-              Close
-            </button>
-            <ul className="list-disc list-inside space-y-1">
-              {(users.find((u) => (u._id || u.id) === showLogsFor)?.activityLogs || []).map(
-                (log, i) => (
-                  <li key={i}>{log}</li>
-                )
-              )}
-            </ul>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -8,10 +8,15 @@ const sanitizeUser = (user) => {
   return obj;
 };
 
-// GET /api/users - Get all users without passwords
+// GET /api/users - Get all users, optionally filtered by role
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const role = req.query.role;
+    let query = {};
+    if (role) {
+      query.role = role;
+    }
+    const users = await User.find(query).select("-password");
     res.json(users);
   } catch (error) {
     console.error("Error getting users:", error);
@@ -22,7 +27,7 @@ exports.getUsers = async (req, res) => {
 // POST /api/users - Create a new user (password will be hashed by model)
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, studentId, teacherId, adminId } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "Name, email, password, and role are required" });
@@ -33,10 +38,19 @@ exports.createUser = async (req, res) => {
       return res.status(409).json({ message: "Email already exists" });
     }
 
-    // Do NOT hash password here! Let the model pre-save hook handle it.
-    const user = new User({ name, email: email.toLowerCase(), password, role, active: true });
-    await user.save();
+    // Create a user with specific role
+    const user = new User({
+      name,
+      email: email.toLowerCase(),
+      password,
+      role,
+      studentId: role === "student" ? studentId : null,
+      teacherId: role === "teacher" ? teacherId : null,
+      adminId: role === "admin" ? adminId : null,
+      active: true,
+    });
 
+    await user.save();
     res.status(201).json(sanitizeUser(user));
   } catch (error) {
     console.error("Create user error:", error);
@@ -50,9 +64,7 @@ exports.updateUser = async (req, res) => {
     const { id } = req.params;
     const updates = { ...req.body };
 
-    // Hash password if it's being updated
     if (updates.password) {
-      // Let the pre-save hook handle hashing if you use save(), but for findByIdAndUpdate you must hash manually:
       const salt = await bcrypt.genSalt(10);
       updates.password = await bcrypt.hash(updates.password, salt);
     }
@@ -139,15 +151,12 @@ exports.addStudent = async (req, res) => {
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("Login payload:", req.body);
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
     const user = await User.findOne({ email: email.toLowerCase() });
-    console.log("User found:", user);
-
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -157,8 +166,6 @@ exports.loginUser = async (req, res) => {
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("Password match:", isMatch);
-
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import ClipLoader from "react-spinners/ClipLoader";
 
 const API_BASE = "http://localhost:5000";
@@ -14,8 +14,18 @@ export default function StudentDashboard() {
     const fetchClasses = async () => {
       setLoadingClasses(true);
       setError(null);
+
       try {
-        const res = await fetch(`${API_BASE}/api/classes`);
+        const user = JSON.parse(localStorage.getItem("user"));
+        const studentId = user ? user._id : null;
+
+        if (!studentId) {
+          setError("Student ID not found in session");
+          setLoadingClasses(false);
+          return;
+        }
+
+        const res = await fetch(`${API_BASE}/api/classes?studentId=${studentId}`);
         if (!res.ok) throw new Error("Failed to fetch classes");
         const data = await res.json();
         setClasses(data);
@@ -27,7 +37,7 @@ export default function StudentDashboard() {
     };
 
     fetchClasses();
-  }, []);
+  }, []);  // Empty dependency array to run only once when the component is mounted
 
   useEffect(() => {
     if (!classes.length) {
@@ -42,7 +52,9 @@ export default function StudentDashboard() {
         let allActivities = [];
         for (const cls of classes) {
           const res = await fetch(`${API_BASE}/api/activities?classId=${cls._id}`);
-          if (!res.ok) throw new Error(`Failed to fetch activities for class ${cls.className}`);
+          if (!res.ok) {
+            throw new Error(`Failed to fetch activities for class ${cls.className}`);
+          }
           const data = await res.json();
           allActivities = allActivities.concat(data);
         }
@@ -55,15 +67,15 @@ export default function StudentDashboard() {
     };
 
     fetchActivities();
-  }, [classes]);
+  }, [classes]); // Run when `classes` is updated
 
   const now = new Date();
   const upcomingDeadlines = activities.filter((act) => new Date(act.deadline) >= now);
 
   const statuses = {
-    submitted: 0,
-    late: 0,
-    missing: 0,
+    submitted: activities.filter((act) => act.status === "submitted").length,
+    late: activities.filter((act) => act.status === "late").length,
+    missing: activities.filter((act) => act.status === "missing").length,
   };
 
   if (error)
