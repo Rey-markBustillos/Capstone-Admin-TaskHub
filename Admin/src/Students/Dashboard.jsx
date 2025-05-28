@@ -1,189 +1,105 @@
-import React, { useState, useEffect } from "react";
-import ClipLoader from "react-spinners/ClipLoader";
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-const API_BASE = "http://localhost:5000";
+const LoadingSpinner = () => (
+  <div role="status" aria-live="polite" aria-busy="true" className="flex justify-center items-center py-6">
+    <svg
+      className="animate-spin h-10 w-10 text-blue-600"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      ></circle>
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      ></path>
+    </svg>
+    <span className="sr-only">Loading...</span>
+  </div>
+);
 
-export default function StudentDashboard() {
+const StudentDashboard = ({ onLogout }) => {
   const [classes, setClasses] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [loadingClasses, setLoadingClasses] = useState(true);
-  const [loadingActivities, setLoadingActivities] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Get user and studentId
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+  const studentName = user?.name || 'Student';
+  const studentId = user && user.role === 'student' ? user._id : null;
+
   useEffect(() => {
+    if (!studentId) {
+      setError('Student not logged in');
+      setLoading(false);
+      return;
+    }
+
     const fetchClasses = async () => {
-      setLoadingClasses(true);
-      setError(null);
-
       try {
-        const user = JSON.parse(localStorage.getItem("user"));
-        const studentId = user ? user._id : null;
-
-        if (!studentId) {
-          setError("Student ID not found in session");
-          setLoadingClasses(false);
-          return;
-        }
-
-        const res = await fetch(`${API_BASE}/api/classes?studentId=${studentId}`);
-        if (!res.ok) throw new Error("Failed to fetch classes");
-        const data = await res.json();
-        setClasses(data);
+        const res = await axios.get(`http://localhost:5000/api/classes?studentId=${studentId}`);
+        setClasses(res.data);
       } catch (err) {
-        setError(err.message || "Error fetching classes");
+        setError(err.response?.data?.message || err.message);
       } finally {
-        setLoadingClasses(false);
+        setLoading(false);
       }
     };
 
     fetchClasses();
-  }, []);  // Empty dependency array to run only once when the component is mounted
+  }, [studentId]);
 
-  useEffect(() => {
-    if (!classes.length) {
-      setActivities([]);
-      return;
-    }
-
-    const fetchActivities = async () => {
-      setLoadingActivities(true);
-      setError(null);
-      try {
-        let allActivities = [];
-        for (const cls of classes) {
-          const res = await fetch(`${API_BASE}/api/activities?classId=${cls._id}`);
-          if (!res.ok) {
-            throw new Error(`Failed to fetch activities for class ${cls.className}`);
-          }
-          const data = await res.json();
-          allActivities = allActivities.concat(data);
-        }
-        setActivities(allActivities);
-      } catch (err) {
-        setError(err.message || "Error fetching activities");
-      } finally {
-        setLoadingActivities(false);
-      }
-    };
-
-    fetchActivities();
-  }, [classes]); // Run when `classes` is updated
-
-  const now = new Date();
-  const upcomingDeadlines = activities.filter((act) => new Date(act.deadline) >= now);
-
-  const statuses = {
-    submitted: activities.filter((act) => act.status === "submitted").length,
-    late: activities.filter((act) => act.status === "late").length,
-    missing: activities.filter((act) => act.status === "missing").length,
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    if (typeof onLogout === 'function') onLogout();
   };
 
-  if (error)
-    return (
-      <p className="text-red-600 p-6 text-center text-lg font-semibold">{error}</p>
-    );
-
-  if (loadingClasses || loadingActivities)
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <ClipLoader size={70} color={"#4F46E5"} loading={true} />
-      </div>
-    );
-
   return (
-    <div className="bg-[#FFDAB9] min-h-screen p-8 font-sans text-gray-900">
-      <h1 className="text-5xl font-extrabold mb-12 text-center tracking-tight">
-        Student Dashboard
-      </h1>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <header className="max-w-4xl mx-auto flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Welcome, {studentName}!</h1>
+        <button
+          onClick={handleLogout}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+        >
+          Logout
+        </button>
+      </header>
 
-      {/* Quick Stats */}
-      <section className="mb-20 max-w-5xl mx-auto">
-        <h2 className="text-3xl font-semibold mb-8 border-b border-indigo-500 pb-3">
-          Quick Stats
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="bg-indigo-50 p-8 rounded-xl shadow-md text-center flex flex-col justify-center items-center">
-            <p className="text-4xl font-extrabold text-indigo-700">{upcomingDeadlines.length}</p>
-            <p className="mt-2 text-indigo-900 font-semibold tracking-wide">Assignments Due</p>
-          </div>
-          <div className="bg-green-50 p-8 rounded-xl shadow-md text-center flex flex-col justify-center items-center">
-            <p className="text-4xl font-extrabold text-green-700">{statuses.submitted}</p>
-            <p className="mt-2 text-green-900 font-semibold tracking-wide">Submitted</p>
-          </div>
-          <div className="bg-yellow-50 p-8 rounded-xl shadow-md text-center flex flex-col justify-center items-center">
-            <p className="text-4xl font-extrabold text-yellow-700">{statuses.late}</p>
-            <p className="mt-2 text-yellow-900 font-semibold tracking-wide">Late</p>
-          </div>
-          <div className="bg-red-50 p-8 rounded-xl shadow-md text-center flex flex-col justify-center items-center">
-            <p className="text-4xl font-extrabold text-red-700">{statuses.missing}</p>
-            <p className="mt-2 text-red-900 font-semibold tracking-wide">Missing</p>
-          </div>
-        </div>
-      </section>
+      <main className="max-w-4xl mx-auto">
+        {loading && <LoadingSpinner />}
+        {error && <p className="text-red-600">{error}</p>}
+        {!loading && !error && classes.length === 0 && <p>You are not enrolled in any classes.</p>}
 
-      {/* Enrolled Classes */}
-      <section className="mb-16 max-w-5xl mx-auto">
-        <h2 className="text-3xl font-semibold mb-6 border-b border-indigo-500 pb-3">
-          Enrolled Classes
-        </h2>
-        {classes.length === 0 ? (
-          <p className="text-gray-600 italic text-lg text-center">No enrolled classes.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {classes.map((cls) => (
-              <div
-                key={cls._id}
-                className="bg-indigo-50 border border-indigo-200 rounded-xl shadow p-6 flex flex-col justify-between hover:shadow-lg transition cursor-pointer"
-              >
-                <div>
-                  <p className="text-xl font-bold text-indigo-700 mb-2">{cls.className}</p>
-                  <p className="text-gray-700 mb-1">
-                    <span className="font-semibold">Teacher:</span>{" "}
-                    <span className="italic">{cls.teacherName}</span>
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Upcoming Deadlines */}
-      <section className="mb-16 max-w-5xl mx-auto">
-        <h2 className="text-3xl font-semibold mb-6 border-b border-indigo-500 pb-3">
-          Upcoming Deadlines
-        </h2>
-        {upcomingDeadlines.length === 0 ? (
-          <p className="text-gray-600 italic text-lg text-center">No upcoming deadlines.</p>
-        ) : (
-          <ul className="divide-y divide-indigo-200">
-            {upcomingDeadlines
-              .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
-              .map((act) => (
-                <li
-                  key={act._id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-2 py-4 px-2"
-                >
-                  <span className="font-semibold text-indigo-700 text-lg">{act.title}</span>
-                  <span className="text-gray-500 text-base">for</span>
-                  <span className="italic text-indigo-900 text-base">{act.className}</span>
-                  <span className="text-gray-500 text-base">— Due:</span>
-                  <span className="font-medium text-red-600 text-base">
-                    {new Date(act.deadline).toLocaleDateString()}
-                  </span>
+        {!loading && !error && classes.length > 0 && (
+          <>
+            <h2 className="text-2xl font-semibold mb-4">Your Enrolled Classes</h2>
+            <ul className="space-y-4">
+              {classes.map((cls) => (
+                <li key={cls._id} className="bg-gray-100 p-4 rounded shadow">
+                  <h3 className="text-xl font-bold">{cls.className}</h3>
+                  <p><strong>Teacher:</strong> {cls.teacherName}</p>
+                  <p><strong>Room:</strong> {cls.roomNumber}</p>
+                  <p><strong>Time:</strong> {cls.time ? new Date(cls.time).toLocaleString() : 'TBA'}</p>
                 </li>
               ))}
-          </ul>
+            </ul>
+          </>
         )}
-      </section>
-
-      {/* Recent Announcements */}
-      <section className="max-w-xl mx-auto text-center">
-        <h2 className="text-3xl font-semibold mb-6 border-b border-indigo-500 pb-3">
-          Recent Announcements
-        </h2>
-        <p className="italic text-gray-500 text-lg">No announcements yet.</p>
-      </section>
+      </main>
     </div>
   );
-}
+};
+
+export default StudentDashboard;

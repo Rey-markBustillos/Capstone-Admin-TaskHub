@@ -6,22 +6,14 @@ import StudentLayout from './layouts/StudentLayout';
 import TeacherLayout from './layouts/TeacherLayout';
 
 import AdminDashboard from './pages/dashboard';
-import ActivityManagement from './pages/ActivityManagement';
-import GradingAndFeedback from './pages/GradingAndFeedback';
-import SubmissionMonitoring from './pages/SubmissionMonitoring';
 import UserManagement from './pages/UserManagement';
 import ClassManagement from './pages/ClassManagement';
 
 import StudentDashboard from './Students/Dashboard';
-import ViewTask from './Students/SubmitAct';
-import ClassEnrollmentInfo from './Students/ClassEnrollmentInfo';
+import StudentPortal from './Students/StudentPortal';
 
 import TeacherDashboard from './Teachers/Dashboard';
-import AddClass from './Teachers/Addclass';
-import CreateTask from './Teachers/Createtask';
-import CreateActivityModal from './Teachers/CreateActivityModal';
-import ClassFeed from './Teachers/Classfeed';
-import ClassManager from './Teachers/ClassManager';
+import TeacherPortal from './Teachers/TeacherPortal';
 
 import LandingPage from './LandingPage/LandingPage';
 import Login from './LandingPage/Login';
@@ -36,9 +28,6 @@ function AppRoutes({ user, onLogout }) {
       <AdminLayout onLogout={onLogout}>
         <Routes>
           <Route path="/admindashboard" element={<AdminDashboard />} />
-          <Route path="/activitymanagement" element={<ActivityManagement />} />
-          <Route path="/gradingandfeedback" element={<GradingAndFeedback />} />
-          <Route path="/submissionmonitoring" element={<SubmissionMonitoring />} />
           <Route path="/usermanagement" element={<UserManagement />} />
           <Route path="/classmanagement" element={<ClassManagement />} />
           <Route path="/" element={<Navigate to="/admindashboard" replace />} />
@@ -53,8 +42,7 @@ function AppRoutes({ user, onLogout }) {
       <StudentLayout onLogout={onLogout}>
         <Routes>
           <Route path="/studentdashboard" element={<StudentDashboard />} />
-          <Route path="/studentactivitysubmission" element={<ViewTask />} />
-          <Route path="/classenrollmentinfo" element={<ClassEnrollmentInfo />} />
+          <Route path="/studentportal" element={<StudentPortal />} />
           <Route path="/" element={<Navigate to="/studentdashboard" replace />} />
           <Route path="*" element={<Navigate to="/studentdashboard" replace />} />
         </Routes>
@@ -67,11 +55,7 @@ function AppRoutes({ user, onLogout }) {
       <TeacherLayout onLogout={onLogout}>
         <Routes>
           <Route path="/teacherdashboard" element={<TeacherDashboard />} />
-          <Route path="/addclass" element={<AddClass />} />
-          <Route path="/createtask" element={<CreateTask />} />
-          <Route path="/createactivitymodal" element={<CreateActivityModal />} />
-          <Route path="/classfeed" element={<ClassFeed />} />
-          <Route path="/classmanager" element={<ClassManager />} />
+          <Route path="/classes" element={<TeacherPortal />} />
           <Route path="/" element={<Navigate to="/teacherdashboard" replace />} />
           <Route path="*" element={<Navigate to="/teacherdashboard" replace />} />
         </Routes>

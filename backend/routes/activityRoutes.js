@@ -1,21 +1,11 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const { createActivity, getActivitiesByClass } = require('../controllers/activityController');
-
 const router = express.Router();
+const activityController = require('../controllers/activityController');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage });
-
-router.post('/', upload.single('attachedFile'), createActivity);
-router.get('/', getActivitiesByClass);
+router.post('/', activityController.createActivity);
+router.get('/', activityController.getActivities);
+router.get('/:id', activityController.getActivityById);
+router.put('/:id', activityController.updateActivity);
+router.delete('/:id', activityController.deleteActivity);
 
 module.exports = router;

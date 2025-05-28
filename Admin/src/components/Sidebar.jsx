@@ -12,24 +12,16 @@ import {
 const menuItemsByRole = {
   admin: [
     { name: 'Dashboard', path: '/admindashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'Activity Management', path: '/activitymanagement', icon: <FileText size={20} /> },
-    { name: 'Grading & Feedback', path: '/gradingandfeedback', icon: <ClipboardList size={20} /> },
-    { name: 'Submission Monitoring', path: '/submissionmonitoring', icon: <Folder size={20} /> },
     { name: 'User Management', path: '/usermanagement', icon: <Users size={20} /> },
     { name: 'Class Management', path: '/classmanagement', icon: <Calendar size={20} /> },
   ],
   student: [
     { name: 'Dashboard', path: '/studentdashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'Activity Submission', path: '/studentactivitysubmission', icon: <FileText size={20} /> },
-    { name: 'Class Enrolled', path: '/classenrollmentinfo', icon: <FileText size={20} /> },
+    { name: 'Classes', path: '/studentportal', icon: <ClipboardList size={20} /> },
   ],
   teacher: [
-    { name: 'Dashboard', path: '/teacherdashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'Add Class', path: '/addclass', icon: <FileText size={20} /> },
-        { name: 'Class Manager', path: '/classmanager', icon: <Folder size={20} /> },
-    { name: 'Create Task', path: '/createtask', icon: <ClipboardList size={20} /> },
-    { name: 'Create Activity', path: '/createactivitymodal', icon: <Folder size={20} /> },
-    { name: 'Class Feed', path: '/classfeed', icon: <Users size={20} /> },
+    { name: 'Dashboard', path: '/teacherdashboard', icon: <LayoutDashboard size={20} /> },  
+    { name: 'Classes', path: '/classes', icon: <ClipboardList size={20} /> },  
   ],
 };
 

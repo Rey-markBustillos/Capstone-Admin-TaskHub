@@ -32,8 +32,8 @@ export default function Login({ onBack, onLoginSuccess }) {
       if (!res.ok) {
         setError(data.message || "Invalid email or password.");
       } else {
-        // Store user data including studentId in localStorage
-        localStorage.setItem("user", JSON.stringify(data));  // Store the entire user object
+        // Store user data (including role, _id, etc.) in localStorage
+        localStorage.setItem("user", JSON.stringify(data));
         onLoginSuccess(data);
       }
     } catch (err) {
