@@ -1,0 +1,85 @@
+/* Full screen dark blue violet gradient background with falling books animation */
+.app-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(to bottom, #2e0854, #4b0082);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app-background .falling-book {
+  position: absolute;
+  top: -60px;
+  width: 40px;
+  height: 50px;
+  background: #7b3fbf;
+  border: 3px solid #9d7bff;
+  border-radius: 6px;
+  box-shadow: 2px 2px 8px rgba(155, 90, 255, 0.5);
+  font-size: 30px;
+  line-height: 50px;
+  text-align: center;
+  user-select: none;
+  animation-name: fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  color: #e0d7ff;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.app-background .falling-book:nth-child(1) {
+  left: 5vw;
+  animation-duration: 7s;
+  animation-delay: 0s;
+}
+.app-background .falling-book:nth-child(2) {
+  left: 20vw;
+  animation-duration: 9s;
+  animation-delay: 2s;
+}
+.app-background .falling-book:nth-child(3) {
+  left: 35vw;
+  animation-duration: 6s;
+  animation-delay: 4s;
+}
+.app-background .falling-book:nth-child(4) {
+  left: 50vw;
+  animation-duration: 8s;
+  animation-delay: 1s;
+}
+.app-background .falling-book:nth-child(5) {
+  left: 65vw;
+  animation-duration: 10s;
+  animation-delay: 3s;
+}
+.app-background .falling-book:nth-child(6) {
+  left: 80vw;
+  animation-duration: 7.5s;
+  animation-delay: 5s;
+}
+.app-background .falling-book:nth-child(7) {
+  left: 90vw;
+  animation-duration: 8.5s;
+  animation-delay: 6s;
+}
+
+/* Additional styling for header text */
+header, main {
+  color: white;
+}

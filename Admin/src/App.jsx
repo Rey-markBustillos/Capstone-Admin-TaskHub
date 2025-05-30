@@ -14,6 +14,7 @@ import StudentPortal from './Students/StudentPortal';
 
 import TeacherDashboard from './Teachers/Dashboard';
 import TeacherPortal from './Teachers/TeacherPortal';
+import ActivityMonitoring from './Teachers/ActivityMonitoring';
 
 import LandingPage from './LandingPage/LandingPage';
 import Login from './LandingPage/Login';
@@ -56,6 +57,7 @@ function AppRoutes({ user, onLogout }) {
         <Routes>
           <Route path="/teacherdashboard" element={<TeacherDashboard />} />
           <Route path="/classes" element={<TeacherPortal />} />
+          <Route path="/activitymonitoring" element={<ActivityMonitoring />} />
           <Route path="/" element={<Navigate to="/teacherdashboard" replace />} />
           <Route path="*" element={<Navigate to="/teacherdashboard" replace />} />
         </Routes>

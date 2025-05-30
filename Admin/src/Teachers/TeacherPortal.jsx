@@ -33,6 +33,7 @@ const TeacherPortal = () => {
 
     const fetchClasses = async () => {
       try {
+        // Corrected line with template string in backticks:
         const res = await axios.get(`http://localhost:5000/api/classes?teacherId=${teacherId}`);
         setClasses(res.data);
       } catch (err) {
@@ -45,6 +46,9 @@ const TeacherPortal = () => {
     fetchClasses();
   }, [teacherId]);
 
+  // ... rest of your code
+
+
   const handleActivityChange = (e) => {
     const { name, value } = e.target;
     setActivityData((prev) => ({ ...prev, [name]: value }));
@@ -56,7 +60,6 @@ const TeacherPortal = () => {
     setActivitySuccess('');
     setActivityLoading(true);
 
-    // Validate required fields including selectedClass
     if (!activityData.title || !activityData.date || !selectedClass?._id) {
       setActivityError('Title, Date, and Class are required.');
       setActivityLoading(false);
@@ -68,7 +71,7 @@ const TeacherPortal = () => {
         ...activityData,
         score: activityData.score ? Number(activityData.score) : undefined,
         createdBy: teacherId,
-        classId: selectedClass._id,  // send classId for backend linking
+        classId: selectedClass._id,
       };
 
       await axios.post('http://localhost:5000/api/activities', payload);
@@ -89,7 +92,6 @@ const TeacherPortal = () => {
     }
   };
 
-  // Clear activity messages when modal closes
   const handleCloseModal = () => {
     setSelectedClass(null);
     setActivityError('');
@@ -154,42 +156,60 @@ const TeacherPortal = () => {
 
       {selectedClass && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
           onClick={handleCloseModal}
         >
           <div
-            className="bg-white rounded-lg shadow-lg max-w-5xl w-full p-6 flex max-h-[80vh] gap-10"
+            className="bg-white rounded-lg shadow-lg max-w-6xl w-full max-h-[90vh] flex flex-col md:flex-row gap-8 p-6 overflow-hidden relative"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
           >
+            {/* Back Button */}
+            <button
+              onClick={handleCloseModal}
+              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+              aria-label="Close modal"
+              type="button"
+            >
+              &#8592; Back
+            </button>
+
             {/* Student List */}
             <div className="flex-1 overflow-y-auto pr-4">
-              <h2 id="modal-title" className="text-xl font-bold mb-4">{selectedClass.className} - Students</h2>
-              <ul className="divide-y divide-gray-200 max-h-[calc(80vh-100px)] overflow-y-auto">
+              <h2
+                id="modal-title"
+                className="text-2xl font-semibold mb-4 border-b pb-2 sticky top-0 bg-white z-10"
+              >
+                {selectedClass.className} - Students
+              </h2>
+              <ul className="divide-y divide-gray-200">
                 {selectedClass.students && selectedClass.students.length > 0 ? (
                   selectedClass.students.map((student) => (
-                    <li key={student._id} className="py-2">
-                      <p className="font-medium">{student.name}</p>
-                      <p className="text-sm text-gray-600">{student.email}</p>
+                    <li key={student._id} className="py-3">
+                      <p className="font-medium text-gray-800">{student.name}</p>
+                      <p className="text-sm text-gray-500">{student.email}</p>
                     </li>
                   ))
                 ) : (
-                  <p>No students enrolled in this class.</p>
+                  <p className="text-gray-600">No students enrolled in this class.</p>
                 )}
               </ul>
             </div>
 
-            {/* Vertical divider with wider margin */}
-            <div className="w-px bg-gray-300 mx-10" />
+            {/* Vertical divider */}
+            <div className="hidden md:block w-px bg-gray-300 mx-6" />
 
             {/* Create Activity Form */}
             <div className="flex-1 overflow-y-auto pl-4">
-              <h2 className="text-xl font-bold mb-4">Create Activity for this Class</h2>
+              <h2 className="text-2xl font-semibold mb-4 border-b pb-2 sticky top-0 bg-white z-10">
+                Create Activity for this Class
+              </h2>
               <form
                 onSubmit={handleCreateActivity}
-                className="flex flex-col gap-4 max-h-[calc(80vh-100px)] overflow-y-auto"
+                className="flex flex-col gap-4"
+                style={{ maxHeight: 'calc(90vh - 72px)', overflowY: 'auto' }}
               >
                 <input
                   type="text"
@@ -197,7 +217,7 @@ const TeacherPortal = () => {
                   placeholder="Title *"
                   value={activityData.title}
                   onChange={handleActivityChange}
-                  className="border p-2 rounded"
+                  className="border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
                 <textarea
@@ -205,15 +225,15 @@ const TeacherPortal = () => {
                   placeholder="Description"
                   value={activityData.description}
                   onChange={handleActivityChange}
-                  className="border p-2 rounded"
-                  rows={3}
+                  className="border border-gray-300 p-3 rounded resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={4}
                 />
                 <input
                   type="datetime-local"
                   name="date"
                   value={activityData.date}
                   onChange={handleActivityChange}
-                  className="border p-2 rounded"
+                  className="border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
                 <input
@@ -222,7 +242,7 @@ const TeacherPortal = () => {
                   placeholder="Score"
                   value={activityData.score}
                   onChange={handleActivityChange}
-                  className="border p-2 rounded"
+                  className="border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="0"
                   step="any"
                 />
@@ -232,7 +252,7 @@ const TeacherPortal = () => {
                   placeholder="Link (URL)"
                   value={activityData.link}
                   onChange={handleActivityChange}
-                  className="border p-2 rounded"
+                  className="border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <input
                   type="text"
@@ -240,16 +260,20 @@ const TeacherPortal = () => {
                   placeholder="Attachment URL or filename"
                   value={activityData.attachment}
                   onChange={handleActivityChange}
-                  className="border p-2 rounded"
+                  className="border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
 
-                {activityError && <p className="text-red-600">{activityError}</p>}
-                {activitySuccess && <p className="text-green-600">{activitySuccess}</p>}
+                {activityError && (
+                  <p className="text-red-600 font-medium">{activityError}</p>
+                )}
+                {activitySuccess && (
+                  <p className="text-green-600 font-medium">{activitySuccess}</p>
+                )}
 
                 <button
                   type="submit"
                   disabled={activityLoading}
-                  className="bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                  className="mt-auto bg-blue-600 text-white py-3 rounded hover:bg-blue-700 disabled:opacity-50 transition"
                 >
                   {activityLoading ? 'Creating...' : 'Create Activity'}
                 </button>
