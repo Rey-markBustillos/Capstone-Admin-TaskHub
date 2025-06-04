@@ -1,4 +1,3 @@
-/* Full screen dark blue violet gradient background with falling books animation */
 .app-background {
   position: fixed;
   top: 0;
@@ -11,7 +10,19 @@
   z-index: 0;
 }
 
-.app-background .falling-book {
+.modal-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, #2e0854, #4b0082);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.falling-book {
   position: absolute;
   top: -60px;
   width: 40px;
@@ -43,37 +54,37 @@
   }
 }
 
-.app-background .falling-book:nth-child(1) {
+.falling-book:nth-child(1) {
   left: 5vw;
   animation-duration: 7s;
   animation-delay: 0s;
 }
-.app-background .falling-book:nth-child(2) {
+.falling-book:nth-child(2) {
   left: 20vw;
   animation-duration: 9s;
   animation-delay: 2s;
 }
-.app-background .falling-book:nth-child(3) {
+.falling-book:nth-child(3) {
   left: 35vw;
   animation-duration: 6s;
   animation-delay: 4s;
 }
-.app-background .falling-book:nth-child(4) {
+.falling-book:nth-child(4) {
   left: 50vw;
   animation-duration: 8s;
   animation-delay: 1s;
 }
-.app-background .falling-book:nth-child(5) {
+.falling-book:nth-child(5) {
   left: 65vw;
   animation-duration: 10s;
   animation-delay: 3s;
 }
-.app-background .falling-book:nth-child(6) {
+.falling-book:nth-child(6) {
   left: 80vw;
   animation-duration: 7.5s;
   animation-delay: 5s;
 }
-.app-background .falling-book:nth-child(7) {
+.falling-book:nth-child(7) {
   left: 90vw;
   animation-duration: 8.5s;
   animation-delay: 6s;
@@ -103,20 +114,12 @@
   left: 0 !important;
 }
 
-/* Activities modal content full width & height */
-.fixed.inset-0 > div {
-  width: 100% !important;
-  height: 100% !important;
-  max-height: 100% !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  overflow: auto !important;
-}
-
 /* Scroll inside modal content */
 .fixed.inset-0 > div {
   overflow-y: auto;
 }
+
+/* Hover effect on class box */
 .class-box:hover {
-    background-color: #86d9ff; /* Light blue color on hover */
+  background-color: #86d9ff; /* Light blue color on hover */
 }

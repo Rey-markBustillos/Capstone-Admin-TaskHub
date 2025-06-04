@@ -163,7 +163,7 @@ const StudentDashboard = ({ }) => {
               <h2 className="text-2xl font-semibold mb-4 text-gray-100">Your Enrolled Classes</h2>
               <ul className="space-y-4">
                 {classes.map((cls) => (
-                  <li key={cls._id} className="bg-gray-100 p-4 rounded shadow">
+                  <li key={cls._id} className="bg-gray-200 p-4 rounded shadow">
                     <h3 className="text-xl text-black font-bold">{cls.className}</h3>
                     <div className="flex items-center">
                       <p className="text-black mr-4"><strong>Teacher:</strong> {cls.teacherName}</p>

@@ -15,59 +15,26 @@ import StudentPortal from './Students/StudentPortal';
 import TeacherDashboard from './Teachers/Dashboard';
 import TeacherPortal from './Teachers/TeacherPortal';
 import ActivityMonitoring from './Teachers/ActivityMonitoring';
+import TeacherAnnouncement from './Teachers/TeacherAnnouncement';
+import CreateActivity from './Teachers/CreateActivity';
+import Classlist from './Teachers/Studentlist';
 
 import LandingPage from './LandingPage/LandingPage';
 import Login from './LandingPage/Login';
+import StudentList from './Teachers/Studentlist';
 
-function AppRoutes({ user, onLogout }) {
+// HOC for Protected Routes
+const ProtectedRoute = ({ user, requiredRole, children }) => {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role === 'admin') {
-    return (
-      <AdminLayout onLogout={onLogout}>
-        <Routes>
-          <Route path="/admindashboard" element={<AdminDashboard />} />
-          <Route path="/usermanagement" element={<UserManagement />} />
-          <Route path="/classmanagement" element={<ClassManagement />} />
-          <Route path="/" element={<Navigate to="/admindashboard" replace />} />
-          <Route path="*" element={<Navigate to="/admindashboard" replace />} />
-        </Routes>
-      </AdminLayout>
-    );
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/unauthorized" replace />; // Create an unauthorized page
   }
 
-  if (user.role === 'student') {
-    return (
-      <StudentLayout onLogout={onLogout}>
-        <Routes>
-          <Route path="/studentdashboard" element={<StudentDashboard />} />
-          <Route path="/studentportal" element={<StudentPortal />} />
-          <Route path="/" element={<Navigate to="/studentdashboard" replace />} />
-          <Route path="*" element={<Navigate to="/studentdashboard" replace />} />
-        </Routes>
-      </StudentLayout>
-    );
-  }
-
-  if (user.role === 'teacher') {
-    return (
-      <TeacherLayout onLogout={onLogout}>
-        <Routes>
-          <Route path="/teacherdashboard" element={<TeacherDashboard />} />
-          <Route path="/classes" element={<TeacherPortal />} />
-          <Route path="/activitymonitoring" element={<ActivityMonitoring />} />
-          <Route path="/" element={<Navigate to="/teacherdashboard" replace />} />
-          <Route path="*" element={<Navigate to="/teacherdashboard" replace />} />
-        </Routes>
-      </TeacherLayout>
-    );
-  }
-
-  // Default fallback if user role is unknown
-  return <Navigate to="/login" replace />;
-}
+  return children;
+};
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -105,11 +72,124 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage onContinue={() => navigate('/login')} />} />
       <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+      <Route path="/unauthorized" element={<h1>Unauthorized</h1>} />
 
-      {/* Protected routes */}
-      <Route path="/*" element={<AppRoutes user={user} onLogout={handleLogout} />} />
+      {/* Admin Routes */}
+      <Route
+        path="/admindashboard"
+        element={
+          <ProtectedRoute user={user} requiredRole="admin">
+            <AdminLayout onLogout={handleLogout}>
+              <AdminDashboard />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/usermanagement"
+        element={
+          <ProtectedRoute user={user} requiredRole="admin">
+            <AdminLayout onLogout={handleLogout}>
+              <UserManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/classmanagement"
+        element={
+          <ProtectedRoute user={user} requiredRole="admin">
+            <AdminLayout onLogout={handleLogout}>
+              <ClassManagement />
+            </AdminLayout>
+          </ProtectedRoute>
+        }
+      />
 
-      {/* Catch all unknown */}
+      {/* Student Routes */}
+      <Route
+        path="/studentdashboard"
+        element={
+          <ProtectedRoute user={user} requiredRole="student">
+            <StudentLayout onLogout={handleLogout}>
+              <StudentDashboard />
+            </StudentLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/studentportal"
+        element={
+          <ProtectedRoute user={user} requiredRole="student">
+            <StudentLayout onLogout={handleLogout}>
+              <StudentPortal />
+            </StudentLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Teacher Routes */}
+      <Route
+        path="/teacherdashboard"
+        element={
+          <ProtectedRoute user={user} requiredRole="teacher">
+            <TeacherLayout onLogout={handleLogout}>
+              <TeacherDashboard />
+            </TeacherLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/classes"
+        element={
+          <ProtectedRoute user={user} requiredRole="teacher">
+            <TeacherLayout onLogout={handleLogout}>
+              <TeacherPortal />
+            </TeacherLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/activitymonitoring"
+        element={
+          <ProtectedRoute user={user} requiredRole="teacher">
+            <TeacherLayout onLogout={handleLogout}>
+              <ActivityMonitoring />
+            </TeacherLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacherannouncement"
+        element={
+          <ProtectedRoute user={user} requiredRole="teacher">
+            <TeacherLayout onLogout={handleLogout}>
+              <TeacherAnnouncement />
+            </TeacherLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/createactivity"
+        element={
+          <ProtectedRoute user={user} requiredRole="teacher">
+            <TeacherLayout onLogout={handleLogout}>
+              <CreateActivity />
+            </TeacherLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/studentlist"
+        element={
+          <ProtectedRoute user={user} requiredRole="teacher">
+            <TeacherLayout onLogout={handleLogout}>
+              <StudentList />
+            </TeacherLayout>
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

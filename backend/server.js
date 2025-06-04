@@ -9,6 +9,7 @@ const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const classRoutes = require('./routes/classRoutes');
 const activityRoutes = require('./routes/activityRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ app.get('/', (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/activities', activityRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // 404 handler
 app.use((req, res, next) => {
