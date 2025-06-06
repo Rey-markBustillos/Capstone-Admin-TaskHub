@@ -31,10 +31,16 @@ app.use(
 app.use(express.json());
 
 // Ensure uploads folder exists
-const uploadDir = path.join(__dirname, 'uploads', 'activities');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+const uploadDirActivities = path.join(__dirname, 'uploads', 'activities');
+if (!fs.existsSync(uploadDirActivities)) {
+  fs.mkdirSync(uploadDirActivities, { recursive: true });
   console.log('Created uploads/activities directory');
+}
+
+const uploadDirSubmissions = path.join(__dirname, 'uploads', 'submissions');
+if (!fs.existsSync(uploadDirSubmissions)) {
+  fs.mkdirSync(uploadDirSubmissions, { recursive: true });
+  console.log('Created uploads/submissions directory');
 }
 
 // Serve static uploads folder
@@ -51,12 +57,12 @@ app.use('/api/classes', classRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/announcements', announcementRoutes);
 
-// 404 handler
+// 404 handler (keep this AFTER all routes)
 app.use((req, res, next) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Global error handler
+// Global error handler (keep this LAST)
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({

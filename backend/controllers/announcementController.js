@@ -23,10 +23,16 @@ exports.createAnnouncement = async (req, res) => {
   }
 };
 
-// Get all announcements, optionally sorted by datePosted desc
+// Get all announcements, optionally filtered by postedBy and sorted by datePosted desc
 exports.getAllAnnouncements = async (req, res) => {
   try {
-    const announcements = await Announcement.find()
+    const { postedBy } = req.query;
+    let filter = {};
+    if (postedBy && mongoose.Types.ObjectId.isValid(postedBy)) {
+      filter.postedBy = postedBy;
+    }
+
+    const announcements = await Announcement.find(filter)
       .populate('postedBy', 'name email')
       .sort({ datePosted: -1 });
 

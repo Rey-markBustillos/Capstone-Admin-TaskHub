@@ -7,7 +7,7 @@ const path = require('path');
 // Multer storage config
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './uploads/activities'); // siguraduhing existing at writable ito
+    cb(null, './uploads/activities');
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);
@@ -35,17 +35,40 @@ const upload = multer({
   fileFilter,
 });
 
-// CRUD routes
-router.post('/', activityController.createActivity);
-router.get('/', activityController.getActivities);
-router.get('/:id', activityController.getActivityById);
-router.put('/:id', activityController.updateActivity);
-router.delete('/:id', activityController.deleteActivity);
+// Error handling middleware for Multer
+const multerErrorHandler = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    return res.status(400).json({ message: 'File upload error: ' + err.message });
+  } else if (err) {
+    return res.status(400).json({ message: 'File processing error: ' + err.message });
+  }
+  next();
+};
 
-// Upload route for activity attachment with validation
-router.post('/upload', upload.single('file'), activityController.uploadActivityAttachment);
+// CRUD routes
+router.post('/', upload.single('attachment'), activityController.createActivity);
+router.get('/', activityController.getActivities);
+
+// --- Place all /submissions and /submit routes BEFORE any /:id routes ---
+
+// Route for fetching student submissions for a class
+router.get('/submissions', activityController.getStudentSubmissions);
 
 // Route for teacher's activity submissions
 router.get('/submissions/:teacherId', activityController.getActivitySubmissionsByTeacher);
+
+// Route for updating submission score by activity submission ID
+router.put('/submissions/score/:submissionId', activityController.updateActivityScore);
+
+// Route for submitting activity (student submission)
+router.post('/submit', upload.single('attachment'), activityController.submitActivity);
+
+// --- Parameterized routes at the end ---
+router.get('/:id', activityController.getActivityById);
+router.put('/:id', upload.single('attachment'), activityController.updateActivity);
+router.delete('/:id', activityController.deleteActivity);
+
+// Apply the error handling middleware
+router.use(multerErrorHandler);
 
 module.exports = router;

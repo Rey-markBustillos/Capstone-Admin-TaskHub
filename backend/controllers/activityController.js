@@ -1,11 +1,19 @@
 const Activity = require('../models/Activity');
 const Class = require('../models/Class');
+const Submission = require('../models/Submission');
 const mongoose = require('mongoose');
 
 // Create activity
 exports.createActivity = async (req, res) => {
   try {
-    const { title, description, date, score, link, attachment, createdBy, classId } = req.body;
+    const { title, description, date, score, link, createdBy, classId } = req.body;
+    let attachmentPath = null;
+
+    if (req.file) {
+      attachmentPath = `/uploads/activities/${req.file.filename}`;
+    } else if (req.body.attachment) {
+      attachmentPath = req.body.attachment;
+    }
 
     if (!title || !date || !classId) {
       return res.status(400).json({ message: 'Title, date, and classId are required.' });
@@ -17,7 +25,7 @@ exports.createActivity = async (req, res) => {
       date,
       score,
       link,
-      attachment,
+      attachment: attachmentPath,
       createdBy,
       classId,
     });
@@ -74,7 +82,12 @@ exports.updateActivity = async (req, res) => {
       return res.status(400).json({ message: 'Invalid activity ID' });
     }
 
-    const updated = await Activity.findByIdAndUpdate(id, req.body, {
+    let updateData = { ...req.body };
+    if (req.file) {
+      updateData.attachment = `/uploads/activities/${req.file.filename}`;
+    }
+
+    const updated = await Activity.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -109,7 +122,7 @@ exports.deleteActivity = async (req, res) => {
   }
 };
 
-// Upload activity attachment
+// Upload activity attachment (optional)
 exports.uploadActivityAttachment = async (req, res) => {
   try {
     const { classId, createdBy, title, date } = req.body;
@@ -119,56 +132,153 @@ exports.uploadActivityAttachment = async (req, res) => {
     }
 
     if (!classId || !title || !date) {
-      return res.status(400).json({ message: 'classId, title, and date are required' });
+      return res.status(400).json({ message: 'classId, title, and date are required for standalone upload' });
     }
 
-    // Save the uploaded file path as relative URL
     const attachmentPath = `/uploads/activities/${req.file.filename}`;
 
     const newActivity = new Activity({
-      title,
-      date,
+      title: title || 'Uploaded File Activity',
+      date: date || new Date(),
       attachment: attachmentPath,
       classId,
       createdBy,
-      description: 'Uploaded attachment',
+      description: req.body.description || 'Uploaded attachment',
+      score: req.body.score || 0,
     });
 
     const saved = await newActivity.save();
-
-    res.status(201).json({ message: 'Upload successful', activity: saved });
+    res.status(201).json({ message: 'Upload successful, new activity created', activity: saved });
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).json({ message: 'Upload failed', error: error.message });
   }
 };
 
-// **New controller method: Activity Submissions Monitoring**
+// Activity Submissions Monitoring
 exports.getActivitySubmissionsByTeacher = async (req, res) => {
   try {
     const teacherId = req.params.teacherId;
+    const classId = req.query.classId;
+
     if (!teacherId) {
       return res.status(400).json({ message: 'Teacher ID is required' });
     }
-
-    // Find all classes for the teacher
-    const classes = await Class.find({ teacherId }).select('_id className');
-
-    if (!classes.length) {
-      return res.json({ submissions: [] });
+    if (!mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({ message: 'Invalid Teacher ID format' });
+    }
+    if (!classId) {
+      return res.status(400).json({ message: 'Class ID is required' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ message: 'Invalid Class ID format' });
     }
 
-    const classIds = classes.map(c => c._id);
-
-    // Find activities submitted in those classes, populate user and class info
-    const submissions = await Activity.find({ classId: { $in: classIds } })
-      .populate('createdBy', 'name email')
-      .populate('classId', 'className')
-      .sort({ date: -1 });
+    const submissions = await Submission.find({
+      activityId: { $in: await Activity.find({ classId: classId }).distinct('_id') },
+    })
+      .populate({
+        path: 'studentId',
+        select: 'name email role',
+        model: 'User',
+      })
+      .populate({
+        path: 'activityId',
+        select: 'title date',
+        model: 'Activity',
+      })
+      .sort({ submissionDate: -1 });
 
     res.json({ submissions });
   } catch (error) {
     console.error('Error fetching activity submissions:', error);
+    res.status(500).json({ message: 'Error fetching submissions', error: error.message });
+  }
+};
+
+// Update activity score
+exports.updateActivityScore = async (req, res) => {
+  try {
+    const { submissionId } = req.params;
+    const { score } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(submissionId)) {
+      return res.status(400).json({ message: 'Invalid Submission ID format' });
+    }
+    if (score === undefined || score === null) {
+      return res.status(400).json({ message: 'Score is required' });
+    }
+    const scoreNumber = Number(score);
+    if (isNaN(scoreNumber)) {
+      return res.status(400).json({ message: 'Score must be a number' });
+    }
+    if (scoreNumber < 0 || scoreNumber > 100) {
+      return res.status(400).json({ message: 'Score must be between 0 and 100' });
+    }
+
+    const updatedSubmission = await Submission.findByIdAndUpdate(
+      submissionId,
+      { score: scoreNumber },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedSubmission) {
+      return res.status(404).json({ message: 'Submission not found' });
+    }
+
+    res.json(updatedSubmission);
+  } catch (error) {
+    console.error('Error updating submission score:', error);
+    res.status(500).json({ message: 'Error updating submission score', error: error.message });
+  }
+};
+
+// Submit Activity
+exports.submitActivity = async (req, res) => {
+  try {
+    const { activityId, studentId } = req.body;
+    let attachmentPath = null;
+
+    if (req.file) {
+      attachmentPath = `/uploads/submissions/${req.file.filename}`;
+    }
+
+    if (!activityId || !studentId) {
+      return res.status(400).json({ message: 'Activity ID and Student ID are required' });
+    }
+
+    const submission = new Submission({
+      activityId,
+      studentId,
+      attachment: attachmentPath,
+    });
+
+    const savedSubmission = await submission.save();
+    res.status(201).json(savedSubmission);
+  } catch (error) {
+    console.error('Error submitting activity:', error);
+    res.status(500).json({ message: 'Error submitting activity', error: error.message });
+  }
+};
+
+// GET /api/submissions?classId=...&studentId=...
+exports.getStudentSubmissions = async (req, res) => {
+  try {
+    const { classId, studentId } = req.query;
+    if (!classId || !studentId) {
+      return res.status(400).json({ message: 'classId and studentId are required' });
+    }
+
+    const activities = await Activity.find({ classId }).select('_id');
+    const activityIds = activities.map(a => a._id);
+
+    const submissions = await Submission.find({
+      activityId: { $in: activityIds },
+      studentId,
+    });
+
+    res.json(submissions);
+  } catch (error) {
     res.status(500).json({ message: 'Error fetching submissions', error: error.message });
   }
 };

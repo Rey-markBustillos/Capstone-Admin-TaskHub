@@ -1,0 +1,71 @@
+/*
+.student-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+*/
+
+.student-title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 25px; /* Slightly increased margin */
+  text-align: center;
+  color: #2c3e50; /* Darker, more modern title color */
+}
+
+.student-table {
+  width: 100%; /* This makes the table take the full width of its parent */
+  border-collapse: collapse;
+  border-spacing: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.student-table th,
+.student-table td {
+  padding: 16px 20px;
+  text-align: left;
+}
+
+.student-table th {
+  background-color: #1b006c;
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.student-table tbody tr:nth-of-type(even) {
+  background-color: #f8f9fa;
+}
+
+.student-table tbody tr:nth-of-type(odd) {
+  background-color: #ffffff;
+}
+
+.student-table tbody tr:hover {
+  background-color: #e9ecef;
+  color: #000;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.student-table th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.student-table th:last-child {
+  border-top-right-radius: 8px;
+}
+
+/*
+.student-table td, .student-table th {
+  border-right: 1px solid #ecf0f1;
+}
+.student-table th:last-child, .student-table td:last-child {
+  border-right: none;
+}
+*/

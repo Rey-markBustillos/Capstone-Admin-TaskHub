@@ -1,0 +1,63 @@
+/* Styling for Teacher Dashboard */
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+}
+
+.main-content {
+  margin-left: 250px; /* Adjust this to your sidebar width */
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Stats Cards */
+.card {
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive grid for cards */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Activity List Styling */
+.space-y-6 {
+  margin-bottom: 1.5rem;
+}
+
+.bg-white {
+  background-color: white;
+}
+
+.text-gray-800 {
+  color: #333;
+}
+
+.text-gray-600 {
+  color: #777;
+}
+
+.text-indigo-800 {
+  color: #5c6bc0;
+}
+
+.transition-transform {
+  transition: transform 0.3s ease-in-out;
+}
