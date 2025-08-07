@@ -150,6 +150,7 @@ const TeacherPortal = () => {
             aria-modal="true"
             aria-labelledby="modal-title"
           >
+
             {/* Modal Header */}
             <h2 id="modal-title" className="text-2xl font-bold text-gray-800 mb-4">
               {selectedClass.className}

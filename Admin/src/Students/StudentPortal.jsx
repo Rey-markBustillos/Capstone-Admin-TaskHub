@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Sidebar from '../components/Sidebar';
-import '../Css/StudentPortal.css';
+import { FaUserTie, FaMapMarkerAlt, FaClock, FaExternalLinkAlt, FaPaperclip } from 'react-icons/fa';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -19,35 +18,23 @@ const StudentPortal = () => {
   const [uploadError, setUploadError] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
   const [submissions, setSubmissions] = useState([]);
+
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const studentId = user && user.role === 'student' ? user._id : null;
-  const role = user?.role || 'student';
-  const [activeClass, setActiveClass] = useState(null);
-
-  useEffect(() => {
-    if (selectedClass || selectedActivity) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [selectedClass, selectedActivity]);
 
   useEffect(() => {
     if (!studentId) {
-      setError('Student not logged in');
+      setError('Student not logged in. Please log in again.');
       setLoading(false);
       return;
     }
     const fetchClasses = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/classes?studentId=${studentId}`);
-        setClasses(res.data);
+        setClasses(res.data || []);
       } catch (err) {
-        setError(err.response?.data?.message || err.message);
+        setError(err.response?.data?.message || 'Failed to fetch classes.');
       } finally {
         setLoading(false);
       }
@@ -55,12 +42,10 @@ const StudentPortal = () => {
     fetchClasses();
   }, [studentId]);
 
-  // Fetch activities and submissions for the selected class
   useEffect(() => {
     if (!selectedClass) {
       setActivities([]);
       setSubmissions([]);
-      setActivitiesError(null);
       return;
     }
 
@@ -75,7 +60,7 @@ const StudentPortal = () => {
         setActivities(activitiesRes.data);
         setSubmissions(submissionsRes.data);
       } catch (err) {
-        setActivitiesError(err.response?.data?.message || err.message);
+        setActivitiesError(err.response?.data?.message || 'Failed to fetch activities.');
       } finally {
         setActivitiesLoading(false);
       }
@@ -91,15 +76,8 @@ const StudentPortal = () => {
 
   const handleFileSubmit = async (e) => {
     e.preventDefault();
-    setUploadError('');
-    setUploadSuccess('');
-
-    if (!file) {
-      setUploadError('Please select a file to upload.');
-      return;
-    }
-    if (!selectedActivity) {
-      setUploadError('No activity selected.');
+    if (!file || !selectedActivity || !studentId) {
+      setUploadError('File, activity, or student is missing.');
       return;
     }
 
@@ -109,322 +87,182 @@ const StudentPortal = () => {
     formData.append('studentId', studentId);
 
     setUploading(true);
+    setUploadError('');
+    setUploadSuccess('');
     try {
       await axios.post(`${API_BASE_URL}/activities/submit`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setUploadSuccess('File uploaded successfully!');
       setFile(null);
-
-      // Refetch activities and submissions after submission
-      const [activitiesRes, submissionsRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/activities?classId=${selectedClass._id}`),
-        axios.get(`${API_BASE_URL}/activities/submissions?classId=${selectedClass._id}&studentId=${studentId}`)
-      ]);
-      setActivities(activitiesRes.data);
+      // Refetch submissions to update status and close modal
+      const submissionsRes = await axios.get(`${API_BASE_URL}/activities/submissions?classId=${selectedClass._id}&studentId=${studentId}`);
       setSubmissions(submissionsRes.data);
-
       setSelectedActivity(null);
     } catch (err) {
-      setUploadError(err.response?.data?.message || err.message || 'Upload failed');
+      setUploadError(err.response?.data?.message || 'Upload failed.');
     } finally {
       setUploading(false);
     }
   };
 
-  const FallingBooksAnimation = () => (
-    <>
-      <div className="falling-book" key="book1" style={{ left: '5vw', animationDuration: '7s', animationDelay: '0s' }}>📚</div>
-      <div className="falling-book" key="book2" style={{ left: '20vw', animationDuration: '9s', animationDelay: '2s' }}>📚</div>
-      <div className="falling-book" key="book3" style={{ left: '35vw', animationDuration: '6s', animationDelay: '4s' }}>📚</div>
-      <div className="falling-book" key="book4" style={{ left: '50vw', animationDuration: '8s', animationDelay: '1s' }}>📚</div>
-      <div className="falling-book" key="book5" style={{ left: '65vw', animationDuration: '10s', animationDelay: '3s' }}>📚</div>
-      <div className="falling-book" key="book6" style={{ left: '80vw', animationDuration: '7.5s', animationDelay: '5s' }}>📚</div>
-      <div className="falling-book" key="book7" style={{ left: '90vw', animationDuration: '8.5s', animationDelay: '6s' }}>📚</div>
-    </>
-  );
-
-  // Helper: get submission for activity
   const getSubmissionForActivity = (activityId) => {
-    const submission = submissions.find((sub) => sub.activityId === activityId || sub.activityId?._id === activityId);
-    return submission;
+    return submissions.find((sub) => sub.activityId === activityId || sub.activityId?._id === activityId);
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-100 dark:bg-gray-900 p-4">
+        <p className="text-xl text-red-500 text-center">Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <>
-      {loading ? (
-        <div className="fixed inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-[9999]">
-          <div className="app-background" aria-hidden="true">
-            <FallingBooksAnimation />
-          </div>
-          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
-        </div>
-      ) : error ? (
-        <p className="text-red-500" aria-live="polite">Error: {error}</p>
-      ) : classes.length === 0 ? (
-        <p className="text-gray-700" aria-live="polite">You are not enrolled in any classes.</p>
-      ) : (
-        <>
-          <div className="app-background" aria-hidden="true">
-            <FallingBooksAnimation />
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-8">
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 pt-6">
+            <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">Your Enrolled Classes</h1>
+            <hr className="mt-3 border-t-2 border-gray-300 dark:border-gray-600" />
           </div>
 
-          <div className="flex">
-            <Sidebar
-              role={role}
-              onLogout={() => {
-                localStorage.removeItem('user');
-                window.location.reload();
-              }}
-            />
-
-            <main
-              className="container mx-auto py-6 px-4 md:px-6 lg:px-8"
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                marginLeft: '0',
-                minHeight: '100vh',
-                position: 'relative',
-                zIndex: 10,
-              }}
-            >
-              <div className="w-full relative z-10">
-                <h1 className="text-3xl font-semibold text-gray-100 mb-6">Your Enrolled Classes</h1>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {classes.map((cls) => (
-                    <div
-                      key={cls._id}
-                      className={`bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition duration-300 ease-in-out ${activeClass === cls._id ? 'bg-lightblue' : ''} class-box`}
-                      onClick={() => {
-                        setSelectedClass(cls);
-                        setActiveClass(cls._id);
-                      }}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          setSelectedClass(cls);
-                          setActiveClass(cls._id);
-                        }
-                      }}
-                      style={{
-                        minHeight: '220px',
-                        width: '100%',
-                        border: '1px solid #e2e8f0',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <div className="p-4">
-                        <h2 className="text-xl font-semibold text-gray-800 mb-2">{cls.className}</h2>
-                        <p className="text-gray-600">
-                          <strong>Teacher:</strong> {cls.teacherName}
-                        </p>
-                        <p className="text-gray-600">
-                          <strong>Room:</strong> {cls.roomNumber}
-                        </p>
-                        <p className="text-gray-600">
-                          <strong>Time:</strong> {cls.time ? new Date(cls.time).toLocaleString() : 'TBA'}
-                        </p>
-                      </div>
+          {classes.length === 0 ? (
+            <div className="text-center py-10 mt-6">
+              <p className="text-xl text-gray-600 dark:text-gray-400">You are not enrolled in any classes.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {classes.map((cls) => (
+                <div
+                  key={cls._id}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden"
+                  onClick={() => setSelectedClass(cls)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSelectedClass(cls)}
+                >
+                  <div className="p-6 flex-grow">
+                    <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 truncate" title={cls.className}>
+                      {cls.className}
+                    </h2>
+                    <div className="space-y-3 text-sm mt-4">
+                      <p className="text-gray-700 dark:text-gray-300 flex items-center">
+                        <FaUserTie size={16} className="mr-3 text-indigo-500 dark:text-indigo-400" />
+                        <strong>Teacher:</strong>&nbsp;{cls.teacherName}
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300 flex items-center">
+                        <FaClock size={16} className="mr-3 text-indigo-500 dark:text-indigo-400" />
+                        <strong>Time:</strong>&nbsp;{cls.time ? new Date(cls.time).toLocaleString() : 'TBA'}
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300 flex items-center">
+                        <FaMapMarkerAlt size={16} className="mr-3 text-indigo-500 dark:text-indigo-400" />
+                        <strong>Room:</strong>&nbsp;{cls.roomNumber || 'N/A'}
+                      </p>
                     </div>
-                  ))}
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-xs text-indigo-600 dark:text-indigo-300 font-semibold text-center">
+                      View Activities &rarr;
+                    </p>
+                  </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
 
-                {/* Activities Modal */}
-                {selectedClass && !selectedActivity && (
-                  <div
-                    className="fixed inset-0 flex items-center justify-center z-50"
-                    onClick={() => setSelectedClass(null)}
-                    style={{ overflow: 'hidden', position: 'relative' }}
-                  >
-                    <div aria-hidden="true" className="modal-background">
-                      <FallingBooksAnimation />
-                    </div>
-
-                    <div
-                      className="bg-gray-100 rounded-lg shadow-lg max-w-7xl w-full p-6 max-h-[85vh] overflow-auto relative z-10"
-                      onClick={(e) => e.stopPropagation()}
-                      role="dialog"
-                      aria-modal="true"
-                      aria-labelledby="activities-modal-title"
-                    >
-                      <h2 id="activities-modal-title" className="text-xl font-bold mb-4 text-indigo-900">
-                        Activities for {selectedClass.className}
-                      </h2>
-
-                      {activitiesLoading && <p className="text-indigo-900">Loading activities...</p>}
-                      {activitiesError && <p className="text-red-600">Error: {activitiesError}</p>}
-                      {!activitiesLoading && activities.length === 0 && (
-                        <p className="text-indigo-900">No activities available for this class.</p>
-                      )}
-
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full table-auto divide-y divide-gray-200 text-sm">
-                          <thead className="bg-indigo-100">
-                            <tr>
-                              <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
-                                Title
-                              </th>
-                              <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
-                                Status
-                              </th>
-                              <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
-                                Date
-                              </th>
-                              <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
-                                Score
-                              </th>
-                              <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
-                                Link
-                              </th>
-                              <th className="px-6 py-4 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
-                                Attachment
-                              </th>
+      {/* Activities Modal */}
+      {selectedClass && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={() => setSelectedClass(null)}>
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-5xl p-6 md:p-8 overflow-hidden relative max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="activities-modal-title"
+          >
+            <h2 id="activities-modal-title" className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
+              Activities for {selectedClass.className}
+            </h2>
+            <div className="overflow-y-auto flex-grow">
+              {activitiesLoading ? <p className="text-center dark:text-gray-300">Loading activities...</p> :
+               activitiesError ? <p className="text-red-500 text-center">Error: {activitiesError}</p> :
+               activities.length === 0 ? <p className="text-center dark:text-gray-300">No activities available for this class.</p> :
+                (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full table-auto divide-y divide-gray-200 dark:divide-gray-700 text-sm">
+                      <thead className="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                          {['Title', 'Status', 'Due Date', 'Score', 'Link', 'My Submission'].map(header => (
+                            <th key={header} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">{header}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {activities.map((activity) => {
+                          const submission = getSubmissionForActivity(activity._id);
+                          const hasSubmitted = !!submission;
+                          const isPastDue = new Date() > new Date(activity.date);
+                          let statusText = 'Pending';
+                          let statusStyle = 'bg-gray-200 text-gray-800';
+                          if (hasSubmitted) {
+                            statusText = new Date(submission.submissionDate) > new Date(activity.date) ? 'Late' : 'Submitted';
+                            statusStyle = statusText === 'Late' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800';
+                          } else if (isPastDue) {
+                            statusText = 'Missing';
+                            statusStyle = 'bg-red-100 text-red-800';
+                          }
+                          return (
+                            <tr key={activity._id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${!hasSubmitted && 'cursor-pointer'}`} onClick={() => !hasSubmitted && setSelectedActivity(activity)}>
+                              <td className="px-4 py-4 font-medium text-gray-900 dark:text-white">{activity.title}</td>
+                              <td className="px-4 py-4"><span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${statusStyle}`}>{statusText}</span></td>
+                              <td className="px-4 py-4 text-gray-700 dark:text-gray-300">{activity.date ? new Date(activity.date).toLocaleString() : 'N/A'}</td>
+                              <td className="px-4 py-4 text-gray-700 dark:text-gray-300">{submission?.score ?? '-'}</td>
+                              <td className="px-4 py-4">{activity.link ? <a href={activity.link} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline"><FaExternalLinkAlt /></a> : '-'}</td>
+                              <td className="px-4 py-4">{submission?.attachment ? <a href={`http://localhost:5000${submission.attachment}`} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline"><FaPaperclip /></a> : '-'}</td>
                             </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {activities.map((activity) => {
-                              const now = new Date();
-                              const dueDate = new Date(activity.date);
-                              const submission = getSubmissionForActivity(activity._id);
-                              const hasSubmitted = !!submission;
-
-                              let statusText = 'Pending';
-                              let statusStyle = 'bg-gray-200 text-gray-700';
-                              let studentScore = '-';
-
-                              if (submission) {
-                                const submittedAt = new Date(submission.submissionDate);
-                                if (submittedAt > dueDate) {
-                                  statusText = 'Late';
-                                  statusStyle = 'bg-yellow-100 text-yellow-800';
-                                } else {
-                                  statusText = 'Submitted';
-                                  statusStyle = 'bg-green-100 text-green-800';
-                                }
-                                // Display student's score if available
-                                studentScore = submission.score !== undefined ? submission.score : '-';
-                              } else if (now > dueDate) {
-                                statusText = 'Missing';
-                                statusStyle = 'bg-red-100 text-red-800';
-                              }
-
-                              return (
-                                <tr
-                                  key={activity._id}
-                                  className="hover:bg-gray-50 focus-within:bg-gray-50"
-                                  tabIndex={0}
-                                  role="button"
-                                  style={{ cursor: hasSubmitted ? 'default' : 'pointer' }}
-                                  onClick={() => {
-                                    if (!hasSubmitted) {
-                                      setSelectedActivity(activity);
-                                    }
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if ((e.key === 'Enter' || e.key === ' ') && !hasSubmitted) {
-                                      setSelectedActivity(activity);
-                                    }
-                                  }}
-                                >
-                                  <td className="px-6 py-4 font-medium text-gray-900">{activity.title}</td>
-                                  <td className="px-6 py-4">
-                                    <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${statusStyle}`}>
-                                      {statusText}
-                                    </span>
-                                  </td>
-                                  <td className="px-6 py-4 text-gray-700">{activity.date ? new Date(activity.date).toLocaleString() : 'N/A'}</td>
-                                  <td className="px-6 py-4 text-gray-700">{studentScore}</td>
-                                  <td className="px-6 py-4 text-blue-600 underline">
-                                    {activity.link ? <a href={activity.link} target="_blank" rel="noreferrer">View</a> : '-'}
-                                  </td>
-                                  <td className="px-6 py-4 text-gray-700">
-                                    {submission && submission.attachment ? (
-                                      <a href={`http://localhost:5000${submission.attachment}`} target="_blank" rel="noreferrer">View</a>
-                                    ) : '-'}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      <button
-                        className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-                        onClick={() => setSelectedClass(null)}
-                      >
-                        Close
-                      </button>
-                    </div>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 )}
-
-                {/* Submit Attachment Modal */}
-                {selectedActivity && !getSubmissionForActivity(selectedActivity._id) && (
-                  <div
-                    className="fixed inset-0 flex items-center justify-center z-50"
-                    onClick={() => setSelectedActivity(null)}
-                    style={{ overflow: 'hidden', position: 'relative' }}
-                  >
-                    <div aria-hidden="true" className="modal-background">
-                      <FallingBooksAnimation />
-                    </div>
-
-                    <div
-                      className="bg-gray-100 rounded-lg shadow-lg max-w-3xl w-full p-6 max-h-[85vh] overflow-auto relative z-10"
-                      onClick={(e) => e.stopPropagation()}
-                      role="dialog"
-                      aria-modal="true"
-                      aria-labelledby="activity-detail-modal-title"
-                    >
-                      <h2 id="activity-detail-modal-title" className="text-2xl font-bold mb-4 text-indigo-900">
-                        Submit Attachment for: {selectedActivity.title}
-                      </h2>
-
-                      <p className="mb-4 text-indigo-900"><strong>Description:</strong> {selectedActivity.description || 'No description'}</p>
-                      <p className="mb-4 text-indigo-900"><strong>Date:</strong> {selectedActivity.date ? new Date(selectedActivity.date).toLocaleString() : 'N/A'}</p>
-
-                      <form onSubmit={handleFileSubmit} className="flex flex-col gap-4">
-                        <input
-                          type="file"
-                          onChange={handleFileChange}
-                          accept="*/*"
-                          className="border p-2 rounded"
-                        />
-
-                        {uploadError && <p className="text-red-600">{uploadError}</p>}
-                        {uploadSuccess && <p className="text-green-600">{uploadSuccess}</p>}
-
-                        <div className="flex justify-end gap-4">
-                          <button
-                            type="submit"
-                            disabled={uploading}
-                            className="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 disabled:opacity-50"
-                          >
-                            {uploading ? 'Uploading...' : 'Upload'}
-                          </button>
-
-                          <button
-                            type="button"
-                            className="bg-gray-300 py-2 px-4 rounded hover:bg-gray-400"
-                            onClick={() => setSelectedActivity(null)}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </main>
+            </div>
+            <button className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white" onClick={() => setSelectedClass(null)}>
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
           </div>
-        </>
+        </div>
+      )}
+
+      {/* Submit Attachment Modal */}
+      {selectedActivity && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4" onClick={() => setSelectedActivity(null)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6 md:p-8 relative" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Submit for: {selectedActivity.title}</h2>
+            <p className="mb-2 text-gray-600 dark:text-gray-300"><strong>Description:</strong> {selectedActivity.description || 'No description'}</p>
+            <p className="mb-4 text-gray-600 dark:text-gray-300"><strong>Due:</strong> {selectedActivity.date ? new Date(selectedActivity.date).toLocaleString() : 'N/A'}</p>
+            <form onSubmit={handleFileSubmit} className="flex flex-col gap-4">
+              <input type="file" onChange={handleFileChange} className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:text-gray-300" />
+              {uploadError && <p className="text-red-500 text-sm">{uploadError}</p>}
+              {uploadSuccess && <p className="text-green-500 text-sm">{uploadSuccess}</p>}
+              <div className="flex justify-end gap-4 mt-4">
+                <button type="button" className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500" onClick={() => setSelectedActivity(null)}>Cancel</button>
+                <button type="submit" disabled={uploading || !file} className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">{uploading ? 'Uploading...' : 'Upload'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </>
   );

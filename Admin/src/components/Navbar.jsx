@@ -10,7 +10,7 @@ const Navbar = ({ selectedClass }) => {
   return (
     <>
      
-      {/* Top Class Info Bar */}
+      {/* Top Class Info Bar (This will likely still be full-width based on its parent container) */}
       {selectedClass && (
         <div className="bg-blue-600 text-white px-6 py-2 text-sm flex justify-between items-center">
           <div><strong>Class:</strong> {selectedClass.className}</div>
@@ -20,10 +20,12 @@ const Navbar = ({ selectedClass }) => {
       )}
 
       {/* Main Navbar */}
-      <nav className="bg-gray-800 text-white p-4 flex justify-between items-center sticky top-0 z-50 w-full">
-        <div className="flex items-center">
+      {/* Removed w-full, changed to justify-start. The navbar will now be as wide as its content and aligned left. */}
+      <nav className="bg-gray-800 text-white p-4 flex justify-start items-center sticky top-0 z-50">
+        <div className="flex items-center"> {/* This container holds all nav items */}
           {/* Desktop Links */}
-          <ul className="hidden md:flex items-center space-x-60 ml-20">
+          {/* Removed ml-20, adjusted space-x for closer items */}
+          <ul className="hidden md:flex items-center space-x-60 ml-20"> {/* Adjusted space-x, e.g., to space-x-8 */}
             <li>
               <Link to="/teacherannouncement" className="hover:text-gray-300 flex items-center">
                 <FaBullhorn className="mr-2" /> Announcement
@@ -47,9 +49,10 @@ const Navbar = ({ selectedClass }) => {
           </ul>
 
           {/* Hamburger icon */}
+          {/* Removed ml-4. On mobile, it will be at the start of the navbar. */}
           <button
             onClick={handleHamburgerClick}
-            className="md:hidden flex flex-col justify-between w-6 h-4 bg-transparent border-none cursor-pointer ml-4"
+            className="md:hidden flex flex-col justify-between w-6 h-4 bg-transparent border-none cursor-pointer"
             aria-label="Toggle menu"
           >
             <div className={`h-0.5 w-full bg-white rounded transition-all duration-300 ${open ? 'rotate-45 translate-y-1.5' : ''}`}></div>
@@ -59,8 +62,9 @@ const Navbar = ({ selectedClass }) => {
         </div>
 
         {/* Mobile Dropdown Menu */}
+        {/* Changed right-0 to left-0 to align with the left-positioned navbar */}
         {open && (
-          <div className="md:hidden absolute top-full right-0 bg-gray-800 w-60 p-4 rounded-md flex flex-col items-start space-y-2">
+          <div className="md:hidden absolute top-full left-0 bg-gray-800 w-60 p-4 rounded-md flex flex-col items-start space-y-2 z-50"> {/* Ensure z-index if needed */}
             <Link to="/teacherannouncement" className="hover:text-gray-300 py-3 px-4 flex items-center w-full" onClick={() => setOpen(false)}>
               <FaBullhorn className="mr-3" /> Announcement
             </Link>
