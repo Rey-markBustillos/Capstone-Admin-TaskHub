@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaClock, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
-import Navbar from '../components/Navbar';
-import TeacherAnnouncement from './TeacherAnnouncement';
 import { useNavigate } from 'react-router-dom';
 
 const TeacherPortal = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedClass, setSelectedClass] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
@@ -26,7 +23,7 @@ const TeacherPortal = () => {
 
     const fetchClasses = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/classes?teacherId=${teacherId}`);
+        const res = await axios.get(`http://localhost:5000/api/class?teacherId=${teacherId}`);
         setClasses(res.data);
       } catch (err) {
         setError(err.response?.data?.message || err.message);
@@ -38,29 +35,37 @@ const TeacherPortal = () => {
     fetchClasses();
   }, [teacherId]);
 
-  const handleCloseModal = () => {
-    setSelectedClass(null);
-  };
-
+  // Updated function to navigate to the correct dynamic route
   const handleClassClick = (cls) => {
-    setSelectedClass(cls);
-    navigate('/teacherannouncement');
+    navigate(`/class/${cls._id}/announcements`);
   };
 
   const filteredClasses = classes.filter((cls) =>
     cls.className.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return <p>Loading your classes...</p>;
-  if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
-  if (classes.length === 0) return <p>You have no assigned classes.</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>Loading your classes...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p style={{ color: 'red' }}>Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8 pt-6">
-          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">All Subjects</h1>
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">My Subjects</h1>
           <hr className="mt-3 border-t-2 border-gray-300 dark:border-gray-600" />
         </div>
 
@@ -97,7 +102,7 @@ const TeacherPortal = () => {
                       </h2>
                     </div>
                     <img
-                      src={user?.profilePicture || "/teacher-avatar.png"} // Use user's profile picture if available
+                      src={user?.profilePicture || "/teacher-avatar.png"}
                       alt={user?.name || "Teacher"}
                       className="w-12 h-12 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-600 flex-shrink-0"
                     />
@@ -120,16 +125,16 @@ const TeacherPortal = () => {
                     </p>
                   </div>
                 </div>
-                <div className="bg-gray-100 dark:bg-blue-400/70 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="bg-gray-100 dark:bg-indigo-500/20 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
                   <p className="text-xs text-indigo-600 dark:text-indigo-300 font-semibold text-center">
-                    View Details &rarr;
+                    View Class &rarr;
                   </p>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-10 mt-6">
+          <div className="text-center py-10 mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-400 dark:text-indigo-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
             </svg>
@@ -137,43 +142,6 @@ const TeacherPortal = () => {
           </div>
         )}
       </div>
-
-      {selectedClass && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-60 flex items-center z-50"
-          onClick={handleCloseModal}
-        >
-          <div
-            className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-auto p-8 overflow-hidden relative"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-          >
-
-            {/* Modal Header */}
-            <h2 id="modal-title" className="text-2xl font-bold text-gray-800 mb-4">
-              {selectedClass.className}
-            </h2>
-            <Navbar selectedClass={selectedClass} />
-            {/* Navbar Placed Inside the Modal */}
-            <Navbar />
-
-            {/* TeacherAnnouncement Component */}
-            <TeacherAnnouncement selectedClass={selectedClass} />
-
-            {/* Back Button */}
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-              aria-label="Close modal"
-              type="button"
-            >
-              &#8592; Back
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,13 +1,34 @@
 const mongoose = require('mongoose');
 
-const ClassSchema = new mongoose.Schema({
-  teacherId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  teacherName: { type: String, required: true },
-  className: { type: String, required: true },
-  time: { type: Date },
-  roomNumber: { type: String },
-  profilePic: { type: String },
-  students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+const classSchema = new mongoose.Schema({
+  className: {
+    type: String,
+    required: [true, 'Class name is required'],
+    trim: true,
+    unique: true, // Tinitiyak na walang magkakaparehong pangalan ng klase
+  },
+  teacher: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Mahalaga: Dapat tumugma sa pangalan ng iyong User model
+    required: [true, 'Teacher is required'],
+  },
+  students: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Mahalaga: Dapat tumugma sa pangalan ng iyong User model
+  }],
+  time: {
+    type: Date,
+    default: null,
+  },
+  roomNumber: {
+    type: String,
+    trim: true,
+    default: 'N/A',
+  },
+}, {
+  timestamps: true, // Awtomatikong nagdaragdag ng createdAt at updatedAt
 });
 
-module.exports = mongoose.model('Class', ClassSchema);
+const Class = mongoose.model('Class', classSchema);
+
+module.exports = Class;

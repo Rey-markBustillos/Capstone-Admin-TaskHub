@@ -53,7 +53,9 @@ app.get('/', (req, res) => {
 
 // Mount routes
 app.use('/api/users', userRoutes);
-app.use('/api/classes', classRoutes);
+// UPDATED: Pinalitan mula sa '/api/classes' para tumugma sa frontend request.
+// Tandaan: Maaaring makaapekto ito sa ibang parts ng app.
+app.use('/api/class', classRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/announcements', announcementRoutes);
 

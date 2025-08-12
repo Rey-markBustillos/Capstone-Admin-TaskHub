@@ -1,20 +1,34 @@
 const express = require('express');
 const router = express.Router();
-const announcementController = require('../controllers/announcementController');
+const {
+  createAnnouncement,
+  getAllAnnouncements,
+  getAnnouncementById,
+  updateAnnouncement,
+  deleteAnnouncement,
+  addComment,
+  toggleReaction,
+  markAsViewed // AYOS: I-import ang bagong function
+} = require('../controllers/announcementController');
 
-// Create announcement
-router.post('/', announcementController.createAnnouncement);
+// Routes for creating and getting all announcements
+router.route('/')
+  .get(getAllAnnouncements)
+  .post(createAnnouncement);
 
-// Get all announcements
-router.get('/', announcementController.getAllAnnouncements);
+// Routes for a specific announcement by ID
+router.route('/:id')
+  .get(getAnnouncementById)
+  .put(updateAnnouncement)
+  .delete(deleteAnnouncement);
 
-// Get one announcement by ID
-router.get('/:id', announcementController.getAnnouncementById);
+// Route for adding a comment
+router.route('/:id/comments').post(addComment);
 
-// Update announcement by ID
-router.put('/:id', announcementController.updateAnnouncement);
+// Route for toggling a reaction
+router.route('/:id/reactions').post(toggleReaction);
 
-// Delete announcement by ID
-router.delete('/:id', announcementController.deleteAnnouncement);
+// AYOS: Bagong route para sa pag-view
+router.route('/:id/view').post(markAsViewed);
 
 module.exports = router;

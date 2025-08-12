@@ -106,7 +106,8 @@ const UserManagement = () => {
   if (error) return <p className="text-center text-red-600 mt-10">{error}</p>;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 font-sans">
+    <div className="bg-white w-450 h-190">
+    <div className="max-w-5xl ml-20 bg-white mx-auto p-6 font-sans">
       <h1 className="text-3xl font-bold mb-8 text-center">User Management</h1>
 
       {/* Add New User Form */}
@@ -178,6 +179,7 @@ const UserManagement = () => {
           </button>
         </div>
       </section>
+      
 
       {/* User List Table */}
       <div className="overflow-x-auto">
@@ -269,6 +271,7 @@ const UserManagement = () => {
           </tbody>
         </table>
       </div>
+     </div>
     </div>
   );
 };

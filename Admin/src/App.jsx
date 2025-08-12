@@ -17,11 +17,10 @@ import TeacherPortal from './Teachers/TeacherPortal';
 import ActivityMonitoring from './Teachers/ActivityMonitoring';
 import TeacherAnnouncement from './Teachers/TeacherAnnouncement';
 import CreateActivity from './Teachers/CreateActivity';
-import Classlist from './Teachers/Studentlist';
+import StudentList from './Teachers/Studentlist';
 
 import LandingPage from './LandingPage/LandingPage';
 import Login from './LandingPage/Login';
-import StudentList from './Teachers/Studentlist';
 
 // HOC for Protected Routes
 const ProtectedRoute = ({ user, requiredRole, children }) => {
@@ -38,12 +37,28 @@ const ProtectedRoute = ({ user, requiredRole, children }) => {
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Add loading state
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        // Check if user object and role exist
+        if (parsedUser && parsedUser.role) {
+          setUser(parsedUser);
+        } else {
+          // Clear invalid data from storage
+          localStorage.removeItem('user');
+        }
+      }
+    } catch (error) {
+      console.error("Failed to parse user from localStorage", error);
+      localStorage.removeItem('user');
+    } finally {
+      // Set loading to false after check is complete
+      setLoading(false);
     }
   }, []);
 
@@ -67,6 +82,15 @@ export default function App() {
     setUser(null);
     navigate('/login');
   };
+
+  // Show a loading indicator while checking for user
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -160,7 +184,7 @@ export default function App() {
         }
       />
       <Route
-        path="/teacherannouncement"
+        path="/class/:classId/announcements"
         element={
           <ProtectedRoute user={user} requiredRole="teacher">
             <TeacherLayout onLogout={handleLogout}>
@@ -170,7 +194,7 @@ export default function App() {
         }
       />
       <Route
-        path="/createactivity"
+        path="/class/:classId/createactivity"
         element={
           <ProtectedRoute user={user} requiredRole="teacher">
             <TeacherLayout onLogout={handleLogout}>
@@ -180,7 +204,7 @@ export default function App() {
         }
       />
       <Route
-        path="/studentlist"
+        path="/class/:classId/studentlist"
         element={
           <ProtectedRoute user={user} requiredRole="teacher">
             <TeacherLayout onLogout={handleLogout}>

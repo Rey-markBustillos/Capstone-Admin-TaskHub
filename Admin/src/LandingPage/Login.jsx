@@ -32,7 +32,6 @@ export default function Login({ onBack, onLoginSuccess }) {
       if (!res.ok) {
         setError(data.message || "Invalid email or password.");
       } else {
-        // Store user data (including role, _id, etc.) in localStorage
         localStorage.setItem("user", JSON.stringify(data));
         onLoginSuccess(data);
       }
@@ -45,82 +44,105 @@ export default function Login({ onBack, onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">
-      <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-left">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Login</h2>
+    <div className="relative min-h-screen bg-gray-900 flex flex-col items-center justify-center p-4 overflow-hidden">
+      {/* Decorative background blobs */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3"
+      >
+        <div className="w-[40rem] h-[40rem] rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-30 blur-3xl"></div>
+      </div>
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3"
+      >
+        <div className="w-[40rem] h-[40rem] rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 opacity-30 blur-3xl"></div>
+      </div>
+
+      <div className="relative bg-slate-800/60 backdrop-blur-xl p-8 sm:p-10 rounded-xl shadow-2xl shadow-black/20 max-w-md w-full">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-slate-100">TaskHub</h1>
+          <p className="text-slate-400 mt-2">Sign in to continue</p>
+        </div>
 
         {error && (
-          <p
-            className="mb-4 text-red-600"
-            role="alert"
-            aria-live="assertive"
-            aria-atomic="true"
-          >
-            {error}
-          </p>
+          <div className="bg-red-900/50 border-l-4 border-red-500 text-red-300 p-4 mb-6 rounded-md" role="alert">
+            <p>{error}</p>
+          </div>
         )}
 
-        <form onSubmit={handleSubmit} noValidate>
-          <label
-            htmlFor="email"
-            className="block mb-1 font-medium text-gray-700"
-          >
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="Enter email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            autoComplete="username"
-            className="w-full mb-4 px-3 py-2 border rounded border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <form onSubmit={handleSubmit} noValidate className="space-y-6">
+          <div>
+            <label
+              htmlFor="email"
+              className="block mb-2 text-sm font-medium text-slate-300"
+            >
+              Email Address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="you@example.com"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              autoComplete="username"
+              className="w-full px-4 py-3 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow bg-slate-700/50 text-slate-100 placeholder:text-slate-400"
+            />
+          </div>
 
-          <label
-            htmlFor="password"
-            className="block mb-1 font-medium text-gray-700"
-          >
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Enter password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            autoComplete="current-password"
-            className="w-full mb-6 px-3 py-2 border rounded border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div>
+            <label
+              htmlFor="password"
+              className="block mb-2 text-sm font-medium text-slate-300"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Enter your password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              autoComplete="current-password"
+              className="w-full px-4 py-3 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow bg-slate-700/50 text-slate-100 placeholder:text-slate-400"
+            />
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition disabled:opacity-50"
+            className="w-full flex justify-center bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             aria-busy={loading}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? (
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
 
-        <p
-          onClick={onBack}
-          tabIndex={0}
-          role="button"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              onBack();
-            }
-          }}
-          className="mt-4 text-blue-600 cursor-pointer hover:underline select-none text-center"
-          aria-label="Back to Welcome"
-        >
-          ← Back to Welcome
-        </p>
+        <div className="text-center mt-6">
+          <p
+            onClick={onBack}
+            tabIndex={0}
+            role="button"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") onBack();
+            }}
+            className="text-sm font-medium text-indigo-400 hover:text-indigo-300 cursor-pointer"
+            aria-label="Back to Welcome"
+          >
+            ← Back to Welcome
+          </p>
+        </div>
       </div>
     </div>
   );
