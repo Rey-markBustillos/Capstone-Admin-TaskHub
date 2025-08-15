@@ -3,72 +3,102 @@ const router = express.Router();
 const activityController = require('../controllers/activityController');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// Multer storage config
-const storage = multer.diskStorage({
+// --- Multer Configuration ---
+
+// Helper function to ensure directory exists
+const ensureDir = (dirPath) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+};
+
+// Storage for Activity Attachments
+const activityStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './uploads/activities');
+    const dir = './uploads/activities';
+    ensureDir(dir);
+    cb(null, dir);
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);
-    cb(null, Date.now() + ext);
+    cb(null, `activity-${Date.now()}${ext}`);
   },
 });
 
-// File filter - accept only images (jpg, jpeg, png, gif) and pdf
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|pdf/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+// Storage for Student Submissions
+const submissionStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = './uploads/submissions';
+    ensureDir(dir);
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, `submission-${Date.now()}${ext}`);
+  },
+});
 
-  if (extname && mimetype) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only images and PDF files are allowed'));
-  }
+// General File Filter
+const fileFilter = (req, file, cb) => {
+  cb(null, true); 
 };
 
-// Multer upload with limits and fileFilter
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit
+// Multer instance for Activity Attachments
+const uploadActivity = multer({
+  storage: activityStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
   fileFilter,
 });
 
-// Error handling middleware for Multer
-const multerErrorHandler = (err, req, res, next) => {
-  if (err instanceof multer.MulterError) {
-    return res.status(400).json({ message: 'File upload error: ' + err.message });
-  } else if (err) {
-    return res.status(400).json({ message: 'File processing error: ' + err.message });
-  }
-  next();
-};
+// Multer instance for Student Submissions
+const uploadSubmission = multer({
+  storage: submissionStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
+  fileFilter,
+});
 
-// CRUD routes
-router.post('/', upload.single('attachment'), activityController.createActivity);
+
+// --- Routes ---
+// IMPORTANT: Specific routes must come BEFORE general/parameterized routes.
+
+// GET all activities for a class
 router.get('/', activityController.getActivities);
 
-// --- Place all /submissions and /submit routes BEFORE any /:id routes ---
+// POST create a new activity
+router.post('/', uploadActivity.single('attachment'), activityController.createActivity);
 
-// Route for fetching student submissions for a class
+// GET a single submission for a student and activity
+router.get('/submission', activityController.getSubmissionForActivity);
+
+// DELETE a submission by its ID (for students)
+router.delete('/submission/:id', activityController.deleteSubmission);
+
+// GET all submissions for a student in a class
 router.get('/submissions', activityController.getStudentSubmissions);
 
-// Route for teacher's activity submissions
-router.get('/submissions/:teacherId', activityController.getActivitySubmissionsByTeacher);
+// GET submissions for a teacher to monitor
+router.get('/submissions/teacher/:teacherId', activityController.getActivitySubmissionsByTeacher);
 
-// Route for updating submission score by activity submission ID
+// PUT to update a submission's score
 router.put('/submissions/score/:submissionId', activityController.updateActivityScore);
 
-// Route for submitting activity (student submission)
-router.post('/submit', upload.single('attachment'), activityController.submitActivity);
+// POST a new submission for an activity
+router.post('/submit', uploadSubmission.single('file'), activityController.submitActivity);
 
-// --- Parameterized routes at the end ---
+// PUT to resubmit an activity
+router.put('/resubmit/:id', uploadSubmission.single('file'), activityController.resubmitActivity);
+
+// --- Parameterized routes for a single activity must be last ---
+
+// GET a single activity by its ID
 router.get('/:id', activityController.getActivityById);
-router.put('/:id', upload.single('attachment'), activityController.updateActivity);
-router.delete('/:id', activityController.deleteActivity);
 
-// Apply the error handling middleware
-router.use(multerErrorHandler);
+// PUT to update an activity
+router.put('/:id', uploadActivity.single('attachment'), activityController.updateActivity);
+
+// DELETE an activity
+router.delete('/:id', activityController.deleteActivity);
 
 module.exports = router;

@@ -2,17 +2,16 @@ const Activity = require('../models/Activity');
 const Class = require('../models/Class');
 const Submission = require('../models/Submission');
 const mongoose = require('mongoose');
+const fs = require('fs'); // Required for deleting files
 
 // Create activity
 exports.createActivity = async (req, res) => {
   try {
-    const { title, description, date, score, link, createdBy, classId } = req.body;
+    const { title, description, date, totalPoints, link, createdBy, classId } = req.body;
     let attachmentPath = null;
 
     if (req.file) {
-      attachmentPath = `/uploads/activities/${req.file.filename}`;
-    } else if (req.body.attachment) {
-      attachmentPath = req.body.attachment;
+      attachmentPath = req.file.path; // Use full path from multer
     }
 
     if (!title || !date || !classId) {
@@ -23,7 +22,7 @@ exports.createActivity = async (req, res) => {
       title,
       description,
       date,
-      score,
+      totalPoints,
       link,
       attachment: attachmentPath,
       createdBy,
@@ -84,7 +83,7 @@ exports.updateActivity = async (req, res) => {
 
     let updateData = { ...req.body };
     if (req.file) {
-      updateData.attachment = `/uploads/activities/${req.file.filename}`;
+      updateData.attachment = req.file.path;
     }
 
     const updated = await Activity.findByIdAndUpdate(id, updateData, {
@@ -110,83 +109,37 @@ exports.deleteActivity = async (req, res) => {
       return res.status(400).json({ message: 'Invalid activity ID' });
     }
 
+    // Also delete associated submissions
+    await Submission.deleteMany({ activityId: id });
+
     const deleted = await Activity.findByIdAndDelete(id);
     if (!deleted) {
       return res.status(404).json({ message: 'Activity not found' });
     }
 
-    res.json({ message: 'Activity deleted successfully' });
+    res.json({ message: 'Activity and associated submissions deleted successfully' });
   } catch (error) {
     console.error('Error deleting activity:', error);
     res.status(500).json({ message: 'Error deleting activity', error: error.message });
   }
 };
 
-// Upload activity attachment (optional)
-exports.uploadActivityAttachment = async (req, res) => {
-  try {
-    const { classId, createdBy, title, date } = req.body;
-
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-
-    if (!classId || !title || !date) {
-      return res.status(400).json({ message: 'classId, title, and date are required for standalone upload' });
-    }
-
-    const attachmentPath = `/uploads/activities/${req.file.filename}`;
-
-    const newActivity = new Activity({
-      title: title || 'Uploaded File Activity',
-      date: date || new Date(),
-      attachment: attachmentPath,
-      classId,
-      createdBy,
-      description: req.body.description || 'Uploaded attachment',
-      score: req.body.score || 0,
-    });
-
-    const saved = await newActivity.save();
-    res.status(201).json({ message: 'Upload successful, new activity created', activity: saved });
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ message: 'Upload failed', error: error.message });
-  }
-};
-
-// Activity Submissions Monitoring
+// Activity Submissions Monitoring for Teacher
 exports.getActivitySubmissionsByTeacher = async (req, res) => {
   try {
     const teacherId = req.params.teacherId;
     const classId = req.query.classId;
 
-    if (!teacherId) {
-      return res.status(400).json({ message: 'Teacher ID is required' });
+    if (!teacherId || !classId) {
+      return res.status(400).json({ message: 'Teacher ID and Class ID are required' });
     }
-    if (!mongoose.Types.ObjectId.isValid(teacherId)) {
-      return res.status(400).json({ message: 'Invalid Teacher ID format' });
-    }
-    if (!classId) {
-      return res.status(400).json({ message: 'Class ID is required' });
-    }
-    if (!mongoose.Types.ObjectId.isValid(classId)) {
-      return res.status(400).json({ message: 'Invalid Class ID format' });
+    if (!mongoose.Types.ObjectId.isValid(teacherId) || !mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ message: 'Invalid ID format' });
     }
 
-    const submissions = await Submission.find({
-      activityId: { $in: await Activity.find({ classId: classId }).distinct('_id') },
-    })
-      .populate({
-        path: 'studentId',
-        select: 'name email role',
-        model: 'User',
-      })
-      .populate({
-        path: 'activityId',
-        select: 'title date',
-        model: 'Activity',
-      })
+    const submissions = await Submission.find({ classId })
+      .populate('studentId', 'name email')
+      .populate('activityId', 'title date')
       .sort({ submissionDate: -1 });
 
     res.json({ submissions });
@@ -212,13 +165,10 @@ exports.updateActivityScore = async (req, res) => {
     if (isNaN(scoreNumber)) {
       return res.status(400).json({ message: 'Score must be a number' });
     }
-    if (scoreNumber < 0 || scoreNumber > 100) {
-      return res.status(400).json({ message: 'Score must be between 0 and 100' });
-    }
 
     const updatedSubmission = await Submission.findByIdAndUpdate(
       submissionId,
-      { score: scoreNumber },
+      { score: scoreNumber, status: 'Graded' },
       { new: true, runValidators: true }
     );
 
@@ -233,24 +183,31 @@ exports.updateActivityScore = async (req, res) => {
   }
 };
 
-// Submit Activity
+// Submit Activity (for new submissions)
 exports.submitActivity = async (req, res) => {
   try {
-    const { activityId, studentId } = req.body;
-    let attachmentPath = null;
+    const { activityId, studentId, classId } = req.body;
 
-    if (req.file) {
-      attachmentPath = `/uploads/submissions/${req.file.filename}`;
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file was uploaded.' });
+    }
+    if (!activityId || !studentId || !classId) {
+      return res.status(400).json({ message: 'Activity ID, Student ID, and Class ID are required.' });
     }
 
-    if (!activityId || !studentId) {
-      return res.status(400).json({ message: 'Activity ID and Student ID are required' });
+    const existingSubmission = await Submission.findOne({ activityId, studentId });
+    if (existingSubmission) {
+      return res.status(409).json({ message: 'You have already submitted this activity. Please use the resubmit option.' });
     }
 
     const submission = new Submission({
       activityId,
       studentId,
-      attachment: attachmentPath,
+      classId,
+      filePath: req.file.path,
+      fileName: req.file.originalname,
+      submissionDate: new Date(),
+      status: 'Submitted'
     });
 
     const savedSubmission = await submission.save();
@@ -261,7 +218,99 @@ exports.submitActivity = async (req, res) => {
   }
 };
 
-// GET /api/submissions?classId=...&studentId=...
+// Resubmit Activity
+exports.resubmitActivity = async (req, res) => {
+    try {
+        const { id } = req.params; // This is submissionId
+
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file was uploaded for resubmission.' });
+        }
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid Submission ID.' });
+        }
+
+        const updatedSubmission = await Submission.findByIdAndUpdate(
+            id,
+            {
+                filePath: req.file.path,
+                fileName: req.file.originalname,
+                submissionDate: new Date(),
+                status: 'Resubmitted',
+                score: null, // Reset score on resubmission
+            },
+            { new: true }
+        );
+
+        if (!updatedSubmission) {
+            return res.status(404).json({ message: 'Submission not found to update.' });
+        }
+
+        res.status(200).json(updatedSubmission);
+    } catch (error) {
+        console.error('Error resubmitting activity:', error);
+        res.status(500).json({ message: 'Error resubmitting activity', error: error.message });
+    }
+};
+
+// Delete a submission by its ID (for students)
+exports.deleteSubmission = async (req, res) => {
+    try {
+        const { id } = req.params; // This is submissionId
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid Submission ID.' });
+        }
+
+        const submission = await Submission.findById(id);
+
+        if (!submission) {
+            return res.status(404).json({ message: 'Submission not found.' });
+        }
+
+        // Delete the actual file from the server's file system
+        if (submission.filePath) {
+            fs.unlink(submission.filePath, (err) => {
+                if (err) {
+                    // Log the error but don't block the response.
+                    // The record will still be deleted from the DB.
+                    console.error('Failed to delete submission file from disk:', err);
+                }
+            });
+        }
+
+        await Submission.findByIdAndDelete(id);
+
+        res.status(200).json({ message: 'Submission deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting submission:', error);
+        res.status(500).json({ message: 'Error deleting submission', error: error.message });
+    }
+};
+
+// GET a single submission for a specific activity and student
+exports.getSubmissionForActivity = async (req, res) => {
+  try {
+    const { activityId, studentId } = req.query;
+    if (!activityId || !studentId) {
+      return res.status(400).json({ message: 'activityId and studentId are required query parameters.' });
+    }
+
+    const submission = await Submission.findOne({ activityId, studentId });
+    
+    if (!submission) {
+      // This is not an error, it just means the student hasn't submitted yet.
+      return res.status(404).json({ message: 'Submission not found.' });
+    }
+
+    res.json(submission);
+  } catch (error) {
+    console.error('Error fetching single submission:', error);
+    res.status(500).json({ message: 'Error fetching submission', error: error.message });
+  }
+};
+
+// GET all submissions for a student in a class
 exports.getStudentSubmissions = async (req, res) => {
   try {
     const { classId, studentId } = req.query;
@@ -275,10 +324,11 @@ exports.getStudentSubmissions = async (req, res) => {
     const submissions = await Submission.find({
       activityId: { $in: activityIds },
       studentId,
-    });
+    }).populate('activityId', 'title');
 
     res.json(submissions);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching submissions', error: error.message });
+    console.error('Error fetching student submissions:', error);
+    res.status(500).json({ message: 'Error fetching student submissions', error: error.message });
   }
 };

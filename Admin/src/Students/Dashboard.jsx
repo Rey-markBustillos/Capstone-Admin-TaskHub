@@ -59,14 +59,16 @@ const StudentDashboard = ({ }) => {
     if (!studentId) {
       setError('Student not logged in');
       setLoadingClasses(false);
-      // setLoadingActivities(false);
+      setLoadingActivities(false);
+      setLoadingAnnouncements(false);
       return;
     }
 
     // Fetch classes
     const fetchClasses = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/classes?studentId=${studentId}`);
+        // UPDATED: Pinalitan ang 'classes' to 'class' para tumugma sa backend route
+        const res = await axios.get(`http://localhost:5000/api/class?studentId=${studentId}`);
         setClasses(res.data);
       } catch (err) {
         setError(err.response?.data?.message || err.message);
@@ -123,8 +125,8 @@ const StudentDashboard = ({ }) => {
         <FallingBooksAnimation />
       </div>
 
-      {/* Reduced left padding to move closer to the sidebar and expand width */}
-      <div className="relative z-10 min-h-screen pl-0 p-6" style={{ marginLeft: '-1rem', width: 'calc(100% + 1rem)' }}>
+      {/* UPDATED: Added overflow-y-auto to enable scrolling */}
+      <div className="relative z-10 h-screen overflow-y-auto pl-0 p-6" style={{ marginLeft: '-1rem', width: 'calc(100% + 1rem)' }}>
         <header className="max-w-4xl mx-auto flex justify-between items-center mb-8 text-white">
           <h1 className="text-3xl font-bold">Welcome, {studentName}!</h1>
         </header>

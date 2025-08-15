@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, Outlet } from 'react-router-dom';
 
 import AdminLayout from './layouts/AdminLayout';
 import StudentLayout from './layouts/StudentLayout';
@@ -11,6 +11,11 @@ import ClassManagement from './pages/ClassManagement';
 
 import StudentDashboard from './Students/Dashboard';
 import StudentPortal from './Students/StudentPortal';
+import StudentClassView from './Students/StudentClassView';
+import StudentAnnouncements from './Students/StudentAnnouncements';
+import StudentActivities from './Students/StudentActivities';
+import StudentClassList from './Students/StudentsClassList';
+import SubmitActivity from './Students/SubmitActivity'; // Import the submission component
 
 import TeacherDashboard from './Teachers/Dashboard';
 import TeacherPortal from './Teachers/TeacherPortal';
@@ -29,7 +34,7 @@ const ProtectedRoute = ({ user, requiredRole, children }) => {
   }
 
   if (requiredRole && user.role !== requiredRole) {
-    return <Navigate to="/unauthorized" replace />; // Create an unauthorized page
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;
@@ -37,7 +42,7 @@ const ProtectedRoute = ({ user, requiredRole, children }) => {
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,11 +50,9 @@ export default function App() {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
-        // Check if user object and role exist
         if (parsedUser && parsedUser.role) {
           setUser(parsedUser);
         } else {
-          // Clear invalid data from storage
           localStorage.removeItem('user');
         }
       }
@@ -57,7 +60,6 @@ export default function App() {
       console.error("Failed to parse user from localStorage", error);
       localStorage.removeItem('user');
     } finally {
-      // Set loading to false after check is complete
       setLoading(false);
     }
   }, []);
@@ -83,7 +85,6 @@ export default function App() {
     navigate('/login');
   };
 
-  // Show a loading indicator while checking for user
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -151,6 +152,34 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      
+      {/* Student Class View with Nested Routes */}
+      <Route
+        path="/student/class/:classId"
+        element={
+          <ProtectedRoute user={user} requiredRole="student">
+            <StudentLayout onLogout={handleLogout}>
+              <StudentClassView />
+            </StudentLayout>
+          </ProtectedRoute>
+        }
+      >
+        <Route path="announcements" element={<StudentAnnouncements />} />
+        <Route path="activities" element={<StudentActivities />} />
+        <Route path="classlist" element={<StudentClassList />} />
+      </Route>
+
+      {/* Student Submission Route */}
+      <Route
+        path="/student/class/:classId/activity/:activityId/submit"
+        element={
+          <ProtectedRoute user={user} requiredRole="student">
+            <StudentLayout onLogout={handleLogout}>
+              <SubmitActivity />
+            </StudentLayout>
+          </ProtectedRoute>
+        }
+      />
 
       {/* Teacher Routes */}
       <Route
@@ -204,17 +233,15 @@ export default function App() {
         }
       />
       <Route
-        path="/class/:classId/studentlist"
-        element={
-          <ProtectedRoute user={user} requiredRole="teacher">
-            <TeacherLayout onLogout={handleLogout}>
-              <StudentList />
-            </TeacherLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
-}
+              path="/class/:classId/studentlist"
+              element={
+                <ProtectedRoute user={user} requiredRole="teacher">
+                  <TeacherLayout onLogout={handleLogout}>
+                    <StudentList />
+                  </TeacherLayout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        );
+      }
