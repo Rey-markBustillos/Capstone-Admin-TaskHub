@@ -2,7 +2,8 @@ const Activity = require('../models/Activity');
 const Class = require('../models/Class');
 const Submission = require('../models/Submission');
 const mongoose = require('mongoose');
-const fs = require('fs'); // Required for deleting files
+const fs = require('fs'); // Required for deleting and downloading files
+const path = require('path'); // Required for resolving file paths
 
 // Create activity
 exports.createActivity = async (req, res) => {
@@ -270,13 +271,14 @@ exports.deleteSubmission = async (req, res) => {
 
         // Delete the actual file from the server's file system
         if (submission.filePath) {
-            fs.unlink(submission.filePath, (err) => {
-                if (err) {
-                    // Log the error but don't block the response.
-                    // The record will still be deleted from the DB.
-                    console.error('Failed to delete submission file from disk:', err);
-                }
-            });
+            const filePath = path.join(__dirname, '..', submission.filePath);
+            if (fs.existsSync(filePath)) {
+                fs.unlink(filePath, (err) => {
+                    if (err) {
+                        console.error('Failed to delete submission file from disk:', err);
+                    }
+                });
+            }
         }
 
         await Submission.findByIdAndDelete(id);
@@ -299,7 +301,6 @@ exports.getSubmissionForActivity = async (req, res) => {
     const submission = await Submission.findOne({ activityId, studentId });
     
     if (!submission) {
-      // This is not an error, it just means the student hasn't submitted yet.
       return res.status(404).json({ message: 'Submission not found.' });
     }
 
@@ -331,4 +332,63 @@ exports.getStudentSubmissions = async (req, res) => {
     console.error('Error fetching student submissions:', error);
     res.status(500).json({ message: 'Error fetching student submissions', error: error.message });
   }
+};
+
+// Function to download an activity's attachment
+exports.downloadActivityAttachment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid activity ID' });
+        }
+
+        const activity = await Activity.findById(id);
+        if (!activity || !activity.attachment) {
+            return res.status(404).json({ message: 'Attachment not found for this activity.' });
+        }
+
+        // Build the absolute path from the project's root directory
+        const filePath = path.join(__dirname, '..', activity.attachment);
+        
+        if (fs.existsSync(filePath)) {
+            // Download the file, providing the original filename
+            res.download(filePath, path.basename(activity.attachment)); 
+        } else {
+            console.error(`File not found at path: ${filePath}`);
+            res.status(404).json({ message: 'File not found on server.' });
+        }
+
+    } catch (error) {
+        console.error('Error downloading activity attachment:', error);
+        res.status(500).json({ message: 'Error downloading file', error: error.message });
+    }
+};
+
+// Function to download a submission file
+exports.downloadSubmissionFile = async (req, res) => {
+    try {
+        const { id } = req.params; // This is the submissionId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid submission ID' });
+        }
+
+        const submission = await Submission.findById(id);
+        if (!submission || !submission.filePath) {
+            return res.status(404).json({ message: 'Submission file not found.' });
+        }
+
+        // Build the absolute path from the project's root directory
+        const filePath = path.join(__dirname, '..', submission.filePath);
+
+        if (fs.existsSync(filePath)) {
+            res.download(filePath, submission.fileName); 
+        } else {
+            console.error(`File not found at path: ${filePath}`);
+            res.status(404).json({ message: 'File not found on server.' });
+        }
+
+    } catch (error) {
+        console.error('Error downloading submission file:', error);
+        res.status(500).json({ message: 'Error downloading file', error: error.message });
+    }
 };

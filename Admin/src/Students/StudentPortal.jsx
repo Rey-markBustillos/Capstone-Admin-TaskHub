@@ -62,74 +62,78 @@ const StudentPortal = () => {
   }
 
   return (
-    <div className="min-h-screen py-8">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="h-screen flex flex-col">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-grow flex flex-col w-full py-8">
         {/* Header */}
-        <div className="mb-8 pt-6">
-          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">My Enrolled Classes</h1>
-          <hr className="mt-3 border-t-2 border-gray-300 dark:border-gray-600" />
+        <div className="flex-shrink-0">
+          <div className="mb-8 pt-6">
+            <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">My Enrolled Classes</h1>
+            <hr className="mt-3 border-t-2 border-gray-300 dark:border-gray-600" />
+          </div>
+
+          {/* Search Bar */}
+          <div className="mb-8">
+            <input
+              type="text"
+              className="w-full p-4 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+              placeholder="Search classes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-8">
-          <input
-            type="text"
-            className="w-full p-4 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-            placeholder="Search classes..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Grid layout */}
-        {filteredClasses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredClasses.map((cls) => (
-              <div
-                key={cls._id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden"
-                onClick={() => handleClassClick(cls._id)} // Updated onClick
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClassClick(cls._id)}
-              >
-                <div className="p-6 flex-grow">
-                  <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 truncate" title={cls.className}>
-                    {cls.className}
-                  </h2>
-                  <div className="space-y-3 text-sm mt-4">
-                    <p className="text-gray-700 dark:text-gray-300 flex items-center">
-                      <FaUserTie size={16} className="mr-3 text-indigo-500 dark:text-indigo-400" />
-                      <strong>Teacher:</strong>&nbsp;{cls.teacherName}
-                    </p>
-                    <p className="text-gray-700 dark:text-gray-300 flex items-center">
-                      <FaClock size={16} className="mr-3 text-indigo-500 dark:text-indigo-400" />
-                      <strong>Time:</strong>&nbsp;{cls.time ? new Date(cls.time).toLocaleString() : 'TBA'}
-                    </p>
-                    <p className="text-gray-700 dark:text-gray-300 flex items-center">
-                      <FaMapMarkerAlt size={16} className="mr-3 text-indigo-500 dark:text-indigo-400" />
-                      <strong>Room:</strong>&nbsp;{cls.roomNumber || 'N/A'}
+        {/* Scrollable Grid layout */}
+        <div className="flex-grow overflow-y-auto pb-8">
+          {filteredClasses.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredClasses.map((cls) => (
+                <div
+                  key={cls._id}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden"
+                  onClick={() => handleClassClick(cls._id)} // Updated onClick
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClassClick(cls._id)}
+                >
+                  <div className="p-6 flex-grow">
+                    <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 truncate" title={cls.className}>
+                      {cls.className}
+                    </h2>
+                    <div className="space-y-3 text-sm mt-4">
+                      <p className="text-gray-700 dark:text-gray-300 flex items-center">
+                        <FaUserTie size={16} className="mr-3 text-indigo-500 dark:text-indigo-400" />
+                        <strong>Teacher:</strong>&nbsp;{cls.teacherName}
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300 flex items-center">
+                        <FaClock size={16} className="mr-3 text-indigo-500 dark:text-indigo-400" />
+                        <strong>Time:</strong>&nbsp;{cls.time ? new Date(cls.time).toLocaleString() : 'TBA'}
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300 flex items-center">
+                        <FaMapMarkerAlt size={16} className="mr-3 text-indigo-500 dark:text-indigo-400" />
+                        <strong>Room:</strong>&nbsp;{cls.roomNumber || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="bg-gray-100 dark:bg-indigo-500/20 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-xs text-indigo-600 dark:text-indigo-300 font-semibold text-center">
+                      View Class &rarr;
                     </p>
                   </div>
                 </div>
-                <div className="bg-gray-100 dark:bg-indigo-500/20 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-xs text-indigo-600 dark:text-indigo-300 font-semibold text-center">
-                    View Class &rarr;
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-10 mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-400 dark:text-indigo-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-            </svg>
-            <p className="text-xl text-gray-600 dark:text-gray-400">
-              {searchTerm ? 'No classes found matching your search.' : 'You are not enrolled in any classes.'}
-            </p>
-          </div>
-        )}
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-400 dark:text-indigo-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+              </svg>
+              <p className="text-xl text-gray-600 dark:text-gray-400">
+                {searchTerm ? 'No classes found matching your search.' : 'You are not enrolled in any classes.'}
+              </p>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

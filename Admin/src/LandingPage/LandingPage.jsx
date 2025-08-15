@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import Login from "./Login"; // I-import ang Login component
 
-export default function LandingPage({ onContinue }) {
+// Ito ang Welcome Screen component na dating LandingPage
+const WelcomeScreen = ({ onContinue }) => {
   const [activeTab, setActiveTab] = useState(null);
 
   const renderContent = () => {
@@ -62,7 +64,6 @@ export default function LandingPage({ onContinue }) {
 
       <div className="relative bg-slate-800/60 backdrop-blur-xl p-8 sm:p-12 rounded-xl shadow-2xl shadow-black/20 max-w-3xl w-full text-center">
         
-        {/* Header Tabs */}
         <div className="flex justify-center border-b border-slate-700 mb-8">
           <button
             onClick={() => setActiveTab('vision')}
@@ -84,7 +85,6 @@ export default function LandingPage({ onContinue }) {
           </button>
         </div>
 
-        {/* ALS Logo */}
         <div className="mb-8">
           <h1 className="text-7xl font-extrabold tracking-tight">
             <span className="text-blue-500">A</span>
@@ -96,7 +96,6 @@ export default function LandingPage({ onContinue }) {
           </p>
         </div>
 
-        {/* Action Button */}
         <div>
           <button
             onClick={onContinue}
@@ -107,7 +106,6 @@ export default function LandingPage({ onContinue }) {
           </button>
         </div>
 
-        {/* Content Area */}
         <div className="text-left min-h-[160px] p-4 mt-8">
           {renderContent()}
         </div>
@@ -115,4 +113,23 @@ export default function LandingPage({ onContinue }) {
       </div>
     </div>
   );
+};
+
+
+// Ito na ngayon ang main component ng file na ito.
+// Siya ang mag-mamanage kung WelcomeScreen o Login ang ipapakita.
+export default function LandingPage() {
+  const [view, setView] = useState('welcome'); // 'welcome' or 'login'
+
+  const handleLoginSuccess = () => {
+    // I-reload ang page para ma-trigger ng App.js ang redirect sa dashboard
+    window.location.reload();
+  };
+
+  if (view === 'login') {
+    return <Login onBack={() => setView('welcome')} onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // By default, show the welcome screen
+  return <WelcomeScreen onContinue={() => setView('login')} />;
 }

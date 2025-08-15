@@ -132,29 +132,34 @@ const StudentActivities = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                  {attachmentUrl ? (
-                    <a 
-                      href={attachmentUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      onClick={(e) => e.stopPropagation()} // Prevent card click from firing
-                      className="flex items-center text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium text-sm"
-                    >
-                      <FaPaperclip className="mr-1.5" /> View Attachment
-                    </a>
-                  ) : (
-                    <span className="text-gray-400 dark:text-gray-500 text-sm">No Attachment</span>
-                  )}
-                  
-                  {statusInfo.text !== 'Missing' && new Date() < new Date(activity.date) || statusInfo.text === 'Needs Resubmission' ? (
-                    <div className="flex items-center gap-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                      <FaUpload />
-                      <span>{submission ? 'Resubmit' : 'Submit'}</span>
-                    </div>
-                  ) : (
-                    <span className="text-gray-400 dark:text-gray-500 text-sm">-</span>
-                  )}
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex justify-between items-center">
+                    {attachmentUrl ? (
+                      <a 
+                        href={attachmentUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        onClick={(e) => e.stopPropagation()} // Prevent card click from firing
+                        className="flex items-center text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium text-sm"
+                      >
+                        <FaPaperclip className="mr-1.5" /> View Attachment
+                      </a>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500 text-sm">No Attachment</span>
+                    )}
+                    
+                    {statusInfo.text !== 'Missing' && new Date() < new Date(activity.date) || statusInfo.text === 'Needs Resubmission' ? (
+                      <div className="flex items-center gap-1 text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                        <FaUpload />
+                        <span>{submission ? 'Resubmit' : 'Submit'}</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500 text-sm">-</span>
+                    )}
+                  </div>
+                  <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">
+                    Click to view details or submit
+                  </p>
                 </div>
               </div>
             );

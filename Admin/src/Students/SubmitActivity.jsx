@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { FaFileUpload, FaArrowLeft, FaPaperclip, FaCalendarAlt, FaStar, FaFileAlt, FaTimesCircle, FaTrash } from 'react-icons/fa';
+import { FaFileUpload, FaArrowLeft, FaPaperclip, FaCalendarAlt, FaStar, FaFileAlt, FaTimesCircle, FaTrash, FaDownload } from 'react-icons/fa';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 const SERVER_URL = 'http://localhost:5000';
@@ -100,7 +100,7 @@ const SubmitActivity = () => {
 
       setSuccess('File submitted successfully! Refreshing...');
       setTimeout(() => {
-        fetchDetails(); // Refresh the data to show the latest submission
+        fetchDetails();
         setSelectedFile(null);
       }, 2000);
 
@@ -124,7 +124,6 @@ const SubmitActivity = () => {
     setSuccess('');
 
     try {
-      // Note: You need to create this DELETE endpoint in your backend
       await axios.delete(`${API_BASE_URL}/activities/submission/${previousSubmission._id}`);
       
       setSuccess('Submission deleted successfully.');
@@ -139,10 +138,13 @@ const SubmitActivity = () => {
     }
   };
 
-  const getAttachmentUrl = (path) => {
-    if (!path) return '#';
-    const normalizedPath = path.replace(/\\/g, '/');
-    return `${SERVER_URL}/${normalizedPath}`;
+  const getAttachmentUrl = (filePath) => {
+    if (!filePath) return '#';
+    // Palitan ang backslashes (Windows) ng forward slashes (URL)
+    const normalizedPath = filePath.replace(/\\/g, '/');
+    // Tiyaking hindi nagsisimula sa slash ang path para maiwasan ang double slash
+    const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
+    return `${SERVER_URL}/${cleanPath}`;
   };
 
   if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -173,10 +175,15 @@ const SubmitActivity = () => {
                       <FaTrash /> Delete
                     </button>
                   </div>
-                  <a href={getAttachmentUrl(previousSubmission.filePath)} target="_blank" rel="noopener noreferrer" className="mt-2 flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-sm hover:underline">
-                    <FaFileAlt />
-                    <span>{previousSubmission.fileName}</span>
-                  </a>
+                  <div className="mt-2 flex items-center justify-between">
+                    <a href={getAttachmentUrl(previousSubmission.filePath)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-sm hover:underline">
+                      <FaFileAlt />
+                      <span>{previousSubmission.fileName}</span>
+                    </a>
+                    <a href={`${API_BASE_URL}/activities/submission/${previousSubmission._id}/download`} className="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white">
+                      <FaDownload /> Download
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -242,9 +249,15 @@ const SubmitActivity = () => {
             )}
             {activity.attachment && (
               <div className="mt-6">
-                 <a href={getAttachmentUrl(activity.attachment)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-white bg-indigo-600 rounded-lg px-4 py-2 hover:bg-indigo-700 transition-colors">
-                    <FaPaperclip /> View Activity Attachment
-                </a>
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Attachment</h3>
+                <div className="flex items-center gap-4">
+                  <a href={getAttachmentUrl(activity.attachment)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-white bg-indigo-600 rounded-lg px-4 py-2 hover:bg-indigo-700 transition-colors">
+                      <FaPaperclip /> View Attachment
+                  </a>
+                  <a href={`${API_BASE_URL}/activities/${activity._id}/download`} className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg px-4 py-2 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                      <FaDownload /> Download
+                  </a>
+                </div>
               </div>
             )}
           </div>

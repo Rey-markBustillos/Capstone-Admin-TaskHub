@@ -7,14 +7,12 @@ const fs = require('fs');
 
 // --- Multer Configuration ---
 
-// Helper function to ensure directory exists
 const ensureDir = (dirPath) => {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
   }
 };
 
-// Storage for Activity Attachments
 const activityStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     const dir = './uploads/activities';
@@ -27,7 +25,6 @@ const activityStorage = multer.diskStorage({
   },
 });
 
-// Storage for Student Submissions
 const submissionStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     const dir = './uploads/submissions';
@@ -40,28 +37,23 @@ const submissionStorage = multer.diskStorage({
   },
 });
 
-// General File Filter
 const fileFilter = (req, file, cb) => {
   cb(null, true); 
 };
 
-// Multer instance for Activity Attachments
 const uploadActivity = multer({
   storage: activityStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter,
 });
 
-// Multer instance for Student Submissions
 const uploadSubmission = multer({
   storage: submissionStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter,
 });
 
-
 // --- Routes ---
-// IMPORTANT: Specific routes must come BEFORE general/parameterized routes.
 
 // GET all activities for a class
 router.get('/', activityController.getActivities);
@@ -71,6 +63,9 @@ router.post('/', uploadActivity.single('attachment'), activityController.createA
 
 // GET a single submission for a student and activity
 router.get('/submission', activityController.getSubmissionForActivity);
+
+// GET to download a submission file
+router.get('/submission/:id/download', activityController.downloadSubmissionFile);
 
 // DELETE a submission by its ID (for students)
 router.delete('/submission/:id', activityController.deleteSubmission);
@@ -90,7 +85,8 @@ router.post('/submit', uploadSubmission.single('file'), activityController.submi
 // PUT to resubmit an activity
 router.put('/resubmit/:id', uploadSubmission.single('file'), activityController.resubmitActivity);
 
-// --- Parameterized routes for a single activity must be last ---
+// GET to download an activity attachment
+router.get('/:id/download', activityController.downloadActivityAttachment);
 
 // GET a single activity by its ID
 router.get('/:id', activityController.getActivityById);
