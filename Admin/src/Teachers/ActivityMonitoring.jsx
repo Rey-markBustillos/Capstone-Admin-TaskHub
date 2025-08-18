@@ -35,7 +35,7 @@ export default function ActivityMonitoring() {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
   const [activities, setActivities] = useState([]);
-  const [selectedActivity, setSelectedActivity] = useState(null); // Bagong state
+  const [selectedActivity, setSelectedActivity] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [classSearchTerm, setClassSearchTerm] = useState("");
@@ -74,11 +74,14 @@ export default function ActivityMonitoring() {
         const activitiesRes = await axios.get(`${API_BASE}/api/activities?classId=${selectedClass._id}`);
         const classActivities = activitiesRes.data || [];
 
-        const submissionsRes = await axios.get(`${API_BASE}/api/activities/submissions/${teacherId}?classId=${selectedClass._id}`);
-        const allSubmissions = submissionsRes.data.submissions.filter(sub => sub.studentId?.role === 'student') || [];
+        const submissionsRes = await axios.get(`${API_BASE}/api/activities/submissions/teacher/${teacherId}?classId=${selectedClass._id}`);
+        const allSubmissions = submissionsRes.data.submissions.filter(sub => sub.studentId) || [];
 
         const activitiesWithSubmissions = classActivities.map(activity => {
-          const relatedSubmissions = allSubmissions.filter(sub => sub.activityId?._id === activity._id);
+          const relatedSubmissions = allSubmissions.filter(sub => {
+            const submissionActivityId = sub.activityId?._id || sub.activityId;
+            return submissionActivityId === activity._id;
+          });
           return { ...activity, submissions: relatedSubmissions };
         });
 
@@ -105,7 +108,6 @@ export default function ActivityMonitoring() {
         return activity;
       })
     );
-    // Update selectedActivity as well if it's the one being changed
     if (selectedActivity?._id === activityId) {
         setSelectedActivity(prev => ({
             ...prev,
@@ -128,14 +130,14 @@ export default function ActivityMonitoring() {
     }
   };
 
-  const getFileIconAndAction = (attachment) => {
-    if (!attachment) return { icon: <FaFile className="text-gray-500" />, action: "View" };
-    const lower = attachment.toLowerCase();
-    if (lower.endsWith(".pdf")) return { icon: <FaFilePdf className="text-red-500" />, action: "View" };
-    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png")) return { icon: <FaFileImage className="text-blue-500" />, action: "View" };
-    if (lower.endsWith(".docx")) return { icon: <FaFileWord className="text-blue-600" />, action: "Download" };
-    if (lower.endsWith(".zip")) return { icon: <FaFileArchive className="text-yellow-500" />, action: "Download" };
-    return { icon: <FaFile className="text-gray-500" />, action: "View" };
+  const getFileIcon = (fileName) => {
+    if (!fileName) return <FaFile className="text-gray-500" />;
+    const lower = fileName.toLowerCase();
+    if (lower.endsWith(".pdf")) return <FaFilePdf className="text-red-500" />;
+    if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png")) return <FaFileImage className="text-blue-500" />;
+    if (lower.endsWith(".docx")) return <FaFileWord className="text-blue-600" />;
+    if (lower.endsWith(".zip")) return <FaFileArchive className="text-yellow-500" />;
+    return <FaFile className="text-gray-500" />;
   };
 
   const filteredClasses = classes.filter(cls =>
@@ -153,7 +155,6 @@ export default function ActivityMonitoring() {
     setSubmissionSearchTerm("");
   };
 
-  // Main Render
   return (
     <div className="app-container bg-gray-100 dark:bg-gray-900 min-h-screen">
       <FallingBooksAnimation />
@@ -161,8 +162,7 @@ export default function ActivityMonitoring() {
         {loading && <p className="text-center mt-6 text-lg font-semibold">Loading...</p>}
         {error && <p className="text-center mt-6 text-red-500 dark:text-red-400 text-lg">Error: {error}</p>}
 
-        {/* View 1: Class Selection */}
-        {!loading && !error && !selectedClass && (
+        {!selectedClass && (
           <>
             <h1 className="text-3xl font-bold mb-6 text-center text-indigo-700 dark:text-indigo-300">Select a Class</h1>
             <input
@@ -172,7 +172,7 @@ export default function ActivityMonitoring() {
               value={classSearchTerm}
               onChange={(e) => setClassSearchTerm(e.target.value)}
             />
-            {filteredClasses.length === 0 ? (
+            {filteredClasses.length === 0 && !loading ? (
               <p className="text-center mt-6 text-lg">No classes found.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -196,26 +196,27 @@ export default function ActivityMonitoring() {
           </>
         )}
 
-        {/* View 2: Activity Selection */}
-        {!loading && selectedClass && !selectedActivity && (
+        {selectedClass && !selectedActivity && (
           <>
             <button className="mb-8 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition duration-300 ease-in-out flex items-center shadow-md hover:shadow-lg" onClick={handleBackToClasses}>
               <FaChevronLeft className="mr-2" /> Back to Classes
             </button>
             <h1 className="text-4xl font-bold mb-8 text-indigo-700 dark:text-indigo-300 text-center">Activities for: <span className="text-purple-600 dark:text-purple-400">{selectedClass.className}</span></h1>
-            {activities.length === 0 ? (
+            {activities.length === 0 && !loading ? (
               <div className="text-center py-10"><p className="text-xl text-gray-600 dark:text-gray-400">No activities found for this class.</p></div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {activities.map(activity => (
-                  <div key={activity._id} onClick={() => setSelectedActivity(activity)} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-5 cursor-pointer hover:bg-indigo-50 dark:hover:bg-gray-700/50 transition-all duration-200 flex justify-between items-center">
-                    <div>
-                      <h2 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">{activity.title}</h2>
+                  <div key={activity._id} onClick={() => setSelectedActivity(activity)} className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden cursor-pointer hover:shadow-2xl hover:scale-105 transform transition-all duration-300 flex flex-col">
+                    <div className="p-5 flex-grow">
+                      <h2 className="text-xl font-bold text-indigo-600 dark:text-indigo-400 truncate mb-2">{activity.title}</h2>
                       <p className="text-sm text-gray-500 dark:text-gray-400">Due: {activity.date ? new Date(activity.date).toLocaleDateString() : 'N/A'}</p>
                     </div>
-                    <div className="text-right">
-                        <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{activity.submissions.length}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Submissions</p>
+                    <div className="bg-gray-50 dark:bg-gray-700/50 px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <div className="text-sm font-semibold text-gray-600 dark:text-gray-300">Submissions</div>
+                        <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-500/20 rounded-full h-8 w-8 flex items-center justify-center">
+                            {activity.submissions.length}
+                        </div>
                     </div>
                   </div>
                 ))}
@@ -224,8 +225,7 @@ export default function ActivityMonitoring() {
           </>
         )}
 
-        {/* View 3: Submissions List */}
-        {!loading && selectedClass && selectedActivity && (
+        {selectedClass && selectedActivity && (
           <>
             <button className="mb-8 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition duration-300 ease-in-out flex items-center shadow-md hover:shadow-lg" onClick={handleBackToActivities}>
               <FaChevronLeft className="mr-2" /> Back to Activities
@@ -262,17 +262,27 @@ export default function ActivityMonitoring() {
                         {selectedActivity.submissions
                           .filter(sub => sub.studentId?.name.toLowerCase().includes(submissionSearchTerm.toLowerCase()))
                           .map((sub, index) => {
-                            const { icon: fileTypeIcon, action } = getFileIconAndAction(sub.attachment);
+                            const fileTypeIcon = getFileIcon(sub.fileName);
+                            const downloadUrl = `${API_BASE}/api/activities/submission/${sub._id}/download`;
                             const dueDate = selectedActivity.date ? new Date(selectedActivity.date) : null;
                             const submissionDate = sub.submissionDate ? new Date(sub.submissionDate) : null;
                             const statusText = submissionDate && dueDate ? (submissionDate > dueDate ? "Late" : "Submitted") : "Submitted";
-                            const absoluteUrl = sub.attachment ? `${API_BASE}${sub.attachment}` : "";
 
                             return (
                               <tr key={sub._id} className={`border-b border-gray-200 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-gray-700/50 transition-all duration-200 ease-in-out ${index % 2 !== 0 ? 'bg-gray-50 dark:bg-gray-800/60' : ''}`}>
                                 <td className="px-6 py-4"><div className="font-medium text-gray-900 dark:text-white">{sub.studentId?.name || "-"}</div><div className="text-sm text-gray-500">{sub.studentId?.email || "-"}</div></td>
                                 <td className="px-6 py-4">{submissionDate ? new Date(submissionDate).toLocaleString() : "-"}</td>
-                                <td className="px-6 py-4">{sub.attachment ? <a href={absoluteUrl} target="_blank" rel="noopener noreferrer" className="flex items-center px-3 py-1 rounded-md bg-indigo-100 dark:bg-indigo-500/30 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-200 dark:hover:bg-indigo-500/50 w-fit shadow-sm"><span className="text-lg mr-2">{fileTypeIcon}</span><span className="text-sm font-medium">{action}</span>{action === "Download" && <FaDownload className="ml-2" />}</a> : <span className="text-gray-400 dark:text-gray-500 italic">No file</span>}</td>
+                                <td className="px-6 py-4">
+                                  {sub.fileName ? (
+                                    <a href={downloadUrl} target="_blank" rel="noopener noreferrer" className="flex items-center px-3 py-1 rounded-md bg-indigo-100 dark:bg-indigo-500/30 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-200 dark:hover:bg-indigo-500/50 w-fit shadow-sm">
+                                      <span className="text-lg mr-2">{fileTypeIcon}</span>
+                                      <span className="text-sm font-medium">Download</span>
+                                      <FaDownload className="ml-2" />
+                                    </a>
+                                  ) : (
+                                    <span className="text-gray-400 dark:text-gray-500 italic">No file</span>
+                                  )}
+                                </td>
                                 <td className="px-6 py-4 text-center"><input type="number" value={sub.score || ""} onChange={(e) => handleScoreChange(selectedActivity._id, sub._id, e.target.value)} className="p-2 border rounded-md w-20 text-center bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600" placeholder="Score" /></td>
                                 <td className="px-6 py-4 text-center"><span className={`px-3 py-1 rounded-full text-xs font-bold ${statusText === "Late" ? "bg-red-100 dark:bg-red-500/30 text-red-800 dark:text-red-200" : "bg-green-100 dark:bg-green-500/30 text-green-800 dark:text-green-200"}`}>{statusText}</span></td>
                                 <td className="px-6 py-4 text-center"><button onClick={() => handleSubmitScore(sub._id, sub.score)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-md">Save</button></td>

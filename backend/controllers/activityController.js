@@ -2,8 +2,8 @@ const Activity = require('../models/Activity');
 const Class = require('../models/Class');
 const Submission = require('../models/Submission');
 const mongoose = require('mongoose');
-const fs = require('fs'); // Required for deleting and downloading files
-const path = require('path'); // Required for resolving file paths
+const fs = require('fs');
+const path = require('path');
 
 // Create activity
 exports.createActivity = async (req, res) => {
@@ -12,7 +12,7 @@ exports.createActivity = async (req, res) => {
     let attachmentPath = null;
 
     if (req.file) {
-      attachmentPath = req.file.path; // Use full path from multer
+      attachmentPath = req.file.path;
     }
 
     if (!title || !date || !classId) {
@@ -110,7 +110,6 @@ exports.deleteActivity = async (req, res) => {
       return res.status(400).json({ message: 'Invalid activity ID' });
     }
 
-    // Also delete associated submissions
     await Submission.deleteMany({ activityId: id });
 
     const deleted = await Activity.findByIdAndDelete(id);
@@ -128,8 +127,8 @@ exports.deleteActivity = async (req, res) => {
 // Activity Submissions Monitoring for Teacher
 exports.getActivitySubmissionsByTeacher = async (req, res) => {
   try {
-    const teacherId = req.params.teacherId;
-    const classId = req.query.classId;
+    const { teacherId } = req.params;
+    const { classId } = req.query;
 
     if (!teacherId || !classId) {
       return res.status(400).json({ message: 'Teacher ID and Class ID are required' });
@@ -138,7 +137,16 @@ exports.getActivitySubmissionsByTeacher = async (req, res) => {
       return res.status(400).json({ message: 'Invalid ID format' });
     }
 
-    const submissions = await Submission.find({ classId })
+    const targetClass = await Class.findOne({ _id: classId, teacher: teacherId });
+
+    if (!targetClass) {
+      return res.status(403).json({ message: 'Access denied or class not found.' });
+    }
+
+    const activitiesInClass = await Activity.find({ classId: classId }).select('_id');
+    const activityIds = activitiesInClass.map(activity => activity._id);
+
+    const submissions = await Submission.find({ activityId: { $in: activityIds } })
       .populate('studentId', 'name email')
       .populate('activityId', 'title date')
       .sort({ submissionDate: -1 });
@@ -187,13 +195,19 @@ exports.updateActivityScore = async (req, res) => {
 // Submit Activity (for new submissions)
 exports.submitActivity = async (req, res) => {
   try {
-    const { activityId, studentId, classId } = req.body;
+    const { activityId, studentId } = req.body; // Tinanggal ang classId mula sa body
 
     if (!req.file) {
       return res.status(400).json({ message: 'No file was uploaded.' });
     }
-    if (!activityId || !studentId || !classId) {
-      return res.status(400).json({ message: 'Activity ID, Student ID, and Class ID are required.' });
+    if (!activityId || !studentId) {
+      return res.status(400).json({ message: 'Activity ID and Student ID are required.' });
+    }
+
+    // AYOS: Hanapin ang activity para makuha ang tamang classId
+    const activity = await Activity.findById(activityId);
+    if (!activity) {
+        return res.status(404).json({ message: 'Activity not found.' });
     }
 
     const existingSubmission = await Submission.findOne({ activityId, studentId });
@@ -204,7 +218,7 @@ exports.submitActivity = async (req, res) => {
     const submission = new Submission({
       activityId,
       studentId,
-      classId,
+      classId: activity.classId, // Gamitin ang classId mula sa nahanap na activity
       filePath: req.file.path,
       fileName: req.file.originalname,
       submissionDate: new Date(),
@@ -222,7 +236,7 @@ exports.submitActivity = async (req, res) => {
 // Resubmit Activity
 exports.resubmitActivity = async (req, res) => {
     try {
-        const { id } = req.params; // This is submissionId
+        const { id } = req.params;
 
         if (!req.file) {
             return res.status(400).json({ message: 'No file was uploaded for resubmission.' });
@@ -238,7 +252,7 @@ exports.resubmitActivity = async (req, res) => {
                 fileName: req.file.originalname,
                 submissionDate: new Date(),
                 status: 'Resubmitted',
-                score: null, // Reset score on resubmission
+                score: null,
             },
             { new: true }
         );
@@ -257,7 +271,7 @@ exports.resubmitActivity = async (req, res) => {
 // Delete a submission by its ID (for students)
 exports.deleteSubmission = async (req, res) => {
     try {
-        const { id } = req.params; // This is submissionId
+        const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'Invalid Submission ID.' });
@@ -269,7 +283,6 @@ exports.deleteSubmission = async (req, res) => {
             return res.status(404).json({ message: 'Submission not found.' });
         }
 
-        // Delete the actual file from the server's file system
         if (submission.filePath) {
             const filePath = path.join(__dirname, '..', submission.filePath);
             if (fs.existsSync(filePath)) {
@@ -347,11 +360,9 @@ exports.downloadActivityAttachment = async (req, res) => {
             return res.status(404).json({ message: 'Attachment not found for this activity.' });
         }
 
-        // Build the absolute path from the project's root directory
         const filePath = path.join(__dirname, '..', activity.attachment);
         
         if (fs.existsSync(filePath)) {
-            // Download the file, providing the original filename
             res.download(filePath, path.basename(activity.attachment)); 
         } else {
             console.error(`File not found at path: ${filePath}`);
@@ -367,7 +378,7 @@ exports.downloadActivityAttachment = async (req, res) => {
 // Function to download a submission file
 exports.downloadSubmissionFile = async (req, res) => {
     try {
-        const { id } = req.params; // This is the submissionId
+        const { id } = req.params;
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'Invalid submission ID' });
         }
@@ -377,7 +388,6 @@ exports.downloadSubmissionFile = async (req, res) => {
             return res.status(404).json({ message: 'Submission file not found.' });
         }
 
-        // Build the absolute path from the project's root directory
         const filePath = path.join(__dirname, '..', submission.filePath);
 
         if (fs.existsSync(filePath)) {
