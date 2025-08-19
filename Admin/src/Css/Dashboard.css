@@ -1,0 +1,80 @@
+/* Reset some default styles */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: #1a184a; /* Dark Blue Violet */
+}
+
+/* AYOS: Pinalitan ang pangalan ng keyframes para sa kalinawan */
+@keyframes fall {
+  0% {
+    transform: translateY(-10vh) rotate(0deg); /* Magsimula sa itaas ng screen */
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7; /* Unti-unting lumitaw */
+  }
+  90% {
+    opacity: 0.7; /* Manatiling nakikita */
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg); /* Lumagpas sa ibaba ng screen */
+    opacity: 0;
+  }
+}
+
+/* Dashboard.css */
+.falling-book {
+  position: absolute;
+  top: 0;
+  font-size: 2rem;
+  pointer-events: none;
+  animation-name: fall;
+  animation-timing-function: linear;
+  /* animation-duration and animation-delay are set inline */
+}
+
+@keyframes fall {
+  from {
+    transform: translateY(-120%);
+    opacity: 0.7;
+  }
+  to {
+    transform: translateY(110vh);
+    opacity: 0.9;
+  }
+}
+
+.falling-books-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #1a184a; /* Dark Blue Violet */
+}
+
+/* New Styles */
+.app-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background-color: #1a184a; /* Dark Blue Violet */
+  color: white;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  padding: 20px;
+}

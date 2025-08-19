@@ -1,7 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaClock, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaClock, FaCalendarAlt, FaMapMarkerAlt, FaChalkboardTeacher } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import '../Css/FallingBooks.css';
+
+// FallingBooksAnimation component
+const FallingBooksAnimation = () => {
+  const bookEmojis = ["\uD83D\uDCDA", "\uD83D\uDCD3", "\uD83D\uDCD5", "\uD83D\uDCD7", "\uD83D\uDCD8"];
+  const numberOfBooks = 7;
+  return (
+    <div className="dashboard-background" aria-hidden="true">
+      {Array.from({ length: numberOfBooks }, (_, index) => {
+        const randomLeft = Math.random() * 100;
+        const randomDuration = Math.random() * 8 + 7;
+        const randomDelay = Math.random() * 10;
+        const randomEmoji = bookEmojis[Math.floor(Math.random() * bookEmojis.length)];
+        return (
+          <div
+            className="falling-book"
+            key={`book-${index}`}
+            style={{
+              left: `${randomLeft}vw`,
+              animationDuration: `${randomDuration}s`,
+              animationDelay: `${randomDelay}s`,
+              top: 0,
+              transform: "translateY(-120%)",
+            }}
+          >
+            {randomEmoji}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// Helper to format time as hh:mm AM/PM in PH time
+const formatTimePH = (timeStr) => {
+  if (!timeStr) return 'TBA';
+  const [hour, minute] = timeStr.split(':');
+  if (isNaN(Number(hour)) || isNaN(Number(minute))) return timeStr;
+  const date = new Date(`1970-01-01T${hour}:${minute}:00`);
+  return date.toLocaleTimeString('en-PH', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Manila'
+  });
+};
 
 const TeacherPortal = () => {
   const [classes, setClasses] = useState([]);
@@ -12,21 +58,23 @@ const TeacherPortal = () => {
 
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
-  const teacherId = user && user.role === 'teacher' ? user._id : null;
+  const teacherId = user?._id;
 
   useEffect(() => {
     if (!teacherId) {
-      setError('Teacher not logged in');
+      setError('Teacher not logged in. Please log in again.');
       setLoading(false);
       return;
     }
 
     const fetchClasses = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const res = await axios.get(`http://localhost:5000/api/class?teacherId=${teacherId}`);
-        setClasses(res.data);
+        setClasses(res.data || []);
       } catch (err) {
-        setError(err.response?.data?.message || err.message);
+        setError(err.response?.data?.message || 'Failed to load classes.');
       } finally {
         setLoading(false);
       }
@@ -35,9 +83,8 @@ const TeacherPortal = () => {
     fetchClasses();
   }, [teacherId]);
 
-  // Updated function to navigate to the correct dynamic route
   const handleClassClick = (cls) => {
-    navigate(`/class/${cls._id}/announcements`);
+    navigate(`/class/${cls._id}`);
   };
 
   const filteredClasses = classes.filter((cls) =>
@@ -46,87 +93,78 @@ const TeacherPortal = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p>Loading your classes...</p>
+      <div className="flex justify-center items-center h-screen text-white">
+        <p className="text-xl">Loading your classes...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p style={{ color: 'red' }}>Error: {error}</p>
+      <div className="flex justify-center items-center h-screen text-red-400">
+        <p className="text-xl">Error: {error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="app-container bg-white dark:bg-gray-800 min-h-screen">
+      <FallingBooksAnimation />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="mb-8 pt-6">
-          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">My Subjects</h1>
-          <hr className="mt-3 border-t-2 border-gray-300 dark:border-gray-600" />
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
+            <FaChalkboardTeacher className="text-indigo-400" /> My Subjects
+          </h1>
+          <hr className="mt-3 border-t-2 border-indigo-600" />
         </div>
 
-        {/* Search Bar */}
         <div className="mb-8">
           <input
             type="text"
-            className="w-full p-4 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+            className="w-full p-4 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
             placeholder="Search subjects..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        {/* Grid layout */}
         {filteredClasses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredClasses.map((cls) => (
               <div
                 key={cls._id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden"
+                className="relative bg-gradient-to-br from-indigo-900/80 to-gray-900/80 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden border border-indigo-700 group"
                 onClick={() => handleClassClick(cls)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') handleClassClick(cls);
-                }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClassClick(cls); }}
               >
-                <div className="p-6 flex-grow">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-grow mr-4">
-                      <h2 className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 truncate" title={cls.className}>
-                        {cls.className}
-                      </h2>
-                    </div>
-                    <img
-                      src={user?.profilePicture || "/teacher-avatar.png"}
-                      alt={user?.name || "Teacher"}
-                      className="w-12 h-12 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-600 flex-shrink-0"
-                    />
-                  </div>
-                  <div className="space-y-3 text-sm mb-4">
-                    <p className="text-gray-700 dark:text-gray-300 flex items-center">
-                      <FaCalendarAlt size={16} className="mr-3 text-indigo-500 dark:text-indigo-400 flex-shrink-0" />
-                      <span className="font-medium">Date:</span>&nbsp;
-                      {cls.time ? new Date(cls.time).toLocaleDateString() : <span className="italic text-gray-500 dark:text-gray-400">TBA</span>}
+                {/* Optional background image or pattern */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('/class-bg.svg')] bg-cover bg-center" />
+                <div className="p-6 pt-12 flex-grow flex flex-col">
+                  <h2 className="text-2xl font-bold text-indigo-200 truncate mb-4" title={cls.className}>
+                    {cls.className}
+                  </h2>
+                  <div className="space-y-3 text-sm">
+                    <p className="text-gray-300 flex items-center">
+                      <FaCalendarAlt size={14} className="mr-3 text-indigo-400 flex-shrink-0" />
+                      <span className="font-medium">Day:</span>&nbsp;
+                      {cls.day || <span className="italic text-gray-400">N/A</span>}
                     </p>
-                    <p className="text-gray-700 dark:text-gray-300 flex items-center">
-                      <FaClock size={16} className="mr-3 text-indigo-500 dark:text-indigo-400 flex-shrink-0" />
+                    <p className="text-gray-300 flex items-center">
+                      <FaClock size={14} className="mr-3 text-indigo-400 flex-shrink-0" />
                       <span className="font-medium">Time:</span>&nbsp;
-                      {cls.time ? new Date(cls.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : <span className="italic text-gray-500 dark:text-gray-400">TBA</span>}
+                      {cls.time ? formatTimePH(cls.time) : <span className="italic text-gray-400">TBA</span>}
                     </p>
-                    <p className="text-gray-700 dark:text-gray-300 flex items-center">
-                      <FaMapMarkerAlt size={16} className="mr-3 text-indigo-500 dark:text-indigo-400 flex-shrink-0" />
+                    <p className="text-gray-300 flex items-center">
+                      <FaMapMarkerAlt size={14} className="mr-3 text-indigo-400 flex-shrink-0" />
                       <span className="font-medium">Room:</span>&nbsp;
-                      {cls.roomNumber || <span className="italic text-gray-500 dark:text-gray-400">N/A</span>}
+                      {cls.roomNumber || <span className="italic text-gray-400">N/A</span>}
                     </p>
                   </div>
                 </div>
-                <div className="bg-gray-100 dark:bg-indigo-500/20 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
-                  <p className="text-xs text-indigo-600 dark:text-indigo-300 font-semibold text-center">
+                <div className="bg-indigo-500/30 px-6 py-3 border-t border-indigo-700">
+                  <p className="text-xs text-indigo-200 font-semibold text-center tracking-wide group-hover:text-white transition">
                     View Class &rarr;
                   </p>
                 </div>
@@ -134,11 +172,8 @@ const TeacherPortal = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-10 mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-400 dark:text-indigo-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-            </svg>
-            <p className="text-xl text-gray-600 dark:text-gray-400">No subjects found matching your search.</p>
+          <div className="text-center py-10 mt-6 bg-gray-800 rounded-xl shadow-md">
+            <p className="text-xl text-gray-400">No subjects found matching your search.</p>
           </div>
         )}
       </div>

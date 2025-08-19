@@ -19,11 +19,11 @@ const getAllClasses = async (req, res) => {
 
 // POST /api/class - Gumawa ng bagong klase
 const createClass = async (req, res) => {
-  const { className, teacher, time, roomNumber } = req.body;
+  const { className, teacher, time, day, roomNumber } = req.body;
 
   try {
-    if (!className || !teacher) {
-      return res.status(400).json({ message: 'Class Name and Teacher are required' });
+    if (!className || !teacher || !day) {
+      return res.status(400).json({ message: 'Class Name, Teacher, and Day are required' });
     }
     if (!mongoose.Types.ObjectId.isValid(teacher)) {
       return res.status(400).json({ message: 'Invalid Teacher ID format' });
@@ -33,30 +33,30 @@ const createClass = async (req, res) => {
       return res.status(400).json({ message: 'A valid teacher ID is required' });
     }
 
+    // Always save time as string "HH:mm"
     const newClass = new Class({
       className,
       teacher,
-      time,
+      time: typeof time === 'string' ? time : '',
+      day,
       roomNumber,
       students: [],
     });
 
     const savedClass = await newClass.save();
-    const populatedClass = await Class.findById(savedClass._id).populate('teacher', 'name email');
+    const populatedClass = await Class.findById(savedClass._id)
+      .populate('teacher', 'name email')
+      .populate('students', 'name email');
     res.status(201).json(populatedClass);
   } catch (error) {
     console.error('Error creating class:', error);
 
-    // UPDATED: Improved Error Handling
-    // Kung ito ay duplicate key error (code 11000)
     if (error.code === 11000) {
       return res.status(409).json({ message: `Class with name '${error.keyValue.className}' already exists.` });
     }
-    // Kung ito ay isang Mongoose validation error
     if (error.name === 'ValidationError') {
-        return res.status(400).json({ message: error.message });
+      return res.status(400).json({ message: error.message });
     }
-    // Para sa ibang errors
     res.status(500).json({ message: 'Server error while creating class' });
   }
 };
@@ -127,11 +127,58 @@ const getClassById = async (req, res) => {
   }
 };
 
-// I-export lahat ng functions sa isang object
+// PUT /api/class/:id - I-update ang class details
+const updateClass = async (req, res) => {
+  const { id } = req.params;
+  const { className, teacher, time, day, roomNumber } = req.body;
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid class ID' });
+    }
+    if (!className || !teacher || !day) {
+      return res.status(400).json({ message: 'Class Name, Teacher, and Day are required' });
+    }
+    // Always save time as string "HH:mm"
+    const updated = await Class.findByIdAndUpdate(
+      id,
+      { className, teacher, time: typeof time === 'string' ? time : '', day, roomNumber },
+      { new: true, runValidators: true }
+    ).populate('teacher', 'name email').populate('students', 'name email');
+    if (!updated) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating class:', error);
+    res.status(500).json({ message: 'Server error while updating class' });
+  }
+};
+
+// GET /api/class/my-classes/:studentId - Kunin lang ang classes na enrolled ang student
+const getClassesByStudent = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ message: 'Invalid student ID' });
+    }
+    const classes = await Class.find({ students: studentId })
+      .populate('teacher', 'name email')
+      .populate('students', 'name email')
+      .sort({ createdAt: -1 });
+    res.json(classes);
+  } catch (error) {
+    console.error('Error fetching student classes:', error);
+    res.status(500).json({ message: 'Server error while fetching student classes' });
+  }
+};
+
 module.exports = {
   getAllClasses,
   createClass,
   deleteClass,
   updateClassStudents,
+  updateClass,
   getClassById,
+  getClassesByStudent
 };

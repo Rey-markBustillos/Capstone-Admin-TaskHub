@@ -10,6 +10,10 @@ const userRoutes = require('./routes/userRoutes');
 const classRoutes = require('./routes/classRoutes');
 const activityRoutes = require('./routes/activityRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
+const scheduleRoutes = require('./routes/schedule');
+
+// ADD: Import submission routes
+const submissionRoutes = require('./routes/submissionRoutes');
 
 dotenv.config();
 
@@ -53,11 +57,13 @@ app.get('/', (req, res) => {
 
 // Mount routes
 app.use('/api/users', userRoutes);
-// UPDATED: Pinalitan mula sa '/api/classes' para tumugma sa frontend request.
-// Tandaan: Maaaring makaapekto ito sa ibang parts ng app.
 app.use('/api/class', classRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/schedule', scheduleRoutes);
+
+// ADD: Mount submission routes (for /api/submissions/student/:studentId)
+app.use('/api/submissions', submissionRoutes);
 
 // 404 handler (keep this AFTER all routes)
 app.use((req, res, next) => {

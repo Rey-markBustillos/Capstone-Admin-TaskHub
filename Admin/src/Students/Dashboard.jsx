@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import VoiceAssistant from './VoiceAssistant';
+import { CheckCircle, Clock, AlertTriangle, Megaphone } from 'lucide-react';
 
+// Falling books animation (unchanged)
 const FallingBooksAnimation = () => (
   <>
     <div className="falling-book" style={{ left: '5vw', animationDuration: '7s', animationDelay: '0s' }}>📚</div>
@@ -40,13 +43,12 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// eslint-disable-next-line no-empty-pattern
-const StudentDashboard = ({ }) => {
+const StudentDashboard = () => {
   const [classes, setClasses] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
-  const [, setLoadingActivities] = useState(true);
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
   const [error, setError] = useState(null);
 
@@ -55,21 +57,36 @@ const StudentDashboard = ({ }) => {
   const studentName = user?.name || 'Student';
   const studentId = user && user.role === 'student' ? user._id : null;
 
+  const [todaysClassTime, setTodaysClassTime] = useState("");
+
   useEffect(() => {
     if (!studentId) {
       setError('Student not logged in');
       setLoadingClasses(false);
-      setLoadingActivities(false);
       setLoadingAnnouncements(false);
       return;
     }
 
-    // Fetch classes
     const fetchClasses = async () => {
       try {
-        // UPDATED: Pinalitan ang 'classes' to 'class' para tumugma sa backend route
-        const res = await axios.get(`http://localhost:5000/api/class?studentId=${studentId}`);
-        setClasses(res.data);
+        const res = await axios.get(`http://localhost:5000/api/class/my-classes/${studentId}`);
+        setClasses(res.data || []);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const classToday = (res.data || []).find(cls => {
+          if (!cls.time) return false;
+          const classDate = new Date(cls.time);
+          return (
+            classDate.getFullYear() === today.getFullYear() &&
+            classDate.getMonth() === today.getMonth() &&
+            classDate.getDate() === today.getDate()
+          );
+        });
+        if (classToday && classToday.time) {
+          setTodaysClassTime(new Date(classToday.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        } else {
+          setTodaysClassTime("");
+        }
       } catch (err) {
         setError(err.response?.data?.message || err.message);
       } finally {
@@ -77,26 +94,69 @@ const StudentDashboard = ({ }) => {
       }
     };
 
-    // Fetch activities
+    fetchClasses();
+    const handleStorage = (e) => {
+      if (e.key === 'user') fetchClasses();
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [studentId]);
+
+  useEffect(() => {
+    if (!studentId || classes.length === 0) {
+      setActivities([]);
+      return;
+    }
     const fetchActivities = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/activities?studentId=${studentId}`);
-        setActivities(res.data);
+        const classIds = classes.map(cls => cls._id).join(',');
+        if (!classIds) {
+          setActivities([]);
+          return;
+        }
+        const res = await axios.get(`http://localhost:5000/api/activities?classIds=${classIds}`);
+        setActivities(res.data || []);
       } catch (err) {
         setError(err.response?.data?.message || err.message);
-      } finally {
-        setLoadingActivities(false);
       }
     };
+    fetchActivities();
+  }, [studentId, classes]);
 
-    // Fetch announcements (example endpoint or mock)
+  useEffect(() => {
+    if (!studentId) {
+      setSubmissions([]);
+      return;
+    }
+    const fetchSubmissions = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/submissions/student/${studentId}`);
+        setSubmissions(res.data.submissions || []);
+      } catch (err) {
+        setError(err.response?.data?.message || err.message);
+      }
+    };
+    fetchSubmissions();
+  }, [studentId, activities]);
+
+  useEffect(() => {
+    if (!studentId || classes.length === 0) {
+      setAnnouncements([]);
+      setLoadingAnnouncements(false);
+      return;
+    }
+    setLoadingAnnouncements(true);
     const fetchAnnouncements = async () => {
       try {
-        // Replace with your real announcements API if available
-        const res = await axios.get(`http://localhost:5000/api/announcements?studentId=${studentId}`);
-        setAnnouncements(res.data);
+        const classIds = classes.map(cls => cls._id).join(',');
+        if (!classIds) {
+          setAnnouncements([]);
+          setLoadingAnnouncements(false);
+          return;
+        }
+        const res = await axios.get(`http://localhost:5000/api/announcements?classIds=${classIds}&studentId=${studentId}`);
+        setAnnouncements(res.data || []);
       } catch {
-        // fallback to mock announcements if API fails or not available
         setAnnouncements([
           { _id: '1', title: 'Welcome to the new semester!', date: '2025-06-01' },
           { _id: '2', title: 'Midterm exams start next month.', date: '2025-06-15' },
@@ -105,52 +165,84 @@ const StudentDashboard = ({ }) => {
         setLoadingAnnouncements(false);
       }
     };
-
-    fetchClasses();
-    fetchActivities();
     fetchAnnouncements();
-  }, [studentId]);
+  }, [studentId, classes]);
 
-
-  // Compute counts for summary
   const now = new Date();
-  const totalSubmitted = activities.filter(a => a.attachment).length;
-  const totalLate = activities.filter(a => a.attachment && new Date(a.submittedAt) > new Date(a.date)).length;
-  const totalMissing = activities.filter(a => !a.attachment && new Date(a.date) < now).length;
+  const submissionMap = {};
+  submissions.forEach(sub => {
+    const actId = sub.activityId && sub.activityId._id ? sub.activityId._id : sub.activityId;
+    if (actId) {
+      submissionMap[actId] = sub;
+    }
+  });
+
+  const filteredActivities = activities.filter(a =>
+    classes.some(cls => cls._id === (a.classId?._id || a.classId))
+  );
+
+  const totalSubmitted = filteredActivities.filter(a => submissionMap[a._id]).length;
+  const totalLate = filteredActivities.filter(a => {
+    const sub = submissionMap[a._id];
+    return sub && new Date(sub.submissionDate) > new Date(a.date);
+  }).length;
+  const totalMissing = filteredActivities.filter(a => {
+    const sub = submissionMap[a._id];
+    return !sub && new Date(a.date) < now;
+  }).length;
 
   return (
-    <div className="min-h-screen relative">
-      {/* Background with falling books */}
-      <div className="app-background" aria-hidden="true">
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden">
+      {/* Decorative background blobs (same as login) */}
+      <div
+        aria-hidden="true"
+        className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3"
+      >
+        <div className="w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-30 blur-3xl"></div>
+      </div>
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3"
+      >
+        <div className="w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 opacity-30 blur-3xl"></div>
+      </div>
+      {/* Falling books */}
+      <div className="absolute inset-0 pointer-events-none z-0">
         <FallingBooksAnimation />
       </div>
 
-      {/* UPDATED: Added overflow-y-auto to enable scrolling */}
-      <div className="relative z-10 h-screen overflow-y-auto pl-0 p-6" style={{ marginLeft: '-1rem', width: 'calc(100% + 1rem)' }}>
-        <header className="max-w-4xl mx-auto flex justify-between items-center mb-8 text-white">
-          <h1 className="text-3xl font-bold">Welcome, {studentName}!</h1>
+      <div className="relative z-10 w-full h-full overflow-y-auto p-2 sm:p-4 md:p-6 max-w-6xl mx-auto">
+        <header className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center mb-8 text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-0">Welcome, {studentName}!</h1>
         </header>
 
-        <main className="max-w-6xl mr-50 mx-auto rounded-lg p-6 shadow-lg">
+        {/* Voice Assistant Button */}
+        {studentId && <VoiceAssistant userId={studentId} todaysClassTime={todaysClassTime} />}
+
+        <main className="rounded-lg p-2 sm:p-4 md:p-6 shadow-lg backdrop-blur-xl border border-indigo-700">
           {/* Summary Section */}
           <section className="mb-6">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-100">Activity Summary</h2>
-            <div className="grid grid-cols-4 gap-6 text-center">
-              <div className="bg-indigo-100 p-4 rounded shadow">
-                <p className="text-3xl font-bold text-indigo-700">{totalSubmitted}</p>
-                <p className="text-indigo-900 font-semibold">Submitted</p>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Activity Summary</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
+              <div className="bg-indigo-100/80 p-3 sm:p-4 rounded shadow flex flex-col items-center">
+                <CheckCircle className="text-indigo-600 mb-1" size={32} />
+                <p className="text-2xl sm:text-3xl font-bold text-indigo-700">{totalSubmitted}</p>
+                <p className="text-indigo-900 font-semibold text-xs sm:text-base">Submitted</p>
               </div>
-              <div className="bg-yellow-100 p-4 rounded shadow">
-                <p className="text-3xl font-bold text-yellow-700">{totalLate}</p>
-                <p className="text-yellow-900 font-semibold">Late</p>
+              <div className="bg-yellow-100/80 p-3 sm:p-4 rounded shadow flex flex-col items-center">
+                <Clock className="text-yellow-600 mb-1" size={32} />
+                <p className="text-2xl sm:text-3xl font-bold text-yellow-700">{totalLate}</p>
+                <p className="text-yellow-900 font-semibold text-xs sm:text-base">Late</p>
               </div>
-              <div className="bg-red-100 p-4 rounded shadow">
-                <p className="text-3xl font-bold text-red-700">{totalMissing}</p>
-                <p className="text-red-900 font-semibold">Missing</p>
+              <div className="bg-red-100/80 p-3 sm:p-4 rounded shadow flex flex-col items-center">
+                <AlertTriangle className="text-red-600 mb-1" size={32} />
+                <p className="text-2xl sm:text-3xl font-bold text-red-700">{totalMissing}</p>
+                <p className="text-red-900 font-semibold text-xs sm:text-base">Missing</p>
               </div>
-              <div className="bg-green-100 p-4 rounded shadow">
-                <p className="text-3xl font-bold text-green-700">{announcements.length}</p>
-                <p className="text-green-900 font-semibold">Announcements</p>
+              <div className="bg-green-100/80 p-3 sm:p-4 rounded shadow flex flex-col items-center">
+                <Megaphone className="text-green-600 mb-1" size={32} />
+                <p className="text-2xl sm:text-3xl font-bold text-green-700">{announcements.length}</p>
+                <p className="text-green-900 font-semibold text-xs sm:text-base">Announcements</p>
               </div>
             </div>
           </section>
@@ -158,18 +250,18 @@ const StudentDashboard = ({ }) => {
           {/* Classes List */}
           {loadingClasses && <LoadingSpinner />}
           {error && <p className="text-red-600">{error}</p>}
-          {!loadingClasses && !error && classes.length === 0 && <p>You are not enrolled in any classes.</p>}
+          {!loadingClasses && !error && classes.length === 0 && <p className="text-white">You are not enrolled in any classes.</p>}
 
           {!loadingClasses && !error && classes.length > 0 && (
             <>
-              <h2 className="text-2xl font-semibold mb-4 text-gray-100">Your Enrolled Classes</h2>
-              <ul className="space-y-4">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Your Enrolled Classes</h2>
+              <ul className="space-y-3 sm:space-y-4">
                 {classes.map((cls) => (
-                  <li key={cls._id} className="bg-gray-200 p-4 rounded shadow">
-                    <h3 className="text-xl text-black font-bold">{cls.className}</h3>
-                    <div className="flex items-center">
-                      <p className="text-black mr-4"><strong>Teacher:</strong> {cls.teacherName}</p>
-                      <p className="text-black mr-4"><strong>Room:</strong> {cls.roomNumber}</p>
+                  <li key={cls._id} className="bg-gray-200/80 p-3 sm:p-4 rounded shadow">
+                    <h3 className="text-lg sm:text-xl text-black font-bold">{cls.className}</h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center">
+                      <p className="text-black mr-0 sm:mr-4"><strong>Teacher:</strong> {cls.teacherName}</p>
+                      <p className="text-black mr-0 sm:mr-4"><strong>Room:</strong> {cls.roomNumber}</p>
                       <p className="text-black"><strong>Time:</strong> {cls.time ? new Date(cls.time).toLocaleString() : 'TBA'}</p>
                     </div>
                   </li>
@@ -180,15 +272,15 @@ const StudentDashboard = ({ }) => {
 
           {/* Announcements Section */}
           <section className="mt-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-100">Announcements</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Announcements</h2>
             {loadingAnnouncements && <LoadingSpinner />}
-            {!loadingAnnouncements && announcements.length === 0 && <p>No announcements available.</p>}
+            {!loadingAnnouncements && announcements.length === 0 && <p className="text-white">No announcements available.</p>}
             {!loadingAnnouncements && announcements.length > 0 && (
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-3">
                 {announcements.map((ann) => (
-                  <li key={ann._id} className="bg-green-100 p-3 rounded shadow text-green-900">
+                  <li key={ann._id} className="bg-green-100/80 p-2 sm:p-3 rounded shadow text-green-900">
                     <p className="font-semibold">{ann.title}</p>
-                    <p className="text-sm italic">{new Date(ann.date).toLocaleDateString()}</p>
+                    <p className="text-xs sm:text-sm italic">{new Date(ann.date).toLocaleDateString()}</p>
                   </li>
                 ))}
               </ul>

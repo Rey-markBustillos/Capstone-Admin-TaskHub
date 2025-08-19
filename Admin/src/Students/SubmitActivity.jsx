@@ -140,9 +140,7 @@ const SubmitActivity = () => {
 
   const getAttachmentUrl = (filePath) => {
     if (!filePath) return '#';
-    // Palitan ang backslashes (Windows) ng forward slashes (URL)
     const normalizedPath = filePath.replace(/\\/g, '/');
-    // Tiyaking hindi nagsisimula sa slash ang path para maiwasan ang double slash
     const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
     return `${SERVER_URL}/${cleanPath}`;
   };

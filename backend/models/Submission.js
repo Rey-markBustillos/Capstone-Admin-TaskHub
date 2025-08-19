@@ -15,8 +15,11 @@ const submissionSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  attachment: {
+  filePath: {
     type: String // Path to the uploaded file
+  },
+  fileName: {
+    type: String // Original file name
   },
   score: {
     type: Number,

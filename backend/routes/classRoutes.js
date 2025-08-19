@@ -1,27 +1,39 @@
 const express = require('express');
 const router = express.Router();
 
-// AYOS: I-destructure ang mga tamang function mula sa inayos na controller
+const classController = require('../controllers/classController'); // <-- FIXED: import as classController
+
+// Destructure all controller functions
 const {
   getAllClasses,
   createClass,
   deleteClass,
   updateClassStudents,
   getClassById,
-} = require('../controllers/classController');
+  updateClass,
+  getClassesByStudent // <-- add this
+} = classController;
 
-// Route para sa pagkuha ng lahat ng klase at paggawa ng bago
+// Get all classes (admin/teacher) or create class
 router.route('/')
-  .get(getAllClasses)   // Dati ay 'getClasses', ngayon ay 'getAllClasses' na
-  .post(createClass);   // Dati ay 'addClass', ngayon ay 'createClass' na
+  .get(getAllClasses)
+  .post(createClass);
 
-// Route para sa isang specific na klase by ID
+// Get, update, or delete a class by ID
 router.route('/:id')
   .get(getClassById)
-  .delete(deleteClass);
+  .delete(deleteClass)
+  .put(updateClass);
 
-// Route para sa pag-update ng mga estudyante sa isang klase
+// Update students in a class
 router.route('/:id/students')
   .put(updateClassStudents);
+
+// GET all classes for a student (student view only)
+router.get('/my-classes/:studentId', getClassesByStudent);
+
+// REMOVE the duplicate and inline async route below!
+// (delete this block)
+// router.get('/my-classes/:studentId', async (req, res) => { ... });
 
 module.exports = router;

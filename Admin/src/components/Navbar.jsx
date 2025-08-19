@@ -1,76 +1,90 @@
 import React, { useState } from 'react';
-// Import useParams to get the classId from the URL
-import { Link, useParams } from 'react-router-dom';
-import { FaBullhorn, FaPlusSquare, FaUsers } from 'react-icons/fa'; // Removed FaEnvelope
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { FaBullhorn, FaPlusSquare, FaUsers, FaArrowLeft, FaBars, FaTimes, FaClock, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
 
 const Navbar = ({ selectedClass }) => {
   const [open, setOpen] = useState(false);
-  const { classId } = useParams(); // Get classId from the route parameters
+  const { classId } = useParams();
+  const navigate = useNavigate();
   const handleHamburgerClick = () => setOpen(!open);
 
-  // A safeguard to prevent rendering the navbar on pages without a classId
-  if (!classId) {
-    return null;
-  }
+  if (!classId) return null;
 
   return (
     <>
       {/* Top Class Info Bar */}
       {selectedClass && (
-        <div className="bg-blue-600 text-white px-6 py-2 text-sm flex justify-between items-center">
-          <div><strong>Class:</strong> {selectedClass.className}</div>
-          <div><strong>Schedule:</strong> {selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}</div>
-          <div><strong>Room:</strong> {selectedClass.roomNumber}</div>
+        <div className="bg-blue-600 text-white px-4 py-3 text-sm flex flex-col sm:flex-row sm:flex-wrap justify-start sm:justify-between items-start sm:items-center gap-2 sm:gap-4">
+          <div className="truncate flex items-center">
+            <FaCalendarAlt className="mr-2" />
+            <strong>Class:</strong>&nbsp;{selectedClass.className}
+          </div>
+          <div className="truncate flex items-center">
+            <FaClock className="mr-2" />
+            <strong>Schedule:</strong>&nbsp;{selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}
+          </div>
+          <div className="truncate flex items-center">
+            <span className="mr-2 font-bold">🗓️</span>
+            <strong>Day:</strong>&nbsp;{selectedClass.day || 'N/A'}
+          </div>
+          <div className="truncate flex items-center">
+            <FaMapMarkerAlt className="mr-2" />
+            <strong>Room:</strong>&nbsp;{selectedClass.roomNumber}
+          </div>
         </div>
       )}
 
-      {/* Main Navbar */}
-      <nav className="bg-gray-800 text-white p-4 flex justify-start items-center sticky top-0 z-50">
-        <div className="flex items-center">
-          {/* Desktop Links - Updated with dynamic classId */}
-          <ul className="hidden md:flex items-center space-x-60 ml-20">
-            <li>
-              {/* Use the classId to build the correct link */}
-              <Link to={`/class/${classId}/announcements`} className="hover:text-gray-300 flex items-center">
-                <FaBullhorn className="mr-2" /> Announcement
-              </Link>
-            </li>
-            <li>
-              <Link to={`/class/${classId}/createactivity`} className="hover:text-gray-300 flex items-center">
-                <FaPlusSquare className="mr-2" /> Create Activity
-              </Link>
-            </li>
-            <li>
-              <Link to={`/class/${classId}/studentlist`} className="hover:text-gray-300 flex items-center">
-                <FaUsers className="mr-2" /> Student List
-              </Link>
-            </li>
-            {/* Removed Contact link as it doesn't have a route */}
-          </ul>
-
-          {/* Hamburger icon */}
+      {/* Main Navigation */}
+      <nav className="bg-gray-800 text-white p-4 flex justify-between items-center sticky top-0 z-20 shadow-md">
+        {/* Back to Classes */}
+        <div className="text-lg font-bold">
           <button
-            onClick={handleHamburgerClick}
-            className="md:hidden flex flex-col justify-between w-6 h-4 bg-transparent border-none cursor-pointer"
-            aria-label="Toggle menu"
+            onClick={() => navigate('/classes')}
+            className="flex items-center gap-2 hover:text-gray-300 transition-colors"
           >
-            <div className={`h-0.5 w-full bg-white rounded transition-all duration-300 ${open ? 'rotate-45 translate-y-1.5' : ''}`}></div>
-            <div className={`h-0.5 w-full bg-white rounded transition-opacity duration-300 ${open ? 'opacity-0' : ''}`}></div>
-            <div className={`h-0.5 w-full bg-white rounded transition-all duration-300 ${open ? '-rotate-45 translate-y-1.5' : ''}`}></div>
+            <FaArrowLeft />
+            <span className="hidden sm:inline">Back to Classes</span>
           </button>
         </div>
 
-        {/* Mobile Dropdown Menu - Updated with dynamic classId */}
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center space-x-2">
+          <Link to={`/class/${classId}/announcements`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white">
+            <FaBullhorn className="mr-2" /> Announcement
+          </Link>
+          <Link to={`/class/${classId}/createactivity`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white">
+            <FaPlusSquare className="mr-2" /> Create Activity
+          </Link>
+          <Link to={`/class/${classId}/studentlist`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white">
+            <FaUsers className="mr-2" /> Student List
+          </Link>
+        </div>
+
+        {/* Mobile Menu Button */}
+        <div className="md:hidden">
+          <button onClick={handleHamburgerClick} className="text-2xl" aria-label="Toggle menu">
+            {open ? <FaTimes /> : <FaBars />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Dropdown */}
         {open && (
-          <div className="md:hidden absolute top-full left-0 bg-gray-800 w-60 p-4 rounded-md flex flex-col items-start space-y-2 z-50">
-            <Link to={`/class/${classId}/announcements`} className="hover:text-gray-300 py-3 px-4 flex items-center w-full" onClick={() => setOpen(false)}>
-              <FaBullhorn className="mr-3" /> Announcement
+          <div className="md:hidden absolute top-full right-0 bg-gray-800 w-full max-w-xs p-4 shadow-lg rounded-b-lg flex flex-col items-start space-y-2 z-10 animate-fadeIn">
+            <button
+              onClick={() => { setOpen(false); navigate('/classes'); }}
+              className="flex items-center gap-2 hover:text-gray-300 transition-colors py-2 px-3 rounded-md w-full"
+            >
+              <FaArrowLeft />
+              <span>Back to Classes</span>
+            </button>
+            <Link to={`/class/${classId}/announcements`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white w-full" onClick={() => setOpen(false)}>
+              <FaBullhorn className="mr-2" /> Announcement
             </Link>
-            <Link to={`/class/${classId}/createactivity`} className="hover:text-gray-300 py-3 px-4 flex items-center w-full" onClick={() => setOpen(false)}>
-              <FaPlusSquare className="mr-3" /> Create Activity
+            <Link to={`/class/${classId}/createactivity`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white w-full" onClick={() => setOpen(false)}>
+              <FaPlusSquare className="mr-2" /> Create Activity
             </Link>
-            <Link to={`/class/${classId}/studentlist`} className="hover:text-gray-300 py-3 px-4 flex items-center w-full" onClick={() => setOpen(false)}>
-              <FaUsers className="mr-3" /> Student List
+            <Link to={`/class/${classId}/studentlist`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white w-full" onClick={() => setOpen(false)}>
+              <FaUsers className="mr-2" /> Student List
             </Link>
           </div>
         )}

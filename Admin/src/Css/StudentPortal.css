@@ -1,125 +1,14 @@
-.app-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: linear-gradient(to bottom, #2e0854, #4b0082);
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.modal-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(to bottom, #2e0854, #4b0082);
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-}
-
 .falling-book {
-  position: absolute;
-  top: -60px;
-  width: 40px;
-  height: 50px;
-  background: #7b3fbf;
-  border: 3px solid #9d7bff;
-  border-radius: 6px;
-  box-shadow: 2px 2px 8px rgba(155, 90, 255, 0.5);
-  font-size: 30px;
-  line-height: 50px;
-  text-align: center;
-  user-select: none;
-  animation-name: fall;
+  position: fixed;
+  top: -3rem;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 0;
+  animation-name: fallBook;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
-  color: #e0d7ff;
-  pointer-events: none;
-  z-index: 0;
 }
-
-@keyframes fall {
-  0% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(110vh) rotate(360deg);
-    opacity: 0;
-  }
-}
-
-.falling-book:nth-child(1) {
-  left: 5vw;
-  animation-duration: 7s;
-  animation-delay: 0s;
-}
-.falling-book:nth-child(2) {
-  left: 20vw;
-  animation-duration: 9s;
-  animation-delay: 2s;
-}
-.falling-book:nth-child(3) {
-  left: 35vw;
-  animation-duration: 6s;
-  animation-delay: 4s;
-}
-.falling-book:nth-child(4) {
-  left: 50vw;
-  animation-duration: 8s;
-  animation-delay: 1s;
-}
-.falling-book:nth-child(5) {
-  left: 65vw;
-  animation-duration: 10s;
-  animation-delay: 3s;
-}
-.falling-book:nth-child(6) {
-  left: 80vw;
-  animation-duration: 7.5s;
-  animation-delay: 5s;
-}
-.falling-book:nth-child(7) {
-  left: 90vw;
-  animation-duration: 8.5s;
-  animation-delay: 6s;
-}
-
-/* Sidebar background set to medium-to-dark purple gradient */
-.sidebar-bg-transparent {
-  background: linear-gradient(180deg, #5a2d82, #4a1f6f) !important;
-}
-
-/* Sidebar text light for contrast on dark purple */
-.sidebar-text-color {
-  color: #ddd !important;
-}
-
-/* Student portal content text color for contrast */
-.student-portal {
-  color: #ddd;
-}
-
-/* Make modals full screen */
-.fixed.inset-0 {
-  position: fixed !important;
-  top: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  left: 0 !important;
-}
-
-/* Scroll inside modal content */
-.fixed.inset-0 > div {
-  overflow-y: auto;
-}
-
-/* Hover effect on class box */
-.class-box:hover {
-  background-color: #86d9ff; /* Light blue color on hover */
+@keyframes fallBook {
+  0% { top: -3rem; opacity: 0.7; }
+  100% { top: 110vh; opacity: 0.2; }
 }

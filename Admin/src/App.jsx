@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, Outlet, useLocation } from 'react-router-dom';
 
 // Import Components
 import Sidebar from './components/Sidebar'; // Siguraduhing tama ang path
@@ -19,6 +19,7 @@ import ActivityMonitoring from './Teachers/ActivityMonitoring';
 import TeacherAnnouncement from './Teachers/TeacherAnnouncement';
 import CreateActivity from './Teachers/CreateActivity';
 import StudentList from './Teachers/Studentlist';
+import TeacherClassView from './Teachers/TeacherClassView'; // AYOS: Import ng bagong layout
 import LandingPage from './LandingPage/LandingPage';
 import Login from './LandingPage/Login';
 
@@ -45,9 +46,10 @@ const RedirectIfLoggedIn = ({ user, children }) => {
   return children;
 };
 
-// Main Layout for authenticated users (handles sidebar and content margin)
+// Main Layout para sa mga authenticated users
 const ProtectedLayout = ({ user, onLogout }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
+  const location = useLocation();
 
   useEffect(() => {
     const handleResize = () => {
@@ -59,8 +61,25 @@ const ProtectedLayout = ({ user, onLogout }) => {
 
   if (!user) return <Navigate to="/login" />;
 
+  // Custom background logic
+  const isAdmin = user.role === 'admin';
+  const isStudentPortal = location.pathname.startsWith('/studentportal');
+  const hasCustomBackground = 
+    location.pathname.includes('/teacherdashboard') || 
+    location.pathname.includes('/classes') ||
+    location.pathname.startsWith('/class/'); // Para sa TeacherClassView
+
+  // Set bg-gray-300 for admin, gradient for student portal, default for others
+  const backgroundClass = isAdmin
+    ? 'bg-gray-300'
+    : isStudentPortal
+      ? 'bg-gradient-to-br from-indigo-50 via-white to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900'
+      : hasCustomBackground
+        ? ''
+        : 'bg-gray-100 dark:bg-gray-900';
+
   return (
-    <div className="flex bg-gray-100 dark:bg-gray-900 min-h-screen">
+    <div className={`flex min-h-screen ${backgroundClass}`}>
       <Sidebar 
         role={user.role} 
         onLogout={onLogout} 
@@ -68,7 +87,7 @@ const ProtectedLayout = ({ user, onLogout }) => {
         setIsOpen={setIsSidebarOpen} 
       />
       <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-56' : 'ml-16'}`}>
-        <Outlet /> {/* Dito lalabas ang mga nested routes (e.g., Dashboard, UserManagement) */}
+        <Outlet /> {/* Dito lalabas ang mga nested routes */}
       </main>
     </div>
   );
@@ -149,9 +168,14 @@ export default function App() {
         <Route path="/teacherdashboard" element={<TeacherDashboard />} />
         <Route path="/classes" element={<TeacherPortal />} />
         <Route path="/activitymonitoring" element={<ActivityMonitoring />} />
-        <Route path="/class/:classId/announcements" element={<TeacherAnnouncement />} />
-        <Route path="/class/:classId/createactivity" element={<CreateActivity />} />
-        <Route path="/class/:classId/studentlist" element={<StudentList />} />
+        
+        {/* AYOS: Binalot ang mga class-specific routes sa TeacherClassView */}
+        <Route path="/class/:classId" element={<TeacherClassView />}>
+            <Route index element={<Navigate to="announcements" replace />} />
+            <Route path="announcements" element={<TeacherAnnouncement />} />
+            <Route path="createactivity" element={<CreateActivity />} />
+            <Route path="studentlist" element={<StudentList />} />
+        </Route>
       </Route>
       
       {/* Fallback for any other authenticated route */}

@@ -67,11 +67,14 @@ router.get('/submission', activityController.getSubmissionForActivity);
 // GET to download a submission file
 router.get('/submission/:id/download', activityController.downloadSubmissionFile);
 
+// Get all students' scores for a class
+router.get('/export-scores', require('../controllers/activityController').exportScores);
+
 // DELETE a submission by its ID (for students)
 router.delete('/submission/:id', activityController.deleteSubmission);
 
 // GET all submissions for a student in a class
-router.get('/submissions', activityController.getStudentSubmissions);
+router.get('/submissions', activityController.getSubmissionsForStudentInClass);
 
 // GET submissions for a teacher to monitor
 router.get('/submissions/teacher/:teacherId', activityController.getActivitySubmissionsByTeacher);

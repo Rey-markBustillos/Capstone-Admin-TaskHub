@@ -8,7 +8,7 @@ const ActivitySchema = new mongoose.Schema({
   link: { type: String },
   attachment: { type: String }, // could be a file path or URL
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true },  // <-- Added
+  classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true },
 }, {
   timestamps: true,
 });

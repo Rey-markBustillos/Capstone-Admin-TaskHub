@@ -10,7 +10,7 @@ const populateFields = (query) => {
       populate: { path: 'postedBy', select: 'name' }
     })
     .populate('reactions.user', 'name')
-    .populate('viewedBy', 'name'); // Idinagdag ang pag-populate sa viewers
+    .populate('viewedBy', 'name');
 };
 
 // Create a new announcement
@@ -34,16 +34,22 @@ exports.createAnnouncement = async (req, res) => {
   }
 };
 
-// Get all announcements, filtered by classId
+// Get all announcements, filtered by classId or studentId
 exports.getAllAnnouncements = async (req, res) => {
   try {
-    const { classId } = req.query;
+    const { classId, studentId } = req.query;
     let filter = {};
 
     if (classId && mongoose.Types.ObjectId.isValid(classId)) {
       filter.classId = classId;
+    } else if (studentId && mongoose.Types.ObjectId.isValid(studentId)) {
+      // Hanapin lahat ng class na kasali ang studentId
+      const Class = require('../models/Class');
+      const classes = await Class.find({ students: studentId }).select('_id');
+      const classIds = classes.map(c => c._id);
+      filter.classId = { $in: classIds };
     } else {
-      return res.status(400).json({ message: 'A valid classId is required.' });
+      return res.status(400).json({ message: 'A valid classId or studentId is required.' });
     }
 
     const announcements = await populateFields(Announcement.find(filter)).sort({ datePosted: -1 });
@@ -175,7 +181,7 @@ exports.markAsViewed = async (req, res) => {
 
     const announcement = await Announcement.findByIdAndUpdate(
       id,
-      { $addToSet: { viewedBy: userId } }, // Gumagamit ng $addToSet para maiwasan ang duplicates
+      { $addToSet: { viewedBy: userId } },
       { new: true }
     );
 
