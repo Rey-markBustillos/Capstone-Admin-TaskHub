@@ -22,7 +22,7 @@ export default function Login({ onBack, onLoginSuccess }) {
         password: formData.password.trim(),
       };
 
-      const res = await fetch("http://localhost:5000/api/users/login", {
+      const res = await fetch("https://capstone-admin-task-hub-9c3u-p6r5s7bf2.vercel.app/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -3,6 +3,8 @@ import axios from 'axios';
 import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone } from 'lucide-react';
 
+const API_BASE = 'https://capstone-admin-task-hub-9c3u-p6r5s7bf2.vercel.app/api';
+
 // Falling books animation (unchanged)
 const FallingBooksAnimation = () => (
   <>
@@ -69,7 +71,7 @@ const StudentDashboard = () => {
 
     const fetchClasses = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/class/my-classes/${studentId}`);
+        const res = await axios.get(`${API_BASE}/class/my-classes/${studentId}`);
         setClasses(res.data || []);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -114,7 +116,7 @@ const StudentDashboard = () => {
           setActivities([]);
           return;
         }
-        const res = await axios.get(`http://localhost:5000/api/activities?classIds=${classIds}`);
+        const res = await axios.get(`${API_BASE}/activities?classIds=${classIds}`);
         setActivities(res.data || []);
       } catch (err) {
         setError(err.response?.data?.message || err.message);
@@ -130,7 +132,7 @@ const StudentDashboard = () => {
     }
     const fetchSubmissions = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/submissions/student/${studentId}`);
+        const res = await axios.get(`${API_BASE}/submissions/student/${studentId}`);
         setSubmissions(res.data.submissions || []);
       } catch (err) {
         setError(err.response?.data?.message || err.message);
@@ -154,7 +156,7 @@ const StudentDashboard = () => {
           setLoadingAnnouncements(false);
           return;
         }
-        const res = await axios.get(`http://localhost:5000/api/announcements?classIds=${classIds}&studentId=${studentId}`);
+        const res = await axios.get(`${API_BASE}/announcements?classIds=${classIds}&studentId=${studentId}`);
         setAnnouncements(res.data || []);
       } catch {
         setAnnouncements([

@@ -3,8 +3,10 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf } from 'react-icons/fa';
 
-const API_BASE_URL = 'http://localhost:5000/api';
-const SERVER_URL = 'http://localhost:5000';
+const API_BASE = "https://capstone-admin-task-hub-9c3u-p6r5s7bf2.vercel.app/api";
+const SERVER_URL = 'https://your-backend.up.railway.app';
+
+// Use API_BASE for all API calls for consistency
 
 const statusIcons = {
   'Graded': <FaCheckCircle className="text-blue-500 mr-1" />,
@@ -38,7 +40,7 @@ const StudentActivities = () => {
     const checkEnrollmentAndFetch = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API_BASE_URL}/class/my-classes/${studentId}`);
+        const res = await axios.get(`${API_BASE}/class/my-classes/${studentId}`);
         const enrolledClasses = res.data || [];
         const isEnrolled = enrolledClasses.some(cls => String(cls._id) === String(classId));
 
@@ -50,8 +52,8 @@ const StudentActivities = () => {
           return;
         }
         const [activitiesRes, submissionsRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/activities?classId=${classId}`),
-          axios.get(`${API_BASE_URL}/activities/submissions?classId=${classId}&studentId=${studentId}`)
+          axios.get(`${API_BASE}/activities?classId=${classId}`),
+          axios.get(`${API_BASE}/activities/submissions?classId=${classId}&studentId=${studentId}`)
         ]);
         let subs = [];
         if (Array.isArray(submissionsRes.data)) {
