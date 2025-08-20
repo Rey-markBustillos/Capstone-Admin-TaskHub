@@ -18,7 +18,7 @@ import '../Css/Dashboard.css';
 
 
 const SERVER_URL = 'https://capstone-admin-task-hub.vercel.app';
-const API_BASE = 'https://capstone-admin-task-hub.vercel.app';
+const API_BASE = 'https://capstone-admin-task-hub.vercel.app/api';
 
 // --- FallingBooksAnimation: Improved version ---
 const FallingBooksAnimation = () => {
@@ -81,10 +81,10 @@ export default function TeacherDashboard() {
     setLoadingSubs(true);
     setError(null);
     try {
-      const res = await axios.get(
-  `${API_BASE}/api/activities/submissions/teacher/${teacherId}`,
-        { params: { classId } }
-      );
+  const res = await axios.get(
+  `${API_BASE}/activities/submissions/teacher/${teacherId}`,
+    { params: { classId } }
+  );
       const submissionsData = res.data.submissions || [];
       const sortedSubmissions = submissionsData.sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate));
       setSubmissions(sortedSubmissions);
@@ -110,7 +110,7 @@ export default function TeacherDashboard() {
     setLoadingStats(true);
     setError(null);
     try {
-  const res = await axios.get(`${API_BASE}/api/class`, { params: { teacherId } });
+  const res = await axios.get(`${API_BASE}/class`, { params: { teacherId } });
       const fetchedClasses = res.data || [];
       const studentIdsSet = new Set();
       fetchedClasses.forEach(c => c.students?.forEach(s => studentIdsSet.add(s._id)));
