@@ -24,7 +24,7 @@ import '../Css/ActivityMonitoring.css';
 
 const SERVER_URL = 'https://capstone-admin-task-hub.vercel.app';
 
-const API_BASE = 'https://capstone-admin-task-hub-9c3u.vercel.app/api';
+const API_BASE = 'https://capstone-admin-task-hub.vercel.app/api';
 
 const FallingBooksAnimation = () => {
   const bookEmojis = ["\uD83D\uDCDA", "\uD83D\uDCD3", "\uD83D\uDCD5", "\uD83D\uDCD7", "\uD83D\uDCD8"];
