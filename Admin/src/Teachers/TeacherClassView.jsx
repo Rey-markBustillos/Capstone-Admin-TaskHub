@@ -4,8 +4,8 @@ import axios from 'axios';
 import Navbar from '../components/Navbar'; // Siguraduhing tama ang path
 import { FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
 
-const SERVER_URL = 'https://capstone-admin-task-hub-9c3u.vercel.app';
-const API_BASE = 'https://capstone-admin-task-hub-9c3u.vercel.app/api';
+const SERVER_URL = 'https://capstone-admin-task-hub.vercel.app';
+const API_BASE = 'https://capstone-admin-task-hub.vercel.app/api';
 
 const TeacherClassView = () => {
   const { classId } = useParams();

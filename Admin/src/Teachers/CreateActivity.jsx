@@ -28,8 +28,8 @@ const CreateActivity = () => {
     setActivitiesError('');
     try {
       const [classRes, activitiesRes] = await Promise.all([
-        axios.get(`https://capstone-admin-task-hub-9c3u.vercel.app/api/class/${classId}`),
-        axios.get(`https://capstone-admin-task-hub-9c3u.vercel.app/api/activities?classId=${classId}`)
+        axios.get(`https://capstone-admin-task-hub.vercel.app/api/class/${classId}`),
+        axios.get(`https://capstone-admin-task-hub.vercel.app/api/activities?classId=${classId}`)
       ]);
       setClassName(classRes.data.className);
       setActivitiesList(activitiesRes.data || []);
@@ -74,7 +74,7 @@ const CreateActivity = () => {
       if (activityData.attachment) {
         formData.append('attachment', activityData.attachment);
       }
-  await axios.post('https://capstone-admin-task-hub-9c3u.vercel.app/api/activities', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+  await axios.post('https://capstone-admin-task-hub.vercel.app/api/activities', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSuccess('Activity created successfully!');
       fetchClassData();
       setTimeout(() => {
