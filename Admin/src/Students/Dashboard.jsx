@@ -3,7 +3,7 @@ import axios from 'axios';
 import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone } from 'lucide-react';
 
-const API_BASE = 'https://capstone-admin-task-hub-9c3u-p6r5s7bf2.vercel.app/api';
+const API_BASE = 'https://capstone-admin-task-hub-9c3u.vercel.app/api';
 
 // Falling books animation (unchanged)
 const FallingBooksAnimation = () => (

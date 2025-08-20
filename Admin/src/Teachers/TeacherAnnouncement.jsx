@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye } from 'react-icons/fa';
 
-const API_BASE = "https://capstone-admin-task-hub-9c3u-p6r5s7bf2.vercel.app/api";
+const API_BASE = "https://capstone-admin-task-hub-9c3u.vercel.app/api";
 
 export default function TeacherAnnouncement() {
   const { classId } = useParams();

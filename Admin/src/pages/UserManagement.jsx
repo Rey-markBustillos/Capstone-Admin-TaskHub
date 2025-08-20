@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../Css/usermanagement.css";
 
-const API_BASE = "https://taskhub-backend.up.railway.app/api/users";
+const API_BASE = "https://capstone-admin-task-hub-9c3u.vercel.app/api/users";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);

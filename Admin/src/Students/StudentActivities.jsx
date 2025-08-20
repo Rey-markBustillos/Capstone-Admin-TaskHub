@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf } from 'react-icons/fa';
 
-const API_BASE = "https://capstone-admin-task-hub-9c3u-p6r5s7bf2.vercel.app/api";
+const API_BASE = "https://capstone-admin-task-hub-9c3u.vercel.app/api";
 const SERVER_URL = 'https://your-backend.up.railway.app';
 
 // Use API_BASE for all API calls for consistency

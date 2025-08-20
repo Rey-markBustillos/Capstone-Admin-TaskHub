@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
-const API_BASE_URL = 'https://capstone-admin-task-hub-9c3u-p6r5s7bf2.vercel.app/api';
+const API_BASE_URL = 'https://capstone-admin-task-hub-9c3u.vercel.app/api';
 
 const daysOfWeek = [
   "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"

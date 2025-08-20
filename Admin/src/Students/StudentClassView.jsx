@@ -3,7 +3,7 @@ import { useParams, Outlet } from 'react-router-dom';
 import axios from 'axios';
 import StudentClassNavbar from '../components/StudentClassNavbar'; // Corrected path
 
-const API_BASE_URL = 'https://capstone-admin-task-hub-9c3u-p6r5s7bf2.vercel.app/api';
+const API_BASE_URL = 'https://capstone-admin-task-hub-9c3u.vercel.app/api';
 
 const StudentClassView = () => {
   const { classId } = useParams();

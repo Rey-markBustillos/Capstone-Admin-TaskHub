@@ -16,9 +16,9 @@ import {
 } from "react-icons/fa";
 import '../Css/Dashboard.css';
 
-const SERVER_URL = 'https://your-backend.up.railway.app';
 
-const API_BASE = 'https://capstone-admin-task-hub-9c3u-p6r5s7bf2.vercel.app/api';
+const SERVER_URL = 'https://capstone-admin-task-hub-9c3u.vercel.app';
+const API_BASE = 'https://capstone-admin-task-hub-9c3u.vercel.app/api';
 
 // --- FallingBooksAnimation: Improved version ---
 const FallingBooksAnimation = () => {
