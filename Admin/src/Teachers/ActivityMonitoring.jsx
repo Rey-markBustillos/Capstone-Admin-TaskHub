@@ -74,7 +74,7 @@ export default function ActivityMonitoring() {
     const fetchClasses = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API_BASE}/api/class?teacherId=${teacherId}`);
+  const res = await axios.get(`${API_BASE}/class?teacherId=${teacherId}`);
         setClasses(res.data || []);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch classes.");
@@ -92,10 +92,10 @@ export default function ActivityMonitoring() {
       setLoading(true);
       setError(null);
       try {
-        const activitiesRes = await axios.get(`${API_BASE}/api/activities?classId=${selectedClass._id}`);
+  const activitiesRes = await axios.get(`${API_BASE}/activities?classId=${selectedClass._id}`);
         const classActivities = activitiesRes.data || [];
 
-        const submissionsRes = await axios.get(`${API_BASE}/api/activities/submissions/teacher/${teacherId}?classId=${selectedClass._id}`);
+  const submissionsRes = await axios.get(`${API_BASE}/activities/submissions/teacher/${teacherId}?classId=${selectedClass._id}`);
         const allSubmissions = submissionsRes.data.submissions.filter(sub => sub.studentId) || [];
 
         const activitiesWithSubmissions = classActivities.map(activity => {
@@ -144,7 +144,7 @@ export default function ActivityMonitoring() {
         alert("Score must be a number");
         return;
       }
-      await axios.put(`${API_BASE}/api/activities/submissions/score/${submissionId}`, { score: scoreNumber });
+  await axios.put(`${API_BASE}/activities/submissions/score/${submissionId}`, { score: scoreNumber });
       alert("Score updated successfully!");
     } catch (err) {
       alert(`Failed to update score: ${err.response?.data?.message || err.message}`);
@@ -180,7 +180,7 @@ export default function ActivityMonitoring() {
   const handleExportExcel = async () => {
     if (!selectedClass) return;
     try {
-      const res = await axios.get(`${API_BASE}/api/activities/export-scores?classId=${selectedClass._id}`);
+  const res = await axios.get(`${API_BASE}/activities/export-scores?classId=${selectedClass._id}`);
       const { exportData, activityTitles } = res.data;
 
       // Set column order: Name, Email, then all activity titles

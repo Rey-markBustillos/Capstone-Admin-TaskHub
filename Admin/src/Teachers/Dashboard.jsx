@@ -82,7 +82,7 @@ export default function TeacherDashboard() {
     setError(null);
     try {
       const res = await axios.get(
-        `${API_BASE}/api/activities/submissions/teacher/${teacherId}`,
+        `${API_BASE}/activities/submissions/teacher/${teacherId}`,
         { params: { classId } }
       );
       const submissionsData = res.data.submissions || [];
@@ -110,7 +110,7 @@ export default function TeacherDashboard() {
     setLoadingStats(true);
     setError(null);
     try {
-      const res = await axios.get(`${API_BASE}/api/class`, { params: { teacherId } });
+  const res = await axios.get(`${API_BASE}/class`, { params: { teacherId } });
       const fetchedClasses = res.data || [];
       const studentIdsSet = new Set();
       fetchedClasses.forEach(c => c.students?.forEach(s => studentIdsSet.add(s._id)));

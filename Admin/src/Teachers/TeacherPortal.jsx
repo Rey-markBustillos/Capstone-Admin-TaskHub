@@ -71,7 +71,7 @@ const TeacherPortal = () => {
       setLoading(true);
       setError(null);
       try {
-  const res = await axios.get(`https://capstone-admin-task-hub.vercel.app/api/class?teacherId=${teacherId}`);
+  const res = await axios.get(`https://capstone-admin-task-hub.vercel.app/class?teacherId=${teacherId}`);
         setClasses(res.data || []);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load classes.');
