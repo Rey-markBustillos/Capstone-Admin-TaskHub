@@ -23,9 +23,10 @@ exports.getTodaySchedule = async (req, res) => {
       date: { $gte: today, $lt: tomorrow }
     }).sort({ date: 1 });
 
-    // Format result
+    // Format result with day (weekday)
     const schedule = activities.map(act => ({
       time: act.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      day: act.date.toLocaleDateString('en-US', { weekday: 'long' }),
       title: act.title
     }));
 

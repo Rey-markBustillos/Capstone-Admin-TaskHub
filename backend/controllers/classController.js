@@ -3,10 +3,14 @@ const User = require('../models/User');
 const Announcement = require('../models/Announcement');
 const mongoose = require('mongoose');
 
-// GET /api/class - Kunin lahat ng klase
+// GET /api/class - Kunin lahat ng klase, optional filter by teacherId
 const getAllClasses = async (req, res) => {
   try {
-    const classes = await Class.find({})
+    const filter = {};
+    if (req.query.teacherId && mongoose.Types.ObjectId.isValid(req.query.teacherId)) {
+      filter.teacher = req.query.teacherId;
+    }
+    const classes = await Class.find(filter)
       .populate('teacher', 'name email')
       .populate('students', 'name email')
       .sort({ createdAt: -1 });
@@ -95,8 +99,16 @@ const updateClassStudents = async (req, res) => {
     if (!classFound) {
       return res.status(404).json({ message: 'Class not found' });
     }
-    classFound.students = studentIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    // Ensure no duplicates and only valid ObjectIds
+    const validStudentIds = studentIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    classFound.students = Array.from(new Set(validStudentIds.map(id => id.toString())));
     await classFound.save();
+
+    // Optionally, if you want to track enrolled classes in the User model, update students' enrolled classes here
+    // for (const studentId of validStudentIds) {
+    //   await User.findByIdAndUpdate(studentId, { $addToSet: { enrolledClasses: classId } });
+    // }
+
     const populatedClass = await Class.findById(classId)
       .populate('teacher', 'name email')
       .populate('students', 'name email');

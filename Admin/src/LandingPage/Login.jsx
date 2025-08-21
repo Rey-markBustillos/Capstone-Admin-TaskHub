@@ -22,7 +22,7 @@ export default function Login({ onBack, onLoginSuccess }) {
         password: formData.password.trim(),
       };
 
-  const res = await fetch("https://capstone-admin-task-hub-9c3u.vercel.app/api/users/login", {
+  const res = await fetch("http://localhost:5000/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -60,13 +60,24 @@ export default function Login({ onBack, onLoginSuccess }) {
         <div className="w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 opacity-30 blur-3xl"></div>
       </div>
 
-      <div className="relative bg-slate-800/80 backdrop-blur-xl p-4 sm:p-8 rounded-xl shadow-2xl shadow-black/20 max-w-md w-full mx-auto border border-indigo-700">
-        <div className="flex flex-col items-center mb-6">
-          <FaUserCircle className="text-indigo-400 text-5xl mb-2 drop-shadow-lg" />
-          <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight flex items-center gap-2">
+      <div className="relative bg-gradient-to-br from-indigo-900/80 via-slate-900/80 to-blue-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/40">
+        <div className="flex flex-col items-center mb-8">
+          <span className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 via-violet-500 to-blue-500 shadow-lg border-4 border-white mb-2 animate-bounce-slow">
+            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="url(#loginLogoGradient)" />
+              <defs>
+                <linearGradient id="loginLogoGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#06b6d4" />
+                </linearGradient>
+              </defs>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h8M12 8v8" />
+            </svg>
+          </span>
+          <h1 className="text-4xl font-extrabold text-slate-100 tracking-tight flex items-center gap-2 drop-shadow-lg">
             TaskHub
           </h1>
-          <p className="text-slate-400 mt-2">Sign in to continue</p>
+          <p className="text-slate-300 mt-2 text-lg font-medium">Sign in to continue</p>
         </div>
 
         {error && (
@@ -84,8 +95,8 @@ export default function Login({ onBack, onLoginSuccess }) {
               Email Address
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400">
-                <FaUserCircle />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400 animate-pulse">
+                <FaUserCircle size={22} />
               </span>
               <input
                 id="email"
@@ -96,7 +107,7 @@ export default function Login({ onBack, onLoginSuccess }) {
                 onChange={handleChange}
                 required
                 autoComplete="username"
-                className="w-full pl-10 pr-4 py-3 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow bg-slate-700/50 text-slate-100 placeholder:text-slate-400"
+                className="w-full pl-11 pr-4 py-3 border border-indigo-600/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow bg-slate-700/60 text-slate-100 placeholder:text-slate-400 shadow-inner"
               />
             </div>
           </div>
@@ -109,8 +120,8 @@ export default function Login({ onBack, onLoginSuccess }) {
               Password
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400">
-                <FaLock />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400 animate-pulse">
+                <FaLock size={20} />
               </span>
               <input
                 id="password"
@@ -121,7 +132,7 @@ export default function Login({ onBack, onLoginSuccess }) {
                 onChange={handleChange}
                 required
                 autoComplete="current-password"
-                className="w-full pl-10 pr-4 py-3 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow bg-slate-700/50 text-slate-100 placeholder:text-slate-400"
+                className="w-full pl-11 pr-4 py-3 border border-indigo-600/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow bg-slate-700/60 text-slate-100 placeholder:text-slate-400 shadow-inner"
               />
             </div>
           </div>
@@ -129,7 +140,7 @@ export default function Login({ onBack, onLoginSuccess }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-500 text-white py-3 px-4 rounded-lg hover:from-indigo-500 hover:to-blue-400 transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-lg font-semibold shadow-lg"
+            className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-indigo-600 via-violet-500 to-blue-500 text-white py-3 px-4 rounded-xl hover:from-indigo-500 hover:to-blue-400 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-lg font-bold shadow-xl shadow-indigo-900/20 ring-2 ring-indigo-400/10"
             aria-busy={loading}
           >
             {loading ? (
@@ -139,24 +150,24 @@ export default function Login({ onBack, onLoginSuccess }) {
               </svg>
             ) : (
               <>
-                <FaSignInAlt className="mr-2" /> Sign In
+                <FaSignInAlt className="mr-2 animate-bounce" /> Sign In
               </>
             )}
           </button>
         </form>
 
-        <div className="text-center mt-6">
+        <div className="text-center mt-8">
           <button
             onClick={onBack}
             tabIndex={0}
             type="button"
-            className="inline-flex items-center gap-2 text-sm font-medium text-indigo-400 hover:text-indigo-300 cursor-pointer transition"
+            className="inline-flex items-center gap-2 text-base font-semibold text-indigo-300 hover:text-indigo-100 cursor-pointer transition-all duration-200 px-4 py-2 rounded-lg bg-indigo-900/30 hover:bg-indigo-800/40 shadow"
             aria-label="Back to Welcome"
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") onBack();
             }}
           >
-            <FaArrowLeft /> Back to Welcome
+            <FaArrowLeft className="animate-pulse" /> Back to Welcome
           </button>
         </div>
       </div>

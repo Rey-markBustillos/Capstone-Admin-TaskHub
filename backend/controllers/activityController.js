@@ -142,20 +142,29 @@ exports.getActivitySubmissionsByTeacher = async (req, res) => {
     const { teacherId } = req.params;
     const { classId } = req.query;
 
-    if (!teacherId || !classId) {
-      return res.status(400).json({ message: 'Teacher ID and Class ID are required' });
-    }
-    if (!mongoose.Types.ObjectId.isValid(teacherId) || !mongoose.Types.ObjectId.isValid(classId)) {
-      return res.status(400).json({ message: 'Invalid ID format' });
+    if (!teacherId || !mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({ message: 'Valid Teacher ID is required' });
     }
 
-    const targetClass = await Class.findOne({ _id: classId, teacher: teacherId });
-    if (!targetClass) {
-      return res.status(403).json({ message: 'Access denied or class not found.' });
+    let activityIds = [];
+    if (classId) {
+      if (!mongoose.Types.ObjectId.isValid(classId)) {
+        return res.status(400).json({ message: 'Invalid classId format' });
+      }
+      // Check teacher owns the class
+      const targetClass = await Class.findOne({ _id: classId, teacher: teacherId });
+      if (!targetClass) {
+        return res.status(403).json({ message: 'Access denied or class not found.' });
+      }
+      const activitiesInClass = await Activity.find({ classId: classId }).select('_id');
+      activityIds = activitiesInClass.map(activity => activity._id);
+    } else {
+      // Get all classes for this teacher
+      const teacherClasses = await Class.find({ teacher: teacherId }).select('_id');
+      const classIds = teacherClasses.map(cls => cls._id);
+      const activities = await Activity.find({ classId: { $in: classIds } }).select('_id');
+      activityIds = activities.map(activity => activity._id);
     }
-
-    const activitiesInClass = await Activity.find({ classId: classId }).select('_id');
-    const activityIds = activitiesInClass.map(activity => activity._id);
 
     const submissions = await Submission.find({ activityId: { $in: activityIds } })
       .populate('studentId', 'name email')

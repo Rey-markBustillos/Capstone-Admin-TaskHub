@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { FaBullhorn, FaPlusSquare, FaUsers, FaArrowLeft, FaBars, FaTimes, FaClock, FaCalendarAlt, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaBullhorn, FaPlusSquare, FaUsers, FaArrowLeft, FaBars, FaTimes, FaClock, FaCalendarAlt, FaMapMarkerAlt, FaSchool } from 'react-icons/fa';
 
 const Navbar = ({ selectedClass }) => {
   const [open, setOpen] = useState(false);
@@ -14,17 +14,17 @@ const Navbar = ({ selectedClass }) => {
     <>
       {/* Top Class Info Bar */}
       {selectedClass && (
-        <div className="bg-blue-600 text-white px-4 py-3 text-sm flex flex-col sm:flex-row sm:flex-wrap justify-start sm:justify-between items-start sm:items-center gap-2 sm:gap-4">
-          <div className="truncate flex items-center">
-            <FaCalendarAlt className="mr-2" />
-            <strong>Class:</strong>&nbsp;{selectedClass.className}
+        <div className="bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-500 text-white px-4 py-4 text-sm flex flex-col sm:flex-row sm:flex-wrap justify-start sm:justify-between items-start sm:items-center gap-2 sm:gap-4 rounded-b-xl shadow-lg">
+          <div className="flex items-center gap-3 mb-2 sm:mb-0">
+            <FaSchool className="text-yellow-300 text-3xl drop-shadow-lg animate-pulse" />
+            <span className="text-xl sm:text-2xl font-bold text-white drop-shadow">{selectedClass.className}</span>
           </div>
           <div className="truncate flex items-center">
             <FaClock className="mr-2" />
             <strong>Schedule:</strong>&nbsp;{selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}
           </div>
           <div className="truncate flex items-center">
-            <span className="mr-2 font-bold">🗓️</span>
+            <FaCalendarAlt className="mr-2" />
             <strong>Day:</strong>&nbsp;{selectedClass.day || 'N/A'}
           </div>
           <div className="truncate flex items-center">
@@ -49,14 +49,14 @@ const Navbar = ({ selectedClass }) => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-2">
-          <Link to={`/class/${classId}/announcements`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white">
-            <FaBullhorn className="mr-2" /> Announcement
+          <Link to={`/class/${classId}/announcements`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold">
+            <FaBullhorn className="mr-2 text-yellow-300 text-lg animate-pulse" /> Announcement
           </Link>
-          <Link to={`/class/${classId}/createactivity`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white">
-            <FaPlusSquare className="mr-2" /> Create Activity
+          <Link to={`/class/${classId}/createactivity`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-yellow-400/20 hover:text-yellow-300 font-semibold">
+            <FaPlusSquare className="mr-2 text-yellow-400 text-lg animate-bounce" /> Create Activity
           </Link>
-          <Link to={`/class/${classId}/studentlist`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white">
-            <FaUsers className="mr-2" /> Student List
+          <Link to={`/class/${classId}/studentlist`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold">
+            <FaUsers className="mr-2 text-yellow-200 text-lg animate-pulse" /> Student List
           </Link>
         </div>
 
@@ -77,14 +77,14 @@ const Navbar = ({ selectedClass }) => {
               <FaArrowLeft />
               <span>Back to Classes</span>
             </button>
-            <Link to={`/class/${classId}/announcements`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white w-full" onClick={() => setOpen(false)}>
-              <FaBullhorn className="mr-2" /> Announcement
+            <Link to={`/class/${classId}/announcements`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold w-full" onClick={() => setOpen(false)}>
+              <FaBullhorn className="mr-2 text-yellow-300 text-lg animate-pulse" /> Announcement
             </Link>
-            <Link to={`/class/${classId}/createactivity`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white w-full" onClick={() => setOpen(false)}>
-              <FaPlusSquare className="mr-2" /> Create Activity
+            <Link to={`/class/${classId}/createactivity`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-yellow-400/20 hover:text-yellow-300 font-semibold w-full" onClick={() => setOpen(false)}>
+              <FaPlusSquare className="mr-2 text-yellow-400 text-lg animate-bounce" /> Create Activity
             </Link>
-            <Link to={`/class/${classId}/studentlist`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-gray-700/50 hover:text-white w-full" onClick={() => setOpen(false)}>
-              <FaUsers className="mr-2" /> Student List
+            <Link to={`/class/${classId}/studentlist`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold w-full" onClick={() => setOpen(false)}>
+              <FaUsers className="mr-2 text-yellow-200 text-lg animate-pulse" /> Student List
             </Link>
           </div>
         )}

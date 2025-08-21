@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import moment from 'moment-timezone';
 import { useParams } from 'react-router-dom';
-import { FaPaperclip, FaListOl, FaPlusCircle, FaBook, FaTimes } from 'react-icons/fa';
+import { FaPaperclip, FaListOl, FaPlusCircle, FaBook, FaTimes, FaTasks } from 'react-icons/fa';
 
 const CreateActivity = () => {
   const { classId } = useParams();
@@ -28,8 +28,8 @@ const CreateActivity = () => {
     setActivitiesError('');
     try {
       const [classRes, activitiesRes] = await Promise.all([
-        axios.get(`https://capstone-admin-task-hub.vercel.app/api/class/${classId}`),
-        axios.get(`https://capstone-admin-task-hub.vercel.app/api/activities?classId=${classId}`)
+        axios.get(`http://localhost:5000/api/class/${classId}`),
+        axios.get(`http://localhost:5000/api/activities?classId=${classId}`)
       ]);
       setClassName(classRes.data.className);
       setActivitiesList(activitiesRes.data || []);
@@ -74,7 +74,7 @@ const CreateActivity = () => {
       if (activityData.attachment) {
         formData.append('attachment', activityData.attachment);
       }
-  await axios.post('https://capstone-admin-task-hub.vercel.app/api/activities', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+  await axios.post('http://localhost:5000/api/activities', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSuccess('Activity created successfully!');
       fetchClassData();
       setTimeout(() => {
@@ -88,13 +88,17 @@ const CreateActivity = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-100 text-center sm:text-left">
-          Activities for <span className="text-indigo-400">{className}</span>
-        </h2>
+      {/* Header Section with Icon */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-500 rounded-xl shadow-lg px-6 py-5">
+        <div className="flex items-center gap-4">
+          <FaTasks className="text-yellow-300 text-4xl drop-shadow-lg animate-pulse" />
+          <h2 className="text-3xl sm:text-4xl font-bold text-white drop-shadow text-center sm:text-left">
+            Activities for <span className="text-yellow-200">{className}</span>
+          </h2>
+        </div>
         <button
           onClick={openCreateModal}
-          className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150"
+          className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-indigo-900 font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150"
         >
           <FaPlusCircle className="mr-2" /> Create New Activity
         </button>
@@ -189,7 +193,10 @@ const CreateActivity = () => {
           ) : activitiesError ? (
             <div className="text-red-400 text-center py-4">{activitiesError}</div>
           ) : activitiesList.length === 0 ? (
-            <div className="text-gray-400 text-center py-4">No activities found.</div>
+            <div className="flex flex-col items-center justify-center gap-2 text-gray-400 text-center py-8">
+              <FaTasks className="text-yellow-300 text-4xl mb-2 animate-bounce" />
+              <span className="text-lg">No activities found.</span>
+            </div>
           ) : (
             <ul className="space-y-4">
               {activitiesList.map((activity) => (

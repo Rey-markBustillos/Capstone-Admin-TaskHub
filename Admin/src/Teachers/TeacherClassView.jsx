@@ -4,8 +4,8 @@ import axios from 'axios';
 import Navbar from '../components/Navbar'; // Siguraduhing tama ang path
 import { FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
 
-const SERVER_URL = 'https://capstone-admin-task-hub.vercel.app';
-const API_BASE = 'https://capstone-admin-task-hub.vercel.app/api';
+const SERVER_URL = 'http://localhost:5000';
+const API_BASE = 'http://localhost:5000/api';
 
 const TeacherClassView = () => {
   const { classId } = useParams();
@@ -25,7 +25,7 @@ const TeacherClassView = () => {
       setError(null);
       try {
         // Tiyaking mayroon kang API endpoint para kumuha ng isang klase gamit ang ID
-        const res = await axios.get(`${API_BASE}/api/class/${classId}`);
+  const res = await axios.get(`${API_BASE}/class/${classId}`);
         setSelectedClass(res.data);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load class details.");

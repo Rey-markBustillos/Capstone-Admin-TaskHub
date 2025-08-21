@@ -6,10 +6,11 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   role: { type: String, enum: ['student', 'teacher', 'admin'], required: true },
-  studentId: { type: String, default: null },
+  lrn: { type: String, default: null }, // Learner Reference Number for students
   teacherId: { type: String, default: null },
   adminId: { type: String, default: null },
   active: { type: Boolean, default: true },
+   // studentId removed, use lrn instead
 });
 
 UserSchema.pre('save', async function (next) {

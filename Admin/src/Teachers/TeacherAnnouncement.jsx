@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn } from 'react-icons/fa';
 
-const API_BASE = "https://capstone-admin-task-hub.vercel.app/api";
+const API_BASE = "http://localhost:5000/api";
 
 export default function TeacherAnnouncement() {
   const { classId } = useParams();
@@ -175,19 +175,22 @@ export default function TeacherAnnouncement() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-100">
-          Announcements for <span className="text-indigo-400">{className}</span>
-        </h1>
-        <button onClick={openModalForCreate} className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center" aria-label="Create New Announcement">
+      {/* Header Section with Icon */}
+      <div className="flex items-center justify-between mb-8 bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-500 rounded-xl shadow-lg px-6 py-5">
+        <div className="flex items-center gap-4">
+          <FaBullhorn className="text-yellow-300 text-4xl drop-shadow-lg animate-pulse" />
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow">Announcements for <span className="text-yellow-200">{className}</span></h1>
+        </div>
+        <button onClick={openModalForCreate} className="bg-yellow-400 hover:bg-yellow-500 text-indigo-900 font-bold py-3 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center" aria-label="Create New Announcement">
           <FaPlus className="mr-2 h-5 w-5" /> New Announcement
         </button>
       </div>
 
       <div className={`${isModalOpen || viewersInfo.isOpen ? 'blur-sm pointer-events-none' : ''} transition-all duration-300`}>
         {loading ? <p className="text-center text-lg">Loading...</p> : error && announcements.length === 0 ? <p className="text-center text-red-500">{error}</p> : !loading && announcements.length === 0 ? (
-          <div className="text-center py-10 bg-gray-800 rounded-lg shadow-md p-8">
-            <p>No announcements posted yet.</p>
+          <div className="text-center py-10 bg-gray-800 rounded-lg shadow-md p-8 flex flex-col items-center justify-center gap-4">
+            <FaBullhorn className="text-yellow-300 text-4xl mb-2 animate-bounce" />
+            <p className="text-lg text-gray-200">No announcements posted yet.</p>
           </div>
         ) : (
           <ul className="space-y-8">
@@ -196,17 +199,20 @@ export default function TeacherAnnouncement() {
               const isCommentsOpen = openComments[ann._id];
 
               return (
-                <li key={ann._id} ref={announcementCardRef} data-ann-id={ann._id} className="bg-gray-800 shadow-lg rounded-xl border border-gray-700 overflow-hidden transition-all duration-300">
+                <li key={ann._id} ref={announcementCardRef} data-ann-id={ann._id} className="bg-gradient-to-br from-indigo-800 via-indigo-900 to-gray-900 shadow-xl rounded-2xl border border-indigo-700 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
                   <div className="p-6">
-                    <h2 className="text-2xl font-semibold text-indigo-400 mb-2">{ann.title}</h2>
-                    <p className="text-gray-300 mb-3 whitespace-pre-line leading-relaxed">{ann.content}</p>
-                    <div className="pt-3 mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm">
-                      <p className="text-gray-400 mb-2 sm:mb-0">
-                        Posted by: <span className="font-medium">{ann.postedBy?.name || 'You'}</span> on {new Date(ann.datePosted).toLocaleDateString()}
+                    <div className="flex items-center gap-3 mb-2">
+                      <FaBullhorn className="text-yellow-300 text-xl" />
+                      <h2 className="text-xl sm:text-2xl font-bold text-yellow-200 mb-0 drop-shadow">{ann.title}</h2>
+                    </div>
+                    <p className="text-gray-100 mb-3 whitespace-pre-line leading-relaxed text-base">{ann.content}</p>
+                    <div className="pt-3 mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs sm:text-sm">
+                      <p className="text-indigo-200 mb-2 sm:mb-0">
+                        Posted by: <span className="font-semibold text-yellow-100">{ann.postedBy?.name || 'You'}</span> on {new Date(ann.datePosted).toLocaleDateString()}
                       </p>
                       <div className="flex space-x-3">
-                        <button onClick={() => handleEdit(ann)} className="flex items-center text-blue-400 hover:text-blue-300 font-medium py-1 px-3 rounded-md hover:bg-blue-900/30 transition-colors"><FaEdit className="mr-1.5 h-4 w-4" /> Edit</button>
-                        <button onClick={() => handleDelete(ann._id)} className="flex items-center text-red-400 hover:text-red-300 font-medium py-1 px-3 rounded-md hover:bg-red-900/30 transition-colors"><FaTrashAlt className="mr-1.5 h-4 w-4" /> Delete</button>
+                        <button onClick={() => handleEdit(ann)} className="flex items-center text-blue-200 hover:text-blue-100 font-medium py-1 px-3 rounded-md hover:bg-blue-900/30 transition-colors"><FaEdit className="mr-1.5 h-4 w-4" /> Edit</button>
+                        <button onClick={() => handleDelete(ann._id)} className="flex items-center text-red-300 hover:text-red-200 font-medium py-1 px-3 rounded-md hover:bg-red-900/30 transition-colors"><FaTrashAlt className="mr-1.5 h-4 w-4" /> Delete</button>
                       </div>
                     </div>
                   </div>

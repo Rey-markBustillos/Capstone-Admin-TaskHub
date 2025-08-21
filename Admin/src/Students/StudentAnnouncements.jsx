@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
-import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, FaRegSmile, FaRegSadTear, FaRegLaughBeam, FaRegHeart, FaRegSurprise } from 'react-icons/fa';
+import { useParams, NavLink } from 'react-router-dom';
+import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, FaRegSmile, FaRegSadTear, FaRegLaughBeam, FaRegHeart, FaRegSurprise, FaArrowLeft } from 'react-icons/fa';
+// ...existing code...
+// ...existing code...
 
-const API_BASE_URL = 'https://capstone-admin-task-hub-9c3u.vercel.app/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 export default function StudentAnnouncements() {
   const { classId } = useParams();
@@ -131,6 +133,14 @@ export default function StudentAnnouncements() {
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="mb-6 mt-4 ml-4">
+        <NavLink
+          to={`/student/class/${classId}`}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800 transition mb-4"
+        >
+          <FaArrowLeft /> Back to Class Menu
+        </NavLink>
+      </div>
       {/* Header Section */}
       <div className="shadow-md flex-shrink-0 bg-white dark:bg-gray-800">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-3">

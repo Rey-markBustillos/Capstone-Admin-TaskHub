@@ -3,7 +3,7 @@ import axios from 'axios';
 import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone } from 'lucide-react';
 
-const API_BASE = 'https://capstone-admin-task-hub-9c3u.vercel.app/api';
+const API_BASE = 'http://localhost:5000/api';
 
 // Falling books animation (unchanged)
 const FallingBooksAnimation = () => (
@@ -59,7 +59,7 @@ const StudentDashboard = () => {
   const studentName = user?.name || 'Student';
   const studentId = user && user.role === 'student' ? user._id : null;
 
-  const [todaysClassTime, setTodaysClassTime] = useState("");
+  const [todaysSchedule, setTodaysSchedule] = useState([]);
 
   useEffect(() => {
     if (!studentId) {
@@ -73,22 +73,6 @@ const StudentDashboard = () => {
       try {
         const res = await axios.get(`${API_BASE}/class/my-classes/${studentId}`);
         setClasses(res.data || []);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const classToday = (res.data || []).find(cls => {
-          if (!cls.time) return false;
-          const classDate = new Date(cls.time);
-          return (
-            classDate.getFullYear() === today.getFullYear() &&
-            classDate.getMonth() === today.getMonth() &&
-            classDate.getDate() === today.getDate()
-          );
-        });
-        if (classToday && classToday.time) {
-          setTodaysClassTime(new Date(classToday.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-        } else {
-          setTodaysClassTime("");
-        }
       } catch (err) {
         setError(err.response?.data?.message || err.message);
       } finally {
@@ -96,9 +80,22 @@ const StudentDashboard = () => {
       }
     };
 
+    const fetchTodaySchedule = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/schedule/today?userId=${studentId}`);
+        setTodaysSchedule(res.data.schedule || []);
+      } catch {
+        setTodaysSchedule([]);
+      }
+    };
+
     fetchClasses();
+    fetchTodaySchedule();
     const handleStorage = (e) => {
-      if (e.key === 'user') fetchClasses();
+      if (e.key === 'user') {
+        fetchClasses();
+        fetchTodaySchedule();
+      }
     };
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);
@@ -218,8 +215,33 @@ const StudentDashboard = () => {
           <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-0">Welcome, {studentName}!</h1>
         </header>
 
+
+        {/* Today's Schedule Section */}
+        <section className="mb-6">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Today's Schedule</h2>
+          {todaysSchedule.length === 0 ? (
+            <div className="text-blue-200 italic">No upcoming schedule for today.</div>
+          ) : (
+            <ul className="space-y-2">
+              {todaysSchedule.map((sched, idx) => {
+                // Compose a Date object for today with the activity's time
+                const today = new Date();
+                const [hour, minute] = sched.time.split(':');
+                today.setHours(Number(hour), Number(minute), 0, 0);
+                const weekday = today.toLocaleString('en-US', { weekday: 'long' });
+                return (
+                  <li key={idx} className="bg-blue-100/80 p-3 rounded shadow flex flex-col sm:flex-row sm:items-center justify-between">
+                    <span className="font-bold text-blue-900">{sched.title}</span>
+                    <span className="text-blue-700 text-sm">{weekday} | {sched.time}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
         {/* Voice Assistant Button */}
-        {studentId && <VoiceAssistant userId={studentId} todaysClassTime={todaysClassTime} />}
+        {studentId && <VoiceAssistant userId={studentId} todaysClassTime={todaysSchedule[0]?.time || ""} />}
 
         <main className="rounded-lg p-2 sm:p-4 md:p-6 shadow-lg backdrop-blur-xl border border-indigo-700">
           {/* Summary Section */}
@@ -258,16 +280,34 @@ const StudentDashboard = () => {
             <>
               <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Your Enrolled Classes</h2>
               <ul className="space-y-3 sm:space-y-4">
-                {classes.map((cls) => (
-                  <li key={cls._id} className="bg-gray-200/80 p-3 sm:p-4 rounded shadow">
-                    <h3 className="text-lg sm:text-xl text-black font-bold">{cls.className}</h3>
-                    <div className="flex flex-col sm:flex-row sm:items-center">
-                      <p className="text-black mr-0 sm:mr-4"><strong>Teacher:</strong> {cls.teacherName}</p>
-                      <p className="text-black mr-0 sm:mr-4"><strong>Room:</strong> {cls.roomNumber}</p>
-                      <p className="text-black"><strong>Time:</strong> {cls.time ? new Date(cls.time).toLocaleString() : 'TBA'}</p>
-                    </div>
-                  </li>
-                ))}
+                {classes.map((cls) => {
+                  // Find soonest schedule for this class
+                  let soonestSched = null;
+                  if (Array.isArray(cls.schedule) && cls.schedule.length > 0) {
+                    const now = new Date();
+                    cls.schedule.forEach(sch => {
+                      if (sch.date && sch.time) {
+                        const dt = new Date(`${sch.date}T${sch.time}`);
+                        if (dt > now && (!soonestSched || dt < soonestSched.dt)) {
+                          soonestSched = { ...sch, dt };
+                        }
+                      }
+                    });
+                  }
+                  return (
+                    <li key={cls._id} className="bg-gray-200/80 p-3 sm:p-4 rounded shadow">
+                      <h3 className="text-lg sm:text-xl text-black font-bold">{cls.className}</h3>
+                      <div className="flex flex-col sm:flex-row sm:items-center">
+                        <p className="text-black mr-0 sm:mr-4"><strong>Teacher:</strong> {cls.teacherName}</p>
+                        <p className="text-black mr-0 sm:mr-4"><strong>Room:</strong> {cls.roomNumber}</p>
+                        <p className="text-black">
+                          <strong>Time:</strong> {soonestSched ? soonestSched.dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (cls.time ? new Date(cls.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBA')}
+                          {soonestSched ? ` | ${soonestSched.dt.toLocaleString('en-US', { weekday: 'long' })}` : ''}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </>
           )}

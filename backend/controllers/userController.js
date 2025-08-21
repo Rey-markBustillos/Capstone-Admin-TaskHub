@@ -27,7 +27,7 @@ exports.getUsers = async (req, res) => {
 // POST /api/users - Create a new user (password will be hashed by model)
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, password, role, studentId, teacherId, adminId } = req.body;
+   const { name, email, password, role, lrn, teacherId, adminId } = req.body;
 
     if (!name || !email || !password || !role) {
       return res.status(400).json({ message: "Name, email, password, and role are required" });
@@ -44,7 +44,7 @@ exports.createUser = async (req, res) => {
       email: email.toLowerCase(),
       password,
       role,
-      studentId: role === "student" ? studentId : null,
+      lrn: role === "student" ? lrn || null : null,
       teacherId: role === "teacher" ? teacherId : null,
       adminId: role === "admin" ? adminId : null,
       active: true,

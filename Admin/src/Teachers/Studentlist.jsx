@@ -22,7 +22,7 @@ const StudentList = () => {
       setError(null);
       try {
         // AYOS: Kinukuha ang detalye ng class, kasama ang listahan ng estudyante
-  const response = await axios.get(`https://capstone-admin-task-hub.vercel.app/api/class/${classId}`);
+  const response = await axios.get(`http://localhost:5000/api/class/${classId}`);
         setStudents(response.data.students || []);
         setClassName(response.data.className || '');
       } catch (err) {
@@ -59,14 +59,20 @@ const StudentList = () => {
 
   return (
     <div>
-      <h1 className="text-3xl sm:text-4xl font-bold text-gray-100 mb-8 text-center flex items-center justify-center">
-        <FaUsers className="mr-3 text-indigo-400" /> Student List for {className}
-      </h1>
-      
+      {/* Header Section with Icon */}
+      <div className="flex items-center justify-between mb-8 bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-500 rounded-xl shadow-lg px-6 py-5">
+        <div className="flex items-center gap-4">
+          <FaUsers className="text-yellow-300 text-4xl drop-shadow-lg animate-pulse" />
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow text-center sm:text-left">
+            Student List for <span className="text-yellow-200">{className}</span>
+          </h1>
+        </div>
+      </div>
+
       {students.length === 0 ? (
-        <div className="text-center py-10 text-gray-400 bg-gray-800/50 rounded-lg">
-          <FaUsers size={48} className="mx-auto mb-4 opacity-50" />
-          <p className="text-lg">No students enrolled in this class.</p>
+        <div className="flex flex-col items-center justify-center gap-2 text-gray-400 text-center py-10 bg-gray-800/50 rounded-lg">
+          <FaUsers size={48} className="text-yellow-300 mb-4 animate-bounce" />
+          <span className="text-lg">No students enrolled in this class.</span>
         </div>
       ) : (
         <div className="bg-gray-800/70 backdrop-blur-sm shadow-xl rounded-lg overflow-hidden border border-gray-700">

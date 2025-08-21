@@ -1,23 +1,61 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "../Css/usermanagement.css";
-
-const API_BASE = "https://capstone-admin-task-hub-9c3u.vercel.app/api/users";
+import * as XLSX from "xlsx";
+import '../Css/usermanagement.css'
 
 const UserManagement = () => {
+
+  const handleAddUser = async () => {
+    if (!newUser.name || !newUser.email || !newUser.password) {
+      alert("Please enter name, email, and password");
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(API_BASE, {
+        name: newUser.name,
+        email: newUser.email,
+        password: newUser.password,
+        role: newUser.role,
+        lrn: newUser.lrn || null,
+        teacherId: newUser.teacherId || null,
+        adminId: newUser.adminId || null,
+      });
+      setNewUser({
+        name: "",
+        email: "",
+        password: "",
+        role: "student",
+        lrn: "",
+        teacherId: "",
+        adminId: "",
+      });
+      fetchUsers();
+      setError(null);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to add user");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const [showModal, setShowModal] = useState({ open: false, role: null });
+  const [importError, setImportError] = useState("");
+  const [importSuccess, setImportSuccess] = useState("");
   const [users, setUsers] = useState([]);
-  const [editingUser, setEditingUser] = useState(null);
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
     password: "",
     role: "student",
-    studentId: "",
+    lrn: "",
     teacherId: "",
     adminId: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [roleFilter, setRoleFilter] = useState('all');
+  const API_BASE = "http://localhost:5000/api/users";
 
   useEffect(() => {
     fetchUsers();
@@ -36,38 +74,88 @@ const UserManagement = () => {
     }
   };
 
-  const handleAddUser = async () => {
-    if (!newUser.name || !newUser.email || !newUser.password) {
-      alert("Please enter name, email, and password");
+  const openModal = (role) => {
+    setShowModal({ open: true, role });
+    setNewUser({ name: '', email: '', password: '', role, lrn: '', teacherId: '', adminId: '' });
+  };
+
+  const closeModal = () => {
+    setShowModal({ open: false, role: null });
+    setNewUser({ name: '', email: '', password: '', role: 'student', lrn: '', teacherId: '', adminId: '' });
+  };
+
+  const handleImportExcel = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setImportError('No file selected.');
+      setTimeout(() => setImportError(''), 3000);
       return;
     }
-    setLoading(true);
-    try {
-      await axios.post(API_BASE, {
-        name: newUser.name,
-        email: newUser.email,
-        password: newUser.password,
-        role: newUser.role,
-        studentId: newUser.studentId || null,
-        teacherId: newUser.teacherId || null,
-        adminId: newUser.adminId || null,
-      });
-      setNewUser({
-        name: "",
-        email: "",
-        password: "",
-        role: "student",
-        studentId: "",
-        teacherId: "",
-        adminId: "",
-      });
-      fetchUsers();
-      setError(null);
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to add user");
-    } finally {
-      setLoading(false);
-    }
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        if (!data.length) {
+          setImportError('Excel file is empty.');
+          setTimeout(() => setImportError(''), 3000);
+          return;
+        }
+        const header = data[0].map(h => h && h.toLowerCase && h.toLowerCase());
+        const lrnIdx = header.indexOf('lrn');
+        const nameIdx = header.indexOf('name');
+        const emailIdx = header.indexOf('email');
+        if (lrnIdx === -1 || nameIdx === -1 || emailIdx === -1) {
+          setImportError('Excel must have columns: Name, Email, LRN.');
+          setTimeout(() => setImportError(''), 4000);
+          return;
+        }
+        // Helper to remove leading zeros
+        const stripLeadingZeros = s => String(s).replace(/^0+/, '').trim();
+        const existingLRNs = users.filter(u => u.role === 'student' && u.lrn).map(u => stripLeadingZeros(u.lrn));
+        const newRows = data.slice(1).filter(row => row[nameIdx] && row[emailIdx] && row[lrnIdx]);
+        let added = 0, skipped = 0;
+        for (const row of newRows) {
+          const lrn = stripLeadingZeros(row[lrnIdx]);
+          const name = String(row[nameIdx]).trim();
+          // Auto-generate password: first 3 letters of name (no spaces, lowercase) + full LRN
+          const namePart = name.replace(/\s+/g, '').substring(0, 3).toLowerCase();
+          const password = namePart + lrn;
+          if (!existingLRNs.includes(lrn)) {
+            try {
+              await axios.post(API_BASE, {
+                name: name,
+                email: row[emailIdx],
+                password: password,
+                role: 'student',
+                lrn: lrn
+              });
+              added++;
+            } catch {
+              skipped++;
+            }
+          } else {
+            skipped++;
+          }
+        }
+        fetchUsers();
+        if (added === 0) {
+          setImportError('No new students imported. All LRNs already exist or failed.');
+          setTimeout(() => setImportError(''), 4000);
+        } else {
+          setImportSuccess(`${added} student(s) imported. ${skipped > 0 ? skipped + ' duplicate(s) skipped.' : ''}`);
+          setTimeout(() => setImportSuccess(''), 4000);
+        }
+      } catch (err) {
+        setImportError('Failed to process Excel file.');
+        setTimeout(() => setImportError(''), 3000);
+        console.error('Excel import error:', err);
+      }
+    };
+    reader.readAsBinaryString(file);
   };
 
   const handleDeleteUser = async (id) => {
@@ -84,194 +172,283 @@ const UserManagement = () => {
     }
   };
 
-  const handleSaveEdit = async () => {
-    if (!editingUser.name || !editingUser.email) {
-      alert("Please enter both name and email");
-      return;
-    }
-    setLoading(true);
-    try {
-      await axios.put(`${API_BASE}/${editingUser._id || editingUser.id}`, editingUser);
-      setEditingUser(null);
-      fetchUsers();
-      setError(null);
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to update user");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  if (loading) return <p className="text-center text-lg mt-10">Loading...</p>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[40vh]">
+      <svg className="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span className="text-blue-700 text-lg font-semibold">Loading User Management...</span>
+    </div>
+  );
   if (error) return <p className="text-center text-red-600 mt-10">{error}</p>;
 
   return (
-    <div className="w-450 h-190">
-    <div className="max-w-5xl ml-20 mx-auto p-6 font-sans">
-      <h1 className="text-3xl font-bold mb-8 text-center">User Management</h1>
+  <div className="w-full min-h-screen bg-white">
+  <div className="max-w-5xl mx-auto p-2 sm:p-4 md:p-6 font-sans w-full">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center flex items-center justify-center gap-2">
+        <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 014.5 20.25v-.75z" />
+        </svg>
+        User Management
+      </h1>
 
-      {/* Add New User Form */}
-      <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">Add New User</h2>
-        <div className="flex flex-wrap gap-4 mb-4">
-          <input
-            type="text"
-            placeholder="Name"
-            value={newUser.name}
-            onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-            className="flex-grow min-w-[200px] px-3 py-2 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={newUser.email}
-            onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-            className="flex-grow min-w-[200px] px-3 py-2 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={newUser.password}
-            onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-            className="flex-grow min-w-[200px] px-3 py-2 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <select
-            value={newUser.role}
-            onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-            className="px-3 py-2 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {/* Add User Card Boxes */}
+  <section className="mb-8 sm:mb-12">
+        <h2 className="text-2xl font-semibold mb-4">Add User</h2>
+  <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-6 sm:mb-8">
+          {/* Student Card */}
+          <div
+            className="relative bg-gradient-to-br from-blue-100 via-blue-50 to-white shadow-lg rounded-2xl p-5 sm:p-8 flex-1 text-center cursor-pointer border-2 border-blue-300 hover:scale-105 hover:shadow-2xl transition-all duration-200 group overflow-hidden min-w-[220px]"
+            onClick={() => openModal('student')}
           >
+            <div className="flex justify-center mb-3">
+              <span className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-200 group-hover:bg-blue-400 transition-all text-5xl shadow-lg border-4 border-white">
+                👨‍🎓
+              </span>
+            </div>
+            <div className="font-extrabold text-xl text-blue-800 mb-1 tracking-wide drop-shadow">Add Student</div>
+            <div className="text-gray-500 text-sm">Register a new student</div>
+            <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-blue-300/60 to-blue-100/0 rounded-b-2xl" />
+          </div>
+          {/* Teacher Card */}
+          <div
+            className="relative bg-gradient-to-br from-green-100 via-green-50 to-white shadow-lg rounded-2xl p-5 sm:p-8 flex-1 text-center cursor-pointer border-2 border-green-300 hover:scale-105 hover:shadow-2xl transition-all duration-200 group overflow-hidden min-w-[220px]"
+            onClick={() => openModal('teacher')}
+          >
+            <div className="flex justify-center mb-3">
+              <span className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-200 group-hover:bg-green-400 transition-all text-5xl shadow-lg border-4 border-white">
+                👨‍🏫
+              </span>
+            </div>
+            <div className="font-extrabold text-xl text-green-800 mb-1 tracking-wide drop-shadow">Add Teacher</div>
+            <div className="text-gray-500 text-sm">Register a new teacher</div>
+            <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-green-300/60 to-green-100/0 rounded-b-2xl" />
+          </div>
+          {/* Admin Card */}
+          <div
+            className="relative bg-gradient-to-br from-yellow-100 via-yellow-50 to-white shadow-lg rounded-2xl p-5 sm:p-8 flex-1 text-center cursor-pointer border-2 border-yellow-300 hover:scale-105 hover:shadow-2xl transition-all duration-200 group overflow-hidden min-w-[220px]"
+            onClick={() => openModal('admin')}
+          >
+            <div className="flex justify-center mb-3">
+              <span className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-200 group-hover:bg-yellow-300 transition-all text-5xl shadow-lg border-4 border-white">
+                🧑‍💼
+              </span>
+            </div>
+            <div className="font-extrabold text-xl text-yellow-800 mb-1 tracking-wide drop-shadow">Add Admin</div>
+            <div className="text-gray-500 text-sm">Register a new admin</div>
+            <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-300/60 to-yellow-100/0 rounded-b-2xl" />
+          </div>
+        </div>
+
+        {/* Import Excel Button */}
+  <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 items-center">
+          <label className="inline-block cursor-pointer">
+            <span className="bg-green-600 hover:bg-green-700 text-white font-semibold text-sm px-4 py-2 rounded transition-colors">Import Excel</span>
+            <input
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleImportExcel}
+              className="hidden"
+            />
+          </label>
+          {importError && (
+            <div className="w-full mt-2 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded text-sm animate-pulse">
+              {importError}
+            </div>
+          )}
+          {importSuccess && (
+            <div className="w-full mt-2 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded text-sm animate-pulse">
+              {importSuccess}
+            </div>
+          )}
+        </div>
+
+        {/* Modal for Add User */}
+        {showModal.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/10 px-2 sm:px-0">
+            <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-sm relative">
+              <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={closeModal}>&times;</button>
+              <h3 className="text-xl font-bold mb-4 text-center flex items-center justify-center gap-2">
+                {showModal.role === 'student' && <span className="text-2xl">👨‍🎓</span>}
+                {showModal.role === 'teacher' && <span className="text-2xl">👨‍🏫</span>}
+                {showModal.role === 'admin' && <span className="text-2xl">🧑‍💼</span>}
+                Register {showModal.role.charAt(0).toUpperCase() + showModal.role.slice(1)}
+              </h3>
+              <form onSubmit={e => { e.preventDefault(); handleAddUser(); closeModal(); }}>
+                <div className="relative mb-3">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 014.5 20.25v-.75z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    value={newUser.name}
+                    onChange={e => setNewUser({ ...newUser, name: e.target.value })}
+                    className="block w-full pl-10 px-3 py-2 border border-blue-300 bg-blue-50 rounded focus:border-blue-500 focus:bg-white transition"
+                    required
+                  />
+                </div>
+                <div className="relative mb-3">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-500 text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5v2.25m0 0a2.25 2.25 0 01-2.25-2.25h4.5A2.25 2.25 0 0112 18.75z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={newUser.email}
+                    onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                    className="block w-full pl-10 px-3 py-2 border border-green-300 bg-green-50 rounded focus:border-green-500 focus:bg-white transition"
+                    required
+                  />
+                </div>
+                <div className="relative mb-3">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-yellow-500 text-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v3.75m9 0v6.75A2.25 2.25 0 0114.25 19.5h-4.5A2.25 2.25 0 017.5 17.25V10.5m9 0H7.5" />
+                    </svg>
+                  </span>
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={newUser.password}
+                    onChange={e => setNewUser({ ...newUser, password: e.target.value })}
+                    className="block w-full pl-10 px-3 py-2 border border-yellow-300 bg-yellow-50 rounded focus:border-yellow-500 focus:bg-white transition"
+                    required
+                  />
+                </div>
+                {showModal.role === 'student' && (
+                  <div className="relative mb-3">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 text-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 7.5v-2.25A2.25 2.25 0 0014.25 3h-4.5A2.25 2.25 0 007.5 5.25V7.5m9 0v9.75A2.25 2.25 0 0114.25 19.5h-4.5A2.25 2.25 0 017.5 17.25V7.5m9 0H7.5m9 0a2.25 2.25 0 012.25 2.25v7.5A2.25 2.25 0 0116.5 19.5h-9A2.25 2.25 0 015.25 17.25v-7.5A2.25 2.25 0 017.5 7.5" />
+                      </svg>
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="LRN"
+                      value={newUser.lrn}
+                      onChange={e => setNewUser({ ...newUser, lrn: e.target.value })}
+                      className="block w-full pl-10 px-3 py-2 border border-blue-300 bg-blue-50 rounded focus:border-blue-500 focus:bg-white transition"
+                    />
+                  </div>
+                )}
+                {showModal.role === 'teacher' && (
+                  <div className="relative mb-3">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-500 text-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
+                        <circle cx="12" cy="12" r="9" />
+                      </svg>
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Teacher ID"
+                      value={newUser.teacherId}
+                      onChange={e => setNewUser({ ...newUser, teacherId: e.target.value })}
+                      className="block w-full pl-10 px-3 py-2 border border-purple-300 bg-purple-50 rounded focus:border-purple-500 focus:bg-white transition"
+                      required
+                    />
+                  </div>
+                )}
+                {showModal.role === 'admin' && (
+                  <div className="relative mb-3">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-orange-500 text-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
+                        <circle cx="12" cy="12" r="9" />
+                      </svg>
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Admin ID"
+                      value={newUser.adminId}
+                      onChange={e => setNewUser({ ...newUser, adminId: e.target.value })}
+                      className="block w-full pl-10 px-3 py-2 border border-orange-300 bg-orange-50 rounded focus:border-orange-500 focus:bg-white transition"
+                      required
+                    />
+                  </div>
+                )}
+                <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">Register</button>
+              </form>
+            </div>
+          </div>
+        )}
+      </section>
+      
+
+
+      {/* User List Table */}
+      <section>
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">User List</h2>
+        <div className="mb-3 flex flex-wrap gap-2 items-center">
+          <label className="font-medium text-gray-700">Filter by Role:</label>
+          <select
+            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={roleFilter}
+            onChange={e => setRoleFilter(e.target.value)}
+          >
+            <option value="all">All Roles</option>
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
             <option value="admin">Admin</option>
           </select>
-          {newUser.role === "student" && (
-            <input
-              type="text"
-              placeholder="Student ID"
-              value={newUser.studentId}
-              onChange={(e) => setNewUser({ ...newUser, studentId: e.target.value })}
-              className="flex-grow min-w-[200px] px-3 py-2 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          )}
-          {newUser.role === "teacher" && (
-            <input
-              type="text"
-              placeholder="Teacher ID"
-              value={newUser.teacherId}
-              onChange={(e) => setNewUser({ ...newUser, teacherId: e.target.value })}
-              className="flex-grow min-w-[200px] px-3 py-2 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          )}
-          {newUser.role === "admin" && (
-            <input
-              type="text"
-              placeholder="Admin ID"
-              value={newUser.adminId}
-              onChange={(e) => setNewUser({ ...newUser, adminId: e.target.value })}
-              className="flex-grow min-w-[200px] px-3 py-2 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          )}
-          <button
-            onClick={handleAddUser}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
-          >
-            Add User
-          </button>
+        </div>
+        <div className="overflow-x-auto w-full max-h-[50vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
+          <table className="min-w-[600px] w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs sm:text-sm">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="bg-gradient-to-r from-blue-200 via-green-100 to-yellow-100">
+                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Name</th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Email</th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Role</th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users
+                .filter(user => roleFilter === 'all' ? true : user.role === roleFilter)
+                .map((user, idx) => (
+                  <tr key={user._id || user.id} className={"transition-all " + (idx % 2 === 1 ? "bg-gray-50" : "bg-white") + " hover:bg-blue-50"}>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle font-medium text-gray-900 break-words max-w-[120px] sm:max-w-none">{user.name}</td>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle text-gray-700 break-words max-w-[140px] sm:max-w-none">{user.email}</td>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
+                      <span className={
+                        user.role === 'student' ? "inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold" :
+                        user.role === 'teacher' ? "inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold" :
+                        "inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold"
+                      }>
+                        {user.role === 'student' && <span className="text-lg">👨‍🎓</span>}
+                        {user.role === 'teacher' && <span className="text-lg">👨‍🏫</span>}
+                        {user.role === 'admin' && <span className="text-lg">🧑‍💼</span>}
+                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
+                      <button
+                        className="inline-block bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-red-300 text-xs sm:text-sm"
+                        onClick={() => handleDeleteUser(user._id || user.id)}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          Delete
+                        </span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
         </div>
       </section>
-      
 
-      {/* User List Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-600">
-          <thead className="bg-gray-100">
-            <tr>
-              {["Name", "Email", "Role", "Active", "Actions"].map((title) => (
-                <th
-                  key={title}
-                  className="border border-gray-600 px-4 py-2 text-left text-gray-700"
-                >
-                  {title}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) =>
-              editingUser && (editingUser._id || editingUser.id) === (user._id || user.id) ? (
-                <tr key={user._id || user.id} className="bg-gray-50">
-                  <td className="border border-gray-600 px-4 py-2">
-                    <input
-                      value={editingUser.name}
-                      onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
-                      className="w-full px-2 py-1 border border-gray-600 rounded"
-                    />
-                  </td>
-                  <td className="border border-gray-600 px-4 py-2">
-                    <input
-                      value={editingUser.email}
-                      onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                      className="w-full px-2 py-1 border border-gray-600 rounded"
-                    />
-                  </td>
-                  <td className="border border-gray-600 px-4 py-2">
-                    <select
-                      value={editingUser.role}
-                      onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
-                      className="w-full px-2 py-1 border border-gray-600 rounded"
-                    >
-                      <option value="student">Student</option>
-                      <option value="teacher">Teacher</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </td>
-                  <td className="border border-gray-600 px-4 py-2">
-                    {user.active ? "Yes" : "No"}
-                  </td>
-                  <td className="border border-gray-600 px-4 py-2 space-x-2">
-                    <button
-                      onClick={handleSaveEdit}
-                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditingUser(null)}
-                      className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500"
-                    >
-                      Cancel
-                    </button>
-                  </td>
-                </tr>
-              ) : (
-                <tr key={user._id || user.id}>
-                  <td className="border border-gray-600 px-4 py-2">{user.name}</td>
-                  <td className="border border-gray-600 px-4 py-2">{user.email}</td>
-                  <td className="border border-gray-600 px-4 py-2">{user.role}</td>
-                  <td className="border border-gray-600 px-4 py-2">
-                    {user.active ? "Yes" : "No"}
-                  </td>
-                  <td className="border border-gray-600 px-4 py-2 space-x-2">
-                    <button
-                      onClick={() => setEditingUser(user)}
-                      className="bg-yellow-400 text-white px-3 py-1 rounded hover:bg-yellow-500"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteUser(user._id || user.id)}
-                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              )
-            )}
-          </tbody>
-        </table>
-      </div>
      </div>
+
     </div>
   );
 };

@@ -1,6 +1,6 @@
+
 @import "tailwindcss/preflight";
-/* @tailwind utilities; */
-/* @tailwind utilities; */
+@import "tailwindcss/utilities";
 
 /* Example of a custom component style (optional) */
 .btn-primary {

@@ -71,7 +71,7 @@ const TeacherPortal = () => {
       setLoading(true);
       setError(null);
       try {
-  const res = await axios.get(`https://capstone-admin-task-hub.vercel.app/class?teacherId=${teacherId}`);
+  const res = await axios.get(`http://localhost:5000/api/class?teacherId=${teacherId}`);
         setClasses(res.data || []);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load classes.');
@@ -103,6 +103,19 @@ const TeacherPortal = () => {
     return (
       <div className="flex justify-center items-center h-screen text-red-400">
         <p className="text-xl">Error: {error}</p>
+      </div>
+    );
+  }
+
+  // Show a special message if the teacher has no classes at all
+  if (!classes || classes.length === 0) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-white dark:bg-gray-800">
+        <FallingBooksAnimation />
+        <div className="bg-gray-800 rounded-xl shadow-md px-8 py-12 mt-8">
+          <h2 className="text-3xl font-bold text-indigo-300 mb-4 flex items-center gap-2"><FaChalkboardTeacher /> No Upcoming Classes</h2>
+          <p className="text-lg text-gray-300">You currently have no scheduled classes. Please check with your administrator or add a class to get started.</p>
+        </div>
       </div>
     );
   }

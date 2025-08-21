@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
-import { FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf } from 'react-icons/fa';
+import { useParams, useNavigate, NavLink } from 'react-router-dom';
+import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf } from 'react-icons/fa';
 
-const API_BASE = "https://capstone-admin-task-hub-9c3u.vercel.app/api";
-const SERVER_URL = 'https://your-backend.up.railway.app';
+const API_BASE = 'http://localhost:5000/api';
 
 // Use API_BASE for all API calls for consistency
 
@@ -135,6 +134,14 @@ const StudentActivities = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <div className="mb-6 mt-4 ml-4">
+        <NavLink
+          to={`/student/class/${classId}`}
+          className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800 transition mb-4"
+        >
+          <FaArrowLeft /> Back to Class Menu
+        </NavLink>
+      </div>
       <div className="flex items-center gap-3 mb-6">
         <FaBookOpen className="text-indigo-600 dark:text-indigo-400" size={32} />
         <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-200">Class Activities</h1>
@@ -155,7 +162,7 @@ const StudentActivities = () => {
                   attachmentUrl = activity.attachment;
                 } else {
                   const filename = activity.attachment.split(/[\\/]/).pop();
-                  attachmentUrl = `${SERVER_URL}/uploads/activities/${filename}`;
+                  attachmentUrl = `${API_BASE.replace('/api','')}/uploads/activities/${filename}`;
                 }
               }
 

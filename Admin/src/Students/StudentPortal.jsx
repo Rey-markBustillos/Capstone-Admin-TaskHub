@@ -5,7 +5,7 @@ import { MdClass } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import '../Css/StudentPortal.css'
 
-const API_BASE_URL = 'https://capstone-admin-task-hub-9c3u.vercel.app/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Falling books animation component
 const FallingBooksAnimation = () => (
@@ -65,7 +65,7 @@ const StudentPortal = () => {
   }, [studentId]);
 
   const handleClassClick = (classId) => {
-    navigate(`/student/class/${classId}/announcements`);
+    navigate(`/student/class/${classId}`);
   };
 
   const filteredClasses = classes.filter((cls) =>

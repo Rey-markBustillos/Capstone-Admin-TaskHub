@@ -16,9 +16,8 @@ import {
 } from "react-icons/fa";
 import '../Css/Dashboard.css';
 
-
-const SERVER_URL = 'https://capstone-admin-task-hub.vercel.app';
-const API_BASE = 'https://capstone-admin-task-hub.vercel.app/api';
+const SERVER_URL = 'http://localhost:5000';
+const API_BASE = 'http://localhost:5000/api';
 
 // --- FallingBooksAnimation: Improved version ---
 const FallingBooksAnimation = () => {
@@ -71,9 +70,10 @@ export default function TeacherDashboard() {
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
   const teacherId = user?._id;
+  const teacherName = user?.name || "Teacher";
 
   const fetchSubmissionsForClass = useCallback(async (classId, studentsInClassCount) => {
-    if (!teacherId || !classId) {
+  if (!teacherId) {
       setSubmissions([]);
       setStats(prev => ({ ...prev, submissionRate: 0 }));
       return;
@@ -139,12 +139,76 @@ export default function TeacherDashboard() {
     fetchClassesAndInitialStats();
   }, [fetchClassesAndInitialStats]);
 
-  const handleClassChange = (e) => {
+
+
+  // Helper to get the class with the soonest upcoming schedule
+  const getSoonestClass = () => {
+    // Assume each class has a 'schedule' array with { date, time } objects
+    const now = new Date();
+    let soonest = null;
+    let soonestDate = null;
+    classes.forEach(cls => {
+      if (Array.isArray(cls.schedule)) {
+        cls.schedule.forEach(sch => {
+          if (sch.date && sch.time) {
+            const dt = new Date(`${sch.date}T${sch.time}`);
+            if (dt > now && (!soonestDate || dt < soonestDate)) {
+              soonest = cls;
+              soonestDate = dt;
+            }
+          }
+        });
+      }
+    });
+    return soonest;
+  };
+
+  // Helper to get all unique students across all classes
+  const getAllUniqueStudents = () => {
+    const allStudents = classes.flatMap(c => c.students || []);
+    const unique = {};
+    allStudents.forEach(s => { if (s && s._id) unique[s._id] = s; });
+    return Object.values(unique);
+  };
+
+  // Helper to get all submissions across all classes
+  const getAllSubmissions = async () => {
+    try {
+      const res = await axios.get(
+        `${API_BASE}/activities/submissions/teacher/${teacherId}`
+      );
+      return res.data.submissions || [];
+    } catch {
+      return [];
+    }
+  };
+
+  const handleClassChange = async (e) => {
     const classId = e.target.value;
-    const newSelectedClass = classes.find(c => c._id === classId) || null;
-    setSelectedClass(newSelectedClass);
-    if (newSelectedClass) {
-      fetchSubmissionsForClass(newSelectedClass._id, newSelectedClass.students?.length || 0);
+    if (classId === "ALL_CLASSES") {
+      setSelectedClass({ _id: "ALL_CLASSES", className: "All Classes" });
+      // Calculate total students and submissions across all classes
+      const uniqueStudents = getAllUniqueStudents();
+      const allSubs = await getAllSubmissions();
+      setSubmissions(allSubs.sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate)));
+      // Submission rate: unique students who submitted / total unique students
+      let submissionRate = 0;
+      if (uniqueStudents.length > 0) {
+        const uniqueSubmitters = new Set(allSubs.map(sub => sub.studentId?._id));
+        submissionRate = Math.round((uniqueSubmitters.size / uniqueStudents.length) * 100);
+      }
+      setStats(prev => ({
+        ...prev,
+        totalClasses: classes.length,
+        totalStudents: uniqueStudents.length,
+        submissionRate
+      }));
+    } else {
+      const newSelectedClass = classes.find(c => c._id === classId) || null;
+      setSelectedClass(newSelectedClass);
+      if (newSelectedClass) {
+        fetchSubmissionsForClass(newSelectedClass._id, newSelectedClass.students?.length || 0);
+      }
     }
   };
 
@@ -185,100 +249,181 @@ export default function TeacherDashboard() {
       <FallingBooksAnimation />
       <div className="relative z-10 p-6 md:p-8 overflow-y-auto h-screen">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-100 mb-8 flex items-center gap-3">
-            <FaBookOpen className="text-indigo-400" /> Teacher Dashboard
-          </h1>
-
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            {classes.length > 0 ? (
-              <div className="relative">
-                <select
-                  id="classSelector"
-                  className="appearance-none w-full sm:w-auto bg-gray-800/70 border border-gray-600 text-gray-200 py-3 px-4 pr-8 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                  value={selectedClass?._id || ""}
-                  onChange={handleClassChange}
-                  disabled={loadingSubs}
-                >
-                  {classes.map(cls => <option key={cls._id} value={cls._id}>{cls.className}</option>)}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-300"><FaChevronDown size={16}/></div>
+          {/* Welcome and Stats Section Combined */}
+          <div className="mb-10">
+            <div className="w-full bg-gradient-to-br from-indigo-800 via-indigo-600 to-purple-700 rounded-3xl shadow-2xl p-8 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
+              <div className="flex flex-col items-center lg:items-start gap-2 z-10">
+                <div className="flex items-center gap-4 mb-2">
+                  <FaUserGraduate className="text-yellow-300 text-5xl drop-shadow-lg animate-pulse" />
+                  <span className="text-4xl sm:text-5xl font-extrabold text-white drop-shadow-lg tracking-tight">Welcome,</span>
+                </div>
+                <span className="text-3xl sm:text-4xl font-bold text-yellow-200 drop-shadow-lg mb-2">{teacherName}</span>
+                <span className="text-indigo-100 text-lg font-medium">Empowering your teaching journey 🚀</span>
               </div>
-            ) : (
-              !loadingStats && <p className="text-gray-400">No classes found.</p>
-            )}
-            {error && <p className="text-red-400 text-sm">{error}</p>}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <StatCard
-              title="Total Classes"
-              value={stats.totalClasses}
-              icon={<FaChalkboardTeacher size={28} className="opacity-75" />}
-              bgColor="bg-blue-600"
-            />
-            <StatCard
-              title="Total Students"
-              value={stats.totalStudents}
-              icon={<FaUsers size={28} className="opacity-75" />}
-              bgColor="bg-green-600"
-            />
-            <StatCard
-              title="Submission Rate"
-              value={loadingSubs ? <FaSpinner className="animate-spin text-3xl" /> : stats.submissionRate}
-              unit={loadingSubs ? "" : "%"}
-              icon={<FaChartLine size={28} className="opacity-75" />}
-              bgColor="bg-purple-600"
-            />
-          </div>
-
-          <section className="bg-gray-800/70 backdrop-blur-sm shadow-xl rounded-xl p-6 border border-gray-700">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl text-gray-100 font-semibold flex items-center gap-2">
-                <FaRegFileAlt className="text-indigo-400" />
-                Recent Submissions {selectedClass ? `for ${selectedClass.className}` : ''}
-              </h2>
-              {loadingSubs && <FaSpinner className="animate-spin text-2xl text-indigo-400" />}
+              {/* StatCards removed from welcome section */}
+              {/* Decorative background shapes */}
+              <div className="absolute -top-10 -left-10 w-60 h-60 bg-indigo-900 opacity-30 rounded-full blur-2xl z-0"></div>
+              <div className="absolute -bottom-16 -right-16 w-72 h-72 bg-purple-900 opacity-20 rounded-full blur-2xl z-0"></div>
             </div>
+          </div>
+          {/* Class Selection Dropdown */}
+          <div className="mb-8 flex items-center gap-4">
+            <label htmlFor="class-select" className="text-gray-200 font-semibold">
+              Select Class:
+            </label>
+            <select
+              id="class-select"
+              className="bg-gray-800 text-gray-100 rounded px-3 py-2 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              value={selectedClass ? selectedClass._id : "ALL_CLASSES"}
+              onChange={handleClassChange}
+            >
+              <option value="ALL_CLASSES">All Classes</option>
+              {classes.map((cls) => (
+                <option key={cls._id} value={cls._id}>
+                  {cls.className}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {submissions.length === 0 && !loadingSubs ? (
-              <div className="text-center py-10 text-gray-400">
-                <FaRegFileAlt size={48} className="mx-auto mb-4 opacity-50" />
-                <p className="text-lg">No submissions found for this class.</p>
+          <div className="flex flex-col gap-8">
+            {/* StatCards & Ongoing Class Side by Side */}
+            <div className="flex flex-col lg:flex-row gap-8 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
+                <StatCard
+                  title="Total Classes"
+                  value={stats.totalClasses}
+                  icon={<FaChalkboardTeacher size={32} className="opacity-90" />}
+                  bgColor="bg-blue-700/80"
+                />
+                <StatCard
+                  title="Total Students"
+                  value={stats.totalStudents}
+                  icon={<FaUsers size={32} className="opacity-90" />}
+                  bgColor="bg-green-700/80"
+                />
+                <StatCard
+                  title="Submission Rate"
+                  value={loadingSubs ? <FaSpinner className="animate-spin text-3xl" /> : stats.submissionRate}
+                  unit={loadingSubs ? "" : "%"}
+                  icon={<FaChartLine size={32} className="opacity-90" />}
+                  bgColor="bg-purple-700/80"
+                />
               </div>
-            ) : (
-              <ul className="space-y-4">
-                {submissions.slice(0, 5).map((sub) => (
-                  <li key={sub._id} className="p-4 bg-gray-900/50 rounded-lg shadow-md border border-gray-700 transition-all hover:shadow-lg hover:border-indigo-500">
-                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                      <div className="flex-grow">
-                        <h3 className="text-lg font-semibold text-indigo-400 flex items-center gap-2">
-                          <FaBookOpen /> {sub.activityId?.title || "Untitled Activity"}
-                        </h3>
-                        <p className="text-gray-400 text-sm">
-                          <span className="font-medium text-gray-200">{sub.studentId?.name || "Unknown Student"}</span>
-                          {" submitted on "}
-                          {new Date(sub.submissionDate).toLocaleDateString()}
-                        </p>
-                        {sub.activityId?.date && (
-                          <p className={`text-xs mt-1 font-semibold flex items-center gap-1 ${new Date(sub.submissionDate) > new Date(sub.activityId.date) ? "text-red-400" : "text-green-400"}`}>
-                            {new Date(sub.submissionDate) > new Date(sub.activityId.date) ? (
-                              <>
-                                <FaTimesCircle /> Late
-                              </>
-                            ) : (
-                              <>
-                                <FaCheckCircle /> On Time
-                              </>
-                            )}
-                          </p>
-                        )}
-                      </div>
+              <div className="w-full lg:w-80 flex-shrink-0">
+                <div className="bg-gradient-to-br from-indigo-800 via-indigo-900 to-gray-900 rounded-xl shadow-lg p-6 border border-indigo-700 h-full flex flex-col justify-center">
+                  <h3 className="text-xl font-bold text-yellow-200 mb-4 flex items-center gap-2">
+                    <FaBookOpen className="text-yellow-300" /> Ongoing Class
+                  </h3>
+                  <div className="bg-gray-900 rounded-lg p-4 text-gray-100 font-semibold text-center shadow">
+                    {(() => {
+                      let cls = null;
+                      if (selectedClass && selectedClass._id === "ALL_CLASSES") {
+                        cls = getSoonestClass();
+                        if (!cls) return 'No upcoming class';
+                      } else if (selectedClass) {
+                        cls = selectedClass;
+                      }
+                      if (!cls) return 'No class selected';
+                      // Find soonest schedule for this class
+                      let soonestSched = null;
+                      if (Array.isArray(cls.schedule) && cls.schedule.length > 0) {
+                        const now = new Date();
+                        cls.schedule.forEach(sch => {
+                          if (sch.date && sch.time) {
+                            const dt = new Date(`${sch.date}T${sch.time}`);
+                            if (dt > now && (!soonestSched || dt < soonestSched.dt)) {
+                              soonestSched = { ...sch, dt };
+                            }
+                          }
+                        });
+                      }
+                      return (
+                        <>
+                          <div>{cls.className}</div>
+                          {soonestSched ? (
+                            <div className="text-sm text-indigo-300 mt-1">
+                              {soonestSched.dt.toLocaleString('en-US', { weekday: 'long' })} | {soonestSched.dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-400 mt-1">No upcoming schedule</div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Recent Submissions & Enrolled Classes Stacked Vertically */}
+            <div className="flex flex-col lg:flex-row gap-8">
+              <div className="flex-1">
+                <section className="bg-gray-800/70 backdrop-blur-sm shadow-xl rounded-xl p-6 border border-gray-700">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl text-gray-100 font-semibold flex items-center gap-2">
+                      <FaRegFileAlt className="text-indigo-400" />
+                      Recent Submissions {selectedClass && selectedClass._id === "ALL_CLASSES" ? 'for All Classes' : selectedClass ? `for ${selectedClass.className}` : ''}
+                    </h2>
+                    {loadingSubs && <FaSpinner className="animate-spin text-2xl text-indigo-400" />}
+                  </div>
+
+                  {submissions.length === 0 && !loadingSubs ? (
+                    <div className="text-center py-10 text-gray-400">
+                      <FaRegFileAlt size={48} className="mx-auto mb-4 opacity-50" />
+                      <p className="text-lg">No submissions found for this class.</p>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+                  ) : (
+                    <ul className="space-y-4">
+                      {submissions.slice(0, 5).map((sub) => (
+                        <li key={sub._id} className="p-4 bg-gray-900/50 rounded-lg shadow-md border border-gray-700 transition-all hover:shadow-lg hover:border-indigo-500">
+                          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div className="flex-grow">
+                              <h3 className="text-lg font-semibold text-indigo-400 flex items-center gap-2">
+                                <FaBookOpen /> {sub.activityId?.title || "Untitled Activity"}
+                              </h3>
+                              <p className="text-gray-400 text-sm">
+                                <span className="font-medium text-gray-200">{sub.studentId?.name || "Unknown Student"}</span>
+                                {" submitted on "}
+                                {new Date(sub.submissionDate).toLocaleDateString()}
+                              </p>
+                              {sub.activityId?.date && (
+                                <p className={`text-xs mt-1 font-semibold flex items-center gap-1 ${new Date(sub.submissionDate) > new Date(sub.activityId.date) ? "text-red-400" : "text-green-400"}`}>
+                                  {new Date(sub.submissionDate) > new Date(sub.activityId.date) ? (
+                                    <>
+                                      <FaTimesCircle /> Late
+                                    </>
+                                  ) : (
+                                    <>
+                                      <FaCheckCircle /> On Time
+                                    </>
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              </div>
+              <div className="w-full lg:w-80 flex-shrink-0">
+                <div className="bg-gradient-to-br from-indigo-800 via-indigo-900 to-gray-900 rounded-xl shadow-lg p-6 border border-indigo-700 h-full flex flex-col justify-center">
+                  <h3 className="text-xl font-bold text-yellow-200 mb-4 flex items-center gap-2">
+                    <FaClipboardList className="text-yellow-300" /> Enrolled Classes
+                  </h3>
+                  <ul className="space-y-3">
+                    {classes.slice(0, 3).map(cls => (
+                      <li key={cls._id} className="bg-gray-900 rounded-lg p-3 text-gray-100 font-semibold shadow text-center">
+                        {cls.className}
+                      </li>
+                    ))}
+                    {classes.length === 0 && <li className="text-gray-400">No enrolled classes.</li>}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

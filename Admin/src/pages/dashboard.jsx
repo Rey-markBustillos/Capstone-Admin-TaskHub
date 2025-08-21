@@ -113,7 +113,7 @@ const lineOptions = {
   },
 };
 
-const API_BASE = "https://capstone-admin-task-hub-9c3u.vercel.app/api";
+const API_BASE = "http://localhost:5000/api";
 
 const AdminDashboard = () => {
   const [selectedMenu, setSelectedMenu] = useState("User Management");
@@ -133,6 +133,43 @@ const AdminDashboard = () => {
       fetchUsers();
     }
   }, [selectedMenu]);
+  
+  // Assignments states
+  const [classes, setClasses] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [errorAssignments, setErrorAssignments] = useState("");
+  
+  // Fetch users or assignments on menu change
+  useEffect(() => {
+    if (selectedMenu === "User Management") {
+      fetchUsers();
+    }
+    if (selectedMenu === "Assignments") {
+      fetchAssignmentsData();
+    }
+  }, [selectedMenu]);
+  
+  const fetchAssignmentsData = async () => {
+    setLoadingAssignments(true);
+    setErrorAssignments("");
+    try {
+      const [classRes, activityRes] = await Promise.all([
+        fetch(`${API_BASE}/class`),
+        fetch(`${API_BASE}/activities`),
+      ]);
+      if (!classRes.ok) throw new Error("Failed to fetch classes");
+      if (!activityRes.ok) throw new Error("Failed to fetch activities");
+      const classData = await classRes.json();
+      const activityData = await activityRes.json();
+      setClasses(classData);
+      setActivities(activityData);
+    } catch (err) {
+      setErrorAssignments(err.message);
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
@@ -200,19 +237,40 @@ const AdminDashboard = () => {
 
       {/* Main Content */}
       <main className="flex-grow p-8">
+        {/* Admin Dashboard Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 via-indigo-400 to-blue-600 text-white shadow-lg border-4 border-white">
+            <svg className="w-9 h-9" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+            </svg>
+          </span>
+          <div>
+            <h1 className="text-3xl font-extrabold text-blue-900 tracking-tight drop-shadow">Admin Dashboard</h1>
+            <p className="text-gray-500 font-medium">Welcome, Admin! Manage users, classes, and monitor activities here.</p>
+          </div>
+        </div>
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded shadow">
-            <h3 className="text-gray-500">Total Users</h3>
-            <p className="text-3xl font-bold">{users.length}</p>
+          <div className="bg-gradient-to-br from-blue-100 via-white to-blue-200 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center border-t-4 border-blue-400">
+            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-200 text-blue-700 mb-2 shadow border-2 border-white">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 014.5 20.25v-.75z" /></svg>
+            </span>
+            <h3 className="text-blue-700 font-semibold">Total Users</h3>
+            <p className="text-3xl font-extrabold text-blue-900 drop-shadow">{users.length}</p>
           </div>
-          <div className="bg-white p-6 rounded shadow">
-            <h3 className="text-gray-500">Active Assignments</h3>
-            <p className="text-3xl font-bold">{sampleSummary.activeAssignments}</p>
+          <div className="bg-gradient-to-br from-indigo-100 via-white to-indigo-200 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center border-t-4 border-indigo-400">
+            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-200 text-indigo-700 mb-2 shadow border-2 border-white">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" /><circle cx="12" cy="12" r="9" /></svg>
+            </span>
+            <h3 className="text-indigo-700 font-semibold">Active Assignments</h3>
+            <p className="text-3xl font-extrabold text-indigo-900 drop-shadow">{sampleSummary.activeAssignments}</p>
           </div>
-          <div className="bg-white p-6 rounded shadow">
-            <h3 className="text-gray-500">Late Submissions</h3>
-            <p className="text-3xl font-bold">{sampleSummary.lateSubmissions}</p>
+          <div className="bg-gradient-to-br from-red-100 via-white to-yellow-100 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center border-t-4 border-red-300">
+            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-200 text-red-700 mb-2 shadow border-2 border-white">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </span>
+            <h3 className="text-red-700 font-semibold">Late Submissions</h3>
+            <p className="text-3xl font-extrabold text-red-900 drop-shadow">{sampleSummary.lateSubmissions}</p>
           </div>
         </div>
 
@@ -235,51 +293,147 @@ const AdminDashboard = () => {
                 Add New
               </button>
             </div>
-            {loadingUsers && <p>Loading users...</p>}
-            {errorUsers && <p className="text-red-600">{errorUsers}</p>}
-            {!loadingUsers && filteredUsers.length === 0 && (
-              <p className="text-center p-4">No users found</p>
-            )}
-            {!loadingUsers && filteredUsers.length > 0 && (
-              <table className="w-full border-collapse border border-gray-300">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="border border-gray-300 px-4 py-2">ID</th>
-                    <th className="border border-gray-300 px-4 py-2">Name</th>
-                    <th className="border border-gray-300 px-4 py-2">Role</th>
-                    <th className="border border-gray-300 px-4 py-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((user, idx) => (
-                    <tr key={user._id || idx} className="hover:bg-blue-50">
-                      <td className="border border-gray-300 px-4 py-2">{idx + 1}</td>
-                      <td className="border border-gray-300 px-4 py-2">{user.name}</td>
-                      <td className="border border-gray-300 px-4 py-2">{user.role}</td>
-                      <td className="border border-gray-300 px-4 py-2">Active</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex-1 overflow-x-auto max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-blue-100 rounded-lg bg-gradient-to-br from-blue-50 via-white to-blue-100 shadow-md">
+                {loadingUsers && <p className="flex items-center gap-2 text-blue-600 font-semibold p-4"><svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>Loading users...</p>}
+                {errorUsers && <p className="text-red-600 flex items-center gap-2 p-4"><svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>{errorUsers}</p>}
+                {!loadingUsers && filteredUsers.length === 0 && (
+                  <p className="text-center p-4 text-gray-500 flex items-center justify-center gap-2"><svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /><circle cx="12" cy="12" r="9" /></svg>No users found</p>
+                )}
+                {!loadingUsers && filteredUsers.length > 0 && (
+                  <table className="w-full border-collapse rounded-xl overflow-hidden shadow border border-blue-200">
+                    <thead className="bg-gradient-to-r from-blue-200 via-blue-100 to-white">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-blue-800 font-bold text-base flex items-center gap-2">
+                          <svg className="w-5 h-5 text-blue-500 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 014.5 20.25v-.75z" /></svg>
+                          Name
+                        </th>
+                        <th className="px-4 py-2 text-left text-blue-800 font-bold text-base flex items-center gap-2">
+                          <svg className="w-5 h-5 text-green-500 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5v2.25m0 0a2.25 2.25 0 01-2.25-2.25h4.5A2.25 2.25 0 0112 18.75z" /></svg>
+                          Role
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map((user, idx) => (
+                        <tr key={user._id || idx} className="hover:bg-blue-100 transition-all group">
+                          <td className="px-4 py-2 border-b border-blue-100 text-gray-900 font-medium flex items-center gap-2">
+                            <svg className="w-4 h-4 text-blue-400 group-hover:text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 014.5 20.25v-.75z" /></svg>
+                            {user.name}
+                          </td>
+                          <td className="px-4 py-2 border-b border-blue-100 text-gray-700 flex items-center gap-2">
+                            {user.role === 'student' && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold"><span className="text-lg">👨‍🎓</span>Student</span>}
+                            {user.role === 'teacher' && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold"><span className="text-lg">👨‍🏫</span>Teacher</span>}
+                            {user.role === 'admin' && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold"><span className="text-lg">🧑‍💼</span>Admin</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+              <div className="md:w-1/2 bg-white p-4 rounded shadow flex items-center justify-center">
+                <Bar
+                  data={{
+                    labels: classes.map((cls) => cls.className),
+                    datasets: [
+                      {
+                        label: "# of Activities",
+                        backgroundColor: "rgba(37, 99, 235, 0.6)",
+                        borderColor: "rgba(37, 99, 235, 1)",
+                        borderWidth: 1,
+                        hoverBackgroundColor: "rgba(37, 99, 235, 0.8)",
+                        hoverBorderColor: "rgba(37, 99, 235, 1)",
+                        data: classes.map((cls) =>
+                          activities.filter((act) => act.classId === cls._id || act.classId === cls._id?.toString()).length
+                        ),
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: { position: "top" },
+                      title: { display: true, text: "Number of Activities per Class" },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+            {/* Submissions chart below */}
+            <div className="mt-8 bg-white p-4 rounded shadow overflow-x-auto scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-50">
+              <h3 className="mb-4 font-semibold flex items-center gap-2">
+                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" /></svg>
+                Submissions Over Time (Bar Chart)
+              </h3>
+              <div className="min-w-[400px]">
+                <Bar data={barData} options={barOptions} />
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded shadow">
-            <h3 className="mb-4 font-semibold">Submissions Over Time (Bar Chart)</h3>
-            <Bar data={barData} options={barOptions} />
+        {/* Assignments Section */}
+         {selectedMenu === "Assignments" && (
+           <div className="mb-8 bg-gradient-to-br from-indigo-50 via-white to-blue-100 p-6 rounded-2xl shadow-lg border-t-4 border-indigo-300">
+             <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-800">
+               <svg className="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" /><circle cx="12" cy="12" r="9" /></svg>
+               Assignments per Class
+             </h2>
+             {loadingAssignments && <p className="flex items-center gap-2 text-indigo-600 font-semibold p-4"><svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>Loading assignments...</p>}
+             {errorAssignments && <p className="text-red-600 flex items-center gap-2 p-4"><svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>{errorAssignments}</p>}
+             {!loadingAssignments && classes.length > 0 && (
+               <div className="bg-white rounded-xl shadow p-4">
+                 <Bar
+                   data={{
+                     labels: classes.map((cls) => cls.className),
+                     datasets: [
+                       {
+                         label: "# of Activities",
+                         backgroundColor: "rgba(37, 99, 235, 0.6)",
+                         borderColor: "rgba(37, 99, 235, 1)",
+                         borderWidth: 1,
+                         hoverBackgroundColor: "rgba(37, 99, 235, 0.8)",
+                         hoverBorderColor: "rgba(37, 99, 235, 1)",
+                         data: classes.map((cls) =>
+                           activities.filter((act) => act.classId === cls._id || act.classId === cls._id?.toString()).length
+                         ),
+                       },
+                     ],
+                   }}
+                   options={{
+                     responsive: true,
+                     plugins: {
+                       legend: { position: "top" },
+                       title: { display: true, text: "Number of Activities per Class" },
+                     },
+                   }}
+                 />
+               </div>
+             )}
+             {!loadingAssignments && classes.length === 0 && (
+               <p className="text-center p-4 text-gray-500 flex items-center justify-center gap-2"><svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /><circle cx="12" cy="12" r="9" /></svg>No classes found</p>
+             )}
+           </div>
+         )}
+
+        {/* Default Charts (show for other menus except User Management & Assignments) */}
+        {selectedMenu !== "User Management" && selectedMenu !== "Assignments" && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6 rounded-2xl shadow-lg border-t-4 border-blue-200">
+              <h3 className="mb-4 font-semibold flex items-center gap-2 text-blue-800"><svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18" /></svg>Submissions Over Time (Bar Chart)</h3>
+              <Bar data={barData} options={barOptions} />
+            </div>
+            <div className="bg-gradient-to-br from-green-50 via-white to-green-100 p-6 rounded-2xl shadow-lg border-t-4 border-green-200">
+              <h3 className="mb-4 font-semibold flex items-center gap-2 text-green-800"><svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /></svg>Submission Status (Pie Chart)</h3>
+              <Pie data={pieData} options={pieOptions} />
+            </div>
+            <div className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100 p-6 rounded-2xl shadow-lg border-t-4 border-yellow-200">
+              <h3 className="mb-4 font-semibold flex items-center gap-2 text-yellow-800"><svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" /><circle cx="12" cy="12" r="9" /></svg>New Users (Line Chart)</h3>
+              <Line data={lineData} options={lineOptions} />
+            </div>
           </div>
-          <div className="bg-white p-6 rounded shadow">
-            <h3 className="mb-4 font-semibold">Submission Status (Pie Chart)</h3>
-            <Pie data={pieData} options={pieOptions} />
-          </div>
-          <div className="bg-white p-6 rounded shadow">
-            <h3 className="mb-4 font-semibold">New Users (Line Chart)</h3>
-            <Line data={lineData} options={lineOptions} />
-          </div>
-        </div>
+        )}
 
         {/* Add User Modal */}
         {modalOpen && (
