@@ -1,9 +1,22 @@
 import { FaArrowLeft } from 'react-icons/fa';
 import React, { useState, useEffect } from 'react';
+// Falling books animation component (copied from StudentPortal)
+const FallingBooksAnimation = () => (
+  <>
+    <div className="falling-book" style={{ left: '5vw', animationDuration: '7s', animationDelay: '0s' }}>📚</div>
+    <div className="falling-book" style={{ left: '20vw', animationDuration: '9s', animationDelay: '2s' }}>📚</div>
+    <div className="falling-book" style={{ left: '35vw', animationDuration: '6s', animationDelay: '4s' }}>📚</div>
+    <div className="falling-book" style={{ left: '50vw', animationDuration: '8s', animationDelay: '1s' }}>📚</div>
+    <div className="falling-book" style={{ left: '65vw', animationDuration: '10s', animationDelay: '3s' }}>📚</div>
+    <div className="falling-book" style={{ left: '80vw', animationDuration: '7.5s', animationDelay: '5s' }}>📚</div>
+    <div className="falling-book" style={{ left: '90vw', animationDuration: '8.5s', animationDelay: '6s' }}>📚</div>
+  </>
+);
 import { useParams, Outlet } from 'react-router-dom';
 import axios from 'axios';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaBullhorn, FaTasks, FaUsers } from 'react-icons/fa';
+import { FaBullhorn, FaTasks, FaUsers, FaChalkboardTeacher, FaClock, FaDoorOpen, FaCalendarCheck } from 'react-icons/fa';
+import { FaQuestionCircle } from 'react-icons/fa';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -41,8 +54,10 @@ const StudentClassView = () => {
   const validRoutes = [
     `/student/class/${classId}`,
     `/student/class/${classId}/`,
+    `/student/class/${classId}/attendance`,
     `/student/class/${classId}/announcements`,
     `/student/class/${classId}/activities`,
+    `/student/class/${classId}/quiz`,
     `/student/class/${classId}/classlist`,
   ];
   const isIndex =
@@ -51,8 +66,27 @@ const StudentClassView = () => {
     !validRoutes.includes(location.pathname);
 
   return (
-    <div className="h-screen overflow-y-auto">
-      {/* Class Details */}
+    <div className="h-screen overflow-y-auto hide-scrollbar relative bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900">
+      {/* Decorative scroll background (matches StudentPortal) */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="w-full h-full absolute inset-0 blur-3xl opacity-30">
+          <svg className="w-full h-full" viewBox="0 0 1200 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="scrollbg1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#18181b" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#1e293b" stopOpacity="0.3" />
+              </linearGradient>
+            </defs>
+            <ellipse cx="600" cy="250" rx="320" ry="60" fill="url(#scrollbg1)" />
+          </svg>
+        </div>
+      </div>
+      {/* Falling books animation (matches StudentPortal, only on index view) */}
+      {isIndex && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <FallingBooksAnimation />
+        </div>
+      )}
       {selectedClass && (
   <div className="relative bg-gradient-to-r from-indigo-900 via-indigo-700 to-purple-900 text-white px-2 py-0.5 text-base flex flex-col sm:flex-row sm:flex-wrap justify-start sm:justify-between items-start sm:items-center gap-0.5 sm:gap-1 rounded-b-sm shadow-xl border-b-4 border-indigo-900 overflow-hidden
   transition-all duration-[3000ms] animate-fade-in-down" style={{animationDelay:'0.05s', animationDuration:'3s'}}>
@@ -103,16 +137,30 @@ const StudentClassView = () => {
             </svg>
           </div>
           {/* Welcome message */}
-          <div className="w-full mb-2 flex items-center gap-3">
+          <div className="w-full mb-2 flex items-center gap-3 pl-4 sm:pl-8">
             <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-3 rounded-full shadow-lg ring-2 ring-yellow-200/40 flex items-center justify-center">
               <FaBullhorn className="text-white text-2xl" />
             </span>
             <span className="text-xl sm:text-2xl font-extrabold tracking-wide drop-shadow">Welcome <span className="text-yellow-200">{getStudentName()}</span> to <span className="text-yellow-200">{selectedClass.className}</span>!</span>
           </div>
-          <div className="flex flex-col gap-2 mt-2 ml-2">
-            <div><strong className="text-lg">Teacher:</strong> <span className="font-bold">{selectedClass.teacherName || (selectedClass.teacher && selectedClass.teacher.name) || 'N/A'}</span></div>
-            <div><strong className="text-lg">Schedule:</strong> <span className="font-bold">{selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}</span></div>
-            <div><strong className="text-lg">Room:</strong> <span className="font-bold">{selectedClass.roomNumber || 'N/A'}</span></div>
+          <div className="flex flex-col sm:flex-row gap-4 mt-2 ml-4 sm:ml-12 relative">
+            {/* Decorative dark glassy background */}
+            <div className="absolute inset-0 -z-1 rounded-2xl bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 backdrop-blur-md shadow-2xl border border-indigo-900/40" style={{filter:'blur(0.5px)'}} />
+            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/10 shadow-inner relative z-10">
+              <FaChalkboardTeacher className="text-yellow-300 text-lg" />
+              <span className="font-semibold text-base text-yellow-100 drop-shadow">Teacher:</span>
+              <span className="font-bold text-white text-base">{selectedClass.teacherName || (selectedClass.teacher && selectedClass.teacher.name) || 'N/A'}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/10 shadow-inner relative z-10">
+              <FaClock className="text-blue-300 text-lg" />
+              <span className="font-semibold text-base text-blue-100 drop-shadow">Schedule:</span>
+              <span className="font-bold text-white text-base">{selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}</span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/10 shadow-inner relative z-10">
+              <FaDoorOpen className="text-pink-300 text-lg" />
+              <span className="font-semibold text-base text-pink-100 drop-shadow">Room:</span>
+              <span className="font-bold text-white text-base">{selectedClass.roomNumber || 'N/A'}</span>
+            </div>
           </div>
         </div>
 )}
@@ -128,57 +176,161 @@ const StudentClassView = () => {
           <FaArrowLeft /> Back to My Classes
         </NavLink>
       </div>
-      <div className="flex flex-col md:flex-row gap-8 justify-center items-center mt-4">
-        <NavLink
+  <div className="relative w-full max-w-6xl mx-auto mt-4">
+    {/* Cardbox background */}
+    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 backdrop-blur-xl shadow-2xl border border-indigo-900/40 z-0" />
+    <div className="flex flex-col gap-8 justify-center items-center relative z-10 p-6">
+  <NavLink
+          to={`attendance`}
+          className="group flex flex-col items-center justify-center w-full max-w-6xl h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          style={{ textDecoration: 'none', animationDelay: '0.15s', animationDuration: '3s' }}
+        >
+          {/* Glassy gradient overlay */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{background: 'linear-gradient(120deg,rgba(30,30,60,0.22) 0%,rgba(30,30,60,0.12) 100%)'}}></div>
+          {/* Inner shadow */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{boxShadow:'inset 0 4px 24px 0 rgba(0,0,0,0.08)'}}></div>
+          {/* Animated floating SVG */}
+          <svg className="absolute left-10 top-0 w-16 h-16 opacity-20 animate-pulse-slow" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="#a78bfa" /></svg>
+          {/* Accent bar */}
+          <div className="absolute left-0 top-0 h-full w-2 bg-purple-400 rounded-l-3xl shadow-md"></div>
+          <svg className="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dots0" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="2" fill="#a78bfa" />
+              </pattern>
+            </defs>
+            <rect width="400" height="120" fill="url(#dots0)" />
+          </svg>
+          <div className="absolute -bottom-4 -right-4 w-32 h-16 bg-purple-200 rounded-full blur-2xl opacity-30"></div>
+          <span className="bg-gradient-to-tr from-purple-400 via-indigo-400 to-pink-400 p-3 rounded-full shadow-lg ring-2 ring-purple-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaCalendarCheck className="text-white text-2xl group-hover:animate-bounce" />
+          </span>
+          <span className="font-extrabold text-lg tracking-wide">Attendance</span>
+        </NavLink>
+  <NavLink
           to={`announcements`}
-          className="group flex flex-col items-center justify-center w-[220px] h-[200px] rounded-3xl shadow-2xl transition-all duration-[3000ms] animate-fade-in-up border-2 cursor-pointer bg-gradient-to-br from-yellow-100 via-pink-100 to-white border-yellow-300 text-yellow-900 hover:bg-yellow-50 hover:scale-105"
+          className="group flex flex-col items-center justify-center w-full max-w-6xl h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.2s', animationDuration: '3s' }}
         >
-          <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-5 rounded-full shadow-lg ring-2 ring-yellow-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaBullhorn className="text-white text-4xl group-hover:animate-bounce" />
+          {/* Glassy gradient overlay */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{background: 'linear-gradient(120deg,rgba(30,30,30,0.22) 0%,rgba(30,30,30,0.12) 100%)'}}></div>
+          {/* Inner shadow */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{boxShadow:'inset 0 4px 24px 0 rgba(0,0,0,0.08)'}}></div>
+          {/* Animated floating SVG */}
+          <svg className="absolute left-10 top-0 w-16 h-16 opacity-20 animate-pulse-slow" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="#fbbf24" /></svg>
+          {/* Accent bar */}
+          <div className="absolute left-0 top-0 h-full w-2 bg-yellow-400 rounded-l-3xl shadow-md"></div>
+          <svg className="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dots1" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="2" fill="#fbbf24" />
+              </pattern>
+            </defs>
+            <rect width="400" height="120" fill="url(#dots1)" />
+          </svg>
+          <div className="absolute -bottom-4 -right-4 w-32 h-16 bg-pink-200 rounded-full blur-2xl opacity-30"></div>
+          <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-3 rounded-full shadow-lg ring-2 ring-yellow-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaBullhorn className="text-white text-2xl group-hover:animate-bounce" />
           </span>
           <span className="font-extrabold text-lg tracking-wide">Announcements</span>
         </NavLink>
-        <NavLink
+  <NavLink
           to={`activities`}
-          className="group flex flex-col items-center justify-center w-[220px] h-[200px] rounded-3xl shadow-2xl transition-all duration-[3000ms] animate-fade-in-up border-2 cursor-pointer bg-gradient-to-br from-blue-100 via-cyan-100 to-white border-blue-300 text-blue-900 hover:bg-blue-50 hover:scale-105"
+          className="group flex flex-col items-center justify-center w-full max-w-6xl h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.3s', animationDuration: '3s' }}
         >
-          <span className="bg-gradient-to-tr from-blue-400 via-cyan-400 to-indigo-400 p-5 rounded-full shadow-lg ring-2 ring-blue-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaTasks className="text-white text-4xl group-hover:animate-bounce" />
+          {/* Glassy gradient overlay */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{background: 'linear-gradient(120deg,rgba(30,30,30,0.22) 0%,rgba(30,30,30,0.12) 100%)'}}></div>
+          {/* Inner shadow */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{boxShadow:'inset 0 4px 24px 0 rgba(0,0,0,0.08)'}}></div>
+          {/* Animated floating SVG */}
+          <svg className="absolute left-10 top-0 w-16 h-16 opacity-20 animate-pulse-slow" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="#38bdf8" /></svg>
+          {/* Accent bar */}
+          <div className="absolute left-0 top-0 h-full w-2 bg-blue-400 rounded-l-3xl shadow-md"></div>
+          <svg className="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dots2" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="2" fill="#38bdf8" />
+              </pattern>
+            </defs>
+            <rect width="400" height="120" fill="url(#dots2)" />
+          </svg>
+          <div className="absolute -bottom-4 -right-4 w-32 h-16 bg-cyan-200 rounded-full blur-2xl opacity-30"></div>
+          <span className="bg-gradient-to-tr from-blue-400 via-cyan-400 to-indigo-400 p-3 rounded-full shadow-lg ring-2 ring-blue-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaTasks className="text-white text-2xl group-hover:animate-bounce" />
           </span>
           <span className="font-extrabold text-lg tracking-wide">Activities</span>
         </NavLink>
         <NavLink
+          to={`quiz`}
+          className="group flex flex-col items-center justify-center w-full max-w-6xl h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          style={{ textDecoration: 'none', animationDelay: '0.35s', animationDuration: '3s' }}
+        >
+          {/* Glassy gradient overlay */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{background: 'linear-gradient(120deg,rgba(60,30,60,0.22) 0%,rgba(60,30,60,0.12) 100%)'}}></div>
+          {/* Inner shadow */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{boxShadow:'inset 0 4px 24px 0 rgba(0,0,0,0.08)'}}></div>
+          {/* Animated floating SVG */}
+          <svg className="absolute left-10 top-0 w-16 h-16 opacity-20 animate-pulse-slow" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="#f472b6" /></svg>
+          {/* Accent bar */}
+          <div className="absolute left-0 top-0 h-full w-2 bg-pink-400 rounded-l-3xl shadow-md"></div>
+          <svg className="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dotsQuiz" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="2" fill="#f472b6" />
+              </pattern>
+            </defs>
+            <rect width="400" height="120" fill="url(#dotsQuiz)" />
+          </svg>
+          <div className="absolute -bottom-4 -right-4 w-32 h-16 bg-pink-200 rounded-full blur-2xl opacity-30"></div>
+          <span className="bg-gradient-to-tr from-pink-400 via-fuchsia-400 to-yellow-400 p-3 rounded-full shadow-lg ring-2 ring-pink-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaQuestionCircle className="text-white text-2xl group-hover:animate-bounce" />
+          </span>
+          <span className="font-extrabold text-lg tracking-wide">Quiz Hub</span>
+        </NavLink>
+        <NavLink
           to={`classlist`}
-          className="group flex flex-col items-center justify-center w-[220px] h-[200px] rounded-3xl shadow-2xl transition-all duration-[3000ms] animate-fade-in-up border-2 cursor-pointer bg-gradient-to-br from-green-100 via-teal-100 to-white border-green-300 text-green-900 hover:bg-green-50 hover:scale-105"
+          className="group flex flex-col items-center justify-center w-full max-w-6xl h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.4s', animationDuration: '3s' }}
         >
-          <span className="bg-gradient-to-tr from-green-400 via-teal-400 to-blue-400 p-5 rounded-full shadow-lg ring-2 ring-green-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaUsers className="text-white text-4xl group-hover:animate-bounce" />
+          {/* Glassy gradient overlay */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{background: 'linear-gradient(120deg,rgba(30,60,30,0.22) 0%,rgba(30,60,30,0.12) 100%)'}}></div>
+          {/* Inner shadow */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{boxShadow:'inset 0 4px 24px 0 rgba(0,0,0,0.08)'}}></div>
+          {/* Animated floating SVG */}
+          <svg className="absolute left-10 top-0 w-16 h-16 opacity-20 animate-pulse-slow" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="#34d399" /></svg>
+          {/* Accent bar */}
+          <div className="absolute left-0 top-0 h-full w-2 bg-green-400 rounded-l-3xl shadow-md"></div>
+          <svg className="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dotsClassList" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="2" fill="#34d399" />
+              </pattern>
+            </defs>
+            <rect width="400" height="120" fill="url(#dotsClassList)" />
+          </svg>
+          <div className="absolute -bottom-4 -right-4 w-32 h-16 bg-green-200 rounded-full blur-2xl opacity-30"></div>
+          <span className="bg-gradient-to-tr from-green-400 via-emerald-400 to-yellow-400 p-3 rounded-full shadow-lg ring-2 ring-green-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaUsers className="text-white text-2xl group-hover:animate-bounce" />
           </span>
           <span className="font-extrabold text-lg tracking-wide">Class List</span>
         </NavLink>
       </div>
-    </>
+    </div>
+  
+  </>
   ) : (
     <Outlet />
   )}
 </main>
     </div>
   );
-};
+}
+
+// Helper to get student name (replace with actual logic as needed)
+function getStudentName() {
+  // TODO: Replace with actual student name retrieval logic
+  return 'Student';
+}
 
 export default StudentClassView;
-
-// Helper to get student name from localStorage
-function getStudentName() {
-  const storedUser = localStorage.getItem('user');
-  if (!storedUser) return 'Student';
-  try {
-    const user = JSON.parse(storedUser);
-    return user && user.name ? user.name : 'Student';
-  } catch {
-    return 'Student';
-  }
-}

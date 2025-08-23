@@ -369,8 +369,7 @@ const ClassManagement = () => {
             ))}
           </ul>
         </div>
-      </div>
-// ...existing code...
+      </div>  
 
       {/* Add Class Modal */}
       {showAddClassModal && (

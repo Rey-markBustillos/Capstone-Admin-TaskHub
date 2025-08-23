@@ -301,8 +301,13 @@ const StudentDashboard = () => {
                         <p className="text-black mr-0 sm:mr-4"><strong>Teacher:</strong> {cls.teacherName}</p>
                         <p className="text-black mr-0 sm:mr-4"><strong>Room:</strong> {cls.roomNumber}</p>
                         <p className="text-black">
-                          <strong>Time:</strong> {soonestSched ? soonestSched.dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (cls.time ? new Date(cls.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBA')}
-                          {soonestSched ? ` | ${soonestSched.dt.toLocaleString('en-US', { weekday: 'long' })}` : ''}
+                          <strong>Time:</strong> {
+                            soonestSched
+                              ? soonestSched.dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ` | ${soonestSched.dt.toLocaleString('en-US', { weekday: 'long' })}`
+                              : (cls.time && !isNaN(new Date(`1970-01-01T${cls.time}`).getTime())
+                                  ? new Date(`1970-01-01T${cls.time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                  : 'TBA')
+                          }
                         </p>
                       </div>
                     </li>

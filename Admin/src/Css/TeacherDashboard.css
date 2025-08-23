@@ -1,3 +1,11 @@
+/* Hide scrollbars for attendance tables */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 /* Styling for Teacher Dashboard */
 .dashboard-container {
   display: flex;

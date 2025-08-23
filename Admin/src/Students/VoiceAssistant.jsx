@@ -1,3 +1,24 @@
+  // Helper: Enroll student in a class if not already enrolled
+  const enrollInClassIfNeeded = async (classId, studentId) => {
+    try {
+      // Check if already enrolled
+      const res = await fetch(`${API_BASE}/class/${classId}`);
+      const cls = await res.json();
+      if (cls.students && Array.isArray(cls.students) && cls.students.some(s => s._id === studentId)) {
+        return true; // already enrolled
+      }
+      // Enroll student
+      const updateRes = await fetch(`${API_BASE}/class/${classId}/students`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentIds: [...(cls.students?.map(s => s._id) || []), studentId] })
+      });
+      return updateRes.ok;
+    } catch (err) {
+      console.error('Error enrolling in class:', err);
+      return false;
+    }
+  };
 import React, { useState } from "react";
 import { Mic, Loader2 } from "lucide-react";
 
@@ -30,10 +51,10 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
     recognition.onend = () => setListening(false);
   };
 
-  // Helper: Get all enrolled classes for the student
+  // Helper: Get all enrolled classes for the student (always fetch fresh)
   const fetchEnrolledClasses = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/class/my-classes/${userId}`);
+  const res = await fetch(`${API_BASE}/class/my-classes/${userId}?_=${Date.now()}${Math.random()}`); // force cache bust
       const data = await res.json();
       if (Array.isArray(data)) return data;
       return [];
@@ -42,11 +63,35 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
     }
   };
 
-  // Helper: Get pending/missing/upcoming activities for all enrolled classes (today and future)
+  // Helper: Get pending/missing/upcoming activities for all enrolled classes (always fetch fresh)
   const fetchAllActivitiesStatus = async () => {
     const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-    const enrolledClasses = await fetchEnrolledClasses();
+  let enrolledClasses = await fetchEnrolledClasses();
+  console.log('Fetched enrolled classes:', enrolledClasses);
+
+    // Try to auto-enroll in classes for today if not already enrolled
+    // Use the 'today' and 'dayName' variables already declared above
+    try {
+      const allClassesRes = await fetch(`${API_BASE}/class?_=${Date.now()}${Math.random()}`);
+  const allClasses = await allClassesRes.json();
+  console.log('Fetched all classes:', allClasses);
+      const todayObj = new Date();
+      const todayDayName = todayObj.toLocaleDateString('en-US', { weekday: 'long' });
+      for (const cls of allClasses) {
+        // If class is today and not enrolled, enroll
+        if (cls.day && cls.day.toLowerCase() === todayDayName.toLowerCase()) {
+          const enrolled = enrolledClasses.some(ec => ec._id === cls._id);
+          if (!enrolled) {
+            await enrollInClassIfNeeded(cls._id, userId);
+          }
+        }
+      }
+      // Re-fetch enrolled classes after possible enrollment
+  enrolledClasses = await fetchEnrolledClasses();
+  console.log('Enrolled classes after auto-enroll:', enrolledClasses);
+    } catch (err) {
+      console.error('Error auto-enrolling in today\'s classes:', err);
+    }
     let pending = [];
     let missing = [];
     let hasToday = false;
@@ -55,14 +100,30 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
 
     for (const cls of enrolledClasses) {
       const classId = cls._id;
-      const res = await fetch(`${API_BASE}/api/activities?classId=${classId}`);
+      // Add cache-busting param to always get latest
+      const res = await fetch(`${API_BASE}/activities?classId=${classId}&_=${Date.now()}${Math.random()}`);
       const activities = await res.json();
-      const subRes = await fetch(`${API_BASE}/api/activities/submissions?classId=${classId}&studentId=${userId}`);
+      const subRes = await fetch(`${API_BASE}/activities/submissions?classId=${classId}&studentId=${userId}&_=${Date.now()}${Math.random()}`);
       const submissions = await subRes.json();
+
+      // Use the class's time and day for today check
+      if (cls.day && cls.day.toLowerCase() === today.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()) {
+        hasToday = true;
+        if (cls.time && /^\d{2}:\d{2}$/.test(cls.time)) {
+          const [h, m] = cls.time.split(":");
+          let hour = parseInt(h, 10);
+          const min = m;
+          const ampm = hour >= 12 ? "PM" : "AM";
+          let hour12 = hour % 12;
+          if (hour12 === 0) hour12 = 12;
+          classTime = `${hour12}:${min} ${ampm}`;
+        } else {
+          classTime = cls.time || todaysClassTime || null;
+        }
+      }
 
       activities.forEach((act) => {
         const dueDate = new Date(act.date);
-        const dueStr = act.date?.slice(0, 10);
         const submission = Array.isArray(submissions)
           ? submissions.find((s) => {
               const subActId =
@@ -91,16 +152,12 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
         if (submission && submission.status === "Missing") {
           missing.push(`${act.title} (${cls.className})`);
         }
-        if (dueStr === todayStr) {
-          hasToday = true;
-          classTime = act.time || todaysClassTime || null;
-        }
       });
     }
     return { pending, missing, hasToday, classTime, upcoming };
   };
 
-  // Helper to fetch today's announcements for all classes
+  // Helper to fetch today's announcements for all classes (always fetch fresh)
   const fetchTodaysAnnouncements = async () => {
     try {
       const today = new Date();
@@ -108,7 +165,7 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
       const enrolledClasses = await fetchEnrolledClasses();
       let allAnns = [];
       for (const cls of enrolledClasses) {
-        const res = await fetch(`${API_BASE}/api/announcements?classId=${cls._id}`);
+  const res = await fetch(`${API_BASE}/announcements?classId=${cls._id}&_=${Date.now()}${Math.random()}`);
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
           const todaysAnns = data.filter(
@@ -178,10 +235,11 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
       q.toLowerCase().includes("pasok ba")
     ) {
       const { pending, missing, hasToday, classTime, upcoming } = await fetchAllActivitiesStatus();
-      if (todaysClassTime || classTime || hasToday) {
+      // Only say you have a schedule if there is a real class/activity for today
+      if (classTime || hasToday) {
         aiAnswer = `You have schedule for ${dayName}`;
-        if (todaysClassTime || classTime) {
-          aiAnswer += ` at ${todaysClassTime || classTime}`;
+        if (classTime) {
+          aiAnswer += ` at ${classTime}`;
         }
         aiAnswer += ".";
       } else {
@@ -206,7 +264,7 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
       q.toLowerCase().includes("activity")
     ) {
       try {
-        const res = await fetch(`${API_BASE}/api/schedule/today?userId=${userId}`);
+  const res = await fetch(`${API_BASE}/schedule/today?userId=${userId}&_=${Date.now()}${Math.random()}`);
         const data = await res.json();
         if (data.schedule && data.schedule.length > 0) {
           aiAnswer = `Your schedule and activities for ${dayName}: ` + data.schedule.map(s => `${s.time} - ${s.title}`).join(", ");
@@ -277,20 +335,29 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
       </div>
       {/* Show Q&A only when generating or after a question */}
       {showQA && (
-        <div className="mt-4 bg-indigo-900/80 rounded-lg p-4 shadow flex flex-col gap-2">
-          <div className="flex items-start gap-2">
-            <span className="font-bold text-indigo-200">Question:</span>
-            <span className="text-white ml-2 break-words">{question || <span className="italic text-indigo-200">None</span>}</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="font-bold text-indigo-200">Answer:</span>
-            <span className="text-white ml-2 break-words">
-              {generating ? (
-                <span className="flex items-center gap-1">
-                  <Loader2 className="animate-spin" size={16} /> Generating...
-                </span>
-              ) : answer ? answer : <span className="italic text-indigo-200">None</span>}
-            </span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="bg-indigo-900/95 rounded-xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-4 relative animate-fade-in-up pointer-events-auto">
+            <button
+              className="absolute top-2 right-2 text-indigo-200 hover:text-white text-xl font-bold px-2 py-1 rounded focus:outline-none"
+              onClick={() => setShowQA(false)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <div className="flex items-start gap-2">
+              <span className="font-bold text-indigo-200">Question:</span>
+              <span className="text-white ml-2 break-words">{question || <span className="italic text-indigo-200">None</span>}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-bold text-indigo-200">Answer:</span>
+              <span className="text-white ml-2 break-words">
+                {generating ? (
+                  <span className="flex items-center gap-1">
+                    <Loader2 className="animate-spin" size={16} /> Generating...
+                  </span>
+                ) : answer ? answer : <span className="italic text-indigo-200">None</span>}
+              </span>
+            </div>
           </div>
         </div>
       )}

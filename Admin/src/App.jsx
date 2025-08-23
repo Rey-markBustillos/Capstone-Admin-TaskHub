@@ -13,11 +13,14 @@ import StudentAnnouncements from './Students/StudentAnnouncements';
 import StudentActivities from './Students/StudentActivities';
 import StudentClassList from './Students/StudentsClassList';
 import SubmitActivity from './Students/SubmitActivity';
+import StudentAttendance from './Students/Attendance';
+import Attendance from './Teachers/Attendance';
 import TeacherDashboard from './Teachers/Dashboard';
 import TeacherPortal from './Teachers/TeacherPortal';
 import ActivityMonitoring from './Teachers/ActivityMonitoring';
 import TeacherAnnouncement from './Teachers/TeacherAnnouncement';
 import CreateActivity from './Teachers/CreateActivity';
+import CreateQuizz from './Teachers/CreateQuizz';
 import StudentList from './Teachers/Studentlist';
 import TeacherClassView from './Teachers/TeacherClassView'; // AYOS: Import ng bagong layout
 import LandingPage from './LandingPage/LandingPage';
@@ -154,8 +157,9 @@ export default function App() {
       <Route element={<ProtectedRoute user={user} requiredRole="student"><ProtectedLayout user={user} onLogout={handleLogout} /></ProtectedRoute>}>
         <Route path="/studentdashboard" element={<StudentDashboard />} />
         <Route path="/studentportal" element={<StudentPortal />} />
-        <Route path="/student/class/:classId" element={<StudentClassView />}>
+        <Route path="/student/class/:classId" element={<StudentClassView />}> 
           <Route index element={<Navigate to="announcements" replace />} />
+          <Route path="attendance" element={<StudentAttendance />} />
           <Route path="announcements" element={<StudentAnnouncements />} />
           <Route path="activities" element={<StudentActivities />} />
           <Route path="classlist" element={<StudentClassList />} />
@@ -170,12 +174,14 @@ export default function App() {
         <Route path="/activitymonitoring" element={<ActivityMonitoring />} />
         
         {/* AYOS: Binalot ang mga class-specific routes sa TeacherClassView */}
-        <Route path="/class/:classId" element={<TeacherClassView />}>
-            <Route index element={<Navigate to="announcements" replace />} />
-            <Route path="announcements" element={<TeacherAnnouncement />} />
-            <Route path="createactivity" element={<CreateActivity />} />
-            <Route path="studentlist" element={<StudentList />} />
-        </Route>
+    <Route path="/class/:classId" element={<TeacherClassView />}> 
+      <Route index element={<Navigate to="announcements" replace />} />
+      <Route path="announcements" element={<TeacherAnnouncement />} />
+      <Route path="attendance" element={<Attendance />} />
+  <Route path="createactivity" element={<CreateActivity />} />
+  <Route path="createquiz" element={<CreateQuizz />} />
+  <Route path="studentlist" element={<StudentList />} />
+    </Route>
       </Route>
       
       {/* Fallback for any other authenticated route */}

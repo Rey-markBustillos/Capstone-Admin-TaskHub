@@ -1,6 +1,20 @@
+
 import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { FaBullhorn, FaPlusSquare, FaUsers, FaArrowLeft, FaBars, FaTimes, FaClock, FaCalendarAlt, FaMapMarkerAlt, FaSchool } from 'react-icons/fa';
+import {
+  FaBullhorn,
+  FaPlusSquare,
+  FaUsers,
+  FaArrowLeft,
+  FaBars,
+  FaTimes,
+  FaClock,
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaSchool,
+  FaQuestionCircle
+} from 'react-icons/fa';
+
 
 const Navbar = ({ selectedClass }) => {
   const [open, setOpen] = useState(false);
@@ -49,13 +63,34 @@ const Navbar = ({ selectedClass }) => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-2">
-          <Link to={`/class/${classId}/announcements`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold">
+          <Link
+            to={`/class/${classId}/attendance`}
+            className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-green-700/40 hover:text-green-200 font-semibold"
+          >
+            <FaCalendarAlt className="mr-2 text-green-300 text-lg animate-pulse" /> Attendance
+          </Link>
+          <Link
+            to={`/class/${classId}/announcements`}
+            className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold"
+          >
             <FaBullhorn className="mr-2 text-yellow-300 text-lg animate-pulse" /> Announcement
           </Link>
-          <Link to={`/class/${classId}/createactivity`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-yellow-400/20 hover:text-yellow-300 font-semibold">
+          <Link
+            to={`/class/${classId}/createactivity`}
+            className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-yellow-400/20 hover:text-yellow-300 font-semibold"
+          >
             <FaPlusSquare className="mr-2 text-yellow-400 text-lg animate-bounce" /> Create Activity
           </Link>
-          <Link to={`/class/${classId}/studentlist`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold">
+          <Link
+            to={`/class/${classId}/createquiz`}
+            className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-blue-700/40 hover:text-blue-200 font-semibold"
+          >
+            <FaQuestionCircle className="mr-2 text-blue-300 text-lg animate-pulse" /> Create Quiz
+          </Link>
+          <Link
+            to={`/class/${classId}/studentlist`}
+            className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold"
+          >
             <FaUsers className="mr-2 text-yellow-200 text-lg animate-pulse" /> Student List
           </Link>
         </div>
@@ -77,13 +112,39 @@ const Navbar = ({ selectedClass }) => {
               <FaArrowLeft />
               <span>Back to Classes</span>
             </button>
-            <Link to={`/class/${classId}/announcements`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold w-full" onClick={() => setOpen(false)}>
+            <Link
+              to={`/class/${classId}/attendance`}
+              className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-green-700/40 hover:text-green-200 font-semibold w-full"
+              onClick={() => setOpen(false)}
+            >
+              <FaCalendarAlt className="mr-2 text-green-300 text-lg animate-pulse" /> Attendance
+            </Link>
+            <Link
+              to={`/class/${classId}/announcements`}
+              className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold w-full"
+              onClick={() => setOpen(false)}
+            >
               <FaBullhorn className="mr-2 text-yellow-300 text-lg animate-pulse" /> Announcement
             </Link>
-            <Link to={`/class/${classId}/createactivity`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-yellow-400/20 hover:text-yellow-300 font-semibold w-full" onClick={() => setOpen(false)}>
+            <Link
+              to={`/class/${classId}/createactivity`}
+              className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-yellow-400/20 hover:text-yellow-300 font-semibold w-full"
+              onClick={() => setOpen(false)}
+            >
               <FaPlusSquare className="mr-2 text-yellow-400 text-lg animate-bounce" /> Create Activity
             </Link>
-            <Link to={`/class/${classId}/studentlist`} className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold w-full" onClick={() => setOpen(false)}>
+            <Link
+              to={`/class/${classId}/createquiz`}
+              className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-blue-700/40 hover:text-blue-200 font-semibold w-full"
+              onClick={() => setOpen(false)}
+            >
+              <FaQuestionCircle className="mr-2 text-blue-300 text-lg animate-pulse" /> Create Quiz
+            </Link>
+            <Link
+              to={`/class/${classId}/studentlist`}
+              className="flex items-center py-2 px-3 rounded-md transition-colors duration-200 text-gray-300 hover:bg-indigo-700/40 hover:text-yellow-200 font-semibold w-full"
+              onClick={() => setOpen(false)}
+            >
               <FaUsers className="mr-2 text-yellow-200 text-lg animate-pulse" /> Student List
             </Link>
           </div>
@@ -91,6 +152,8 @@ const Navbar = ({ selectedClass }) => {
       </nav>
     </>
   );
+
+  // ...existing code...
 };
 
 export default Navbar;

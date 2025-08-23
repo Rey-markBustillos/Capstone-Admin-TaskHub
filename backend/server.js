@@ -5,12 +5,16 @@ const path = require('path');
 const fs = require('fs');
 const connectDB = require('./config/db');
 
+
+
 // Routes
 const userRoutes = require('./routes/userRoutes');
 const classRoutes = require('./routes/classRoutes');
 const activityRoutes = require('./routes/activityRoutes');
 const announcementRoutes = require('./routes/announcementRoutes');
 const scheduleRoutes = require('./routes/schedule');
+const attendanceRoutes = require('./routes/AttendanceRoutes');
+const quizRoutes = require('./routes/quizRoutes');
 
 // ADD: Import submission routes
 const submissionRoutes = require('./routes/submissionRoutes');
@@ -56,12 +60,15 @@ app.get('/', (req, res) => {
 });
 
 // Mount routes
+
+
 app.use('/api/users', userRoutes);
 app.use('/api/class', classRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/schedule', scheduleRoutes);
-
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/quizzes', quizRoutes);
 // ADD: Mount submission routes (for /api/submissions/student/:studentId)
 app.use('/api/submissions', submissionRoutes);
 

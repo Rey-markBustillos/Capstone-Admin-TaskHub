@@ -1,14 +1,26 @@
+/* Hide scrollbar for Chrome, Safari and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
 .falling-book {
   position: fixed;
-  top: -3rem;
+  top: -3em;
   font-size: 2rem;
   pointer-events: none;
+  user-select: none;
   z-index: 0;
   animation-name: fallBook;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
 @keyframes fallBook {
-  0% { top: -3rem; opacity: 0.7; }
-  100% { top: 110vh; opacity: 0.2; }
+  0% { top: -3em; opacity: 0.7; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 110vh; opacity: 0; }
 }

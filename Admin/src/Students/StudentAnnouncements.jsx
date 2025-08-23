@@ -290,7 +290,7 @@ export default function StudentAnnouncements() {
       {/* Viewers Modal */}
       {viewersInfo.isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-end sm:items-center z-50"
+          className="fixed inset-0 flex justify-center items-end sm:items-center z-50"
           onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}
         >
           <div
@@ -298,7 +298,7 @@ export default function StudentAnnouncements() {
             onClick={e => e.stopPropagation()}
           >
             <div className="p-4 sm:p-6">
-              <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                   <FaEye className="text-indigo-400" /> Viewed By
                 </h3>

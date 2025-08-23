@@ -7,7 +7,7 @@ import '../Css/StudentPortal.css'
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
-// Falling books animation component
+// Falling books animation component (books fall from above viewport, not stacking at top)
 const FallingBooksAnimation = () => (
   <>
     <div className="falling-book" style={{ left: '5vw', animationDuration: '7s', animationDelay: '0s' }}>📚</div>
@@ -134,50 +134,71 @@ const StudentPortal = () => {
         </div>
 
         {/* Scrollable Grid layout */}
-        <div className="flex-grow overflow-y-auto pb-8" style={{ minHeight: 0, maxHeight: '70vh' }}>
+  <div className="flex-grow overflow-y-auto pb-8 relative hide-scrollbar" style={{ minHeight: 0, maxHeight: '70vh' }}>
+          {/* Decorative scroll background */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <div className="w-full h-full absolute inset-0 blur-3xl opacity-30">
+              <svg className="w-full h-full" viewBox="0 0 1200 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="scrollbg1" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#18181b" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#1e293b" stopOpacity="0.3" />
+                  </linearGradient>
+                </defs>
+                <ellipse cx="600" cy="250" rx="320" ry="60" fill="url(#scrollbg1)" />
+              </svg>
+            </div>
+          </div>
           {filteredClasses.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
               {filteredClasses.map((cls) => (
                 <div
                   key={cls._id}
-                  className="bg-slate-800/80 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden border border-indigo-700"
+                  className="relative bg-gradient-to-br from-indigo-900/80 via-slate-900/80 to-blue-900/80 rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden border-2 border-indigo-700/60 backdrop-blur-md group"
+                  style={{boxShadow:'0 8px 32px 0 rgba(31,41,55,0.18), 0 1.5px 8px 0 rgba(99,102,241,0.10)'}}
                   onClick={() => handleClassClick(cls._id)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClassClick(cls._id)}
                 >
-                  <div className="p-6 flex-grow">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FaChalkboardTeacher className="text-indigo-400" size={22} />
-                      <h2 className="text-xl sm:text-2xl font-bold text-indigo-200 truncate" title={cls.className}>
+                  {/* Glassy overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-indigo-200/5 to-transparent pointer-events-none" />
+                  {/* Animated accent blob */}
+                  <svg className="absolute -top-8 -right-8 w-32 h-32 opacity-20 animate-pulse-slow pointer-events-none" viewBox="0 0 100 100" fill="none"><ellipse cx="50" cy="50" rx="48" ry="32" fill="#6366f1" /></svg>
+                  {/* Accent bar */}
+                  <div className="absolute left-0 top-0 h-full w-2 bg-gradient-to-b from-indigo-400 via-indigo-600 to-blue-500 rounded-l-2xl shadow-md"></div>
+                  <div className="p-7 flex-grow relative z-10">
+                    <div className="flex items-center gap-3 mb-2">
+                      <FaChalkboardTeacher className="text-indigo-300" size={26} />
+                      <h2 className="text-2xl font-bold text-indigo-100 truncate" title={cls.className}>
                         {cls.className}
                       </h2>
                     </div>
-                    <div className="space-y-3 text-sm mt-4">
-                      <p className="text-slate-200 flex items-center">
-                        <FaUserTie size={16} className="mr-3 text-indigo-400" />
+                    <div className="space-y-3 text-base mt-4">
+                      <p className="text-indigo-100 flex items-center">
+                        <FaUserTie size={18} className="mr-3 text-indigo-400" />
                         <strong>Teacher:</strong>&nbsp;
                         {cls.teacher?.name || cls.teacherName || 'N/A'}
                       </p>
-                      <p className="text-slate-200 flex items-center">
-                        <FaCalendarDay size={16} className="mr-3 text-indigo-400" />
+                      <p className="text-indigo-100 flex items-center">
+                        <FaCalendarDay size={18} className="mr-3 text-indigo-400" />
                         <strong>Day:</strong>&nbsp;
                         {cls.day || 'TBA'}
                       </p>
-                      <p className="text-slate-200 flex items-center">
-                        <FaClock size={16} className="mr-3 text-indigo-400" />
+                      <p className="text-indigo-100 flex items-center">
+                        <FaClock size={18} className="mr-3 text-indigo-400" />
                         <strong>Time:</strong>&nbsp;
                         {formatTimePH(cls.time)}
                       </p>
-                      <p className="text-slate-200 flex items-center">
-                        <FaMapMarkerAlt size={16} className="mr-3 text-indigo-400" />
+                      <p className="text-indigo-100 flex items-center">
+                        <FaMapMarkerAlt size={18} className="mr-3 text-indigo-400" />
                         <strong>Room:</strong>&nbsp;{cls.roomNumber || 'N/A'}
                       </p>
                     </div>
                   </div>
-                  <div className="bg-slate-900/60 px-6 py-3 border-t border-indigo-700 flex items-center justify-center gap-2">
-                    <FaDoorOpen className="text-indigo-300" size={16} />
-                    <p className="text-xs text-indigo-200 font-semibold text-center">
+                  <div className="bg-gradient-to-r from-indigo-900/80 via-slate-900/80 to-blue-900/80 px-7 py-4 border-t border-indigo-700 flex items-center justify-center gap-2 relative z-10">
+                    <FaDoorOpen className="text-indigo-300" size={18} />
+                    <p className="text-sm text-indigo-200 font-semibold text-center">
                       View Class &rarr;
                     </p>
                   </div>
