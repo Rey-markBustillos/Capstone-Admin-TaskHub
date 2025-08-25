@@ -1,32 +1,45 @@
 const Quiz = require('../models/Quiz');
 const { ObjectId } = require('mongoose').Types;
 
-// Generate quiz questions from module text (MVP: dummy logic)
+// Generate quiz questions from module text using Ollama local AI
+const fetch = require('node-fetch');
 exports.generateQuiz = async (req, res) => {
-  const { moduleText } = req.body;
-  if (!moduleText) return res.status(400).json({ message: 'Module text required' });
-  // Dummy: generate 1 MCQ, 1 TF, 1 Numeric
-  const questions = [
-    {
-      type: 'mcq',
-      question: 'What is the main topic of the module?',
-      options: ['A', 'B', 'C', 'D'],
-      answer: 'A',
-    },
-    {
-      type: 'tf',
-      question: 'The module is about science. (T/F)',
-      options: ['True', 'False'],
-      answer: 'True',
-    },
-    {
-      type: 'numeric',
-      question: 'How many sections are in the module?',
-      options: [],
-      answer: 3,
-    },
-  ];
-  res.json({ questions });
+  const { count = 3, moduleText } = req.body; // Lower default for speed
+  // Use a faster model if available (e.g., phi3 or llama2:7b)
+  const model = 'phi3';
+  // Simplified prompt for speed
+  let prompt = '';
+  if (moduleText && moduleText.trim()) {
+    prompt = `Generate ${count} quiz questions (any type) based on this text. Respond as a JSON array of objects: type, question, options (array), answer.\nText:\n${moduleText}`;
+  } else {
+    prompt = `Generate ${count} quiz questions (any type) for a general subject. Respond as a JSON array of objects: type, question, options (array), answer.`;
+  }
+
+  try {
+    const ollamaRes = await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        prompt,
+        stream: false
+      })
+    });
+    const data = await ollamaRes.json();
+    // Try to parse the response as JSON array
+    let questions = [];
+    try {
+      // Some models may wrap the JSON in markdown code block
+      let text = data.response.trim();
+      if (text.startsWith('```')) text = text.replace(/```[a-z]*\n?/i, '').replace(/```$/, '').trim();
+      questions = JSON.parse(text);
+    } catch (err) {
+      return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: data.response });
+    }
+    res.json({ questions });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to connect to Ollama', error: err.message });
+  }
 };
 
 // Save quiz

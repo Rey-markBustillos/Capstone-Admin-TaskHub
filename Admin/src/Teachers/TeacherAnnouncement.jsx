@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn } from 'react-icons/fa';
+import { availableReactions } from '../constants/reactions';
 
 const API_BASE = "http://localhost:5000/api";
 
@@ -171,7 +172,7 @@ export default function TeacherAnnouncement() {
     setViewersInfo({ isOpen: true, viewers: ann.viewedBy || [], title: ann.title });
   };
 
-  const availableReactions = ['👍', '❤️', '😂', '😮', '😢'];
+  // ...availableReactions imported from shared constants...
 
   return (
     <div>

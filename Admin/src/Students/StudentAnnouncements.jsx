@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useParams, NavLink } from 'react-router-dom';
 import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, FaRegSmile, FaRegSadTear, FaRegLaughBeam, FaRegHeart, FaRegSurprise, FaArrowLeft } from 'react-icons/fa';
+import { availableReactions } from '../constants/reactions';
 // ...existing code...
 // ...existing code...
 
@@ -121,15 +122,7 @@ export default function StudentAnnouncements() {
     setViewersInfo({ isOpen: true, viewers: ann.viewedBy || [], title: ann.title });
   };
 
-  // Icon map for reactions
-  const reactionIcons = {
-    '👍': <FaRegSmile className="text-yellow-500" />,
-    '❤️': <FaRegHeart className="text-red-500" />,
-    '😂': <FaRegLaughBeam className="text-yellow-400" />,
-    '😮': <FaRegSurprise className="text-blue-400" />,
-    '😢': <FaRegSadTear className="text-blue-500" />,
-  };
-  const availableReactions = ['👍', '❤️', '😂', '😮', '😢'];
+  // ...availableReactions imported from shared constants...
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -196,23 +189,19 @@ export default function StudentAnnouncements() {
                     </div>
 
                     <div className="px-4 sm:px-6 pt-2 pb-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-y-4">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
                         {availableReactions.map(emoji => {
                           const userHasReacted = ann.reactions?.some(r => r.user?._id === userId && r.emoji === emoji);
                           return (
                             <button
                               key={emoji}
                               onClick={() => handleReaction(ann._id, emoji)}
-                              className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-all duration-200 text-lg ${
-                                userHasReacted
-                                  ? 'bg-indigo-100 dark:bg-indigo-500/30 scale-110'
-                                  : 'hover:bg-gray-200 dark:hover:bg-gray-700'
-                              }`}
+                              className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-all duration-200 text-lg ${userHasReacted ? 'bg-indigo-500/30 scale-110' : 'hover:bg-gray-700'}`}
                               title={emoji}
                             >
-                              {reactionIcons[emoji] || emoji}
+                              <span>{emoji}</span>
                               {reactionCounts[emoji] > 0 && (
-                                <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{reactionCounts[emoji]}</span>
+                                <span className="text-xs font-bold text-gray-300">{reactionCounts[emoji]}</span>
                               )}
                             </button>
                           );

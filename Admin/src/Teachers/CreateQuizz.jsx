@@ -12,6 +12,7 @@ export default function CreateQuizz() {
   const user = storedUser ? JSON.parse(storedUser) : null;
   const teacherId = user?._id;
   const [moduleText, setModuleText] = useState('');
+  const [count, setCount] = useState(5);
   const [questions, setQuestions] = useState([]);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,12 +30,20 @@ export default function CreateQuizz() {
     }
   };
 
-  // Generate quiz questions from module text
+  // Generate quiz questions from module text using backend AI
   const handleGenerate = async () => {
+    if (count < 1) return alert('Enter a valid number of questions.');
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, { moduleText });
-      setQuestions(res.data.questions);
+      const response = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
+        count,
+        moduleText: moduleText.trim() ? moduleText : undefined,
+      });
+      if (response.data && Array.isArray(response.data.questions)) {
+        setQuestions(response.data.questions);
+      } else {
+        alert('No questions generated.');
+      }
     } catch {
       alert('Failed to generate quiz.');
     } finally {
@@ -103,6 +112,21 @@ export default function CreateQuizz() {
               onChange={e => setModuleText(e.target.value)}
             />
           </label>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <label className="text-indigo-200 font-semibold">Number of Questions:</label>
+            <input
+              type="number"
+              min={1}
+              max={100}
+              className="w-20 border border-indigo-700 rounded bg-[#23263a] text-indigo-100 p-1"
+              value={count}
+              onChange={e => setCount(Math.max(1, Number(e.target.value)))}
+              required
+            />
+          </div>
         </div>
         <button
           className="bg-gradient-to-r from-indigo-800 to-blue-800 text-white px-6 py-2 rounded-xl font-bold shadow hover:from-indigo-900 hover:to-blue-900 transition mb-8 w-full text-lg disabled:opacity-60"
