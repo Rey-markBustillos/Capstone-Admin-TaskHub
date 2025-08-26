@@ -32,8 +32,12 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: '*', // Adjust in production
+    origin: [
+      'https://capstone-admin-task-hub-jske.vercel.app',
+      'http://localhost:5173', // allow local dev too
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true
   })
 );
 app.use(express.json());
