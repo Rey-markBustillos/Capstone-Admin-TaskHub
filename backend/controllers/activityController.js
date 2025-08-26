@@ -296,6 +296,11 @@ exports.submitActivity = async (req, res) => {
 // Resubmit Activity
 // ============================
 exports.resubmitActivity = async (req, res) => {
+  // Explicit CORS headers for Vercel frontend and local dev
+  res.header('Access-Control-Allow-Origin', 'https://capstone-admin-task-hub-jske.vercel.app');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
   try {
     const { id } = req.params;
 
