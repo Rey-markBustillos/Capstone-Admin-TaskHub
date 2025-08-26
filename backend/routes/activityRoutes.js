@@ -85,6 +85,14 @@ router.put('/submissions/score/:submissionId', activityController.updateActivity
 // POST a new submission for an activity
 router.post('/submit', uploadSubmission.single('file'), activityController.submitActivity);
 
+// OPTIONS preflight for resubmit (CORS)
+router.options('/resubmit/:id', (req, res) => {
+  res.header('Access-Control-Allow-Origin', 'https://capstone-admin-task-hub-jske.vercel.app');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(204);
+});
 // PUT to resubmit an activity
 router.put('/resubmit/:id', uploadSubmission.single('file'), activityController.resubmitActivity);
 
