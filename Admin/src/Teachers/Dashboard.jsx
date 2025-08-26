@@ -16,8 +16,8 @@ import {
 } from "react-icons/fa";
 import '../Css/Dashboard.css';
 
-const SERVER_URL = 'http://localhost:5000';
-const API_BASE = 'http://localhost:5000/api';
+const SERVER_URL = 'https://capstone-admin-task-hub.vercel.app';
+const API_BASE = 'https://capstone-admin-task-hub.vercel.app/api';
 
 // --- FallingBooksAnimation: Improved version ---
 const FallingBooksAnimation = () => {

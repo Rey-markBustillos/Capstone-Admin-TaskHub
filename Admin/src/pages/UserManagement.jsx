@@ -55,7 +55,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState('all');
-  const API_BASE = "http://localhost:5000/api/users";
+  const API_BASE = "https://capstone-admin-task-hub.vercel.app/api/users";
 
   useEffect(() => {
     fetchUsers();

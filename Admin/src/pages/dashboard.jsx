@@ -113,7 +113,7 @@ const lineOptions = {
   },
 };
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "https://capstone-admin-task-hub.vercel.app/api";
 
 const AdminDashboard = () => {
   const [selectedMenu, setSelectedMenu] = useState("User Management");
