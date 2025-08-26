@@ -3,7 +3,10 @@ const router = express.Router();
 const quizController = require('../controllers/quizController');
 
 // Generate quiz from module text
-router.post('/generate', quizController.generateQuiz);
+router.post('/generate', (req, res, next) => {
+	console.log('[Route] /api/quizzes/generate endpoint hit', req.body);
+	next();
+}, quizController.generateQuiz);
 // Create quiz
 router.post('/', quizController.createQuiz);
 // Get quizzes for a class

@@ -22,7 +22,7 @@ const StudentList = () => {
       setError(null);
       try {
         // AYOS: Kinukuha ang detalye ng class, kasama ang listahan ng estudyante
-  const response = await axios.get(`https://capstone-admin-task-hub.vercel.app/api/class/${classId}`);
+  const response = await axios.get(`http://localhost:5000/api/class/${classId}`);
         setStudents(response.data.students || []);
         setClassName(response.data.className || '');
       } catch (err) {

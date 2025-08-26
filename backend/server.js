@@ -1,3 +1,4 @@
+console.log("[Startup] server.js is running. If you see this, logging works.");
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -83,10 +84,12 @@ app.use((req, res, next) => {
 
 // Global error handler (keep this LAST)
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('[GLOBAL ERROR HANDLER]', err);
   res.status(500).json({
     message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+    error: err.message,
+    stack: err.stack,
+    from: 'global-error-handler'
   });
 });
 

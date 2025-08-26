@@ -1,13 +1,14 @@
 const Quiz = require('../models/Quiz');
 const { ObjectId } = require('mongoose').Types;
+const fetch = require('node-fetch');
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
 // Generate quiz questions from module text using Ollama local AI
-const fetch = require('node-fetch');
 exports.generateQuiz = async (req, res) => {
-  const { count = 3, moduleText } = req.body; // Lower default for speed
-  // Use a faster model if available (e.g., phi3 or llama2:7b)
+  console.log('[DEBUG] /api/quizzes/generate called', { body: req.body });
+  const { count = 3, moduleText } = req.body;
   const model = 'phi3';
-  // Simplified prompt for speed
   let prompt = '';
   if (moduleText && moduleText.trim()) {
     prompt = `Generate ${count} quiz questions (any type) based on this text. Respond as a JSON array of objects: type, question, options (array), answer.\nText:\n${moduleText}`;
@@ -16,29 +17,94 @@ exports.generateQuiz = async (req, res) => {
   }
 
   try {
-    const ollamaRes = await fetch('http://localhost:11434/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        prompt,
-        stream: false
-      })
-    });
-    const data = await ollamaRes.json();
-    // Try to parse the response as JSON array
-    let questions = [];
-    try {
-      // Some models may wrap the JSON in markdown code block
-      let text = data.response.trim();
+    if (OPENROUTER_API_KEY) {
+      console.log('[DEBUG] Using OpenRouter API for quiz generation');
+      const openrouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'openrouter/auto',
+          messages: [
+            { role: 'system', content: 'You are a helpful quiz generator.' },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 8192,
+          temperature: 0.7
+        })
+      });
+      const data = await openrouterRes.json();
+      console.log('[DEBUG] OpenRouter raw response:', JSON.stringify(data));
+      let text = data.choices?.[0]?.message?.content?.trim() || '';
       if (text.startsWith('```')) text = text.replace(/```[a-z]*\n?/i, '').replace(/```$/, '').trim();
-      questions = JSON.parse(text);
-    } catch (err) {
-      return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: data.response });
+      let questions = [];
+      try {
+        questions = JSON.parse(text);
+      } catch (err) {
+        console.error('[ERROR] Failed to parse OpenRouter response:', text, err);
+        return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: text });
+      }
+      return res.json({ questions });
+    } else if (DEEPSEEK_API_KEY) {
+      console.log('[DEBUG] Using DeepSeek API for quiz generation');
+      const deepseekRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [
+            { role: 'system', content: 'You are a helpful quiz generator.' },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 8192,
+          temperature: 0.7
+        })
+      });
+      const data = await deepseekRes.json();
+      console.log('[DEBUG] DeepSeek raw response:', JSON.stringify(data));
+      let text = data.choices?.[0]?.message?.content?.trim() || '';
+      if (text.startsWith('```')) text = text.replace(/```[a-z]*\n?/i, '').replace(/```$/, '').trim();
+      let questions = [];
+      try {
+        questions = JSON.parse(text);
+      } catch (err) {
+        console.error('[ERROR] Failed to parse DeepSeek response:', text, err);
+        return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: text });
+      }
+      return res.json({ questions });
+    } else {
+      // Fallback to Ollama only if no API keys are present
+      console.log('[DEBUG] Using Ollama for quiz generation');
+      const ollamaRes = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt,
+          stream: false
+        })
+      });
+      const data = await ollamaRes.json();
+      console.log('[DEBUG] Ollama raw response:', JSON.stringify(data));
+      let questions = [];
+      try {
+        let text = data.response.trim();
+        if (text.startsWith('```')) text = text.replace(/```[a-z]*\n?/i, '').replace(/```$/, '').trim();
+        questions = JSON.parse(text);
+      } catch (err) {
+        console.error('[ERROR] Failed to parse Ollama response:', data.response, err);
+        return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: data.response });
+      }
+      res.json({ questions });
     }
-    res.json({ questions });
   } catch (err) {
-    res.status(500).json({ message: 'Failed to connect to Ollama', error: err.message });
+    console.error('[ERROR] Failed to connect to AI provider:', err);
+    res.status(500).json({ message: 'Failed to connect to AI provider', error: err.message, stack: err.stack });
   }
 };
 

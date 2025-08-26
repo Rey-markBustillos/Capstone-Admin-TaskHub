@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { FaUpload, FaPaste, FaTrash, FaEdit, FaPlus, FaSave, FaTimes } from 'react-icons/fa';
 
-const API_BASE_URL = 'https://capstone-admin-task-hub.vercel.app/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 
 export default function CreateQuizz() {

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, NavLink } from 'react-router-dom';
 import { FaArrowLeft, FaUserGraduate } from 'react-icons/fa';
 
-const API_BASE_URL = 'https://capstone-admin-task-hub.vercel.app/api';
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const StudentClassList = () => {
   const [students, setStudents] = useState([]);

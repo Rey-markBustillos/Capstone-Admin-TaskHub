@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
 
-const API_BASE = "https://capstone-admin-task-hub.vercel.app/api";
+const API_BASE = "http://localhost:5000/api";
 
 export default function TeacherAnnouncement() {
   const { classId } = useParams();
