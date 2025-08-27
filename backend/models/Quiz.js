@@ -12,6 +12,8 @@ const QuizSchema = new mongoose.Schema({
   title: { type: String, required: true },
   questions: [QuestionSchema],
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  dueDate: { type: Date },
+  questionTime: { type: Number, default: 30 }, // seconds per question
   createdAt: { type: Date, default: Date.now },
 });
 

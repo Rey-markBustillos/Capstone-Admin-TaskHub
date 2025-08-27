@@ -15,5 +15,7 @@ router.get('/class/:classId', quizController.getQuizzesByClass);
 router.put('/:quizId', quizController.updateQuiz);
 // Delete quiz
 router.delete('/:quizId', quizController.deleteQuiz);
+// View all submissions for a quiz (teacher)
+router.get('/:quizId/submissions', quizController.getQuizSubmissions);
 
 module.exports = router;

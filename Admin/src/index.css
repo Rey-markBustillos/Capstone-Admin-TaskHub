@@ -1,4 +1,3 @@
-
 @import "tailwindcss/preflight";
 @import "tailwindcss/utilities";
 
@@ -22,4 +21,28 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   /* Or your preferred font */
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slideInRight {
+  animation: slideInRight 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease;
+}
+@keyframes bounceOnce {
+  0% { transform: translateY(100px); opacity: 0; }
+  60% { transform: translateY(-20px); opacity: 1; }
+  80% { transform: translateY(10px); }
+  100% { transform: translateY(0); }
+}
+.animate-bounceOnce {
+  animation: bounceOnce 0.7s cubic-bezier(0.4,0,0.2,1);
 }
