@@ -22,7 +22,7 @@ export default function Login({ onBack, onLoginSuccess }) {
         password: formData.password.trim(),
       };
 
-  const res = await fetch("http://localhost:5000/api/users/login", {
+  const res = await fetch(`${import.meta.env.REACT_APP_API_BASE_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

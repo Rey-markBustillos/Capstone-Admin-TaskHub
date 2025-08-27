@@ -24,7 +24,7 @@ import { Mic, Loader2 } from "lucide-react";
 
 const SERVER_URL = 'https://capstone-admin-task-hub.vercel.app';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.REACT_APP_API_BASE_URL;
 
 export default function VoiceAssistant({ userId, todaysClassTime }) {
   const [listening, setListening] = useState(false);

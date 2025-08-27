@@ -28,8 +28,8 @@ const CreateActivity = () => {
     setActivitiesError('');
     try {
       const [classRes, activitiesRes] = await Promise.all([
-  axios.get(`http://localhost:5000/api/class/${classId}`),
-  axios.get(`http://localhost:5000/api/activities?classId=${classId}`)
+  axios.get(`${import.meta.env.REACT_APP_API_BASE_URL}/class/${classId}`),
+  axios.get(`${import.meta.env.REACT_APP_API_BASE_URL}/activities?classId=${classId}`)
       ]);
       setClassName(classRes.data.className);
       setActivitiesList(activitiesRes.data || []);
@@ -74,7 +74,7 @@ const CreateActivity = () => {
       if (activityData.attachment) {
         formData.append('attachment', activityData.attachment);
       }
-  await axios.post('http://localhost:5000/api/activities', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+  await axios.post(`${import.meta.env.REACT_APP_API_BASE_URL}/activities`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSuccess('Activity created successfully!');
       fetchClassData();
       setTimeout(() => {

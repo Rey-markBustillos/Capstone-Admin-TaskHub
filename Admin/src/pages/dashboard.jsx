@@ -113,7 +113,7 @@ const lineOptions = {
   },
 };
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = import.meta.env.REACT_APP_API_BASE_URL;
 
 const AdminDashboard = () => {
   const [selectedMenu, setSelectedMenu] = useState("User Management");
