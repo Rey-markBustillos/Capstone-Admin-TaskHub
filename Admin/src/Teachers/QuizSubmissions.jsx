@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5000/api';
@@ -8,13 +8,24 @@ export default function QuizSubmissions({ quizId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Poll submissions every 5 seconds for real-time updates
+  const intervalRef = useRef();
   useEffect(() => {
     if (!quizId) return;
-    setLoading(true);
-    axios.get(`${API_BASE_URL}/quizzes/${quizId}/submissions`)
-      .then(res => setSubmissions(res.data))
-      .catch(() => setError('Failed to fetch submissions.'))
-      .finally(() => setLoading(false));
+    let isMounted = true;
+    const fetchSubs = () => {
+      setLoading(true);
+      axios.get(`${API_BASE_URL}/quizzes/${quizId}/submissions`)
+        .then(res => { if (isMounted) setSubmissions(res.data); })
+        .catch(() => { if (isMounted) setError('Failed to fetch submissions.'); })
+        .finally(() => { if (isMounted) setLoading(false); });
+    };
+    fetchSubs();
+    intervalRef.current = setInterval(fetchSubs, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalRef.current);
+    };
   }, [quizId]);
 
   if (!quizId) return <div className="text-indigo-400">No quiz selected.</div>;

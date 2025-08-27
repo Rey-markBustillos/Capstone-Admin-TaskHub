@@ -8,6 +8,11 @@ exports.submitQuiz = async (req, res) => {
     if (!quiz) {
       return res.status(404).json({ message: 'Quiz not found' });
     }
+    // Prevent duplicate submissions
+    const existing = await QuizSubmission.findOne({ quizId, studentId });
+    if (existing) {
+      return res.status(400).json({ message: 'You have already submitted this quiz.' });
+    }
     // Calculate score
     let score = 0;
     if (Array.isArray(answers) && Array.isArray(quiz.questions)) {
@@ -209,7 +214,8 @@ exports.createQuiz = async (req, res) => {
 exports.getQuizzesByClass = async (req, res) => {
   try {
     const { classId } = req.params;
-    console.log('[DEBUG] getQuizzesByClass called with classId:', classId);
+    const { studentId } = req.query;
+    console.log('[DEBUG] getQuizzesByClass called with classId:', classId, 'studentId:', studentId);
     if (!classId || !ObjectId.isValid(classId)) {
       console.error('[ERROR] Invalid classId parameter:', classId);
       return res.status(400).json({ message: 'Invalid classId parameter.' });
@@ -221,7 +227,17 @@ exports.getQuizzesByClass = async (req, res) => {
       console.error('[ERROR] ObjectId conversion failed, trying string match:', objErr);
       quizzes = await Quiz.find({ classId: classId });
     }
-    res.json(quizzes);
+    // Attach submissions for each quiz (optionally filter by studentId)
+    const quizIds = quizzes.map(q => q._id);
+    let submissions = await QuizSubmission.find({ quizId: { $in: quizIds } });
+    if (studentId) {
+      submissions = submissions.filter(sub => String(sub.studentId) === String(studentId));
+    }
+    const quizzesWithSubs = quizzes.map(q => {
+      const subs = submissions.filter(sub => String(sub.quizId) === String(q._id));
+      return { ...q.toObject(), submissions: subs };
+    });
+    res.json(quizzesWithSubs);
   } catch (err) {
     console.error('[ERROR] getQuizzesByClass failed:', err);
     res.status(500).json({ message: err.message });
