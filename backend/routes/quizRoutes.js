@@ -16,6 +16,11 @@ router.put('/:quizId', quizController.updateQuiz);
 // Delete quiz
 router.delete('/:quizId', quizController.deleteQuiz);
 // View all submissions for a quiz (teacher)
+
+// Student submits quiz answers
+router.post('/:quizId/submit', quizController.submitQuiz);
+
+// View all submissions for a quiz (teacher)
 router.get('/:quizId/submissions', quizController.getQuizSubmissions);
 
 module.exports = router;

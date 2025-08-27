@@ -9,6 +9,7 @@ import ClassManagement from './pages/ClassManagement';
 import StudentDashboard from './Students/Dashboard';
 import StudentPortal from './Students/StudentPortal';
 import StudentClassView from './Students/StudentClassView';
+import QuizzHub from './Students/QuizzHub';
 import StudentAnnouncements from './Students/StudentAnnouncements';
 import StudentActivities from './Students/StudentActivities';
 import StudentClassList from './Students/StudentsClassList';
@@ -163,6 +164,7 @@ export default function App() {
           <Route path="attendance" element={<StudentAttendance />} />
           <Route path="announcements" element={<StudentAnnouncements />} />
           <Route path="activities" element={<StudentActivities />} />
+          <Route path="quiz" element={<QuizzHub />} />
           <Route path="classlist" element={<StudentClassList />} />
         </Route>
         <Route path="/student/class/:classId/activity/:activityId/submit" element={<SubmitActivity />} />

@@ -1,3 +1,42 @@
+// Student submits quiz answers
+exports.submitQuiz = async (req, res) => {
+  try {
+    const { quizId } = req.params;
+    const { studentId, answers } = req.body;
+    // Fetch the quiz to get correct answers
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ message: 'Quiz not found' });
+    }
+    // Calculate score
+    let score = 0;
+    if (Array.isArray(answers) && Array.isArray(quiz.questions)) {
+      for (let i = 0; i < quiz.questions.length; i++) {
+        const submitted = answers.find(a => a.questionIndex === i);
+        if (submitted && submitted.answer !== undefined) {
+          // Accept string or boolean answers
+          const correct = quiz.questions[i].answer;
+          if (String(submitted.answer).trim().toLowerCase() === String(correct).trim().toLowerCase()) {
+            score++;
+          }
+        }
+      }
+    }
+    // Save submission
+    const submission = new QuizSubmission({
+      quizId,
+      studentId,
+      answers,
+      score,
+      submittedAt: new Date(),
+    });
+    await submission.save();
+    res.json({ message: 'Quiz submitted successfully', score });
+  } catch (err) {
+    console.error('[ERROR] Quiz submission failed:', err);
+    res.status(500).json({ message: 'Quiz submission failed', error: err.message });
+  }
+};
 const Quiz = require('../models/Quiz');
 const QuizSubmission = require('../models/QuizSubmission');
 const { ObjectId } = require('mongoose').Types;
@@ -170,12 +209,21 @@ exports.createQuiz = async (req, res) => {
 exports.getQuizzesByClass = async (req, res) => {
   try {
     const { classId } = req.params;
+    console.log('[DEBUG] getQuizzesByClass called with classId:', classId);
     if (!classId || !ObjectId.isValid(classId)) {
+      console.error('[ERROR] Invalid classId parameter:', classId);
       return res.status(400).json({ message: 'Invalid classId parameter.' });
     }
-    const quizzes = await Quiz.find({ classId: ObjectId(classId) });
+    let quizzes = [];
+    try {
+      quizzes = await Quiz.find({ classId: ObjectId(classId) });
+    } catch (objErr) {
+      console.error('[ERROR] ObjectId conversion failed, trying string match:', objErr);
+      quizzes = await Quiz.find({ classId: classId });
+    }
     res.json(quizzes);
   } catch (err) {
+    console.error('[ERROR] getQuizzesByClass failed:', err);
     res.status(500).json({ message: err.message });
   }
 };
