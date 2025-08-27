@@ -8,10 +8,53 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 
 export default function CreateQuizz() {
+  // Always initialize params and user info first
   const { classId } = useParams();
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const teacherId = user?._id;
+  // State for created quizzes and their submissions
+  const [createdQuizzes, setCreatedQuizzes] = useState([]);
+  const [submissionsByQuiz, setSubmissionsByQuiz] = useState({});
+  const [subLoading, setSubLoading] = useState(false);
+  const [subError, setSubError] = useState('');
+  const [showSubModal, setShowSubModal] = useState(false);
+
+  // Fetch quizzes created by this teacher for this class
+  useEffect(() => {
+    if (!classId || !teacherId) return;
+    const fetchCreatedQuizzes = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/quizzes/class/${classId}`);
+        const filtered = res.data.filter(q => q.createdBy === teacherId);
+        setCreatedQuizzes(filtered);
+      } catch {
+        setCreatedQuizzes([]);
+      }
+    };
+    fetchCreatedQuizzes();
+  }, [classId, teacherId]);
+
+  // Fetch submissions for each created quiz
+  useEffect(() => {
+    if (!createdQuizzes.length) return;
+    setSubLoading(true);
+    setSubError('');
+    const fetchAll = async () => {
+      const results = {};
+      for (const quiz of createdQuizzes) {
+        try {
+          const res = await axios.get(`${API_BASE_URL}/quizzes/${quiz._id}/submissions`);
+          results[quiz._id] = res.data || [];
+        } catch {
+          results[quiz._id] = [];
+        }
+      }
+      setSubmissionsByQuiz(results);
+      setSubLoading(false);
+    };
+    fetchAll();
+  }, [createdQuizzes]);
   const [moduleText, setModuleText] = useState('');
   const [count, setCount] = useState(5);
   const [questions, setQuestions] = useState([]);
@@ -142,15 +185,24 @@ export default function CreateQuizz() {
 
   // Wrap the whole return in a single centered div
   return (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-[#181a20] via-[#23263a] to-[#1e2746] py-10">
-    <div className="w-full max-w-5xl p-0 sm:p-10 bg-gradient-to-br from-[#181a20] via-[#23263a] to-[#1e2746] rounded-3xl shadow-2xl border-4 border-indigo-900 overflow-hidden max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-700 scrollbar-track-[#23263a] relative">
-      <div className="bg-gradient-to-r from-indigo-900 to-blue-900 px-8 py-6 flex flex-col sm:flex-row sm:items-center gap-4 border-b-4 border-indigo-800 shadow-lg justify-center">
-        <h2 className="text-3xl font-extrabold text-white drop-shadow-lg tracking-wide flex items-center gap-3 justify-center">
-          <svg className="w-10 h-10 text-green-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v1.5m9 0v1.5m0-1.5h-9m9 0a2.25 2.25 0 012.25 2.25v8.25A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V9a2.25 2.25 0 012.25-2.25h9z" /></svg>
-          Quiz Generator
-        </h2>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-[#181a20] via-[#23263a] to-[#1e2746] py-10">
+      {/* View All Submissions button at the top */}
+      <div className="w-full flex justify-end max-w-[90vw] xl:max-w-[1600px] mb-6">
+        <button
+          className="bg-gradient-to-r from-green-700 to-blue-800 hover:from-green-800 hover:to-blue-900 text-white px-8 py-3 rounded-2xl font-bold shadow border-2 border-green-400 hover:border-blue-500 transition"
+          onClick={() => setShowSubModal(true)}
+        >
+          View All Submissions
+        </button>
       </div>
-      <div className="px-8 py-6">
+      <div className="w-full max-w-[90vw] xl:max-w-[1600px] p-0 sm:p-10 bg-gradient-to-br from-[#181a20] via-[#23263a] to-[#1e2746] rounded-3xl shadow-2xl border-4 border-indigo-900 overflow-hidden max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-700 scrollbar-track-[#23263a] relative">
+        <div className="bg-gradient-to-r from-indigo-900 to-blue-900 px-8 py-6 flex flex-col sm:flex-row sm:items-center gap-4 border-b-4 border-indigo-800 shadow-lg justify-center">
+          <h2 className="text-3xl font-extrabold text-white drop-shadow-lg tracking-wide flex items-center gap-3 justify-center">
+            <svg className="w-10 h-10 text-green-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v1.5m9 0v1.5m0-1.5h-9m9 0a2.25 2.25 0 012.25 2.25v8.25A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V9a2.25 2.25 0 012.25-2.25h9z" /></svg>
+            Quiz Generator
+          </h2>
+        </div>
+        <div className="px-8 py-6">
         <h3 className="text-xl font-bold mb-2 text-indigo-200 flex items-center gap-2">
           <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
           Module Upload / Paste
@@ -381,16 +433,82 @@ export default function CreateQuizz() {
             </div>
           </div>
         )}
-        {/* Created Quizzes Section */}
+        {/* Created Quizzes and Student Submissions Section */}
         {questions.length === 0 && (
           <div className="mt-8">
             <h2 className="text-xl font-bold mb-4 text-indigo-200">Your Quizzes</h2>
-            <div className="bg-[#23263a] rounded-lg p-4 shadow-md">
-              <p className="text-indigo-300">No quizzes created yet. Generate a quiz using the module text.</p>
+            {subLoading ? (
+              <div className="text-indigo-300">Loading quizzes and submissions...</div>
+            ) : createdQuizzes.length === 0 ? (
+              <div className="bg-[#23263a] rounded-lg p-4 shadow-md">
+                <p className="text-indigo-300">No quizzes created yet. Generate a quiz using the module text.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-8">
+                {createdQuizzes.map(quiz => (
+                  <div key={quiz._id} className="bg-[#23263a] rounded-lg p-4 shadow-md">
+                    <div className="mb-2">
+                      <span className="font-bold text-lg text-indigo-100">{quiz.title}</span>
+                      <span className="ml-4 text-indigo-300 text-sm">Due: {quiz.dueDate ? new Date(quiz.dueDate).toLocaleString() : 'N/A'}</span>
+                      <div className="text-indigo-200 text-sm">{quiz.questions?.length || 0} Questions</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {subError && <div className="text-red-400 mt-2">{subError}</div>}
+          </div>
+        )}
+
+        {/* Submissions Modal - all quizzes */}
+        {showSubModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl p-8 shadow-2xl w-full max-w-4xl border-4 border-indigo-500 animate-fadeIn pointer-events-auto relative">
+              <button
+                className="absolute top-4 right-4 text-indigo-200 hover:text-white text-2xl font-bold focus:outline-none"
+                onClick={() => setShowSubModal(false)}
+              >
+                ×
+              </button>
+              <h2 className="text-2xl font-extrabold text-white mb-4">All Student Submissions</h2>
+              <div className="overflow-x-auto max-h-[70vh]">
+                {createdQuizzes.length === 0 ? (
+                  <div className="text-indigo-300">No quizzes created yet.</div>
+                ) : (
+                  createdQuizzes.map(quiz => (
+                    <div key={quiz._id} className="mb-8">
+                      <div className="font-bold text-lg text-indigo-100 mb-2">{quiz.title}</div>
+                      <table className="min-w-full text-indigo-100 text-sm border border-indigo-800 rounded-lg mb-2">
+                        <thead>
+                          <tr className="bg-indigo-900 text-indigo-100">
+                            <th className="px-3 py-2 border-b border-indigo-800">Student Name</th>
+                            <th className="px-3 py-2 border-b border-indigo-800">Student Email</th>
+                            <th className="px-3 py-2 border-b border-indigo-800">Score</th>
+                            <th className="px-3 py-2 border-b border-indigo-800">Submitted At</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(submissionsByQuiz[quiz._id] || []).length === 0 ? (
+                            <tr><td colSpan="4" className="text-indigo-400 text-center py-3">No submissions yet.</td></tr>
+                          ) : (
+                            submissionsByQuiz[quiz._id].map((sub, i) => (
+                              <tr key={sub._id || i} className="border-b border-indigo-800">
+                                <td className="px-3 py-2">{sub.student?.name || sub.studentName || 'N/A'}</td>
+                                <td className="px-3 py-2">{sub.student?.email || sub.studentEmail || 'N/A'}</td>
+                                <td className="px-3 py-2">{typeof sub.score === 'number' ? sub.score : 'N/A'}</td>
+                                <td className="px-3 py-2">{sub.submittedAt ? new Date(sub.submittedAt).toLocaleString() : (sub.createdAt ? new Date(sub.createdAt).toLocaleString() : 'N/A')}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
-  {/* Created Quizzes and View Submissions section removed as requested */}
       </div>
     </div>
     {/* Save Quiz Button outside main box, only visible if questions.length > 0, with bounce animation */}

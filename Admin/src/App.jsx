@@ -19,7 +19,6 @@ import Attendance from './Teachers/Attendance';
 import TeacherDashboard from './Teachers/Dashboard';
 import TeacherPortal from './Teachers/TeacherPortal';
 import ActivityMonitoring from './Teachers/ActivityMonitoring';
-import QuizSubmissionsPage from './Teachers/QuizSubmissionsPage';
 import TeacherAnnouncement from './Teachers/TeacherAnnouncement';
 import CreateActivity from './Teachers/CreateActivity';
 import CreateQuizz from './Teachers/CreateQuizz';
@@ -175,7 +174,6 @@ export default function App() {
         <Route path="/teacherdashboard" element={<TeacherDashboard />} />
         <Route path="/classes" element={<TeacherPortal />} />
   <Route path="/activitymonitoring" element={<ActivityMonitoring />} />
-  <Route path="/quizsubmissions" element={<QuizSubmissionsPage />} />
         
         {/* AYOS: Binalot ang mga class-specific routes sa TeacherClassView */}
     <Route path="/class/:classId" element={<TeacherClassView />}> 

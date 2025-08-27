@@ -26,7 +26,6 @@ const menuItemsByRole = {
     { name: 'Dashboard', path: '/teacherdashboard', icon: <LayoutDashboard size={20} />, badge: 2 },
     { name: 'Classes', path: '/classes', icon: <ClipboardList size={20} />, badge: 12 },
     { name: 'Activity Monitoring', path: '/activitymonitoring', icon: <FileText size={20} /> },
-    { name: 'Quiz Submissions', path: '/quizsubmissions', icon: <ClipboardList size={20} /> },
   ],
 };
 

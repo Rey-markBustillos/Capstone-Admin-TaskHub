@@ -272,8 +272,10 @@ exports.getQuizSubmissions = async (req, res) => {
   try {
     const { quizId } = req.params;
     const submissions = await QuizSubmission.find({ quizId }).populate('studentId', 'name email');
+    console.log('[DEBUG] Returning quiz submissions:', submissions.map(s => ({ id: s._id, student: s.studentId, score: s.score, submittedAt: s.submittedAt })));
     res.json(submissions);
   } catch (err) {
+    console.error('[ERROR] getQuizSubmissions:', err);
     res.status(500).json({ message: err.message });
   }
 };
