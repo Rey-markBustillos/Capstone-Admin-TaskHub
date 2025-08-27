@@ -21,6 +21,8 @@ const quizRoutes = require('./routes/quizRoutes');
 const submissionRoutes = require('./routes/submissionRoutes');
 
 dotenv.config();
+console.log('OPENROUTER_API_KEY:', process.env.OPENROUTER_API_KEY ? 'Loaded' : 'Missing');
+console.log('DEEPSEEK_API_KEY:', process.env.DEEPSEEK_API_KEY ? 'Loaded' : 'Missing');
 
 // Connect to MongoDB
 connectDB().catch((err) => {
