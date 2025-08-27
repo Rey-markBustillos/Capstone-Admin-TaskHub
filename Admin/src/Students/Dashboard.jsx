@@ -191,7 +191,11 @@ const StudentDashboard = () => {
   }).length;
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden">
+  <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden w-full">
+      {/* Welcome section at the very top, no margin above */}
+      <div className="w-full flex items-center justify-center pt-8 pb-6">
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight w-full text-center">Welcome, {studentName}!</h1>
+      </div>
       {/* Decorative background blobs (same as login) */}
       <div
         aria-hidden="true"
@@ -210,38 +214,16 @@ const StudentDashboard = () => {
         <FallingBooksAnimation />
       </div>
 
-      <div className="relative z-10 w-full h-full overflow-y-auto p-2 sm:p-4 md:p-6 max-w-6xl mx-auto">
-        <header className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-between items-center mb-8 text-white">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-0">Welcome, {studentName}!</h1>
-        </header>
+  <div className="relative z-10 w-full h-full overflow-y-auto p-2 sm:p-4 md:p-6 max-w-none mx-auto">
 
 
-        {/* Today's Schedule Section */}
-        <section className="mb-6">
-          <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Today's Schedule</h2>
-          {todaysSchedule.length === 0 ? (
-            <div className="text-blue-200 italic">No upcoming schedule for today.</div>
-          ) : (
-            <ul className="space-y-2">
-              {todaysSchedule.map((sched, idx) => {
-                // Compose a Date object for today with the activity's time
-                const today = new Date();
-                const [hour, minute] = sched.time.split(':');
-                today.setHours(Number(hour), Number(minute), 0, 0);
-                const weekday = today.toLocaleString('en-US', { weekday: 'long' });
-                return (
-                  <li key={idx} className="bg-blue-100/80 p-3 rounded shadow flex flex-col sm:flex-row sm:items-center justify-between">
-                    <span className="font-bold text-blue-900">{sched.title}</span>
-                    <span className="text-blue-700 text-sm">{weekday} | {sched.time}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
 
         {/* Voice Assistant Button */}
-        {studentId && <VoiceAssistant userId={studentId} todaysClassTime={todaysSchedule[0]?.time || ""} />}
+        {studentId && (
+          <div className="flex justify-center items-center w-full my-8">
+            <VoiceAssistant userId={studentId} todaysClassTime={todaysSchedule[0]?.time || ""} />
+          </div>
+        )}
 
         <main className="rounded-lg p-2 sm:p-4 md:p-6 shadow-lg backdrop-blur-xl border border-indigo-700">
           {/* Summary Section */}

@@ -45,33 +45,35 @@ exports.submitQuiz = async (req, res) => {
 const Quiz = require('../models/Quiz');
 const QuizSubmission = require('../models/QuizSubmission');
 const { ObjectId } = require('mongoose').Types;
-const fetch = require('node-fetch');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Generate quiz questions from module text using Ollama local AI
 exports.generateQuiz = async (req, res) => {
-  // Load API keys at runtime
-  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-  console.log('[DEBUG] OPENROUTER_API_KEY (raw):', process.env.OPENROUTER_API_KEY);
-  console.log('[DEBUG] OPENROUTER_API_KEY (used):', OPENROUTER_API_KEY ? OPENROUTER_API_KEY.slice(0,12) + '...' : 'Missing');
-  if (!OPENROUTER_API_KEY) {
-    console.error('[ERROR] No OPENROUTER_API_KEY found in environment variables.');
+  // Load Gemini API key at runtime
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+  console.log('[DEBUG] GEMINI_API_KEY (raw):', process.env.GEMINI_API_KEY);
+  if (!GEMINI_API_KEY) {
+    console.error('[ERROR] No GEMINI_API_KEY found in environment variables.');
+    return res.status(500).json({ message: 'No GEMINI_API_KEY found in environment variables.' });
   }
   console.log('[DEBUG] /api/quizzes/generate called', { body: req.body });
   const { count = 3, moduleText, quizType } = req.body;
-  const model = 'phi3';
   // Batching logic: max 10 per API call for reliability
   const batchSize = 10;
   const numBatches = Math.ceil(count / batchSize);
   let allQuestions = [];
+  // Initialize Gemini SDK
+  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: 'models/gemini-2.0-flash' });
   for (let i = 0; i < numBatches; i++) {
     // Compute how many questions for this batch
     const batchCount = (i === numBatches - 1) ? (count - i * batchSize) : batchSize;
     let prompt = '';
     let typePrompt = '';
-  if (quizType === 'mcq') typePrompt = 'multiple choice';
-  else if (quizType === 'true_false') typePrompt = 'true or false';
-  else if (quizType === 'identification') typePrompt = 'identification';
-  else typePrompt = 'mixed types';
+    if (quizType === 'mcq') typePrompt = 'multiple choice';
+    else if (quizType === 'true_false') typePrompt = 'true or false';
+    else if (quizType === 'identification') typePrompt = 'identification';
+    else typePrompt = 'mixed types';
     if (moduleText && moduleText.trim()) {
       prompt = `Generate ${batchCount} quiz questions (${typePrompt}) based on this text. Respond as a JSON array of objects: type, question, options (array), answer.\nText:\n${moduleText}`;
     } else {
@@ -79,77 +81,37 @@ exports.generateQuiz = async (req, res) => {
     }
     try {
       let questions = [];
-      if (OPENROUTER_API_KEY) {
-        console.log(`[DEBUG] [Batch ${i+1}/${numBatches}] Attempting OpenRouter API call with key:`, OPENROUTER_API_KEY.slice(0, 12) + '...');
-        const openrouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: 'openrouter/auto',
-            messages: [
-              { role: 'system', content: 'You are a helpful quiz generator.' },
-              { role: 'user', content: prompt }
-            ],
-            max_tokens: 1024,
-            temperature: 0.7
-          })
-        });
-        const rawText = await openrouterRes.text();
-        if (!openrouterRes.ok) {
-          console.error(`[ERROR] [Batch ${i+1}] OpenRouter API error:`, openrouterRes.status, rawText);
-          // Extra debug info
-          console.error('[DEBUG] OpenRouter API key used:', OPENROUTER_API_KEY);
-          return res.status(500).json({ message: 'OpenRouter API error', status: openrouterRes.status, error: rawText, apiKey: OPENROUTER_API_KEY });
-        }
-        // Log the raw response for debugging
-        console.log(`[DEBUG] [Batch ${i+1}] OpenRouter raw response:`, rawText);
-        let data;
-        try {
-          data = JSON.parse(rawText);
-        } catch (err) {
-          console.error(`[ERROR] [Batch ${i+1}] Failed to parse OpenRouter response as JSON:`, rawText, err);
-          return res.status(500).json({ message: 'OpenRouter response is not valid JSON', raw: rawText });
-        }
-        const message = data.choices?.[0]?.message;
-        console.log(`[DEBUG] [Batch ${i+1}] OpenRouter assistant message:`, JSON.stringify(message, null, 2));
-        let text = message?.content?.trim() || '';
-        if (!text) {
-          // No content returned, log reasoning if present
-          const reasoning = message?.reasoning || '';
-          console.error(`[ERROR] [Batch ${i+1}] No quiz questions found in content. Reasoning:`, reasoning);
-          return res.status(500).json({ message: 'No quiz questions found in OpenRouter response.', reasoning });
-        }
-        // Remove markdown code fencing and extra lines
-        if (text.startsWith('```')) {
-          text = text.replace(/^```[a-z]*\n?/i, '').replace(/```$/, '').trim();
-        }
-        // Attempt to fix incomplete/truncated JSON (remove trailing commas, close array)
-        let fixedText = text;
-        // Remove trailing commas before array/object close
-        fixedText = fixedText.replace(/,\s*([}\]])/g, '$1');
-        // If it looks like an array but is missing the closing bracket, add it
-        if (fixedText.startsWith('[') && !fixedText.trim().endsWith(']')) {
-          fixedText += ']';
-        }
-        try {
-          questions = JSON.parse(fixedText);
-        } catch (err) {
-          console.error(`[ERROR] [Batch ${i+1}] Failed to parse OpenRouter response content as JSON:`, fixedText, err);
-          return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: fixedText });
-        }
-      } else {
-        console.error('[ERROR] No valid OpenRouter API key found. Please set OPENROUTER_API_KEY in your .env.');
-        return res.status(500).json({ message: 'No valid OpenRouter API key found. Please set OPENROUTER_API_KEY in your .env.' });
+      // Gemini SDK call
+      console.log(`[DEBUG] [Batch ${i+1}/${numBatches}] Using Gemini SDK`);
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text = response.text().trim();
+      if (!text) {
+        console.error(`[ERROR] [Batch ${i+1}] No quiz questions found in Gemini SDK response.`);
+        return res.status(500).json({ message: 'No quiz questions found in Gemini SDK response.' });
+      }
+      // Remove markdown code fencing and extra lines
+      if (text.startsWith('```')) {
+        text = text.replace(/^```[a-z]*\n?/i, '').replace(/```$/, '').trim();
+      }
+      // Attempt to fix incomplete/truncated JSON (remove trailing commas, close array)
+      let fixedText = text;
+      fixedText = fixedText.replace(/,\s*([}\]])/g, '$1');
+      if (fixedText.startsWith('[') && !fixedText.trim().endsWith(']')) {
+        fixedText += ']';
+      }
+      try {
+        questions = JSON.parse(fixedText);
+      } catch (err) {
+        console.error(`[ERROR] [Batch ${i+1}] Failed to parse Gemini SDK response content as JSON:`, fixedText, err);
+        return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: fixedText });
       }
       if (Array.isArray(questions)) {
         allQuestions = allQuestions.concat(questions);
       }
     } catch (err) {
-      console.error(`[ERROR] [Batch ${i+1}] Failed to connect to AI provider:`, err);
-      return res.status(500).json({ message: 'Failed to connect to AI provider', error: err.message, stack: err.stack });
+      console.error(`[ERROR] [Batch ${i+1}] Gemini SDK error:`, err);
+      return res.status(500).json({ message: 'Gemini SDK error', error: err.message, stack: err.stack });
     }
   }
   // Post-process: relabel options as A, B, C, D, ... for multiple choice

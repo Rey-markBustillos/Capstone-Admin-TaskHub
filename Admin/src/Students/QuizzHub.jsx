@@ -153,7 +153,7 @@ const QuizzHub = () => {
   };
 
   const renderQuizCreation = () => (
-    <div className="mb-8 p-4 bg-white/80 dark:bg-gray-900/80 rounded-xl shadow-lg">
+  <div className="mb-8 p-4 bg-white/80 dark:bg-gray-900/80 rounded-xl shadow-lg w-full max-w-none">
   <h2 className="text-lg font-bold mb-2 text-gray-100">Create New Quiz</h2>
       <form onSubmit={handleCreateQuiz}>
         <input className="input mb-2" type="text" placeholder="Title" value={newQuiz.title} onChange={e=>setNewQuiz({ ...newQuiz, title: e.target.value })} required />
@@ -183,7 +183,7 @@ const QuizzHub = () => {
           // Check if student has already taken this quiz
           const alreadyTaken = Array.isArray(qz.submissions) && qz.submissions.some(sub => sub.studentId === studentId);
           return (
-            <div key={qz._id || idx} className="mb-6 p-4 bg-white/80 dark:bg-gray-900/80 rounded-xl shadow-lg">
+            <div key={qz._id || idx} className="mb-6 p-4 bg-white/80 dark:bg-gray-900/80 rounded-xl shadow-lg w-full max-w-none">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
                 <div>
                   <div className="font-bold text-lg text-gray-100">{qz.title}</div>
@@ -191,13 +191,27 @@ const QuizzHub = () => {
                   <div className="text-xs text-gray-300 flex items-center gap-1"><FaCalendarAlt /> Due: {qz.dueDate ? new Date(qz.dueDate).toLocaleDateString() : 'N/A'}</div>
                 </div>
                 {alreadyTaken ? (
-                  <button
-                    className="flex items-center gap-2 bg-gradient-to-r from-gray-500 to-gray-700 text-gray-300 px-5 py-2 rounded-2xl shadow-lg font-bold text-base transition mt-2 md:mt-0 opacity-60 cursor-not-allowed"
-                    disabled
-                    title="You have already taken this quiz."
-                  >
-                    <FaPen className="text-gray-300" /> Quiz Taken
-                  </button>
+                  <div className="flex flex-col items-start">
+                    <button
+                      className="flex items-center gap-2 bg-gradient-to-r from-gray-500 to-gray-700 text-gray-300 px-5 py-2 rounded-2xl shadow-lg font-bold text-base transition mt-2 md:mt-0 opacity-60 cursor-not-allowed"
+                      disabled
+                      title="You have already taken this quiz."
+                    >
+                      <FaPen className="text-gray-300" /> Quiz Taken
+                    </button>
+                    {/* Show score below button */}
+                    {Array.isArray(qz.submissions) && qz.submissions.filter(sub => sub.studentId === studentId).map((sub, i) => (
+                      <div
+                        key={i}
+                        className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-green-700 via-green-600 to-green-500 shadow-lg border-2 border-green-300/60 animate-fade-in-up"
+                        style={{ minWidth: '160px' }}
+                      >
+                        <FaCheckCircle className="text-yellow-300 text-xl drop-shadow" />
+                        <span className="font-bold text-white text-base tracking-wide">Your Score:</span>
+                        <span className="ml-2 text-2xl font-extrabold text-yellow-200 drop-shadow-lg">{typeof sub.score === 'number' ? sub.score : 'N/A'}</span>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <button
                     className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-700 hover:from-indigo-700 hover:to-blue-800 text-gray-100 px-5 py-2 rounded-2xl shadow-lg font-bold text-base transition mt-2 md:mt-0"
@@ -331,7 +345,7 @@ const QuizzHub = () => {
     <>
       {showStartModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="bg-gradient-to-br from-[#23263a] to-[#1a223a] rounded-2xl shadow-2xl p-8 border-4 border-indigo-900/80 w-full max-w-md flex flex-col items-center">
+          <div className="bg-gradient-to-br from-[#23263a] to-[#1a223a] rounded-2xl shadow-2xl p-8 border-4 border-indigo-900/80 w-full max-w-none flex flex-col items-center">
             {(() => {
               const quiz = quizzes.find(qz => qz._id === pendingQuizId);
               const alreadyTaken = quiz && Array.isArray(quiz.submissions) && quiz.submissions.some(sub => sub.studentId === studentId);
@@ -395,7 +409,7 @@ const QuizzHub = () => {
         </div>
       )}
       <div className="min-h-screen bg-gradient-to-br from-[#1a223a] via-[#23263a] to-[#1e2746] p-4 sm:p-8 flex flex-col items-center">
-        <div className="w-full max-w-3xl mx-auto">
+  <div className="w-full max-w-none mx-auto">
           {isTeacher && (
             <div className="flex justify-end mb-6">
               <button className="transition bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white font-bold px-6 py-3 rounded-2xl shadow-lg text-lg focus:ring-4 focus:ring-blue-400 flex items-center gap-2" onClick={()=>setShowCreate(!showCreate)}>

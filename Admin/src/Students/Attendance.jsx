@@ -41,8 +41,8 @@ const Attendance = () => {
   }, [studentId, classId]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-4 sm:p-8">
-  <div className="max-w-6xl w-full mx-auto flex flex-col justify-center items-center min-h-[80vh] px-2 sm:px-4 md:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-4 sm:p-8 w-full">
+  <div className="w-full max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh] px-2 sm:px-4 md:px-8">
       <div className="mb-6 mt-4 ml-4 self-start">
         <NavLink
           to={`/student/class/${classId}`}
@@ -51,7 +51,7 @@ const Attendance = () => {
           <FaArrowLeft /> Back to Class Menu
         </NavLink>
       </div>
-      <div className="bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl p-4 sm:p-8 md:p-12 lg:p-16 border-8 border-indigo-600 dark:border-indigo-800 backdrop-blur-md w-full max-w-full overflow-x-auto">
+  <div className="bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl p-4 sm:p-8 md:p-12 lg:p-16 border-8 border-indigo-600 dark:border-indigo-800 backdrop-blur-md w-full max-w-none overflow-x-auto">
           <h2 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300 mb-4 flex items-center gap-2">
             <FaCalendarCheck /> Attendance History
           </h2>

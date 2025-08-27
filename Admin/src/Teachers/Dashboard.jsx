@@ -245,10 +245,10 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative w-full">
       <FallingBooksAnimation />
-      <div className="relative z-10 p-6 md:p-8 overflow-y-auto h-screen">
-        <div className="max-w-7xl mx-auto">
+      <div className="relative z-10 p-6 md:p-8 overflow-y-auto h-screen w-full">
+        <div className="w-full">
           {/* Welcome and Stats Section Combined */}
           <div className="mb-10">
             <div className="w-full bg-gradient-to-br from-indigo-800 via-indigo-600 to-purple-700 rounded-3xl shadow-2xl p-8 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">

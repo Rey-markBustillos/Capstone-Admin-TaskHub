@@ -121,9 +121,9 @@ const TeacherPortal = () => {
   }
 
   return (
-    <div className="app-container bg-white dark:bg-gray-800 min-h-screen">
+    <div className="app-container bg-white dark:bg-gray-800 min-h-screen w-full">
       <FallingBooksAnimation />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-2 sm:px-6 lg:px-8">
         <div className="mb-8 pt-6">
           <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
             <FaChalkboardTeacher className="text-indigo-400" /> My Subjects

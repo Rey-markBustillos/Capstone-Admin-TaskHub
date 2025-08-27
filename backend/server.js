@@ -20,9 +20,9 @@ const quizRoutes = require('./routes/quizRoutes');
 // ADD: Import submission routes
 const submissionRoutes = require('./routes/submissionRoutes');
 
+
 dotenv.config();
-console.log('OPENROUTER_API_KEY:', process.env.OPENROUTER_API_KEY ? 'Loaded' : 'Missing');
-console.log('DEEPSEEK_API_KEY:', process.env.DEEPSEEK_API_KEY ? 'Loaded' : 'Missing');
+console.log('GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'Loaded' : 'Missing');
 
 // Connect to MongoDB
 connectDB().catch((err) => {

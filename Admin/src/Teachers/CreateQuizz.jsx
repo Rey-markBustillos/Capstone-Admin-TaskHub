@@ -113,7 +113,17 @@ export default function CreateQuizz() {
         quizType: quizType !== 'mixed' ? quizType : undefined,
       });
       if (response.data && Array.isArray(response.data.questions)) {
-        setQuestions(response.data.questions);
+        // If quizType is 'mcq', force all generated questions with options to type 'mcq'
+        let fixedQuestions = response.data.questions;
+        if (quizType === 'mcq') {
+          fixedQuestions = fixedQuestions.map(q => {
+            if (Array.isArray(q.options) && q.options.length > 0) {
+              return { ...q, type: 'mcq', displayType: 'Multiple Choice' };
+            }
+            return q;
+          });
+        }
+        setQuestions(fixedQuestions);
       } else {
         alert('No questions generated.');
       }
@@ -149,10 +159,18 @@ export default function CreateQuizz() {
       // Normalize question types for backend
       const normalizedQuestions = questions.map(q => {
         let type = q.type;
-        if (type === 'multiple' || type === 'mcq') type = 'mcq';
-        else if (type === 'truefalse' || type === 'true_false') type = 'true_false';
-        else if (type === 'identification') type = 'identification';
-        else if (type === 'numeric') type = 'identification'; // treat numeric as identification
+        // If options exist and length > 0, always treat as MCQ
+        if (Array.isArray(q.options) && q.options.length > 0) {
+          type = 'mcq';
+        } else if (type === 'multiple' || type === 'mcq') {
+          type = 'mcq';
+        } else if (type === 'truefalse' || type === 'true_false') {
+          type = 'true_false';
+        } else if (type === 'identification') {
+          type = 'identification';
+        } else if (type === 'numeric') {
+          type = 'identification';
+        }
         return { ...q, type };
       });
       await axios.post(`${API_BASE_URL}/quizzes`, {
@@ -274,93 +292,119 @@ export default function CreateQuizz() {
             <div className="border-b-2 border-indigo-900 mb-6"></div>
             <h3 className="text-2xl font-bold mb-4 text-indigo-200 flex items-center gap-2">Quiz Questions</h3>
             <div className="flex flex-col gap-4 mb-8">
-              {questions.map((q, idx) => (
-                <div key={idx} className="border-2 border-indigo-900 rounded-xl bg-[#23263a] p-4 shadow flex flex-col gap-2 relative">
-                  {editingIdx === idx ? (
-                    <>
-                      <input
-                        className="border-2 border-indigo-700 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full text-lg"
-                        value={editQ.question}
-                        onChange={e => handleEditChange('question', e.target.value)}
-                      />
-                      {q.type === 'mcq' && (
-                        <textarea
-                          className="border-2 border-indigo-900 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full"
-                          value={editQ.options?.join('\n')}
-                          onChange={e => handleEditChange('options', e.target.value.split('\n'))}
-                          placeholder="Options (one per line)"
-                        />
-                      )}
-                      {q.type === 'true_false' && (
-                        <div className="flex gap-4 mb-2">
-                          <label className="flex items-center gap-2">
-                            <input type="radio" name={`editQ${idx}`} value="True" checked={editQ.answer === 'True'} onChange={()=>handleEditChange('answer', 'True')} /> True
-                          </label>
-                          <label className="flex items-center gap-2">
-                            <input type="radio" name={`editQ${idx}`} value="False" checked={editQ.answer === 'False'} onChange={()=>handleEditChange('answer', 'False')} /> False
-                          </label>
-                        </div>
-                      )}
-                      {q.type === 'identification' && (
+              {questions.map((q, idx) => {
+                // Ensure MCQ always has a correct answer
+                let correctAnswer = q.answer;
+                if (q.type === 'mcq' && (!correctAnswer || !q.options?.includes(correctAnswer))) {
+                  // Default to first option if answer is missing or invalid
+                  correctAnswer = q.options && q.options.length > 0 ? q.options[0] : '';
+                }
+                return (
+                  <div key={idx} className="border-2 border-indigo-900 rounded-xl bg-[#23263a] p-4 shadow flex flex-col gap-2 relative">
+                    {editingIdx === idx ? (
+                      <>
                         <input
-                          className="border-2 border-indigo-900 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full"
-                          value={editQ.answer}
-                          onChange={e => handleEditChange('answer', e.target.value)}
-                          placeholder="Type the correct answer here"
+                          className="border-2 border-indigo-700 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full text-lg"
+                          value={editQ.question}
+                          onChange={e => handleEditChange('question', e.target.value)}
                         />
-                      )}
-                      {/* fallback for other types */}
-                      {q.type !== 'mcq' && q.type !== 'true_false' && q.type !== 'identification' && (
-                        <input
-                          className="border-2 border-indigo-900 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full"
-                          value={editQ.answer}
-                          onChange={e => handleEditChange('answer', e.target.value)}
-                          placeholder="Answer"
-                        />
-                      )}
-                      <div className="flex gap-2 mt-2">
-                        <button className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded shadow" onClick={handleSaveEdit}><FaSave /></button>
-                        <button className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded shadow" onClick={() => setEditingIdx(null)}><FaTimes /></button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="font-semibold text-lg text-white drop-shadow" style={{textShadow:'0 1px 4px #23263a'}}> {q.question} </div>
-                      <div className="text-sm italic text-green-300 font-bold tracking-wide mb-1">Type: {q.displayType || q.type.toUpperCase()}</div>
-                      {q.type === 'mcq' && (
-                        <ul className="list-disc ml-6 text-green-200 text-base font-semibold">
-                          {q.options.map((opt, i) => <li key={i} className="mb-1">{opt}</li>)}
-                        </ul>
-                      )}
-                      {q.type === 'true_false' && (
-                        <div className="flex gap-4 mb-2">
-                          <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${q.answer === 'True' ? 'bg-green-600 text-white border-green-400' : 'bg-[#181a20] text-green-200 border-green-700'}` }>
-                            <input type="radio" name={`viewQ${idx}`} value="True" checked={q.answer === 'True'} readOnly className="accent-green-400" />
-                            <span className="font-bold">True</span>
-                          </label>
-                          <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${q.answer === 'False' ? 'bg-red-600 text-white border-red-400' : 'bg-[#181a20] text-red-200 border-red-700'}` }>
-                            <input type="radio" name={`viewQ${idx}`} value="False" checked={q.answer === 'False'} readOnly className="accent-red-400" />
-                            <span className="font-bold">False</span>
-                          </label>
+                        {q.type === 'mcq' && (
+                          <>
+                            <textarea
+                              className="border-2 border-indigo-900 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full"
+                              value={editQ.options?.join('\n')}
+                              onChange={e => handleEditChange('options', e.target.value.split('\n'))}
+                              placeholder="Options (one per line)"
+                            />
+                            <label className="block text-green-300 font-semibold mb-2">Correct Answer</label>
+                            <select
+                              className="border-2 border-green-700 bg-[#23263a] text-green-100 rounded p-2 mb-2 w-full"
+                              value={editQ.answer || (editQ.options && editQ.options[0]) || ''}
+                              onChange={e => handleEditChange('answer', e.target.value)}
+                            >
+                              {editQ.options && editQ.options.map((opt, i) => (
+                                <option key={i} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          </>
+                        )}
+                        {q.type === 'true_false' && (
+                          <div className="flex gap-4 mb-2">
+                            <label className="flex items-center gap-2">
+                              <input type="radio" name={`editQ${idx}`} value="True" checked={editQ.answer === 'True'} onChange={()=>handleEditChange('answer', 'True')} /> True
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input type="radio" name={`editQ${idx}`} value="False" checked={editQ.answer === 'False'} onChange={()=>handleEditChange('answer', 'False')} /> False
+                            </label>
+                          </div>
+                        )}
+                        {q.type === 'identification' && (
+                          <input
+                            className="border-2 border-indigo-900 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full"
+                            value={editQ.answer}
+                            onChange={e => handleEditChange('answer', e.target.value)}
+                            placeholder="Type the correct answer here"
+                          />
+                        )}
+                        {/* fallback for other types */}
+                        {q.type !== 'mcq' && q.type !== 'true_false' && q.type !== 'identification' && (
+                          <input
+                            className="border-2 border-indigo-900 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full"
+                            value={editQ.answer}
+                            onChange={e => handleEditChange('answer', e.target.value)}
+                            placeholder="Answer"
+                          />
+                        )}
+                        <div className="flex gap-2 mt-2">
+                          <button className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded shadow" onClick={handleSaveEdit}><FaSave /></button>
+                          <button className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded shadow" onClick={() => setEditingIdx(null)}><FaTimes /></button>
                         </div>
-                      )}
-                      {q.type === 'identification' && (
-                        <div className="flex items-center gap-2 bg-[#181a20] border-2 border-green-700 rounded-lg px-4 py-2 shadow-md w-fit">
-                          <span className="font-semibold text-green-300 mr-2">Correct Answer:</span>
-                          <span className="bg-green-600 text-white px-3 py-1 rounded-lg font-bold tracking-wide shadow" style={{letterSpacing:'1px'}}>{q.answer || ''}</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="font-semibold text-lg text-white drop-shadow" style={{textShadow:'0 1px 4px #23263a'}}> {q.question} </div>
+                        <div className="text-sm italic text-green-300 font-bold tracking-wide mb-1">Type: {q.displayType || q.type.toUpperCase()}</div>
+                        {q.type === 'mcq' && (
+                          <>
+                            <ul className="list-disc ml-6 text-green-200 text-base font-semibold">
+                              {q.options.map((opt, i) => <li key={i} className="mb-1">{opt}</li>)}
+                            </ul>
+                            <div className="flex items-center gap-2 bg-[#181a20] border-2 border-green-700 rounded-lg px-4 py-2 shadow-md w-fit mt-2">
+                              <span className="font-semibold text-green-300 mr-2">Correct Answer:</span>
+                              <span className="bg-green-600 text-white px-3 py-1 rounded-lg font-bold tracking-wide shadow" style={{letterSpacing:'1px'}}>{correctAnswer || ''}</span>
+                            </div>
+                          </>
+                        )}
+                        {q.type === 'true_false' && (
+                          <div className="flex gap-4 mb-2">
+                            <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${q.answer === 'True' ? 'bg-green-600 text-white border-green-400' : 'bg-[#181a20] text-green-200 border-green-700'}` }>
+                              <input type="radio" name={`viewQ${idx}`} value="True" checked={q.answer === 'True'} readOnly className="accent-green-400" />
+                              <span className="font-bold">True</span>
+                            </label>
+                            <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${q.answer === 'False' ? 'bg-red-600 text-white border-red-400' : 'bg-[#181a20] text-red-200 border-red-700'}` }>
+                              <input type="radio" name={`viewQ${idx}`} value="False" checked={q.answer === 'False'} readOnly className="accent-red-400" />
+                              <span className="font-bold">False</span>
+                            </label>
+                          </div>
+                        )}
+                        {q.type === 'identification' && (
+                          <div className="flex items-center gap-2 bg-[#181a20] border-2 border-green-700 rounded-lg px-4 py-2 shadow-md w-fit">
+                            <span className="font-semibold text-green-300 mr-2">Correct Answer:</span>
+                            <span className="bg-green-600 text-white px-3 py-1 rounded-lg font-bold tracking-wide shadow" style={{letterSpacing:'1px'}}>{q.answer || ''}</span>
+                          </div>
+                        )}
+                        {q.type !== 'mcq' && q.type !== 'true_false' && q.type !== 'identification' && (
+                          <div className="text-sm">Answer: <span className="font-bold text-indigo-300">{q.answer?.toString()}</span></div>
+                        )}
+                        <div className="flex gap-2 mt-2">
+                          <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded shadow" onClick={() => handleEdit(idx)}><FaEdit /></button>
+                          <button className="bg-red-700 hover:bg-red-800 text-white px-3 py-1 rounded shadow" onClick={() => handleDelete(idx)}><FaTrash /></button>
                         </div>
-                      )}
-                      {q.type !== 'mcq' && q.type !== 'true_false' && q.type !== 'identification' && (
-                        <div className="text-sm">Answer: <span className="font-bold text-indigo-300">{q.answer?.toString()}</span></div>
-                      )}
-                      <div className="flex gap-2 mt-2">
-                        <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded shadow" onClick={() => handleEdit(idx)}><FaEdit /></button>
-                        <button className="bg-red-700 hover:bg-red-800 text-white px-3 py-1 rounded shadow" onClick={() => handleDelete(idx)}><FaTrash /></button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </>
         )}

@@ -308,12 +308,12 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto my-4 px-2">
-      <div className="flex flex-col sm:flex-row items-center gap-3">
+  <div className="w-full max-w-lg mx-auto m-0 p-0 flex flex-col items-center justify-center">
+      <div className="flex flex-col items-center gap-2 w-full p-0 m-0">
         <button
           onClick={startListening}
           disabled={listening || generating}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition text-white font-semibold shadow-md w-full sm:w-auto justify-center`}
+          className={`flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition text-white font-semibold shadow-md w-full sm:w-auto justify-center m-0 p-0`}
         >
           {listening ? (
             <>
