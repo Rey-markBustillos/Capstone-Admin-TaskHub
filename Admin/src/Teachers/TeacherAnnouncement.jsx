@@ -1,3 +1,5 @@
+
+// ...existing imports and code...
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
@@ -25,6 +27,7 @@ export default function TeacherAnnouncement() {
   const observer = useRef();
   const viewedInSessionRef = useRef(new Set());
 
+
   const fetchData = useCallback(async () => {
     if (!userId || !classId) {
       setError("User or Class not identified.");
@@ -47,9 +50,6 @@ export default function TeacherAnnouncement() {
     }
   }, [userId, classId]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   const markAsViewed = useCallback(async (announcementId) => {
     if (viewedInSessionRef.current.has(announcementId)) return;
@@ -67,6 +67,19 @@ export default function TeacherAnnouncement() {
       // Silent fail
     }
   }, [userId, announcements]);
+
+  // Mark all announcements as viewed on load
+  useEffect(() => {
+    if (!loading && announcements.length > 0 && userId) {
+      announcements.forEach(ann => {
+        markAsViewed(ann._id);
+      });
+    }
+  }, [loading, announcements, userId, markAsViewed]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const announcementCardRef = useCallback(node => {
     if (loading) return;

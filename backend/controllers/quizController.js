@@ -78,12 +78,23 @@ exports.generateQuiz = async (req, res) => {
           console.error(`[ERROR] [Batch ${i+1}] No quiz questions found in content. Reasoning:`, reasoning);
           return res.status(500).json({ message: 'No quiz questions found in OpenRouter response.', reasoning });
         }
-        if (text.startsWith('```')) text = text.replace(/```[a-z]*\n?/i, '').replace(/```$/, '').trim();
+        // Remove markdown code fencing and extra lines
+        if (text.startsWith('```')) {
+          text = text.replace(/^```[a-z]*\n?/i, '').replace(/```$/, '').trim();
+        }
+        // Attempt to fix incomplete/truncated JSON (remove trailing commas, close array)
+        let fixedText = text;
+        // Remove trailing commas before array/object close
+        fixedText = fixedText.replace(/,\s*([}\]])/g, '$1');
+        // If it looks like an array but is missing the closing bracket, add it
+        if (fixedText.startsWith('[') && !fixedText.trim().endsWith(']')) {
+          fixedText += ']';
+        }
         try {
-          questions = JSON.parse(text);
+          questions = JSON.parse(fixedText);
         } catch (err) {
-          console.error(`[ERROR] [Batch ${i+1}] Failed to parse OpenRouter response content as JSON:`, text, err);
-          return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: text });
+          console.error(`[ERROR] [Batch ${i+1}] Failed to parse OpenRouter response content as JSON:`, fixedText, err);
+          return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: fixedText });
         }
       } else {
         console.error('[ERROR] No valid OpenRouter API key found. Please set OPENROUTER_API_KEY in your .env.');
@@ -133,7 +144,22 @@ exports.generateQuiz = async (req, res) => {
 exports.createQuiz = async (req, res) => {
   try {
     const { classId, title, questions, createdBy, dueDate, questionTime } = req.body;
-    const quiz = await Quiz.create({ classId, title, questions, createdBy, dueDate, questionTime });
+    // Map AI question types to schema types
+    const typeMap = {
+      'multiple_choice': 'mcq',
+      'true_false': 'tf',
+      'fill_in_the_blank': 'numeric',
+      'numeric': 'numeric',
+      'mcq': 'mcq',
+      'tf': 'tf'
+    };
+    const mappedQuestions = (questions || []).map(q => ({
+      type: typeMap[q.type] || 'mcq',
+      question: q.question,
+      options: q.options || [],
+      answer: q.answer
+    }));
+    const quiz = await Quiz.create({ classId, title, questions: mappedQuestions, createdBy, dueDate, questionTime });
     res.status(201).json(quiz);
   } catch (err) {
     res.status(500).json({ message: err.message });

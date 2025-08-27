@@ -1,3 +1,11 @@
+/* Hide scrollbar but allow scroll */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 #root {
   max-width: 1280px;
   margin: 0 auto;

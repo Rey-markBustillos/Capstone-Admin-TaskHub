@@ -175,7 +175,10 @@ exports.markAsViewed = async (req, res) => {
     const { id } = req.params;
     const { userId } = req.body;
 
+    console.log('[markAsViewed] called with:', { id, userId });
+
     if (!userId) {
+      console.log('[markAsViewed] Missing userId');
       return res.status(400).json({ message: 'userId is required.' });
     }
 
@@ -185,13 +188,18 @@ exports.markAsViewed = async (req, res) => {
       { new: true }
     );
 
+    console.log('[markAsViewed] After update:', announcement);
+
     if (!announcement) {
+      console.log('[markAsViewed] Announcement not found');
       return res.status(404).json({ message: 'Announcement not found.' });
     }
     
     const populatedAnnouncement = await populateFields(Announcement.findById(announcement._id));
+    console.log('[markAsViewed] Populated announcement:', JSON.stringify(populatedAnnouncement, null, 2));
     res.json(populatedAnnouncement);
   } catch (error) {
+    console.error('[markAsViewed] Error:', error);
     res.status(500).json({ message: 'Failed to mark as viewed.', error: error.message });
   }
 };
