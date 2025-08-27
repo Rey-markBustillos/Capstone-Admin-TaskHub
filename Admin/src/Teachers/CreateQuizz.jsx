@@ -15,7 +15,7 @@ export default function CreateQuizz() {
   const [moduleText, setModuleText] = useState('');
   const [count, setCount] = useState(5);
   const [questions, setQuestions] = useState([]);
-  const [createdQuizzes, setCreatedQuizzes] = useState([]);
+  // const [createdQuizzes, setCreatedQuizzes] = useState([]);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [editingIdx, setEditingIdx] = useState(null);
@@ -24,28 +24,29 @@ export default function CreateQuizz() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [questionTime, setQuestionTime] = useState(30);
-  const [selectedQuizId, setSelectedQuizId] = useState(null);
+  // const [selectedQuizId, setSelectedQuizId] = useState(null);
+  // const [showCreatedQuizzes, setShowCreatedQuizzes] = useState(false);
   // const [showSubmissions, setShowSubmissions] = useState(false);
   const bounceRef = useRef();
 
   // Fetch quizzes created by this teacher for this class
-  useEffect(() => {
-    const fetchCreatedQuizzes = async () => {
-      if (!classId) return;
-      try {
-        const res = await axios.get(`${API_BASE_URL}/quizzes/class/${classId}`);
-        const filtered = res.data.filter(q => q.createdBy === teacherId);
-        setCreatedQuizzes(filtered);
-        // Set default selected quiz for submissions modal
-        if (filtered.length > 0 && !selectedQuizId) {
-          setSelectedQuizId(filtered[0]._id);
-        }
-      } catch {
-        setCreatedQuizzes([]);
-      }
-    };
-    fetchCreatedQuizzes();
-  }, [classId, teacherId, selectedQuizId]);
+  // useEffect(() => {
+  //   const fetchCreatedQuizzes = async () => {
+  //     if (!classId) return;
+  //     try {
+  //       const res = await axios.get(`${API_BASE_URL}/quizzes/class/${classId}`);
+  //       const filtered = res.data.filter(q => q.createdBy === teacherId);
+  //       setCreatedQuizzes(filtered);
+  //       // Set default selected quiz for submissions modal
+  //       if (filtered.length > 0 && !selectedQuizId) {
+  //         setSelectedQuizId(filtered[0]._id);
+  //       }
+  //     } catch {
+  //       setCreatedQuizzes([]);
+  //     }
+  //   };
+  //   fetchCreatedQuizzes();
+  // }, [classId, teacherId, selectedQuizId]);
 
   // Handle file upload (doc/pdf to text, MVP: just read text)
   const handleFileChange = async (e) => {
@@ -112,11 +113,7 @@ export default function CreateQuizz() {
       });
       alert('Quiz saved!');
       setQuestions([]); setTitle(''); setModuleText('');
-      // Refresh created quizzes list after saving
-      try {
-        const res = await axios.get(`${API_BASE_URL}/quizzes/class/${classId}`);
-        setCreatedQuizzes(res.data.filter(q => q.createdBy === teacherId));
-  } catch { /* ignore error */ }
+      // Created quizzes refresh removed
     } catch {
       alert('Failed to save quiz.');
     } finally {
@@ -307,11 +304,14 @@ export default function CreateQuizz() {
               <label className="block text-indigo-200 font-semibold mb-2">Time Limit per Question (seconds)</label>
               <input
                 type="number"
-                min={5}
+                min={1}
                 max={600}
                 className="border-2 border-indigo-700 bg-[#23263a] text-indigo-100 rounded-lg p-2 w-full mb-4 focus:ring-2 focus:ring-green-400"
                 value={questionTime}
-                onChange={e => setQuestionTime(Number(e.target.value))}
+                onChange={e => {
+                  const val = Number(e.target.value);
+                  if (val > 0) setQuestionTime(val);
+                }}
               />
               <div className="flex gap-4 justify-end">
                 <button
@@ -340,36 +340,7 @@ export default function CreateQuizz() {
             </div>
           </div>
         )}
-        {questions.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4 text-indigo-200">Created Quizzes</h2>
-            <table className="min-w-full bg-white rounded shadow">
-              <thead>
-                <tr>
-                  <th className="py-2 px-4 border-b">Title</th>
-                  <th className="py-2 px-4 border-b">Due Date</th>
-                  <th className="py-2 px-4 border-b">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {questions.map((quiz) => (
-                  <tr key={quiz._id}>
-                    <td className="py-2 px-4 border-b">{quiz.title}</td>
-                    <td className="py-2 px-4 border-b">{quiz.dueDate ? new Date(quiz.dueDate).toLocaleString() : 'N/A'}</td>
-                    <td className="py-2 px-4 border-b">
-                      <button
-                        className={`bg-blue-600 text-white px-3 py-1 rounded shadow hover:bg-blue-700 mr-2 ${selectedQuizId === quiz._id ? 'ring-2 ring-blue-400' : ''}`}
-                        onClick={() => setSelectedQuizId(quiz._id)}
-                      >
-                        View Submissions
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+  {/* Created Quizzes and View Submissions section removed as requested */}
       </div>
     </div>
     {/* Save Quiz Button outside main box, only visible if questions.length > 0, with bounce animation */}
@@ -438,67 +409,9 @@ export default function CreateQuizz() {
         </div>
       </div>
     )}
-    {/* Save Quiz Button and Created Quizzes Dropdown at the top */}
-    <div className="flex justify-end items-center mb-4 gap-4">
-      <button
-        className="bg-blue-700 text-white px-6 py-2 rounded-xl font-bold shadow hover:bg-blue-800 transition"
-        onClick={() => setShowCreatedQuizzes(true)}
-        disabled={loading}
-      >
-        Created Quizzes
-      </button>
-      <button
-        className="bg-gradient-to-r from-green-700 to-green-800 text-white px-6 py-2 rounded-xl font-bold shadow hover:from-green-800 hover:to-green-900 transition disabled:opacity-60"
-        onClick={() => setShowSaveModal(true)}
-        disabled={loading}
-      >
-        Save Quiz
-      </button>
-    </div>
+  {/* Top Save Quiz button removed; only floating Save Quiz button remains */}
 
-    {/* Created Quizzes Modal */}
-    {showCreatedQuizzes && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-        <div className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-2xl border-4 border-indigo-900 relative">
-          <button
-            className="absolute top-4 right-4 text-indigo-700 hover:text-red-600 text-2xl font-bold focus:outline-none"
-            onClick={() => setShowCreatedQuizzes(false)}
-          >
-            ×
-          </button>
-          <h2 className="text-2xl font-bold mb-4 text-indigo-900">Created Quizzes</h2>
-          {createdQuizzes.length === 0 ? (
-            <div className="text-indigo-400">No quizzes created yet.</div>
-          ) : (
-            <table className="min-w-full bg-white rounded shadow">
-              <thead>
-                <tr>
-                  <th className="py-2 px-4 border-b">Title</th>
-                  <th className="py-2 px-4 border-b">Due Date</th>
-                  <th className="py-2 px-4 border-b">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {createdQuizzes.map((quiz) => (
-                  <tr key={quiz._id}>
-                    <td className="py-2 px-4 border-b">{quiz.title}</td>
-                    <td className="py-2 px-4 border-b">{quiz.dueDate ? new Date(quiz.dueDate).toLocaleString() : 'N/A'}</td>
-                    <td className="py-2 px-4 border-b">
-                      <button
-                        className="bg-blue-600 text-white px-3 py-1 rounded shadow hover:bg-blue-700 mr-2"
-                        onClick={() => { setSelectedQuizId(quiz._id); }}
-                      >
-                        View Submissions
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    )}
+  {/* Created Quizzes Modal removed */}
     {/* Quiz Submissions Modal - only visible when showSubmissions is true */}
 
   </div>

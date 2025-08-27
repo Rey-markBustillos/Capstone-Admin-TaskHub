@@ -7,9 +7,11 @@ const fetch = require('node-fetch');
 exports.generateQuiz = async (req, res) => {
   // Load API keys at runtime
   const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-  console.log('[DEBUG] OPENROUTER_API_KEY:', OPENROUTER_API_KEY ? OPENROUTER_API_KEY.slice(0,8) + '...' : 'Missing');
-  console.log('[DEBUG] DEEPSEEK_API_KEY:', DEEPSEEK_API_KEY ? DEEPSEEK_API_KEY.slice(0,8) + '...' : 'Missing');
+  console.log('[DEBUG] OPENROUTER_API_KEY (raw):', process.env.OPENROUTER_API_KEY);
+  console.log('[DEBUG] OPENROUTER_API_KEY (used):', OPENROUTER_API_KEY ? OPENROUTER_API_KEY.slice(0,12) + '...' : 'Missing');
+  if (!OPENROUTER_API_KEY) {
+    console.error('[ERROR] No OPENROUTER_API_KEY found in environment variables.');
+  }
   console.log('[DEBUG] /api/quizzes/generate called', { body: req.body });
   const { count = 3, moduleText, quizType } = req.body;
   const model = 'phi3';
@@ -34,7 +36,7 @@ exports.generateQuiz = async (req, res) => {
     try {
       let questions = [];
       if (OPENROUTER_API_KEY) {
-        console.log(`[DEBUG] [Batch ${i+1}/${numBatches}] Attempting OpenRouter API call...`);
+        console.log(`[DEBUG] [Batch ${i+1}/${numBatches}] Attempting OpenRouter API call with key:`, OPENROUTER_API_KEY.slice(0, 12) + '...');
         const openrouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -51,54 +53,41 @@ exports.generateQuiz = async (req, res) => {
             temperature: 0.7
           })
         });
+        const rawText = await openrouterRes.text();
         if (!openrouterRes.ok) {
-          const errorText = await openrouterRes.text();
-          console.error(`[ERROR] [Batch ${i+1}] OpenRouter API error:`, openrouterRes.status, errorText);
-          return res.status(500).json({ message: 'OpenRouter API error', status: openrouterRes.status, error: errorText });
+          console.error(`[ERROR] [Batch ${i+1}] OpenRouter API error:`, openrouterRes.status, rawText);
+          // Extra debug info
+          console.error('[DEBUG] OpenRouter API key used:', OPENROUTER_API_KEY);
+          return res.status(500).json({ message: 'OpenRouter API error', status: openrouterRes.status, error: rawText, apiKey: OPENROUTER_API_KEY });
         }
-        const data = await openrouterRes.json();
-        let text = data.choices?.[0]?.message?.content?.trim() || '';
+        // Log the raw response for debugging
+        console.log(`[DEBUG] [Batch ${i+1}] OpenRouter raw response:`, rawText);
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch (err) {
+          console.error(`[ERROR] [Batch ${i+1}] Failed to parse OpenRouter response as JSON:`, rawText, err);
+          return res.status(500).json({ message: 'OpenRouter response is not valid JSON', raw: rawText });
+        }
+        const message = data.choices?.[0]?.message;
+        console.log(`[DEBUG] [Batch ${i+1}] OpenRouter assistant message:`, JSON.stringify(message, null, 2));
+        let text = message?.content?.trim() || '';
+        if (!text) {
+          // No content returned, log reasoning if present
+          const reasoning = message?.reasoning || '';
+          console.error(`[ERROR] [Batch ${i+1}] No quiz questions found in content. Reasoning:`, reasoning);
+          return res.status(500).json({ message: 'No quiz questions found in OpenRouter response.', reasoning });
+        }
         if (text.startsWith('```')) text = text.replace(/```[a-z]*\n?/i, '').replace(/```$/, '').trim();
         try {
           questions = JSON.parse(text);
         } catch (err) {
-          console.error(`[ERROR] [Batch ${i+1}] Failed to parse OpenRouter response:`, text, err);
-          return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: text });
-        }
-      } else if (DEEPSEEK_API_KEY) {
-        console.log(`[DEBUG] [Batch ${i+1}/${numBatches}] Attempting DeepSeek API call...`);
-        const deepseekRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: 'deepseek-chat',
-            messages: [
-              { role: 'system', content: 'You are a helpful quiz generator.' },
-              { role: 'user', content: prompt }
-            ],
-            max_tokens: 1024,
-            temperature: 0.7
-          })
-        });
-        if (!deepseekRes.ok) {
-          const errorText = await deepseekRes.text();
-          console.error(`[ERROR] [Batch ${i+1}] DeepSeek API error:`, deepseekRes.status, errorText);
-          return res.status(500).json({ message: 'DeepSeek API error', status: deepseekRes.status, error: errorText });
-        }
-        const data = await deepseekRes.json();
-        let text = data.choices?.[0]?.message?.content?.trim() || '';
-        if (text.startsWith('```')) text = text.replace(/```[a-z]*\n?/i, '').replace(/```$/, '').trim();
-        try {
-          questions = JSON.parse(text);
-        } catch (err) {
-          console.error(`[ERROR] [Batch ${i+1}] Failed to parse DeepSeek response:`, text, err);
+          console.error(`[ERROR] [Batch ${i+1}] Failed to parse OpenRouter response content as JSON:`, text, err);
           return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: text });
         }
       } else {
-        return res.status(500).json({ message: 'No valid AI provider API key found. Please set OPENROUTER_API_KEY or DEEPSEEK_API_KEY in your .env.' });
+        console.error('[ERROR] No valid OpenRouter API key found. Please set OPENROUTER_API_KEY in your .env.');
+        return res.status(500).json({ message: 'No valid OpenRouter API key found. Please set OPENROUTER_API_KEY in your .env.' });
       }
       if (Array.isArray(questions)) {
         allQuestions = allQuestions.concat(questions);
@@ -137,87 +126,7 @@ exports.generateQuiz = async (req, res) => {
   });
   return res.json({ questions: labeledQuestions });
 
-  try {
-    if (OPENROUTER_API_KEY) {
-      console.log('[DEBUG] Attempting OpenRouter API call...');
-      console.log('[DEBUG] Using OpenRouter API for quiz generation');
-      const openrouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'openrouter/auto',
-          messages: [
-            { role: 'system', content: 'You are a helpful quiz generator.' },
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 2048,
-          temperature: 0.7
-        })
-      });
-      if (!openrouterRes.ok) {
-        const errorText = await openrouterRes.text();
-        console.error('[ERROR] OpenRouter API error:', openrouterRes.status, errorText);
-        return res.status(500).json({ message: 'OpenRouter API error', status: openrouterRes.status, error: errorText });
-      }
-      const data = await openrouterRes.json();
-      console.log('[DEBUG] OpenRouter raw response:', JSON.stringify(data));
-      let text = data.choices?.[0]?.message?.content?.trim() || '';
-      if (text.startsWith('```')) text = text.replace(/```[a-z]*\n?/i, '').replace(/```$/, '').trim();
-      let questions = [];
-      try {
-        questions = JSON.parse(text);
-      } catch (err) {
-        console.error('[ERROR] Failed to parse OpenRouter response:', text, err);
-        return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: text });
-      }
-      return res.json({ questions });
-    } else if (DEEPSEEK_API_KEY) {
-      console.log('[DEBUG] Attempting DeepSeek API call...');
-      console.log('[DEBUG] Using DeepSeek API for quiz generation');
-      const deepseekRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: [
-            { role: 'system', content: 'You are a helpful quiz generator.' },
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 2048,
-          temperature: 0.7
-        })
-      });
-      if (!deepseekRes.ok) {
-        const errorText = await deepseekRes.text();
-        console.error('[ERROR] DeepSeek API error:', deepseekRes.status, errorText);
-        return res.status(500).json({ message: 'DeepSeek API error', status: deepseekRes.status, error: errorText });
-      }
-      const data = await deepseekRes.json();
-      console.log('[DEBUG] DeepSeek raw response:', JSON.stringify(data));
-      let text = data.choices?.[0]?.message?.content?.trim() || '';
-      if (text.startsWith('```')) text = text.replace(/```[a-z]*\n?/i, '').replace(/```$/, '').trim();
-      let questions = [];
-      try {
-        questions = JSON.parse(text);
-      } catch (err) {
-        console.error('[ERROR] Failed to parse DeepSeek response:', text, err);
-        return res.status(500).json({ message: 'AI response could not be parsed as JSON', raw: text });
-      }
-      return res.json({ questions });
-    } else {
-      // No valid AI provider available
-      return res.status(500).json({ message: 'No valid AI provider API key found. Please set OPENROUTER_API_KEY or DEEPSEEK_API_KEY in your .env.' });
-    }
-  } catch (err) {
-    console.error('[ERROR] Failed to connect to AI provider:', err);
-    res.status(500).json({ message: 'Failed to connect to AI provider', error: err.message, stack: err.stack });
-  }
+  // (Removed duplicate legacy OpenRouter/DeepSeek logic)
 };
 
 // Save quiz
@@ -235,6 +144,9 @@ exports.createQuiz = async (req, res) => {
 exports.getQuizzesByClass = async (req, res) => {
   try {
     const { classId } = req.params;
+    if (!classId || !ObjectId.isValid(classId)) {
+      return res.status(400).json({ message: 'Invalid classId parameter.' });
+    }
     const quizzes = await Quiz.find({ classId: ObjectId(classId) });
     res.json(quizzes);
   } catch (err) {
