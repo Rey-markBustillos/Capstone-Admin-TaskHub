@@ -36,7 +36,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      'https://capstone-admin-task-hub-jske.vercel.app',
+      'https://taskhub-for-als.up.railway.app',
       'http://localhost:5173', // allow local dev too
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
