@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { FaUserCircle, FaLock, FaSignInAlt, FaArrowLeft } from "react-icons/fa";
 
 // Switch between local and deployed backend here:
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
+// For Vite:
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 export default function Login({ onBack, onLoginSuccess }) {
   const [formData, setFormData] = useState({ email: "", password: "" });
