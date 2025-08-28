@@ -66,10 +66,11 @@ app.get('/', (req, res) => {
   res.json({ message: 'API is running' });
 });
 
-// Mount routes
 
-
+console.log('[DEBUG] Mounting /api/users routes...');
 app.use('/api/users', userRoutes);
+console.log('[DEBUG] Mounted /api/users routes.');
+
 app.use('/api/class', classRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/announcements', announcementRoutes);
