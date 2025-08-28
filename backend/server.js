@@ -36,7 +36,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      'https://taskhub-for-als.up.railway.app',
+      'https://capstone-admin-taskhub-production.up.railway.app',
       'http://localhost:5173', // allow local dev too
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
