@@ -57,11 +57,7 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState('all');
   const API_BASE = `${import.meta.env.REACT_APP_API_BASE_URL}/users`;
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = React.useCallback(async () => {
     setLoading(true);
     try {
       const res = await axios.get(API_BASE);
@@ -72,7 +68,11 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const openModal = (role) => {
     setShowModal({ open: true, role });
