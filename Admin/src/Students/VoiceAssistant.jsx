@@ -22,7 +22,7 @@
 import React, { useState } from "react";
 import { Mic, Loader2 } from "lucide-react";
 
-const SERVER_URL = 'https://capstone-admin-task-hub.vercel.app';
+const SERVER_URL = import.meta.env.REACT_APP_API_BASE_URL;
 
 const API_BASE = import.meta.env.REACT_APP_API_BASE_URL;
 
