@@ -3,7 +3,7 @@ import axios from 'axios';
 import { FaCalendarCheck, FaPercent, FaArrowLeft, FaFilter, FaCheckCircle, FaTimesCircle, FaClock } from 'react-icons/fa';
 import { NavLink, useParams } from 'react-router-dom';
 
-const API_BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 const Attendance = () => {
   const { classId } = useParams();

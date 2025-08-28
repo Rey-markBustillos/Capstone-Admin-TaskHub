@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 
-const API_BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'; // UPDATED: Replace as needed
 
 const daysOfWeek = [
   "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
@@ -91,15 +91,15 @@ const ClassManagement = () => {
     // Prepare promises for all fetches
     let classPromise;
     if (parsedUser && parsedUser.role === 'student') {
-      classPromise = axios.get(`${API_BASE_URL}/class/my-classes/${parsedUser._id}`);
+      classPromise = axios.get(`${API_BASE}/class/my-classes/${parsedUser._id}`);
     } else {
-      classPromise = axios.get(`${API_BASE_URL}/class`);
+      classPromise = axios.get(`${API_BASE}/class`);
     }
 
     Promise.all([
       classPromise,
-      axios.get(`${API_BASE_URL}/users?role=teacher`),
-      axios.get(`${API_BASE_URL}/users?role=student`)
+      axios.get(`${API_BASE}/users?role=teacher`),
+      axios.get(`${API_BASE}/users?role=student`)
     ])
       .then(([classRes, teacherRes, studentRes]) => {
         setClasses(classRes.data);
@@ -131,7 +131,7 @@ const ClassManagement = () => {
       roomNumber: newClass.roomNumber,
     };
 
-    axios.post(`${API_BASE_URL}/class`, payload)
+    axios.post(`${API_BASE}/class`, payload)
       .then((response) => {
         setClasses(prevClasses => [response.data, ...prevClasses]);
         setShowAddClassModal(false);
@@ -159,7 +159,7 @@ const ClassManagement = () => {
       roomNumber: editClass.roomNumber,
     };
 
-    axios.put(`${API_BASE_URL}/class/${editClass._id}`, payload)
+    axios.put(`${API_BASE}/class/${editClass._id}`, payload)
       .then((response) => {
         setClasses(classes.map(cls =>
           cls._id === editClass._id ? response.data : cls
@@ -176,7 +176,7 @@ const ClassManagement = () => {
 
   // Delete class and cascade delete activities and submissions
   const handleDeleteClass = (id) => {
-    axios.delete(`${API_BASE_URL}/class/${id}`)
+    axios.delete(`${API_BASE}/class/${id}`)
       .then(() => {
         setClasses(classes.filter((classItem) => classItem._id !== id));
       })
@@ -207,7 +207,7 @@ const ClassManagement = () => {
   };
 
   const handleAddStudentsToClass = () => {
-    axios.put(`${API_BASE_URL}/class/${selectedClassId}/students`, {
+    axios.put(`${API_BASE}/class/${selectedClassId}/students`, {
       studentIds: selectedStudentIds,
     })
       .then((response) => {
