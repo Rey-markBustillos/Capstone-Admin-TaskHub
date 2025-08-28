@@ -3,8 +3,9 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaFileUpload, FaArrowLeft, FaPaperclip, FaCalendarAlt, FaStar, FaFileAlt, FaTimesCircle, FaTrash, FaDownload } from 'react-icons/fa';
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL;
-const SERVER_URL = import.meta.env.REACT_APP_API_BASE_URL;
+
+const API_BASE_URL = 'http://localhost:5000/api';
+const SERVER_URL = 'https://capstone-admin-task-hub.vercel.app';
 
 const SubmitActivity = () => {
   const { classId, activityId } = useParams();

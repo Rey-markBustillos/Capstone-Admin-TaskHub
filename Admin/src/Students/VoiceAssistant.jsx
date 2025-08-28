@@ -24,7 +24,7 @@ import { Mic, Loader2 } from "lucide-react";
 
 const SERVER_URL = import.meta.env.REACT_APP_API_BASE_URL;
 
-const API_BASE = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE = 'http://localhost:5000/api';
 
 export default function VoiceAssistant({ userId, todaysClassTime }) {
   const [listening, setListening] = useState(false);

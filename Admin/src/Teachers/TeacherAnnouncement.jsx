@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
 
-const API_BASE = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE = "http://localhost:5000/api";
 
 export default function TeacherAnnouncement() {
   const { classId } = useParams();

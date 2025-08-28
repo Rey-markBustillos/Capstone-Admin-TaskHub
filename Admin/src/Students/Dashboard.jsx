@@ -3,7 +3,7 @@ import axios from 'axios';
 import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone } from 'lucide-react';
 
-const API_BASE = import.meta.env.REACT_APP_API_BASE_URL;
+const API_BASE = 'http://localhost:5000/api';
 
 // Falling books animation (unchanged)
 const FallingBooksAnimation = () => (
