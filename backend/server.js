@@ -37,7 +37,6 @@ app.use(
   cors({
     origin: [
       'https://capstone-admin-taskhub-production.up.railway.app',
-      'https://capstone-admin-taskhub-1.onrender.com', // ADD: Render deployed frontend
       'http://localhost:5173', // allow local dev too
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

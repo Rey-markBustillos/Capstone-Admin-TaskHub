@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { FaUserCircle, FaLock, FaSignInAlt, FaArrowLeft } from "react-icons/fa";
 
-// Use direct deployed backend URL
-const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+// Switch between local and deployed backend here:
+// For Vite:
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 export default function Login({ onBack, onLoginSuccess }) {
   const [formData, setFormData] = useState({ email: "", password: "" });
