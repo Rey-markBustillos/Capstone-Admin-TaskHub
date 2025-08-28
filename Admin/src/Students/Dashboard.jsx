@@ -3,7 +3,7 @@ import axios from 'axios';
 import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE = 'https://capstone-admin-taskhub-1.onrender.com/api';
 
 // Falling books animation (unchanged)
 const FallingBooksAnimation = () => (

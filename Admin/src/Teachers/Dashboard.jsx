@@ -17,8 +17,8 @@ import {
 import '../Css/Dashboard.css';
 
 
-const SERVER_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5000/api';
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const SERVER_URL = 'https://capstone-admin-taskhub-1.onrender.com/api';
+const API_BASE = 'https://capstone-admin-taskhub-1.onrender.com/api';
 
 
 // --- FallingBooksAnimation: Improved version ---

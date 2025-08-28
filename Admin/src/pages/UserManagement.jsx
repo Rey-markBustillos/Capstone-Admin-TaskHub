@@ -55,7 +55,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState('all');
-  const API_BASE = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/users`; // UPDATED: unified API base usage
+  const API_BASE = 'https://capstone-admin-taskhub-1.onrender.com/api/users';
 
   const fetchUsers = React.useCallback(async () => {
     setLoading(true);

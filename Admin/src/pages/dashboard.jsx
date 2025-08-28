@@ -113,7 +113,7 @@ const lineOptions = {
   },
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'; // UPDATED: Replace as needed
+const API_BASE = 'https://capstone-admin-taskhub-1.onrender.com/api';
 
 const AdminDashboard = () => {
   const [selectedMenu, setSelectedMenu] = useState("User Management");
