@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "start": "echo 'This is a dummy start script. Set Railway root to backend.'"
+  },
   "dependencies": {
     "node-fetch": "^2.7.0"
   }
