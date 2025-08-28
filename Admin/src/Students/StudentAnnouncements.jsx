@@ -6,7 +6,7 @@ import { availableReactions } from '../constants/reactions';
 // ...existing code...
 // ...existing code...
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 export default function StudentAnnouncements() {
   const { classId } = useParams();

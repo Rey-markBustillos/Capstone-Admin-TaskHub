@@ -22,9 +22,9 @@ import {
 } from "react-icons/fa";
 import '../Css/ActivityMonitoring.css';
 
-const SERVER_URL = import.meta.env.REACT_APP_API_BASE_URL;
+const SERVER_URL = import.meta.env.VITE_APP_API_BASE_URL;
 
-const API_BASE = import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 const FallingBooksAnimation = () => {
   const bookEmojis = ["\uD83D\uDCDA", "\uD83D\uDCD3", "\uD83D\uDCD5", "\uD83D\uDCD7", "\uD83D\uDCD8"];

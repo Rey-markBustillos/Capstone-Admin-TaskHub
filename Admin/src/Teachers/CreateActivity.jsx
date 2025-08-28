@@ -28,8 +28,8 @@ const CreateActivity = () => {
     setActivitiesError('');
     try {
       const [classRes, activitiesRes] = await Promise.all([
-  axios.get(`${import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api'}/class/${classId}`),
-  axios.get(`${import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api'}/activities?classId=${classId}`)
+  axios.get(`${import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5000/api'}/class/${classId}`),
+  axios.get(`${import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5000/api'}/activities?classId=${classId}`)
       ]);
       setClassName(classRes.data.className);
       setActivitiesList(activitiesRes.data || []);

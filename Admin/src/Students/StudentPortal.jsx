@@ -5,7 +5,7 @@ import { MdClass } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import '../Css/StudentPortal.css'
 
-const API_BASE_URL = import.meta.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 // Falling books animation component (books fall from above viewport, not stacking at top)
 const FallingBooksAnimation = () => (
