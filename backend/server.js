@@ -36,7 +36,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      'https://capstone-admin-taskhub-production.up.railway.app',
+      'https://taskhub-for-als.netlify.app', // Netlify frontend
       'http://localhost:5173', // allow local dev too
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
