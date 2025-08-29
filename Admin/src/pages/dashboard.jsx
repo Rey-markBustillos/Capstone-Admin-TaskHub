@@ -113,7 +113,7 @@ const lineOptions = {
   },
 };
 
-const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api"; // UPDATED: Replace as needed
+const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api"; // UPDATED: Replace as needed
 
 const AdminDashboard = () => {
   const [selectedMenu, setSelectedMenu] = useState("User Management");

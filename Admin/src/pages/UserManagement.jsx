@@ -55,7 +55,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState('all');
-  const API_BASE = "https://capstone-admin-taskhub-1.onrender.com/api/users";
+  const API_BASE = "https://capstone-admin-taskhub-2.onrender.com/api/users";
 
   const fetchUsers = React.useCallback(async () => {
     setLoading(true);

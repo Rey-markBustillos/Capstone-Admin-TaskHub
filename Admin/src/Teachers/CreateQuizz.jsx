@@ -4,7 +4,7 @@ import axios from 'axios';
 import { FaUpload, FaPaste, FaTrash, FaEdit, FaPlus, FaSave, FaTimes } from 'react-icons/fa';
 
 
-const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
 
 export default function CreateQuizz() {
   // Always initialize params and user info first

@@ -22,7 +22,7 @@ import {
 } from "react-icons/fa";
 import '../Css/ActivityMonitoring.css';
 
-const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
 
 const FallingBooksAnimation = () => {
   const bookEmojis = ["📚", "📖", "📘", "📙", "📗"];

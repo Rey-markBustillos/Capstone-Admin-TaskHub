@@ -22,7 +22,7 @@
 import React, { useState } from "react";
 import { Mic, Loader2 } from "lucide-react";
 
-const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
 
 export default function VoiceAssistant({ userId, todaysClassTime }) {
   const [listening, setListening] = useState(false);

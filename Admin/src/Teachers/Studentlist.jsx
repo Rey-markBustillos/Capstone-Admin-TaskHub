@@ -22,7 +22,7 @@ const StudentList = () => {
       setError(null);
       try {
         // AYOS: Kinukuha ang detalye ng class, kasama ang listahan ng estudyante
-  const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+  const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
   const response = await axios.get(`${API_BASE_URL}/class/${classId}`);
         setStudents(response.data.students || []);
         setClassName(response.data.className || '');

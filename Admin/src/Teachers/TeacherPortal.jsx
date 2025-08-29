@@ -71,7 +71,7 @@ const TeacherPortal = () => {
       setLoading(true);
       setError(null);
       try {
-  const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+  const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
   const res = await axios.get(`${API_BASE_URL}/class?teacherId=${teacherId}`);
         setClasses(res.data || []);
       } catch (err) {

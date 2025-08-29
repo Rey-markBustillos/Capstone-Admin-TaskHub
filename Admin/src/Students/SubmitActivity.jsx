@@ -4,7 +4,7 @@ import axios from 'axios';
 import { FaFileUpload, FaArrowLeft, FaPaperclip, FaCalendarAlt, FaStar, FaFileAlt, FaTimesCircle, FaTrash, FaDownload } from 'react-icons/fa';
 
 
-const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
 
 const SubmitActivity = () => {
   const { classId, activityId } = useParams();

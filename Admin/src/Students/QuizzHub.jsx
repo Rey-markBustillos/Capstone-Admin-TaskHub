@@ -3,7 +3,7 @@ import axios from 'axios';
 import { FaCalendarAlt, FaCheckCircle, FaTimesCircle, FaListOl, FaPlus, FaEye, FaArrowLeft, FaArrowRight, FaPen, FaSave } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 
-const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
 
 
 const QuizzHub = () => {

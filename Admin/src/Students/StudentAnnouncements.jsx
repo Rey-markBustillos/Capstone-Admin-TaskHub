@@ -6,7 +6,7 @@ import { availableReactions } from '../constants/reactions';
 // ...existing code...
 // ...existing code...
 
-const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
 
 export default function StudentAnnouncements() {
   const { classId } = useParams();

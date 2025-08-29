@@ -18,7 +18,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { FaBullhorn, FaTasks, FaUsers, FaChalkboardTeacher, FaClock, FaDoorOpen, FaCalendarCheck } from 'react-icons/fa';
 import { FaQuestionCircle } from 'react-icons/fa';
 
-const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
 
 const StudentClassView = () => {
   const { classId } = useParams();
