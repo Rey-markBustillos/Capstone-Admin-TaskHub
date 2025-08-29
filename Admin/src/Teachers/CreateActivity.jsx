@@ -27,9 +27,10 @@ const CreateActivity = () => {
     setLoadingActivities(true);
     setActivitiesError('');
     try {
+      const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
       const [classRes, activitiesRes] = await Promise.all([
-  axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/class/${classId}`),
-  axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/activities?classId=${classId}`)
+        axios.get(`${API_BASE_URL}/class/${classId}`),
+        axios.get(`${API_BASE_URL}/activities?classId=${classId}`)
       ]);
       setClassName(classRes.data.className);
       setActivitiesList(activitiesRes.data || []);
@@ -74,7 +75,8 @@ const CreateActivity = () => {
       if (activityData.attachment) {
         formData.append('attachment', activityData.attachment);
       }
-  await axios.post(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/activities`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+  const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+  await axios.post(`${API_BASE_URL}/activities`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSuccess('Activity created successfully!');
       fetchClassData();
       setTimeout(() => {

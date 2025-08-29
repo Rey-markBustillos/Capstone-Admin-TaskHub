@@ -17,8 +17,7 @@ import {
 import '../Css/Dashboard.css';
 
 
-const SERVER_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5000/api';
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
 
 
 // --- FallingBooksAnimation: Improved version ---
@@ -84,7 +83,7 @@ export default function TeacherDashboard() {
     setError(null);
     try {
   const res = await axios.get(
-  `${API_BASE}/activities/submissions/teacher/${teacherId}`,
+  `${API_BASE_URL}/activities/submissions/teacher/${teacherId}`,
     { params: { classId } }
   );
       const submissionsData = res.data.submissions || [];
@@ -112,7 +111,7 @@ export default function TeacherDashboard() {
     setLoadingStats(true);
     setError(null);
     try {
-  const res = await axios.get(`${API_BASE}/class`, { params: { teacherId } });
+  const res = await axios.get(`${API_BASE_URL}/class`, { params: { teacherId } });
       const fetchedClasses = res.data || [];
       const studentIdsSet = new Set();
       fetchedClasses.forEach(c => c.students?.forEach(s => studentIdsSet.add(s._id)));
@@ -177,7 +176,7 @@ export default function TeacherDashboard() {
   const getAllSubmissions = async () => {
     try {
       const res = await axios.get(
-        `${API_BASE}/activities/submissions/teacher/${teacherId}`
+  `${API_BASE_URL}/activities/submissions/teacher/${teacherId}`
       );
       return res.data.submissions || [];
     } catch {

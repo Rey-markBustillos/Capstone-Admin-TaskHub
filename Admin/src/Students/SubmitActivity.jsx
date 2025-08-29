@@ -5,7 +5,6 @@ import { FaFileUpload, FaArrowLeft, FaPaperclip, FaCalendarAlt, FaStar, FaFileAl
 
 
 const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
-const SERVER_URL = import.meta.env.VITE_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 const SubmitActivity = () => {
   const { classId, activityId } = useParams();
@@ -197,7 +196,7 @@ const SubmitActivity = () => {
     if (!filePath) return '#';
     const normalizedPath = filePath.replace(/\\/g, '/');
     const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
-    return `${SERVER_URL}/${cleanPath}`;
+  return `${API_BASE_URL}/${cleanPath}`;
   };
 
   if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;

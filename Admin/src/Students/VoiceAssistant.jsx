@@ -22,8 +22,6 @@
 import React, { useState } from "react";
 import { Mic, Loader2 } from "lucide-react";
 
-const SERVER_URL = import.meta.env.VITE_APP_API_BASE_URL;
-
 const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
 
 export default function VoiceAssistant({ userId, todaysClassTime }) {

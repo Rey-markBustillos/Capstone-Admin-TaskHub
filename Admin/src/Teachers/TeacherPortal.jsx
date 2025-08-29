@@ -71,7 +71,8 @@ const TeacherPortal = () => {
       setLoading(true);
       setError(null);
       try {
-  const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'}/class?teacherId=${teacherId}`);
+  const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
+  const res = await axios.get(`${API_BASE_URL}/class?teacherId=${teacherId}`);
         setClasses(res.data || []);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load classes.');

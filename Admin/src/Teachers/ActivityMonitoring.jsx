@@ -22,12 +22,10 @@ import {
 } from "react-icons/fa";
 import '../Css/ActivityMonitoring.css';
 
-const SERVER_URL = import.meta.env.VITE_APP_API_BASE_URL;
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
 
 const FallingBooksAnimation = () => {
-  const bookEmojis = ["\uD83D\uDCDA", "\uD83D\uDCD3", "\uD83D\uDCD5", "\uD83D\uDCD7", "\uD83D\uDCD8"];
+  const bookEmojis = ["📚", "📖", "📘", "📙", "📗"];
   const numberOfBooks = 7;
 
   return (
@@ -74,7 +72,7 @@ export default function ActivityMonitoring() {
     const fetchClasses = async () => {
       setLoading(true);
       try {
-  const res = await axios.get(`${API_BASE}/class?teacherId=${teacherId}`);
+  const res = await axios.get(`${API_BASE_URL}/class?teacherId=${teacherId}`);
         setClasses(res.data || []);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch classes.");
@@ -92,10 +90,10 @@ export default function ActivityMonitoring() {
       setLoading(true);
       setError(null);
       try {
-  const activitiesRes = await axios.get(`${API_BASE}/activities?classId=${selectedClass._id}`);
+  const activitiesRes = await axios.get(`${API_BASE_URL}/activities?classId=${selectedClass._id}`);
         const classActivities = activitiesRes.data || [];
 
-  const submissionsRes = await axios.get(`${API_BASE}/activities/submissions/teacher/${teacherId}?classId=${selectedClass._id}`);
+  const submissionsRes = await axios.get(`${API_BASE_URL}/activities/submissions/teacher/${teacherId}?classId=${selectedClass._id}`);
         const allSubmissions = submissionsRes.data.submissions.filter(sub => sub.studentId) || [];
 
         const activitiesWithSubmissions = classActivities.map(activity => {
@@ -144,7 +142,7 @@ export default function ActivityMonitoring() {
         alert("Score must be a number");
         return;
       }
-  await axios.put(`${API_BASE}/activities/submissions/score/${submissionId}`, { score: scoreNumber });
+  await axios.put(`${API_BASE_URL}/activities/submissions/score/${submissionId}`, { score: scoreNumber });
       alert("Score updated successfully!");
     } catch (err) {
       alert(`Failed to update score: ${err.response?.data?.message || err.message}`);
@@ -180,7 +178,7 @@ export default function ActivityMonitoring() {
   const handleExportExcel = async () => {
     if (!selectedClass) return;
     try {
-  const res = await axios.get(`${API_BASE}/activities/export-scores?classId=${selectedClass._id}`);
+  const res = await axios.get(`${API_BASE_URL}/activities/export-scores?classId=${selectedClass._id}`);
       const { exportData, activityTitles } = res.data;
 
       // Set column order: Name, Email, then all activity titles
@@ -344,7 +342,7 @@ export default function ActivityMonitoring() {
                   .map((sub, index) => {
                     const fileTypeIcon = getFileIcon(sub.fileName);
                     // Use fileUrl from backend if available, else fallback to filePath
-                    const fileUrl = sub.fileUrl || (sub.filePath ? `${API_BASE}/${sub.filePath.replace(/\\/g, "/")}` : null);
+                    const fileUrl = sub.fileUrl || (sub.filePath ? `${API_BASE_URL}/${sub.filePath.replace(/\\/g, "/")}` : null);
                     const dueDate = selectedActivity.date ? new Date(selectedActivity.date) : null;
                     const submissionDate = sub.submissionDate ? new Date(sub.submissionDate) : null;
                     const statusText = submissionDate && dueDate ? (submissionDate > dueDate ? "Late" : "Submitted") : "Submitted";

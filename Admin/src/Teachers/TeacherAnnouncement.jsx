@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
 
 export default function TeacherAnnouncement() {
   const { classId } = useParams();
@@ -37,8 +37,8 @@ export default function TeacherAnnouncement() {
     try {
       setLoading(true);
       const [announcementsRes, classRes] = await Promise.all([
-        axios.get(`${API_BASE}/announcements?classId=${classId}`),
-        axios.get(`${API_BASE}/class/${classId}`)
+  axios.get(`${API_BASE_URL}/announcements?classId=${classId}`),
+  axios.get(`${API_BASE_URL}/class/${classId}`)
       ]);
       setAnnouncements(announcementsRes.data);
       setClassName(classRes.data.className);
@@ -61,7 +61,7 @@ export default function TeacherAnnouncement() {
     }
     viewedInSessionRef.current.add(announcementId);
     try {
-      const res = await axios.post(`${API_BASE}/announcements/${announcementId}/view`, { userId });
+  const res = await axios.post(`${API_BASE_URL}/announcements/${announcementId}/view`, { userId });
       updateAnnouncementInState(res.data);
     } catch {
       // Silent fail
@@ -114,7 +114,7 @@ export default function TeacherAnnouncement() {
     const text = commentInputs[announcementId];
     if (!text || !text.trim()) return;
     try {
-      const res = await axios.post(`${API_BASE}/announcements/${announcementId}/comments`, { text, postedBy: userId });
+  const res = await axios.post(`${API_BASE_URL}/announcements/${announcementId}/comments`, { text, postedBy: userId });
       updateAnnouncementInState(res.data);
       setCommentInputs(prev => ({ ...prev, [announcementId]: '' }));
     } catch {
@@ -124,7 +124,7 @@ export default function TeacherAnnouncement() {
 
   const handleReaction = async (announcementId, emoji) => {
     try {
-      const res = await axios.post(`${API_BASE}/announcements/${announcementId}/reactions`, { emoji, userId });
+  const res = await axios.post(`${API_BASE_URL}/announcements/${announcementId}/reactions`, { emoji, userId });
       updateAnnouncementInState(res.data);
     } catch {
       alert("Could not react.");
@@ -147,9 +147,9 @@ export default function TeacherAnnouncement() {
     try {
       const payload = { title: title.value, content: content.value, postedBy: userId, classId };
       if (form.id) {
-        await axios.put(`${API_BASE}/announcements/${form.id}`, payload);
+  await axios.put(`${API_BASE_URL}/announcements/${form.id}`, payload);
       } else {
-        await axios.post(`${API_BASE}/announcements`, payload);
+  await axios.post(`${API_BASE_URL}/announcements`, payload);
       }
       setForm({ title: '', content: '', id: null });
       fetchData();
@@ -168,7 +168,7 @@ export default function TeacherAnnouncement() {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure?')) return;
     try {
-      await axios.delete(`${API_BASE}/announcements/${id}`);
+  await axios.delete(`${API_BASE_URL}/announcements/${id}`);
       fetchData();
     } catch (err) {
       setError(err.response?.data?.message || err.message);
