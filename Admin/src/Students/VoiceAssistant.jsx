@@ -2,13 +2,13 @@
   const enrollInClassIfNeeded = async (classId, studentId) => {
     try {
       // Check if already enrolled
-      const res = await fetch(`${API_BASE}/class/${classId}`);
+      const res = await fetch(`${API_BASE_URL}/class/${classId}`);
       const cls = await res.json();
       if (cls.students && Array.isArray(cls.students) && cls.students.some(s => s._id === studentId)) {
         return true; // already enrolled
       }
       // Enroll student
-      const updateRes = await fetch(`${API_BASE}/class/${classId}/students`, {
+      const updateRes = await fetch(`${API_BASE_URL}/class/${classId}/students`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ studentIds: [...(cls.students?.map(s => s._id) || []), studentId] })
@@ -24,7 +24,7 @@ import { Mic, Loader2 } from "lucide-react";
 
 const SERVER_URL = import.meta.env.VITE_APP_API_BASE_URL;
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
 
 export default function VoiceAssistant({ userId, todaysClassTime }) {
   const [listening, setListening] = useState(false);
@@ -54,7 +54,7 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
   // Helper: Get all enrolled classes for the student (always fetch fresh)
   const fetchEnrolledClasses = async () => {
     try {
-  const res = await fetch(`${API_BASE}/class/my-classes/${userId}?_=${Date.now()}${Math.random()}`); // force cache bust
+  const res = await fetch(`${API_BASE_URL}/class/my-classes/${userId}?_=${Date.now()}${Math.random()}`); // force cache bust
       const data = await res.json();
       if (Array.isArray(data)) return data;
       return [];
@@ -72,7 +72,7 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
     // Try to auto-enroll in classes for today if not already enrolled
     // Use the 'today' and 'dayName' variables already declared above
     try {
-      const allClassesRes = await fetch(`${API_BASE}/class?_=${Date.now()}${Math.random()}`);
+      const allClassesRes = await fetch(`${API_BASE_URL}/class?_=${Date.now()}${Math.random()}`);
   const allClasses = await allClassesRes.json();
   console.log('Fetched all classes:', allClasses);
       const todayObj = new Date();
@@ -101,9 +101,9 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
     for (const cls of enrolledClasses) {
       const classId = cls._id;
       // Add cache-busting param to always get latest
-      const res = await fetch(`${API_BASE}/activities?classId=${classId}&_=${Date.now()}${Math.random()}`);
+      const res = await fetch(`${API_BASE_URL}/activities?classId=${classId}&_=${Date.now()}${Math.random()}`);
       const activities = await res.json();
-      const subRes = await fetch(`${API_BASE}/activities/submissions?classId=${classId}&studentId=${userId}&_=${Date.now()}${Math.random()}`);
+      const subRes = await fetch(`${API_BASE_URL}/activities/submissions?classId=${classId}&studentId=${userId}&_=${Date.now()}${Math.random()}`);
       const submissions = await subRes.json();
 
       // Use the class's time and day for today check
@@ -165,7 +165,7 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
       const enrolledClasses = await fetchEnrolledClasses();
       let allAnns = [];
       for (const cls of enrolledClasses) {
-  const res = await fetch(`${API_BASE}/announcements?classId=${cls._id}&_=${Date.now()}${Math.random()}`);
+  const res = await fetch(`${API_BASE_URL}/announcements?classId=${cls._id}&_=${Date.now()}${Math.random()}`);
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
           const todaysAnns = data.filter(
@@ -264,7 +264,7 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
       q.toLowerCase().includes("activity")
     ) {
       try {
-  const res = await fetch(`${API_BASE}/schedule/today?userId=${userId}&_=${Date.now()}${Math.random()}`);
+  const res = await fetch(`${API_BASE_URL}/schedule/today?userId=${userId}&_=${Date.now()}${Math.random()}`);
         const data = await res.json();
         if (data.schedule && data.schedule.length > 0) {
           aiAnswer = `Your schedule and activities for ${dayName}: ` + data.schedule.map(s => `${s.time} - ${s.title}`).join(", ");

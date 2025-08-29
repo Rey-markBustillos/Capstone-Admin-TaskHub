@@ -3,7 +3,7 @@ import axios from 'axios';
 import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
 
 // Falling books animation (unchanged)
 const FallingBooksAnimation = () => (
@@ -71,7 +71,7 @@ const StudentDashboard = () => {
 
     const fetchClasses = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/class/my-classes/${studentId}`);
+  const res = await axios.get(`${API_BASE_URL}/class/my-classes/${studentId}`);
         setClasses(res.data || []);
       } catch (err) {
         setError(err.response?.data?.message || err.message);
@@ -82,7 +82,7 @@ const StudentDashboard = () => {
 
     const fetchTodaySchedule = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/schedule/today?userId=${studentId}`);
+  const res = await axios.get(`${API_BASE_URL}/schedule/today?userId=${studentId}`);
         setTodaysSchedule(res.data.schedule || []);
       } catch {
         setTodaysSchedule([]);
@@ -113,7 +113,7 @@ const StudentDashboard = () => {
           setActivities([]);
           return;
         }
-        const res = await axios.get(`${API_BASE}/activities?classIds=${classIds}`);
+  const res = await axios.get(`${API_BASE_URL}/activities?classIds=${classIds}`);
         setActivities(res.data || []);
       } catch (err) {
         setError(err.response?.data?.message || err.message);
@@ -129,7 +129,7 @@ const StudentDashboard = () => {
     }
     const fetchSubmissions = async () => {
       try {
-        const res = await axios.get(`${API_BASE}/submissions/student/${studentId}`);
+  const res = await axios.get(`${API_BASE_URL}/submissions/student/${studentId}`);
         setSubmissions(res.data.submissions || []);
       } catch (err) {
         setError(err.response?.data?.message || err.message);
@@ -153,7 +153,7 @@ const StudentDashboard = () => {
           setLoadingAnnouncements(false);
           return;
         }
-        const res = await axios.get(`${API_BASE}/announcements?classIds=${classIds}&studentId=${studentId}`);
+  const res = await axios.get(`${API_BASE_URL}/announcements?classIds=${classIds}&studentId=${studentId}`);
         setAnnouncements(res.data || []);
       } catch {
         setAnnouncements([

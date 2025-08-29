@@ -113,7 +113,7 @@ const lineOptions = {
   },
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'; // UPDATED: Replace as needed
+const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api"; // UPDATED: Replace as needed
 
 const AdminDashboard = () => {
   const [selectedMenu, setSelectedMenu] = useState("User Management");
@@ -155,8 +155,8 @@ const AdminDashboard = () => {
     setErrorAssignments("");
     try {
       const [classRes, activityRes] = await Promise.all([
-        fetch(`${API_BASE}/class`),
-        fetch(`${API_BASE}/activities`),
+        fetch(`${API_BASE_URL}/class`),
+        fetch(`${API_BASE_URL}/activities`),
       ]);
       if (!classRes.ok) throw new Error("Failed to fetch classes");
       if (!activityRes.ok) throw new Error("Failed to fetch activities");
@@ -175,7 +175,7 @@ const AdminDashboard = () => {
     setLoadingUsers(true);
     setErrorUsers("");
     try {
-      const res = await fetch(`${API_BASE}/users`);
+      const res = await fetch(`${API_BASE_URL}/users`);
       if (!res.ok) throw new Error("Failed to fetch users");
       const data = await res.json();
       setUsers(data);
@@ -198,7 +198,7 @@ const AdminDashboard = () => {
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/users`, {
+      const res = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newUserName, role: newUserRole }),

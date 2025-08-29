@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate, NavLink } from 'react-router-dom';
 import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf } from 'react-icons/fa';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
 
 // Use API_BASE for all API calls for consistency
 
@@ -39,7 +39,7 @@ const StudentActivities = () => {
     const checkEnrollmentAndFetch = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API_BASE}/class/my-classes/${studentId}`);
+        const res = await axios.get(`${API_BASE_URL}/class/my-classes/${studentId}`);
         const enrolledClasses = res.data || [];
         const isEnrolled = enrolledClasses.some(cls => String(cls._id) === String(classId));
 
@@ -51,8 +51,8 @@ const StudentActivities = () => {
           return;
         }
         const [activitiesRes, submissionsRes] = await Promise.all([
-          axios.get(`${API_BASE}/activities?classId=${classId}`),
-          axios.get(`${API_BASE}/activities/submissions?classId=${classId}&studentId=${studentId}`)
+          axios.get(`${API_BASE_URL}/activities?classId=${classId}`),
+          axios.get(`${API_BASE_URL}/activities/submissions?classId=${classId}&studentId=${studentId}`)
         ]);
         let subs = [];
         if (Array.isArray(submissionsRes.data)) {
@@ -162,7 +162,7 @@ const StudentActivities = () => {
                   attachmentUrl = activity.attachment;
                 } else {
                   const filename = activity.attachment.split(/[\\/]/).pop();
-                  attachmentUrl = `${API_BASE.replace('/api','')}/uploads/activities/${filename}`;
+                  attachmentUrl = `${API_BASE_URL.replace('/api','')}/uploads/activities/${filename}`;
                 }
               }
 
