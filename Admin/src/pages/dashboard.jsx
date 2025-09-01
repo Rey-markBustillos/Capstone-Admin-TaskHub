@@ -113,7 +113,7 @@ const lineOptions = {
   },
 };
 
-const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api"; // UPDATED: Replace as needed
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 const AdminDashboard = () => {
   const [selectedMenu, setSelectedMenu] = useState("User Management");
@@ -214,7 +214,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
+  <div className="flex min-h-screen bg-white">
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-md">
         <h2 className="text-2xl font-bold p-6 border-b border-gray-300">
@@ -236,7 +236,7 @@ const AdminDashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow p-8">
+  <main className="flex-grow p-8 bg-white">
         {/* Admin Dashboard Header */}
         <div className="flex items-center gap-4 mb-8">
           <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 via-indigo-400 to-blue-600 text-white shadow-lg border-4 border-white">

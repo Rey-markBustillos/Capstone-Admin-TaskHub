@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
 
-const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 export default function TeacherAnnouncement() {
   const { classId } = useParams();

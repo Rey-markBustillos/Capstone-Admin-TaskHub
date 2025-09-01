@@ -18,7 +18,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { FaBullhorn, FaTasks, FaUsers, FaChalkboardTeacher, FaClock, FaDoorOpen, FaCalendarCheck } from 'react-icons/fa';
 import { FaQuestionCircle } from 'react-icons/fa';
 
-const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 const StudentClassView = () => {
   const { classId } = useParams();
@@ -176,13 +176,13 @@ const StudentClassView = () => {
           <FaArrowLeft /> Back to My Classes
         </NavLink>
       </div>
-  <div className="relative w-full max-w-6xl mx-auto mt-4">
+  <div className="relative w-full mt-4">
     {/* Cardbox background */}
     <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 backdrop-blur-xl shadow-2xl border border-indigo-900/40 z-0" />
     <div className="flex flex-col gap-8 justify-center items-center relative z-10 p-6">
   <NavLink
           to={`attendance`}
-          className="group flex flex-col items-center justify-center w-full max-w-6xl h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center w-full h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.15s', animationDuration: '3s' }}
         >
           {/* Glassy gradient overlay */}
@@ -209,7 +209,7 @@ const StudentClassView = () => {
         </NavLink>
   <NavLink
           to={`announcements`}
-          className="group flex flex-col items-center justify-center w-full max-w-6xl h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center w-full h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.2s', animationDuration: '3s' }}
         >
           {/* Glassy gradient overlay */}
@@ -236,7 +236,7 @@ const StudentClassView = () => {
         </NavLink>
   <NavLink
           to={`activities`}
-          className="group flex flex-col items-center justify-center w-full max-w-6xl h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center w-full h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.3s', animationDuration: '3s' }}
         >
           {/* Glassy gradient overlay */}
@@ -263,7 +263,7 @@ const StudentClassView = () => {
         </NavLink>
         <NavLink
           to={`quiz`}
-          className="group flex flex-col items-center justify-center w-full max-w-6xl h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center w-full h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.35s', animationDuration: '3s' }}
         >
           {/* Glassy gradient overlay */}
@@ -290,7 +290,7 @@ const StudentClassView = () => {
         </NavLink>
         <NavLink
           to={`classlist`}
-          className="group flex flex-col items-center justify-center w-full max-w-6xl h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center w-full h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.4s', animationDuration: '3s' }}
         >
           {/* Glassy gradient overlay */}

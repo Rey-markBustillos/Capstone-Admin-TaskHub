@@ -5,7 +5,7 @@ import { MdClass } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import '../Css/StudentPortal.css'
 
-const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 // Falling books animation component (books fall from above viewport, not stacking at top)
 const FallingBooksAnimation = () => (
@@ -89,7 +89,7 @@ const StudentPortal = () => {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden">
+  <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden">
       {/* Decorative background blobs (same as dashboard/login) */}
       <div
         aria-hidden="true"

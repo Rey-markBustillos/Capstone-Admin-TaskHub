@@ -3,10 +3,8 @@ import axios from 'axios';
 import { useParams, NavLink } from 'react-router-dom';
 import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, FaRegSmile, FaRegSadTear, FaRegLaughBeam, FaRegHeart, FaRegSurprise, FaArrowLeft } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
-// ...existing code...
-// ...existing code...
 
-const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 export default function StudentAnnouncements() {
   const { classId } = useParams();

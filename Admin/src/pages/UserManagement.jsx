@@ -12,7 +12,7 @@ const UserManagement = () => {
     }
     setLoading(true);
     try {
-      await axios.post(API_BASE, {
+      await axios.post(API_BASE_URL, {
         name: newUser.name,
         email: newUser.email,
         password: newUser.password,
@@ -55,12 +55,12 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState('all');
-  const API_BASE = "https://capstone-admin-taskhub-2.onrender.com/api/users";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
   const fetchUsers = React.useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(API_BASE);
+      const res = await axios.get(API_BASE_URL);
       setUsers(res.data);
       setError(null);
     } catch {
@@ -68,7 +68,7 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE]);
+  }, [API_BASE_URL]);
 
   useEffect(() => {
     fetchUsers();
@@ -126,7 +126,7 @@ const UserManagement = () => {
           const password = namePart + lrn;
           if (!existingLRNs.includes(lrn)) {
             try {
-              await axios.post(API_BASE, {
+              await axios.post(API_BASE_URL, {
                 name: name,
                 email: row[emailIdx],
                 password: password,
@@ -162,7 +162,7 @@ const UserManagement = () => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     setLoading(true);
     try {
-      await axios.delete(`${API_BASE}/${id}`);
+      await axios.delete(`${API_BASE_URL}/${id}`);
       fetchUsers();
       setError(null);
     } catch (err) {

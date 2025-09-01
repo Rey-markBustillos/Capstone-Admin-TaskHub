@@ -27,7 +27,7 @@ const CreateActivity = () => {
     setLoadingActivities(true);
     setActivitiesError('');
     try {
-      const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
       const [classRes, activitiesRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/class/${classId}`),
         axios.get(`${API_BASE_URL}/activities?classId=${classId}`)

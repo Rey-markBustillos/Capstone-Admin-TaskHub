@@ -71,7 +71,7 @@ const TeacherPortal = () => {
       setLoading(true);
       setError(null);
       try {
-  const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
   const res = await axios.get(`${API_BASE_URL}/class?teacherId=${teacherId}`);
         setClasses(res.data || []);
       } catch (err) {
@@ -122,7 +122,7 @@ const TeacherPortal = () => {
   }
 
   return (
-    <div className="app-container bg-white dark:bg-gray-800 min-h-screen w-full">
+  <div className="app-container bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 min-h-screen w-full">
       <FallingBooksAnimation />
       <div className="w-full px-2 sm:px-6 lg:px-8">
         <div className="mb-8 pt-6">

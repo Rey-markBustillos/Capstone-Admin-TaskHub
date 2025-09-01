@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -99,52 +100,47 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
   // Sidebar background and shadow per role
   let sidebarBg = '';
   let sidebarShadow = '';
-  if (role === 'admin') {
-    sidebarBg = 'bg-gradient-to-br from-violet-200/80 via-white/60 to-blue-100/80 backdrop-blur-xl';
-    sidebarShadow = 'shadow-2xl border-violet-200';
-  } else if (role === 'teacher') {
-    sidebarBg = 'bg-white dark:bg-gray-800';
-    sidebarShadow = 'shadow-lg border-indigo-800';
-  } else if (role === 'student') {
-    sidebarBg = 'bg-white dark:bg-gray-800';
-    sidebarShadow = 'shadow-lg border-blue-800';
-  } else {
-    sidebarBg = 'bg-white dark:bg-gray-800';
-    sidebarShadow = 'shadow-lg border-gray-200/10';
+   if (role === 'admin') {
+     sidebarBg = isOpen ? 'bg-gradient-to-br from-violet-200/80 via-white/60 to-blue-100/80 backdrop-blur-xl' : 'bg-gray-200 dark:bg-gray-800';
+     sidebarShadow = isOpen ? 'shadow-2xl border-violet-200' : 'border-violet-200';
+   } else if (role === 'teacher') {
+     sidebarBg = 'bg-white dark:bg-gray-800';
+     sidebarShadow = isOpen ? 'shadow-lg border-indigo-800' : 'border-indigo-800';
+   } else if (role === 'student') {
+     sidebarBg = 'bg-white dark:bg-gray-800';
+     sidebarShadow = isOpen ? 'shadow-lg border-blue-800' : 'border-blue-800';
+   } else {
+     sidebarBg = 'bg-white dark:bg-gray-800';
+     sidebarShadow = isOpen ? 'shadow-lg border-gray-200/10' : 'border-gray-200/10';
   }
   return (
     <div
       className={`h-screen flex flex-col justify-between fixed top-0 left-0 transition-all duration-300 z-30
-        ${isOpen ? 'w-60' : 'w-16'} ${sidebarBg} ${sidebarShadow} ${borderClass} border-r`}
+        ${isOpen ? 'w-44' : 'w-12'} ${sidebarBg} ${sidebarShadow} ${borderClass} border-r cursor-pointer`}
       style={role === 'admin' ? { boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)' } : {}}
+      onClick={() => {
+        if (typeof setIsOpenProp === 'function') setIsOpenProp(!isOpen);
+        else setIsOpen(!isOpen);
+      }}
     >
       <div>
         {/* Header at Toggle Button */}
-        <div className={`flex items-center h-20 ${borderClass} border-b ${isOpen ? 'justify-between px-4' : 'justify-center px-2'}`}>
+        <div className={`flex flex-col items-center ${borderClass} border-b ${isOpen ? 'px-4' : 'px-2'} py-4 sm:py-6`}>
           {isOpen && (
-            <span className="flex items-center gap-2 text-2xl font-extrabold text-violet-700 tracking-tight drop-shadow">
-              <svg className="w-8 h-8 text-violet-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="url(#sidebarLogoGradient)" />
-                <defs>
-                  <linearGradient id="sidebarLogoGradient" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#a78bfa" />
-                    <stop offset="100%" stopColor="#6366f1" />
-                  </linearGradient>
-                </defs>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h8M12 8v8" />
-              </svg>
-              TaskHub
-            </span>
+            <>
+              {/* Student profile upload and preview at the very top */}
+              <span className="flex items-center gap-2 text-lg sm:text-2xl font-extrabold text-violet-700 tracking-tight drop-shadow mb-2">
+                <img
+                  src="/taskhublogos.png"
+                  alt="TaskHub Logo"
+                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
+                  style={{ minWidth: '1.5rem' }}
+                />
+                TaskHub
+              </span>
+              {role === 'student' && <StudentProfileAvatar />}
+            </>
           )}
-          <button
-            onClick={() => {
-              if (typeof setIsOpenProp === 'function') setIsOpenProp(!isOpen);
-              else setIsOpen(!isOpen);
-            }}
-            className={`p-2 rounded-full bg-violet-100 hover:bg-violet-200 transition-colors focus:outline-none focus:ring-2 focus:ring-violet-400`}
-          >
-            {isOpen ? <ChevronLeft size={24} className="text-violet-600" /> : <ChevronRight size={24} className="text-violet-600" />}
-          </button>
         </div>
 
         {/* Menu Items */}
@@ -193,6 +189,52 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
           {isOpen && <span className="text-base font-semibold tracking-wide">Logout</span>}
         </button>
       </div>
+    </div>
+  );
+}
+
+// StudentProfileAvatar: local-only, per-student (localStorage key per user)
+function StudentProfileAvatar() {
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
+  const studentId = user && user.role === 'student' ? user._id : null;
+  const storageKey = studentId ? `student_profile_${studentId}` : 'student_profile_default';
+  const [profile, setProfile] = React.useState(() => localStorage.getItem(storageKey) || '');
+  const fileInputRef = React.useRef();
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setProfile(ev.target.result);
+      localStorage.setItem(storageKey, ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="flex flex-col items-center w-full">
+      <div
+        className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gray-200 border-2 border-violet-400 overflow-hidden mb-1 cursor-pointer hover:ring-2 hover:ring-violet-400 transition"
+        title="Upload profile picture"
+        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+      >
+        {profile ? (
+          <img src={profile} alt="Profile" className="w-full h-full object-cover" />
+        ) : (
+          <span className="flex items-center justify-center w-full h-full text-gray-400 text-xl sm:text-2xl">👤</span>
+        )}
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileChange}
+      />
+      <span className="text-xs text-gray-500">Profile</span>
+      <span className="text-xs text-yellow-600 mt-1 text-center">Click the profile picture to upload or change your photo.</span>
     </div>
   );
 }

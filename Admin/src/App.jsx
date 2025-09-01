@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, Outlet, useLocation } from 'react-router-dom';
 
 // Import Components
-import Sidebar from './components/Sidebar'; // Siguraduhing tama ang path
+import Sidebar from './components/Sidebar';
 import AdminDashboard from './pages/dashboard';
 import UserManagement from './pages/UserManagement';
 import ClassManagement from './pages/ClassManagement';
@@ -67,7 +67,9 @@ const ProtectedLayout = ({ user, onLogout }) => {
 
   // Custom background logic
   const isAdmin = user.role === 'admin';
+  const isStudentDashboard = location.pathname.startsWith('/studentdashboard');
   const isStudentPortal = location.pathname.startsWith('/studentportal');
+  const isStudent = user.role === 'student';
   const hasCustomBackground = 
     location.pathname.includes('/teacherdashboard') || 
     location.pathname.includes('/classes') ||
@@ -81,6 +83,23 @@ const ProtectedLayout = ({ user, onLogout }) => {
       : hasCustomBackground
         ? ''
         : 'bg-gray-100 dark:bg-gray-900';
+
+  // Ibalik ang sidebar sa student dashboard/portal, pero alisin ang margin sa main
+  if (isStudent && (isStudentDashboard || isStudentPortal)) {
+    return (
+      <div className={`flex min-h-screen ${backgroundClass}`}>
+        <Sidebar 
+          role={user.role} 
+          onLogout={onLogout} 
+          isOpen={isSidebarOpen} 
+          setIsOpen={setIsSidebarOpen} 
+        />
+        <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-44' : 'ml-12'}`}>
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex min-h-screen ${backgroundClass}`}>

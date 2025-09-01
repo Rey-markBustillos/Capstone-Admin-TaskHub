@@ -4,7 +4,7 @@ import axios from 'axios';
 import Navbar from '../components/Navbar'; // Siguraduhing tama ang path
 import { FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
 
-const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 const TeacherClassView = () => {
   const { classId } = useParams();

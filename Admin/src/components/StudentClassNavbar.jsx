@@ -67,7 +67,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
       )}
 
       {/* Main Navigation */}
-      <nav className="bg-gray-800 text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-md">
+  <nav className="bg-transparent text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-md">
         <div className="text-lg font-bold">
           <NavLink to="/studentportal" className="flex items-center gap-2 hover:text-indigo-300 transition-colors">
             <span className="bg-gradient-to-tr from-indigo-400 via-purple-400 to-pink-400 p-1.5 rounded-full shadow ring-2 ring-white/40 flex items-center justify-center">

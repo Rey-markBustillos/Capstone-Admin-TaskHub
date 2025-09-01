@@ -1,12 +1,10 @@
 // src/layouts/StudentLayout.jsx
 import React from 'react';
-import Sidebar from '../components/Sidebar';
 
-export default function StudentLayout({ children, onLogout }) {
+export default function StudentLayout({ children }) {
+  // No sidebar, full width main content
   return (
-    <div style={{ display: 'flex' }}>
-      <Sidebar role="student" onLogout={onLogout} />
-      <main style={{ marginLeft: 250, padding: 20, flex: 1 }}>{children}</main>
-    </div>
+    <main style={{ width: '100%', padding: 0, margin: 0 }}>{children}</main>
   );
+//
 }

@@ -1,9 +1,12 @@
+
+// NOTE: This dashboard is always full width and should NEVER render a sidebar.
+// If you see a sidebar here, check your router/layout setup.
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone } from 'lucide-react';
 
-const API_BASE_URL = "https://capstone-admin-taskhub-2.onrender.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 // Falling books animation (unchanged)
 const FallingBooksAnimation = () => (
@@ -191,7 +194,8 @@ const StudentDashboard = () => {
   }).length;
 
   return (
-  <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden w-full">
+    // This page is intentionally full width, no sidebar allowed
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden w-full max-w-none mx-0">
       {/* Welcome section at the very top, no margin above */}
       <div className="w-full flex items-center justify-center pt-8 pb-6">
         <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight w-full text-center">Welcome, {studentName}!</h1>
@@ -225,7 +229,7 @@ const StudentDashboard = () => {
           </div>
         )}
 
-        <main className="rounded-lg p-2 sm:p-4 md:p-6 shadow-lg backdrop-blur-xl border border-indigo-700">
+  <main className="rounded-lg p-2 sm:p-4 md:p-6 shadow-lg backdrop-blur-xl border border-indigo-700 w-full max-w-none">
           {/* Summary Section */}
           <section className="mb-6">
             <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Activity Summary</h2>
