@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, Outlet, useLocation } from 'react-router-dom';
+import { SidebarProvider } from './contexts/SidebarContext';
 
 // Import Components
 import Sidebar from './components/Sidebar';
@@ -69,6 +70,7 @@ const ProtectedLayout = ({ user, onLogout }) => {
   const isAdmin = user.role === 'admin';
   const isStudentDashboard = location.pathname.startsWith('/studentdashboard');
   const isStudentPortal = location.pathname.startsWith('/studentportal');
+  const isStudentClass = location.pathname.startsWith('/student/class/');
   const isStudent = user.role === 'student';
   const hasCustomBackground = 
     location.pathname.includes('/teacherdashboard') || 
@@ -85,19 +87,22 @@ const ProtectedLayout = ({ user, onLogout }) => {
         : 'bg-gray-100 dark:bg-gray-900';
 
   // Ibalik ang sidebar sa student dashboard/portal, pero alisin ang margin sa main
-  if (isStudent && (isStudentDashboard || isStudentPortal)) {
+  if (isStudent && (isStudentDashboard || isStudentPortal || isStudentClass)) {
     return (
-      <div className={`flex min-h-screen ${backgroundClass}`}>
-        <Sidebar 
-          role={user.role} 
-          onLogout={onLogout} 
-          isOpen={isSidebarOpen} 
-          setIsOpen={setIsSidebarOpen} 
-        />
-        <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-44' : 'ml-12'}`}>
-          <Outlet />
-        </main>
-      </div>
+      <SidebarProvider isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}>
+        <div className={`flex min-h-screen ${backgroundClass}`}>
+          <Sidebar 
+            role={user.role} 
+            onLogout={onLogout} 
+            isOpen={isSidebarOpen} 
+            setIsOpen={setIsSidebarOpen}
+            isOverlay={isStudentClass}
+          />
+          <main className={`flex-1 transition-all duration-300 ${isStudentClass ? 'ml-0' : (isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12')}`}>
+            <Outlet />
+          </main>
+        </div>
+      </SidebarProvider>
     );
   }
 

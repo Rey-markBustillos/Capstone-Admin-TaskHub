@@ -1,5 +1,5 @@
 import { FaArrowLeft } from 'react-icons/fa';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 // Falling books animation component (copied from StudentPortal)
 const FallingBooksAnimation = () => (
   <>
@@ -15,16 +15,91 @@ const FallingBooksAnimation = () => (
 import { useParams, Outlet } from 'react-router-dom';
 import axios from 'axios';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaBullhorn, FaTasks, FaUsers, FaChalkboardTeacher, FaClock, FaDoorOpen, FaCalendarCheck } from 'react-icons/fa';
+import { FaBullhorn, FaTasks, FaUsers, FaChalkboardTeacher, FaClock, FaDoorOpen, FaCalendarCheck, FaRocket } from 'react-icons/fa';
 import { FaQuestionCircle } from 'react-icons/fa';
+import { useContext } from 'react';
+import SidebarContext from '../contexts/SidebarContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 const StudentClassView = () => {
   const { classId } = useParams();
   const location = useLocation();
+  const { isSidebarOpen } = useContext(SidebarContext);
   const [selectedClass, setSelectedClass] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lastOpenedComponent, setLastOpenedComponent] = useState(null);
+  const [secondLastComponent, setSecondLastComponent] = useState(null);
+
+  // Component mapping for quick access
+  const componentMap = useMemo(() => ({
+    attendance: { 
+      name: 'Attendance', 
+      icon: FaCalendarCheck, 
+      color: 'purple', 
+      path: 'attendance',
+      description: 'Check attendance'
+    },
+    announcements: { 
+      name: 'Announcements', 
+      icon: FaBullhorn, 
+      color: 'yellow', 
+      path: 'announcements',
+      description: 'Latest updates'
+    },
+    activities: { 
+      name: 'Activities', 
+      icon: FaTasks, 
+      color: 'blue', 
+      path: 'activities',
+      description: 'Submit work'
+    },
+    quiz: { 
+      name: 'Quiz Hub', 
+      icon: FaQuestionCircle, 
+      color: 'pink', 
+      path: 'quiz',
+      description: 'Take quizzes'
+    },
+    classlist: { 
+      name: 'Class List', 
+      icon: FaUsers, 
+      color: 'green', 
+      path: 'classlist',
+      description: 'View classmates'
+    }
+  }), []);
+
+  // Track route changes to update last opened component
+  useEffect(() => {
+    const currentPath = location.pathname.split('/').pop();
+    if (componentMap[currentPath] && currentPath !== classId) {
+      const newComponent = componentMap[currentPath];
+      
+      // Update second last component before updating last component
+      if (lastOpenedComponent && lastOpenedComponent.path !== newComponent.path) {
+        setSecondLastComponent(lastOpenedComponent);
+        localStorage.setItem(`secondLastComponent_${classId}`, lastOpenedComponent.path);
+      }
+      
+      setLastOpenedComponent(newComponent);
+      localStorage.setItem(`lastComponent_${classId}`, currentPath);
+    }
+  }, [location.pathname, classId, componentMap, lastOpenedComponent]);
+
+  // Load last opened components from localStorage on mount
+  useEffect(() => {
+    const savedComponent = localStorage.getItem(`lastComponent_${classId}`);
+    const savedSecondComponent = localStorage.getItem(`secondLastComponent_${classId}`);
+    
+    if (savedComponent && componentMap[savedComponent]) {
+      setLastOpenedComponent(componentMap[savedComponent]);
+    }
+    
+    if (savedSecondComponent && componentMap[savedSecondComponent]) {
+      setSecondLastComponent(componentMap[savedSecondComponent]);
+    }
+  }, [classId, componentMap]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -66,7 +141,7 @@ const StudentClassView = () => {
     !validRoutes.includes(location.pathname);
 
   return (
-    <div className="h-screen overflow-y-auto hide-scrollbar relative bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900">
+    <div className={`h-screen overflow-y-auto overflow-x-hidden hide-scrollbar relative bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 transition-all duration-300`}>
       {/* Decorative scroll background (matches StudentPortal) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="w-full h-full absolute inset-0 blur-3xl opacity-30">
@@ -88,8 +163,7 @@ const StudentClassView = () => {
         </div>
       )}
       {selectedClass && (
-  <div className="relative bg-gradient-to-r from-indigo-900 via-indigo-700 to-purple-900 text-white px-2 py-0.5 text-base flex flex-col sm:flex-row sm:flex-wrap justify-start sm:justify-between items-start sm:items-center gap-0.5 sm:gap-1 rounded-b-sm shadow-xl border-b-4 border-indigo-900 overflow-hidden
-  transition-all duration-[3000ms] animate-fade-in-down" style={{animationDelay:'0.05s', animationDuration:'3s'}}>
+  <div className="relative bg-gradient-to-r from-indigo-900 via-indigo-700 to-purple-900 text-white px-2 py-0.5 text-base flex flex-col sm:flex-row sm:flex-wrap justify-start sm:justify-between items-start sm:items-center gap-0.5 sm:gap-1 shadow-xl border-b-4 border-indigo-900 overflow-hidden transition-all duration-[3000ms] animate-fade-in-down max-w-full" style={{animationDelay:'0.05s', animationDuration:'3s'}}>
           {/* Decorative blob or icon on the right */}
           <div className="hidden sm:block absolute right-0 top-0 h-full w-60 pointer-events-none select-none z-0">
             {/* Main dark blob */}
@@ -137,186 +211,187 @@ const StudentClassView = () => {
             </svg>
           </div>
           {/* Welcome message */}
-          <div className="w-full mb-2 flex items-center gap-3 pl-4 sm:pl-8">
-            <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-3 rounded-full shadow-lg ring-2 ring-yellow-200/40 flex items-center justify-center">
-              <FaBullhorn className="text-white text-2xl" />
+          <div className={`w-full mb-2 flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 md:pl-4 lg:pl-8 overflow-hidden ${isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12'}`}>
+            <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-1.5 sm:p-2 md:p-3 rounded-full shadow-lg ring-2 ring-yellow-200/40 flex items-center justify-center flex-shrink-0">
+              <FaBullhorn className="text-white text-sm sm:text-lg md:text-2xl" />
             </span>
-            <span className="text-xl sm:text-2xl font-extrabold tracking-wide drop-shadow">Welcome <span className="text-yellow-200">{getStudentName()}</span> to <span className="text-yellow-200">{selectedClass.className}</span>!</span>
+            <span className="text-sm sm:text-lg md:text-xl lg:text-2xl font-extrabold tracking-wide drop-shadow truncate">Welcome <span className="text-yellow-200">{getStudentName()}</span> to <span className="text-yellow-200">{selectedClass.className}</span>!</span>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4 mt-2 ml-4 sm:ml-12 relative">
+          <div className={`flex flex-col gap-1 sm:gap-2 md:gap-4 mt-2 relative overflow-hidden max-w-full transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 pl-1 sm:pl-2 md:pl-4 lg:pl-12' : 'ml-10 sm:ml-12 pl-1 sm:pl-2 md:pl-4 lg:pl-8'}`}>
             {/* Decorative dark glassy background */}
             <div className="absolute inset-0 -z-1 rounded-2xl bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 backdrop-blur-md shadow-2xl border border-indigo-900/40" style={{filter:'blur(0.5px)'}} />
-            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/10 shadow-inner relative z-10">
-              <FaChalkboardTeacher className="text-yellow-300 text-lg" />
-              <span className="font-semibold text-base text-yellow-100 drop-shadow">Teacher:</span>
-              <span className="font-bold text-white text-base">{selectedClass.teacherName || (selectedClass.teacher && selectedClass.teacher.name) || 'N/A'}</span>
+            <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-lg bg-white/10 shadow-inner relative z-10 text-xs sm:text-sm md:text-base">
+              <FaChalkboardTeacher className="text-yellow-300 text-sm sm:text-base md:text-lg flex-shrink-0" />
+              <span className="font-semibold text-yellow-100 drop-shadow whitespace-nowrap">Teacher:</span>
+              <span className="font-bold text-white truncate">{selectedClass.teacherName || (selectedClass.teacher && selectedClass.teacher.name) || 'N/A'}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/10 shadow-inner relative z-10">
-              <FaClock className="text-blue-300 text-lg" />
-              <span className="font-semibold text-base text-blue-100 drop-shadow">Schedule:</span>
-              <span className="font-bold text-white text-base">{selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}</span>
+            <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-lg bg-white/10 shadow-inner relative z-10 text-xs sm:text-sm md:text-base">
+              <FaClock className="text-blue-300 text-sm sm:text-base md:text-lg flex-shrink-0" />
+              <span className="font-semibold text-blue-100 drop-shadow whitespace-nowrap">Schedule:</span>
+              <span className="font-bold text-white truncate">{selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/10 shadow-inner relative z-10">
-              <FaDoorOpen className="text-pink-300 text-lg" />
-              <span className="font-semibold text-base text-pink-100 drop-shadow">Room:</span>
-              <span className="font-bold text-white text-base">{selectedClass.roomNumber || 'N/A'}</span>
+            <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-lg bg-white/10 shadow-inner relative z-10 text-xs sm:text-sm md:text-base">
+              <FaDoorOpen className="text-pink-300 text-sm sm:text-base md:text-lg flex-shrink-0" />
+              <span className="font-semibold text-pink-100 drop-shadow whitespace-nowrap">Room:</span>
+              <span className="font-bold text-white truncate">{selectedClass.roomNumber || 'N/A'}</span>
             </div>
           </div>
         </div>
 )}
 
-<main className="p-4 md:p-8">
+<main className="w-full transition-all duration-300 overflow-hidden">
   {isIndex ? (
     <>
-  <div className="mb-8 transition-all duration-[3000ms] animate-fade-in-up" style={{animationDelay:'0.15s', animationDuration:'3s'}}>
+  <div className={`mb-4 sm:mb-8 transition-all duration-[3000ms] animate-fade-in-up px-2 sm:px-4 md:px-8 ${isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12'}`} style={{animationDelay:'0.15s', animationDuration:'3s'}}>
         <NavLink
           to="/studentportal"
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800 transition mb-4"
+          className="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800 transition mb-4 text-sm sm:text-base"
         >
-          <FaArrowLeft /> Back to My Classes
+          <FaArrowLeft className="text-sm sm:text-base" /> Back to My Classes
         </NavLink>
       </div>
   <div className="relative w-full mt-4">
     {/* Cardbox background */}
-    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 backdrop-blur-xl shadow-2xl border border-indigo-900/40 z-0" />
-    <div className="flex flex-col gap-8 justify-center items-center relative z-10 p-6">
-  <NavLink
+    <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 backdrop-blur-xl shadow-2xl border border-indigo-900/40 rounded-2xl z-0" />
+    
+    {/* Grid Layout - Better visual hierarchy */}
+    <div className={`relative z-10 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12'}`}>
+      {/* Recent Open Heading */}
+      <div className="mb-4 sm:mb-6">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
+          <span className="bg-gradient-to-tr from-indigo-400 via-purple-400 to-pink-400 p-1.5 sm:p-2 rounded-full shadow-lg">
+            <FaClock className="text-white text-sm sm:text-base md:text-lg" />
+          </span>
+          Recent Open
+        </h2>
+        <p className="text-gray-300 text-xs sm:text-sm">Quick access to your recently visited components</p>
+      </div>
+
+      {/* Recent Components Row */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-4 sm:mb-6">
+        {/* Recent Activity - Dynamic */}
+        {lastOpenedComponent ? (
+          <NavLink
+            to={lastOpenedComponent.path}
+            className="group flex flex-col items-center justify-center h-[100px] sm:h-[120px] md:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-emerald-600/60 cursor-pointer bg-gradient-to-br from-emerald-700 via-teal-800 to-cyan-800 text-white hover:bg-emerald-700/80 hover:scale-105 relative overflow-hidden"
+          >
+            <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-emerald-400 rounded-l-xl sm:rounded-l-2xl"></div>
+            <span className="bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-400 p-1.5 sm:p-2 md:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-emerald-200/40 mb-1 sm:mb-1 md:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <lastOpenedComponent.icon className="text-white text-sm sm:text-lg md:text-2xl group-hover:animate-bounce" />
+            </span>
+            <span className="font-bold text-xs sm:text-sm md:text-lg tracking-wide text-center px-1">{lastOpenedComponent.name}</span>
+            <span className="text-[10px] sm:text-xs text-gray-200">Recent open</span>
+          </NavLink>
+        ) : (
+          <div className="group flex flex-col items-center justify-center h-[100px] sm:h-[120px] md:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-gray-600/60 cursor-not-allowed bg-gradient-to-br from-gray-700 via-gray-800 to-slate-800 text-white relative overflow-hidden">
+            <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-gray-400 rounded-l-xl sm:rounded-l-2xl"></div>
+            <span className="bg-gradient-to-tr from-gray-400 via-slate-400 to-gray-500 p-1.5 sm:p-2 md:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-gray-200/40 mb-1 sm:mb-1 md:mb-2 flex items-center justify-center">
+              <FaClock className="text-white text-sm sm:text-lg md:text-2xl" />
+            </span>
+            <span className="font-bold text-xs sm:text-sm md:text-lg tracking-wide text-center px-1">Recent Activity</span>
+            <span className="text-[10px] sm:text-xs text-gray-300">No recent activity</span>
+          </div>
+        )}
+
+        {/* Quick Access - Dynamic Second Last */}
+        {secondLastComponent ? (
+          <NavLink
+            to={secondLastComponent.path}
+            className="group flex flex-col items-center justify-center h-[100px] sm:h-[120px] md:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-cyan-600/60 cursor-pointer bg-gradient-to-br from-cyan-700 via-teal-800 to-blue-800 text-white hover:bg-cyan-700/80 hover:scale-105 relative overflow-hidden"
+          >
+            <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-cyan-400 rounded-l-xl sm:rounded-l-2xl"></div>
+            <span className="bg-gradient-to-tr from-cyan-400 via-teal-400 to-blue-400 p-1.5 sm:p-2 md:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-cyan-200/40 mb-1 sm:mb-1 md:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <secondLastComponent.icon className="text-white text-sm sm:text-lg md:text-2xl group-hover:animate-bounce" />
+            </span>
+            <span className="font-bold text-xs sm:text-sm md:text-lg tracking-wide text-center px-1">{secondLastComponent.name}</span>
+            <span className="text-[10px] sm:text-xs text-gray-200">Quick access</span>
+          </NavLink>
+        ) : (
+          <div className="group flex flex-col items-center justify-center h-[100px] sm:h-[120px] md:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-gray-600/60 cursor-not-allowed bg-gradient-to-br from-gray-700 via-gray-800 to-slate-800 text-white relative overflow-hidden">
+            <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-gray-400 rounded-l-xl sm:rounded-l-2xl"></div>
+            <span className="bg-gradient-to-tr from-gray-400 via-slate-400 to-gray-500 p-1.5 sm:p-2 md:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-gray-200/40 mb-1 sm:mb-1 md:mb-2 flex items-center justify-center">
+              <FaRocket className="text-white text-sm sm:text-lg md:text-2xl" />
+            </span>
+            <span className="font-bold text-xs sm:text-sm md:text-lg tracking-wide text-center px-1">Quick Access</span>
+            <span className="text-[10px] sm:text-xs text-gray-300">No quick access</span>
+          </div>
+        )}
+      </div>
+
+      {/* Main Navigation Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
+        {/* Attendance */}
+        <NavLink
           to={`attendance`}
-          className="group flex flex-col items-center justify-center w-full h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.15s', animationDuration: '3s' }}
         >
-          {/* Glassy gradient overlay */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{background: 'linear-gradient(120deg,rgba(30,30,60,0.22) 0%,rgba(30,30,60,0.12) 100%)'}}></div>
-          {/* Inner shadow */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{boxShadow:'inset 0 4px 24px 0 rgba(0,0,0,0.08)'}}></div>
-          {/* Animated floating SVG */}
-          <svg className="absolute left-10 top-0 w-16 h-16 opacity-20 animate-pulse-slow" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="#a78bfa" /></svg>
-          {/* Accent bar */}
-          <div className="absolute left-0 top-0 h-full w-2 bg-purple-400 rounded-l-3xl shadow-md"></div>
-          <svg className="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="dots0" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="2" fill="#a78bfa" />
-              </pattern>
-            </defs>
-            <rect width="400" height="120" fill="url(#dots0)" />
-          </svg>
-          <div className="absolute -bottom-4 -right-4 w-32 h-16 bg-purple-200 rounded-full blur-2xl opacity-30"></div>
-          <span className="bg-gradient-to-tr from-purple-400 via-indigo-400 to-pink-400 p-3 rounded-full shadow-lg ring-2 ring-purple-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaCalendarCheck className="text-white text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-purple-400 rounded-l-xl sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-purple-400 via-indigo-400 to-pink-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-purple-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaCalendarCheck className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-extrabold text-lg tracking-wide">Attendance</span>
+          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Attendance</span>
+          <span className="text-xs text-gray-300">Track your presence</span>
         </NavLink>
-  <NavLink
+
+        {/* Announcements */}
+        <NavLink
           to={`announcements`}
-          className="group flex flex-col items-center justify-center w-full h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.2s', animationDuration: '3s' }}
         >
-          {/* Glassy gradient overlay */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{background: 'linear-gradient(120deg,rgba(30,30,30,0.22) 0%,rgba(30,30,30,0.12) 100%)'}}></div>
-          {/* Inner shadow */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{boxShadow:'inset 0 4px 24px 0 rgba(0,0,0,0.08)'}}></div>
-          {/* Animated floating SVG */}
-          <svg className="absolute left-10 top-0 w-16 h-16 opacity-20 animate-pulse-slow" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="#fbbf24" /></svg>
-          {/* Accent bar */}
-          <div className="absolute left-0 top-0 h-full w-2 bg-yellow-400 rounded-l-3xl shadow-md"></div>
-          <svg className="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="dots1" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="2" fill="#fbbf24" />
-              </pattern>
-            </defs>
-            <rect width="400" height="120" fill="url(#dots1)" />
-          </svg>
-          <div className="absolute -bottom-4 -right-4 w-32 h-16 bg-pink-200 rounded-full blur-2xl opacity-30"></div>
-          <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-3 rounded-full shadow-lg ring-2 ring-yellow-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaBullhorn className="text-white text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-yellow-400 rounded-l-xl sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-yellow-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaBullhorn className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-extrabold text-lg tracking-wide">Announcements</span>
+          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Announcements</span>
+          <span className="text-xs text-gray-300">Latest updates</span>
         </NavLink>
-  <NavLink
+
+        {/* Activities */}
+        <NavLink
           to={`activities`}
-          className="group flex flex-col items-center justify-center w-full h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.3s', animationDuration: '3s' }}
         >
-          {/* Glassy gradient overlay */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{background: 'linear-gradient(120deg,rgba(30,30,30,0.22) 0%,rgba(30,30,30,0.12) 100%)'}}></div>
-          {/* Inner shadow */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{boxShadow:'inset 0 4px 24px 0 rgba(0,0,0,0.08)'}}></div>
-          {/* Animated floating SVG */}
-          <svg className="absolute left-10 top-0 w-16 h-16 opacity-20 animate-pulse-slow" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="#38bdf8" /></svg>
-          {/* Accent bar */}
-          <div className="absolute left-0 top-0 h-full w-2 bg-blue-400 rounded-l-3xl shadow-md"></div>
-          <svg className="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="dots2" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="2" fill="#38bdf8" />
-              </pattern>
-            </defs>
-            <rect width="400" height="120" fill="url(#dots2)" />
-          </svg>
-          <div className="absolute -bottom-4 -right-4 w-32 h-16 bg-cyan-200 rounded-full blur-2xl opacity-30"></div>
-          <span className="bg-gradient-to-tr from-blue-400 via-cyan-400 to-indigo-400 p-3 rounded-full shadow-lg ring-2 ring-blue-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaTasks className="text-white text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-blue-400 rounded-l-xl sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-blue-400 via-cyan-400 to-indigo-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-blue-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaTasks className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-extrabold text-lg tracking-wide">Activities</span>
+          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Activities</span>
+          <span className="text-xs text-gray-300">Submit work</span>
         </NavLink>
+
+        {/* Quiz Hub */}
         <NavLink
           to={`quiz`}
-          className="group flex flex-col items-center justify-center w-full h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.35s', animationDuration: '3s' }}
         >
-          {/* Glassy gradient overlay */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{background: 'linear-gradient(120deg,rgba(60,30,60,0.22) 0%,rgba(60,30,60,0.12) 100%)'}}></div>
-          {/* Inner shadow */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{boxShadow:'inset 0 4px 24px 0 rgba(0,0,0,0.08)'}}></div>
-          {/* Animated floating SVG */}
-          <svg className="absolute left-10 top-0 w-16 h-16 opacity-20 animate-pulse-slow" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="#f472b6" /></svg>
-          {/* Accent bar */}
-          <div className="absolute left-0 top-0 h-full w-2 bg-pink-400 rounded-l-3xl shadow-md"></div>
-          <svg className="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="dotsQuiz" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="2" fill="#f472b6" />
-              </pattern>
-            </defs>
-            <rect width="400" height="120" fill="url(#dotsQuiz)" />
-          </svg>
-          <div className="absolute -bottom-4 -right-4 w-32 h-16 bg-pink-200 rounded-full blur-2xl opacity-30"></div>
-          <span className="bg-gradient-to-tr from-pink-400 via-fuchsia-400 to-yellow-400 p-3 rounded-full shadow-lg ring-2 ring-pink-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaQuestionCircle className="text-white text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-pink-400 rounded-l-xl sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-pink-400 via-fuchsia-400 to-yellow-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-pink-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaQuestionCircle className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-extrabold text-lg tracking-wide">Quiz Hub</span>
+          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Quiz Hub</span>
+          <span className="text-xs text-gray-300">Take quizzes</span>
         </NavLink>
+
+        {/* Class List */}
         <NavLink
           to={`classlist`}
-          className="group flex flex-col items-center justify-center w-full h-[120px] rounded-3xl shadow-2xl transition-all duration-300 animate-fade-in-up border-4 border-indigo-700/70 border-dashed cursor-pointer bg-gradient-to-br from-gray-900 via-indigo-900 to-slate-900 text-white hover:bg-gray-900/80 hover:scale-102 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.4s', animationDuration: '3s' }}
         >
-          {/* Glassy gradient overlay */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{background: 'linear-gradient(120deg,rgba(30,60,30,0.22) 0%,rgba(30,60,30,0.12) 100%)'}}></div>
-          {/* Inner shadow */}
-          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{boxShadow:'inset 0 4px 24px 0 rgba(0,0,0,0.08)'}}></div>
-          {/* Animated floating SVG */}
-          <svg className="absolute left-10 top-0 w-16 h-16 opacity-20 animate-pulse-slow" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="#34d399" /></svg>
-          {/* Accent bar */}
-          <div className="absolute left-0 top-0 h-full w-2 bg-green-400 rounded-l-3xl shadow-md"></div>
-          <svg className="absolute left-0 top-0 w-full h-full opacity-10 pointer-events-none" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="dotsClassList" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="2" fill="#34d399" />
-              </pattern>
-            </defs>
-            <rect width="400" height="120" fill="url(#dotsClassList)" />
-          </svg>
-          <div className="absolute -bottom-4 -right-4 w-32 h-16 bg-green-200 rounded-full blur-2xl opacity-30"></div>
-          <span className="bg-gradient-to-tr from-green-400 via-emerald-400 to-yellow-400 p-3 rounded-full shadow-lg ring-2 ring-green-200/40 mb-3 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaUsers className="text-white text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-green-400 rounded-l-xl sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-green-400 via-emerald-400 to-yellow-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-green-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaUsers className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-extrabold text-lg tracking-wide">Class List</span>
+          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Class List</span>
+          <span className="text-xs text-gray-300">View classmates</span>
         </NavLink>
       </div>
     </div>
+  </div>
   
   </>
   ) : (

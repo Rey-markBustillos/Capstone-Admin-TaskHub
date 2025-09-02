@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { FaUserTie, FaMapMarkerAlt, FaClock, FaCalendarDay, FaSearch, FaChalkboardTeacher, FaDoorOpen } from 'react-icons/fa';
 import { MdClass } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
+import SidebarContext from '../contexts/SidebarContext';
 import '../Css/StudentPortal.css'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
@@ -25,6 +26,7 @@ const StudentPortal = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { isSidebarOpen } = useContext(SidebarContext);
   const navigate = useNavigate();
 
   const storedUser = localStorage.getItem('user');
@@ -89,7 +91,7 @@ const StudentPortal = () => {
   }
 
   return (
-  <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden">
+  <div className="relative min-h-screen flex flex-col justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden w-full">
       {/* Decorative background blobs (same as dashboard/login) */}
       <div
         aria-hidden="true"
@@ -107,24 +109,24 @@ const StudentPortal = () => {
       <div className="absolute inset-0 pointer-events-none z-0">
         <FallingBooksAnimation />
       </div>
-      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 flex-grow flex flex-col w-full py-8 relative z-10">
+  <main className={`flex-grow flex flex-col py-4 sm:py-8 relative z-10 transition-all duration-300 ${isSidebarOpen ? 'ml-12 sm:ml-16 w-[calc(100%-48px)] sm:w-[calc(100%-64px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
         {/* Header */}
         <div className="flex-shrink-0">
-          <div className="mb-8 pt-6 flex items-center gap-3">
-            <MdClass className="text-indigo-300" size={38} />
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-100">My Enrolled Classes</h1>
+          <div className="mb-4 sm:mb-8 pt-3 sm:pt-6 flex items-center gap-2 sm:gap-3">
+            <MdClass className="text-indigo-300" size={28} />
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-slate-100">My Enrolled Classes</h1>
           </div>
-          <hr className="mb-6 border-t-2 border-indigo-700" />
+          <hr className="mb-4 sm:mb-6 border-t-2 border-indigo-700" />
 
           {/* Search Bar */}
-          <div className="mb-8 flex items-center gap-2">
+          <div className="mb-4 sm:mb-8 flex items-center gap-2">
             <div className="relative w-full">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400">
-                <FaSearch size={18} />
+                <FaSearch size={16} />
               </span>
               <input
                 type="text"
-                className="w-full pl-10 pr-4 py-3 border border-slate-600 rounded-xl bg-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 shadow-sm transition"
+                className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base border border-slate-600 rounded-xl bg-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 shadow-sm transition"
                 placeholder="Search classes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
