@@ -12,7 +12,7 @@ const UserManagement = () => {
     }
     setLoading(true);
     try {
-      await axios.post(API_BASE_URL, {
+      await axios.post(`${API_BASE_URL}/users`, {
         name: newUser.name,
         email: newUser.email,
         password: newUser.password,
@@ -60,7 +60,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
   const fetchUsers = React.useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(API_BASE_URL);
+      const res = await axios.get(`${API_BASE_URL}/users`);
       setUsers(res.data);
       setError(null);
     } catch {
@@ -126,7 +126,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
           const password = namePart + lrn;
           if (!existingLRNs.includes(lrn)) {
             try {
-              await axios.post(API_BASE_URL, {
+              await axios.post(`${API_BASE_URL}/users`, {
                 name: name,
                 email: row[emailIdx],
                 password: password,
@@ -162,7 +162,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
     if (!window.confirm("Are you sure you want to delete this user?")) return;
     setLoading(true);
     try {
-      await axios.delete(`${API_BASE_URL}/${id}`);
+      await axios.delete(`${API_BASE_URL}/users/${id}`);
       fetchUsers();
       setError(null);
     } catch (err) {
