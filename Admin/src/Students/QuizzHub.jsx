@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import axios from 'axios';
 import { FaCalendarAlt, FaCheckCircle, FaTimesCircle, FaListOl, FaPlus, FaEye, FaArrowLeft, FaArrowRight, FaPen, FaSave } from 'react-icons/fa';
-import { useParams } from 'react-router-dom';
+import { useParams, NavLink } from 'react-router-dom';
+import SidebarContext from '../contexts/SidebarContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -12,6 +13,7 @@ const QuizzHub = () => {
   const [pendingQuizId, setPendingQuizId] = useState(null);
   const [startInput, setStartInput] = useState('');
   const { classId } = useParams();
+  const { isSidebarOpen } = useContext(SidebarContext);
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const studentId = user?._id;
@@ -249,9 +251,6 @@ const QuizzHub = () => {
                         // Enhanced: Detect MCQ by presence of choices (A., B., etc) even if no type, else fallback to identification
                         let answerInput = null;
                         // Detect MCQ by options/choices or by question text containing lettered choices
-                        const letterChoices = [
-                          'A. ', 'B. ', 'C. ', 'D. ', 'A.', 'B.', 'C.', 'D.'
-                        ];
                         let detectedMCQ = false;
                         let mcqChoices = null;
                         if(type==='mcq' && (q.options || q.choices)) {
@@ -260,48 +259,103 @@ const QuizzHub = () => {
                         } else if(Array.isArray(q.choices) && q.choices.length > 0) {
                           detectedMCQ = true;
                           mcqChoices = q.choices;
-                        } else if(typeof q.question === 'string' && letterChoices.some(lc => q.question.includes(lc))) {
-                          // Try to extract choices from question text
-                          const match = q.question.match(/A\.[^A-D]*B\.[^A-D]*C\.[^A-D]*D\.[^A-D]*/);
+                        } else if(Array.isArray(q.options) && q.options.length > 0) {
+                          detectedMCQ = true;
+                          mcqChoices = q.options;
+                        } else if(typeof q.question === 'string') {
+                          // More strict MCQ detection - require proper pattern with all options A-D
+                          const mcqPattern = /A\.\s*[^A-D]*B\.\s*[^A-D]*C\.\s*[^A-D]*D\.\s*/;
+                          const match = q.question.match(mcqPattern);
                           if(match) {
-                            // crude split
-                            const parts = match[0].split(/([A-D]\. )/).filter(Boolean);
-                            mcqChoices = parts.filter((p, idx) => idx % 2 === 1).map((l, idx) => l + parts[idx*2+1]);
-                            detectedMCQ = true;
+                            // Extract choices from question text
+                            const fullMatch = match[0];
+                            const choices = fullMatch.split(/[A-D]\.\s*/).filter(c => c.trim().length > 0);
+                            if(choices.length >= 4) {
+                              mcqChoices = choices.slice(0, 4).map((choice, idx) => String.fromCharCode(65 + idx) + '. ' + choice.trim());
+                              detectedMCQ = true;
+                            }
                           }
                         }
                         if(type==='true_false') {
                           answerInput = (
-                            <div className="flex flex-col gap-2 mt-2">
-                              <span className="font-semibold text-green-200 mb-1">True or False:</span>
-                              <div className="flex gap-4">
-                                <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${studentAnswers[i]==='True' ? 'bg-green-600 text-gray-100 border-green-400' : 'bg-[#181a20] text-green-100 border-green-700'}` }>
-                                  <input type="radio" name={`q${i}`} value="True" checked={studentAnswers[i]==='True'} onChange={()=>handleAnswer(i,'True')} className="accent-green-400" disabled={questionTimers[i]===0} />
-                                  <span className="font-bold">True</span>
+                            <div className="w-full mt-3 sm:mt-4">
+                              <span className="block text-green-200 font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+                                True or False:
+                              </span>
+                              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                                <label className={`flex items-center justify-center gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg cursor-pointer transition-all duration-200 border-2 flex-1 ${studentAnswers[i]==='True' ? 'bg-gradient-to-r from-green-600 to-green-700 text-white border-green-400 shadow-green-500/30' : 'bg-gradient-to-r from-[#23263a] to-[#2a2f47] text-green-100 border-gray-600/50 hover:border-green-500/70 hover:bg-gradient-to-r hover:from-green-700/20 hover:to-green-600/20'}` }>
+                                  <input 
+                                    type="radio" 
+                                    name={`q${i}`} 
+                                    value="True" 
+                                    checked={studentAnswers[i]==='True'} 
+                                    onChange={()=>handleAnswer(i,'True')} 
+                                    className="accent-green-400 w-4 h-4 sm:w-5 sm:h-5" 
+                                    disabled={questionTimers[i]===0} 
+                                  />
+                                  <span className="font-bold text-sm sm:text-base">True</span>
                                 </label>
-                                <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${studentAnswers[i]==='False' ? 'bg-red-600 text-gray-100 border-red-400' : 'bg-[#181a20] text-red-100 border-red-700'}` }>
-                                  <input type="radio" name={`q${i}`} value="False" checked={studentAnswers[i]==='False'} onChange={()=>handleAnswer(i,'False')} className="accent-red-400" disabled={questionTimers[i]===0} />
-                                  <span className="font-bold">False</span>
+                                <label className={`flex items-center justify-center gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg cursor-pointer transition-all duration-200 border-2 flex-1 ${studentAnswers[i]==='False' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-400 shadow-red-500/30' : 'bg-gradient-to-r from-[#23263a] to-[#2a2f47] text-red-100 border-gray-600/50 hover:border-red-500/70 hover:bg-gradient-to-r hover:from-red-700/20 hover:to-red-600/20'}` }>
+                                  <input 
+                                    type="radio" 
+                                    name={`q${i}`} 
+                                    value="False" 
+                                    checked={studentAnswers[i]==='False'} 
+                                    onChange={()=>handleAnswer(i,'False')} 
+                                    className="accent-red-400 w-4 h-4 sm:w-5 sm:h-5" 
+                                    disabled={questionTimers[i]===0} 
+                                  />
+                                  <span className="font-bold text-sm sm:text-base">False</span>
                                 </label>
                               </div>
                             </div>
                           );
-                        } else if(type==='identification' || (!detectedMCQ && !['mcq','true_false'].includes(type))) {
+                        } else if(detectedMCQ && mcqChoices && mcqChoices.length > 0) {
                           answerInput = (
-                            <div className="flex items-center gap-2 bg-[#181a20] border-2 border-green-700 rounded-lg px-4 py-2 shadow-md w-fit mt-2">
-                              <span className="font-semibold text-green-200 mr-2">Your Answer:</span>
-                              <input type="text" className="bg-[#23263a] text-gray-100 px-3 py-1 rounded-lg font-bold tracking-wide shadow outline-none border-none placeholder-gray-300" value={studentAnswers[i]||''} onChange={e=>handleAnswer(i,e.target.value)} placeholder="Type your answer here..." style={{minWidth:'120px'}} disabled={questionTimers[i]===0} />
+                            <div className="w-full mt-3 sm:mt-4">
+                              <div className="space-y-2 sm:space-y-3">
+                                <span className="block text-green-200 font-semibold mb-2 text-sm sm:text-base">
+                                  Choose your answer:
+                                </span>
+                                {mcqChoices.map((choice, ci) => (
+                                  <label key={ci} className={`flex items-start gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 rounded-xl shadow-lg cursor-pointer transition-all duration-200 border-2 ${studentAnswers[i]===choice ? 'bg-gradient-to-r from-green-600 to-green-700 text-white border-green-400 shadow-green-500/30' : 'bg-gradient-to-r from-[#23263a] to-[#2a2f47] text-green-100 border-gray-600/50 hover:border-green-500/70 hover:bg-gradient-to-r hover:from-green-700/20 hover:to-green-600/20'}`}>
+                                    <input 
+                                      type="radio" 
+                                      name={`q${i}`} 
+                                      value={choice} 
+                                      checked={studentAnswers[i]===choice} 
+                                      onChange={()=>handleAnswer(i,choice)} 
+                                      className="accent-green-400 mt-1 w-4 h-4 sm:w-5 sm:h-5" 
+                                      disabled={questionTimers[i]===0} 
+                                    />
+                                    <span className="font-medium text-sm sm:text-base leading-relaxed flex-1">{choice}</span>
+                                  </label>
+                                ))}
+                              </div>
                             </div>
                           );
-                        } else if(detectedMCQ && mcqChoices) {
+                        } else {
+                          // Default fallback for identification/text input questions
                           answerInput = (
-                            <div className="flex flex-col gap-1 mt-2">
-                              {mcqChoices.map((choice, ci) => (
-                                <label key={ci} className="flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all bg-[#23263a] text-green-100 hover:bg-green-700 hover:text-gray-100">
-                                  <input type="radio" name={`q${i}`} value={choice} checked={studentAnswers[i]===choice} onChange={()=>handleAnswer(i,choice)} className="accent-green-400" disabled={questionTimers[i]===0} />
-                                  <span className="font-semibold">{choice}</span>
+                            <div className="w-full mt-3 sm:mt-4">
+                              <div className="bg-gradient-to-r from-[#181a20] to-[#23263a] border-2 border-green-600/70 rounded-xl p-3 sm:p-4 shadow-lg backdrop-blur-sm">
+                                <label className="block text-green-200 font-semibold mb-2 text-sm sm:text-base">
+                                  Your Answer:
                                 </label>
-                              ))}
+                                <input 
+                                  type="text" 
+                                  className="w-full bg-[#23263a] text-gray-100 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium tracking-wide shadow-inner outline-none border-2 border-gray-600/50 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 placeholder-gray-400 transition-all duration-200 text-sm sm:text-base" 
+                                  value={studentAnswers[i]||''} 
+                                  onChange={e=>handleAnswer(i,e.target.value)} 
+                                  placeholder="Type your answer here..." 
+                                  disabled={questionTimers[i]===0}
+                                  maxLength="200"
+                                />
+                                <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
+                                  <span>{questionTimers[i] === 0 ? 'Time expired' : 'Press Tab to move to next field'}</span>
+                                  <span>{(studentAnswers[i]||'').length}/200</span>
+                                </div>
+                              </div>
                             </div>
                           );
                         }
@@ -408,21 +462,32 @@ const QuizzHub = () => {
           </div>
         </div>
       )}
-      <div className="min-h-screen bg-gradient-to-br from-[#1a223a] via-[#23263a] to-[#1e2746] p-4 sm:p-8 flex flex-col items-center">
-  <div className="w-full max-w-none mx-auto">
-          {isTeacher && (
-            <div className="flex justify-end mb-6">
-              <button className="transition bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white font-bold px-6 py-3 rounded-2xl shadow-lg text-lg focus:ring-4 focus:ring-blue-400 flex items-center gap-2" onClick={()=>setShowCreate(!showCreate)}>
-                {showCreate ? (<><FaTimesCircle className="text-white" /> Cancel</>) : (<><FaPlus className="text-white" /> Create Quiz</>)}
-              </button>
-            </div>
-          )}
-          {showCreate && (
-            <div className="mb-8">
-              {renderQuizCreation()}
-            </div>
-          )}
-          <div className="rounded-3xl shadow-2xl bg-gradient-to-br from-[#23263a] via-[#1a223a] to-[#23263a] p-8 border-4 border-indigo-900/60">
+      <div className={`min-h-screen bg-gradient-to-br from-[#1a223a] via-[#23263a] to-[#1e2746] p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+        <div className="w-full max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh] px-1 sm:px-2 md:px-4 lg:px-8">
+          <div className="mb-4 sm:mb-6 mt-2 sm:mt-4 ml-2 sm:ml-4 self-start">
+            <NavLink
+              to={`/student/class/${classId}`}
+              className="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 text-sm sm:text-base rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800 transition mb-2 sm:mb-4"
+            >
+              <FaArrowLeft className="text-xs sm:text-sm" /> <span className="hidden xs:inline sm:inline">Back to Class Menu</span><span className="xs:hidden sm:hidden">Back</span>
+            </NavLink>
+          </div>
+          <div className="bg-white/80 dark:bg-gray-900/80 rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4 md:p-8 lg:p-12 xl:p-16 border-4 sm:border-8 border-indigo-600 dark:border-indigo-800 backdrop-blur-md w-full max-w-none overflow-x-auto">
+            <h2 className="text-lg sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300 mb-3 sm:mb-4 flex items-center gap-1 sm:gap-2">
+              <FaListOl className="text-base sm:text-xl" /> <span className="hidden sm:inline">Available Quizzes</span><span className="sm:hidden">Quizzes</span>
+            </h2>
+            {isTeacher && (
+              <div className="flex justify-end mb-4 sm:mb-6">
+                <button className="transition bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-800 hover:to-indigo-900 text-white font-bold px-3 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-lg text-sm sm:text-lg focus:ring-4 focus:ring-blue-400 flex items-center gap-2" onClick={()=>setShowCreate(!showCreate)}>
+                  {showCreate ? (<><FaTimesCircle className="text-white" /> <span className="hidden sm:inline">Cancel</span></>) : (<><FaPlus className="text-white" /> <span className="hidden sm:inline">Create Quiz</span><span className="sm:hidden">Create</span></>)}
+                </button>
+              </div>
+            )}
+            {showCreate && (
+              <div className="mb-6 sm:mb-8">
+                {renderQuizCreation()}
+              </div>
+            )}
             {renderQuizList()}
           </div>
         </div>

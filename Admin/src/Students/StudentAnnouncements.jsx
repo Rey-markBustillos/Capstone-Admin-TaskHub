@@ -1,13 +1,15 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useContext } from 'react';
 import axios from 'axios';
 import { useParams, NavLink } from 'react-router-dom';
 import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, FaRegSmile, FaRegSadTear, FaRegLaughBeam, FaRegHeart, FaRegSurprise, FaArrowLeft } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
+import SidebarContext from '../contexts/SidebarContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 export default function StudentAnnouncements() {
   const { classId } = useParams();
+  const { isSidebarOpen } = useContext(SidebarContext);
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const userId = user?._id;
@@ -123,28 +125,29 @@ export default function StudentAnnouncements() {
   // ...availableReactions imported from shared constants...
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-white to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="mb-6 mt-4 ml-4">
-        <NavLink
-          to={`/student/class/${classId}`}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800 transition mb-4"
-        >
-          <FaArrowLeft /> Back to Class Menu
-        </NavLink>
-      </div>
-      {/* Header Section */}
-      <div className="shadow-md flex-shrink-0 bg-white dark:bg-gray-800">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-3">
-          <FaBullhorn className="text-indigo-600 dark:text-indigo-400" size={28} />
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">
-            Announcements
-          </h1>
+    <div className={`min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+      <div className="w-full max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh] px-1 sm:px-2 md:px-4 lg:px-8">
+        <div className="mb-4 sm:mb-6 mt-2 sm:mt-4 ml-2 sm:ml-4 self-start">
+          <NavLink
+            to={`/student/class/${classId}`}
+            className="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 text-sm sm:text-base rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800 transition mb-2 sm:mb-4"
+          >
+            <FaArrowLeft className="text-xs sm:text-sm" /> <span className="hidden xs:inline sm:inline">Back to Class Menu</span><span className="xs:hidden sm:hidden">Back</span>
+          </NavLink>
         </div>
-      </div>
+        <div className="bg-white/80 dark:bg-gray-900/80 rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4 md:p-8 lg:p-12 xl:p-16 border-4 sm:border-8 border-indigo-600 dark:border-indigo-800 backdrop-blur-md w-full max-w-none overflow-x-auto">
+          {/* Header Section */}
+          <div className="mb-4 sm:mb-6">
+            <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-2 sm:gap-3">
+              <FaBullhorn className="text-base sm:text-xl lg:text-2xl" />
+              <span className="hidden sm:inline">Announcements</span>
+              <span className="sm:hidden">News</span>
+            </h1>
+          </div>
 
-      {/* Main Content - Scrollable Area */}
-      <div className={`flex-grow overflow-y-auto transition-all duration-300 ${viewersInfo.isOpen ? 'blur-sm pointer-events-none' : ''}`}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Main Content - Scrollable Area */}
+          <div className={`transition-all duration-300 ${viewersInfo.isOpen ? 'blur-sm pointer-events-none' : ''}`}>
+            <div className="max-h-[60vh] overflow-y-auto">
           {loading ? (
             <div className="flex flex-col items-center justify-center min-h-[40vh]">
               <FaBullhorn className="animate-bounce text-indigo-400 mb-4" size={48} />
@@ -310,6 +313,8 @@ export default function StudentAnnouncements() {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }
