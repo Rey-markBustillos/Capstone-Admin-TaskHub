@@ -18,6 +18,9 @@ export default function CreateQuizz() {
   const [subLoading, setSubLoading] = useState(false);
   const [subError, setSubError] = useState('');
   const [showSubModal, setShowSubModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+  const [expandedQuestions, setExpandedQuestions] = useState({});
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Fetch quizzes created by this teacher for this class
   useEffect(() => {
@@ -44,6 +47,7 @@ export default function CreateQuizz() {
       for (const quiz of createdQuizzes) {
         try {
           const res = await axios.get(`${API_BASE_URL}/quizzes/${quiz._id}/submissions`);
+          console.log('[DEBUG] Submissions data for quiz:', quiz._id, res.data);
           results[quiz._id] = res.data || [];
         } catch {
           results[quiz._id] = [];
@@ -54,6 +58,21 @@ export default function CreateQuizz() {
     };
     fetchAll();
   }, [createdQuizzes]);
+
+  // Handle clicks outside dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const [moduleText, setModuleText] = useState('');
   const [count, setCount] = useState(5);
   const [questions, setQuestions] = useState([]);
@@ -70,6 +89,7 @@ export default function CreateQuizz() {
   // const [showCreatedQuizzes, setShowCreatedQuizzes] = useState(false);
   // const [showSubmissions, setShowSubmissions] = useState(false);
   const bounceRef = useRef();
+  const dropdownRef = useRef();
 
   // Fetch quizzes created by this teacher for this class
   // useEffect(() => {
@@ -90,14 +110,124 @@ export default function CreateQuizz() {
   //   fetchCreatedQuizzes();
   // }, [classId, teacherId, selectedQuizId]);
 
-  // Handle file upload (doc/pdf to text, MVP: just read text)
+  // Handle file upload - supports multiple file types with AI processing
   const handleFileChange = async (e) => {
-    const f = e.target.files[0];
-    if (f && f.type.startsWith('text/')) {
-      const text = await f.text();
-      setModuleText(text);
-    } else {
-      alert('Only text files supported for MVP.');
+    const file = e.target.files[0];
+    if (!file) return;
+
+    console.log('[DEBUG] File upload started:', file.name, file.type, file.size);
+
+    console.log('[DEBUG] File upload started:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: new Date(file.lastModified)
+    });
+
+    const allowedTypes = [
+      'text/plain',
+      'application/pdf',
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/msword', // .doc
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+      'application/vnd.ms-powerpoint' // .ppt
+    ];
+
+    // Also check file extension as backup
+    const fileExtension = file.name.toLowerCase().split('.').pop();
+    const allowedExtensions = ['txt', 'pdf', 'jpg', 'jpeg', 'png', 'docx', 'doc', 'pptx', 'ppt'];
+
+    console.log('[DEBUG] File validation:', {
+      extension: fileExtension,
+      mimeType: file.type,
+      extensionAllowed: allowedExtensions.includes(fileExtension),
+      mimeTypeAllowed: allowedTypes.includes(file.type)
+    });
+
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      alert(`File type not supported. Please upload: ${allowedExtensions.join(', ')} files`);
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) { // 50MB limit
+      alert('File size too large. Maximum size is 50MB.');
+      e.target.value = '';
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (file.type === 'text/plain' || fileExtension === 'txt') {
+        // Handle text files directly
+        console.log('[DEBUG] Processing text file directly');
+        const text = await file.text();
+        console.log('[DEBUG] Text file content length:', text.length);
+        setModuleText(text);
+        alert(`Text file loaded successfully! ${text.length} characters imported.`);
+      } else {
+        // Handle other file types using backend AI processing
+        console.log('[DEBUG] Sending file to backend for processing');
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Debug FormData
+        console.log('[DEBUG] FormData contents:');
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}:`, value);
+        }
+
+        console.log('[DEBUG] Making request to:', `${API_BASE_URL}/files/extract-text`);
+
+        const response = await axios.post(`${API_BASE_URL}/files/extract-text`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          timeout: 300000, // 5 minutes
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log('[DEBUG] Upload progress:', percentCompleted + '%');
+          }
+        });
+
+        console.log('[DEBUG] Server response:', response.data);
+
+        if (response.data && response.data.text) {
+          setModuleText(response.data.text);
+          alert(`File content extracted successfully! Extracted ${response.data.text.length} characters from your ${response.data.originalFileName}.`);
+        } else {
+          throw new Error('Failed to extract text from file');
+        }
+      }
+    } catch (error) {
+      console.error('[DEBUG] File processing error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      });
+      
+      let errorMessage = 'Failed to process file. Please try again or use a different file.';
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'File processing timed out. Please try a smaller file or convert to text format.';
+      } else if (error.response?.status === 413) {
+        errorMessage = 'File too large. Please try a smaller file (max 50MB).';
+      } else if (error.response?.status === 400) {
+        errorMessage = `File processing error: ${error.response.data.message || 'Invalid file format'}`;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+      e.target.value = ''; // Reset file input
     }
   };
 
@@ -190,6 +320,129 @@ export default function CreateQuizz() {
     }
   };
 
+  // Delete quiz function
+  const handleDeleteQuiz = async (quizId) => {
+    if (!confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API_BASE_URL}/quizzes/${quizId}`);
+      // Remove the deleted quiz from the local state
+      setCreatedQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz._id !== quizId));
+      // Also remove submissions for this quiz
+      setSubmissionsByQuiz(prevSubs => {
+        const newSubs = { ...prevSubs };
+        delete newSubs[quizId];
+        return newSubs;
+      });
+      alert('Quiz deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting quiz:', error);
+      alert('Failed to delete quiz. Please try again.');
+    }
+  };
+
+  // Calculate quiz analytics
+  const calculateQuizAnalytics = () => {
+    const analytics = [];
+    
+    createdQuizzes.forEach(quiz => {
+      const submissions = submissionsByQuiz[quiz._id] || [];
+      if (submissions.length === 0) return;
+      
+      const questionAnalytics = [];
+      
+      // Analyze each question
+      quiz.questions?.forEach((question, qIndex) => {
+        let correctCount = 0;
+        let incorrectCount = 0;
+        const incorrectAnswers = [];
+        const studentResponses = []; // Track individual student responses
+        
+        submissions.forEach(submission => {
+          const studentAnswer = submission.answers?.find(a => a.questionIndex === qIndex);
+          const studentName = submission.studentId?.name || submission.student?.name || submission.studentName || 'Unknown Student';
+          const studentEmail = submission.studentId?.email || submission.student?.email || submission.studentEmail || 'N/A';
+          
+          if (studentAnswer && studentAnswer.answer !== undefined) {
+            const correct = String(question.answer).trim().toLowerCase();
+            const submitted = String(studentAnswer.answer).trim().toLowerCase();
+            const isCorrect = submitted === correct;
+            
+            if (isCorrect) {
+              correctCount++;
+            } else {
+              incorrectCount++;
+              incorrectAnswers.push(studentAnswer.answer);
+            }
+            
+            // Track individual student response
+            studentResponses.push({
+              studentName,
+              studentEmail,
+              answer: studentAnswer.answer,
+              isCorrect,
+              submissionId: submission._id
+            });
+          } else {
+            incorrectCount++; // Count no answer as incorrect
+            studentResponses.push({
+              studentName,
+              studentEmail,
+              answer: 'No Answer',
+              isCorrect: false,
+              submissionId: submission._id
+            });
+          }
+        });
+        
+        const totalAttempts = correctCount + incorrectCount;
+        const difficultyPercentage = totalAttempts > 0 ? Math.round((incorrectCount / totalAttempts) * 100) : 0;
+        const successPercentage = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 0;
+        
+        // Find most common wrong answers
+        const wrongAnswerCounts = {};
+        incorrectAnswers.forEach(answer => {
+          const key = String(answer).trim();
+          wrongAnswerCounts[key] = (wrongAnswerCounts[key] || 0) + 1;
+        });
+        
+        const commonWrongAnswers = Object.entries(wrongAnswerCounts)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 3)
+          .map(([answer, count]) => ({ answer, count }));
+        
+        // Separate correct and incorrect students
+        const correctStudents = studentResponses.filter(r => r.isCorrect);
+        const incorrectStudents = studentResponses.filter(r => !r.isCorrect);
+        
+        questionAnalytics.push({
+          questionIndex: qIndex,
+          question: question.question,
+          correctAnswer: question.answer,
+          totalAttempts,
+          correctCount,
+          incorrectCount,
+          difficultyPercentage,
+          successPercentage,
+          commonWrongAnswers,
+          correctStudents,
+          incorrectStudents,
+          allStudentResponses: studentResponses
+        });
+      });
+      
+      analytics.push({
+        quiz,
+        totalSubmissions: submissions.length,
+        questionAnalytics
+      });
+    });
+    
+    return analytics;
+  };
+
   // Save Quiz Button outside main box, only visible if questions.length > 0, with bounce animation (force re-trigger on questions change)
   useEffect(() => {
     if (questions.length > 0 && bounceRef.current) {
@@ -202,24 +455,66 @@ export default function CreateQuizz() {
 
   // Wrap the whole return in a single centered div
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-[#181a20] via-[#23263a] to-[#1e2746] py-10">
-      {/* View All Submissions button at the top */}
-      <div className="w-full flex justify-end max-w-[90vw] xl:max-w-[1600px] mb-6">
-        <button
-          className="bg-gradient-to-r from-green-700 to-blue-800 hover:from-green-800 hover:to-blue-900 text-white px-8 py-3 rounded-2xl font-bold shadow border-2 border-green-400 hover:border-blue-500 transition"
-          onClick={() => setShowSubModal(true)}
-        >
-          View All Submissions
-        </button>
+    <div className="flex flex-col items-center justify-start min-h-screen bg-gradient-to-br from-[#181a20] via-[#23263a] to-[#1e2746] py-4 sm:py-6 lg:py-10 px-2 sm:px-4">{/* Improved responsive padding */}
+      {/* Quiz Actions Dropdown at the top */}
+      <div className="w-full flex justify-center sm:justify-end max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] mb-4 sm:mb-6 relative">
+        <div className="relative" ref={dropdownRef}>
+          <button
+            className="bg-gradient-to-r from-indigo-700 to-purple-800 hover:from-indigo-800 hover:to-purple-900 text-white px-6 sm:px-8 py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg border-2 border-indigo-400 hover:border-purple-500 transition-all duration-200 flex items-center gap-2 text-sm sm:text-base"
+            onClick={() => setShowDropdown(!showDropdown)}
+          >
+            Quiz Actions
+            <svg className={`w-5 h-5 transition-transform ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          
+          {showDropdown && (
+            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto mt-2 w-full sm:w-64 bg-gradient-to-br from-indigo-900 to-purple-900 rounded-xl shadow-2xl border-2 border-indigo-500 z-50">
+              <div className="py-2">
+                <button
+                  className="w-full px-4 sm:px-6 py-3 text-left text-white hover:bg-purple-800/50 transition-colors flex items-center gap-3 text-sm sm:text-base"
+                  onClick={() => {
+                    setShowAnalyticsModal(true);
+                    setShowDropdown(false);
+                  }}
+                >
+                  <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
+                  <div>
+                    <div className="font-semibold">Quiz Analytics</div>
+                    <div className="text-sm text-indigo-300">View performance insights</div>
+                  </div>
+                </button>
+                <button
+                  className="w-full px-4 sm:px-6 py-3 text-left text-white hover:bg-green-800/50 transition-colors flex items-center gap-3 text-sm sm:text-base"
+                  onClick={() => {
+                    setShowSubModal(true);
+                    setShowDropdown(false);
+                  }}
+                >
+                  <svg className="w-5 h-5 text-green-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <div>
+                    <div className="font-semibold">View All Submissions</div>
+                    <div className="text-sm text-green-300">Student quiz responses</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="w-full max-w-[90vw] xl:max-w-[1600px] p-0 sm:p-10 bg-gradient-to-br from-[#181a20] via-[#23263a] to-[#1e2746] rounded-3xl shadow-2xl border-4 border-indigo-900 overflow-hidden max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-700 scrollbar-track-[#23263a] relative">
-        <div className="bg-gradient-to-r from-indigo-900 to-blue-900 px-8 py-6 flex flex-col sm:flex-row sm:items-center gap-4 border-b-4 border-indigo-800 shadow-lg justify-center">
-          <h2 className="text-3xl font-extrabold text-white drop-shadow-lg tracking-wide flex items-center gap-3 justify-center">
+      <div className="w-full max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] p-2 sm:p-6 lg:p-10 bg-gradient-to-br from-[#181a20] via-[#23263a] to-[#1e2746] rounded-xl sm:rounded-3xl shadow-2xl border-2 sm:border-4 border-indigo-900 overflow-hidden max-h-[85vh] sm:max-h-[88vh] lg:max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-500 hover:scrollbar-thumb-indigo-400 scrollbar-track-indigo-900/30 relative scroll-smooth">
+        <div className="bg-gradient-to-r from-indigo-900 to-blue-900 px-4 sm:px-8 py-4 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-4 border-b-2 sm:border-b-4 border-indigo-800 shadow-lg justify-center sticky top-0 z-10">{/* Made header sticky */}
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white drop-shadow-lg tracking-wide flex items-center gap-3 justify-center">
             <svg className="w-10 h-10 text-green-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v1.5m9 0v1.5m0-1.5h-9m9 0a2.25 2.25 0 012.25 2.25v8.25A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V9a2.25 2.25 0 012.25-2.25h9z" /></svg>
             Quiz Generator
           </h2>
         </div>
-        <div className="px-8 py-6">
+        <div className="px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-20 sm:pb-24 min-h-full">{/* Enhanced responsive padding with more bottom space */}
         <h3 className="text-xl font-bold mb-2 text-indigo-200 flex items-center gap-2">
           <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
           Module Upload / Paste
@@ -227,8 +522,8 @@ export default function CreateQuizz() {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <label className="flex items-center gap-2 cursor-pointer bg-[#23263a] hover:bg-[#23263a]/80 border-2 border-indigo-900 px-4 py-2 rounded-lg shadow-md transition group">
             <FaUpload className="text-indigo-300 group-hover:text-green-400 transition" />
-            <input type="file" accept=".txt" className="hidden" onChange={handleFileChange} />
-            <span className="font-medium text-indigo-200 group-hover:text-green-400 transition">Upload file</span>
+            <input type="file" accept=".txt,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.pdf" className="hidden" onChange={handleFileChange} />
+            <span className="font-medium text-indigo-200 group-hover:text-green-400 transition">Upload file (TXT, DOCX, JPG, PNG, PPT, PDF)</span>
           </label>
           <label className="flex-1 flex items-start gap-2">
             <FaPaste className="mt-2 text-indigo-400" />
@@ -478,22 +773,52 @@ export default function CreateQuizz() {
         )}
         {/* Created Quizzes and Student Submissions Section */}
         {questions.length === 0 && (
-          <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4 text-indigo-200">Your Quizzes</h2>
+          <div className="mt-6 sm:mt-8 mb-12 sm:mb-16">{/* Enhanced responsive margins */}
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-indigo-200">Your Quizzes</h2>
             {subLoading ? (
-              <div className="text-indigo-300">Loading quizzes and submissions...</div>
+              <div className="text-indigo-300 p-4 bg-indigo-900/20 rounded-lg animate-pulse">Loading quizzes and submissions...</div>
             ) : createdQuizzes.length === 0 ? (
-              <div className="bg-[#23263a] rounded-lg p-4 shadow-md">
-                <p className="text-indigo-300">No quizzes created yet. Generate a quiz using the module text.</p>
+              <div className="bg-[#23263a] rounded-lg p-6 sm:p-8 shadow-lg border border-indigo-800/50">
+                <p className="text-indigo-300 text-center">No quizzes created yet. Generate a quiz using the module text.</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-8">
+              <div className="space-y-4 sm:space-y-6">{/* Improved spacing using space-y */}
                 {createdQuizzes.map(quiz => (
-                  <div key={quiz._id} className="bg-[#23263a] rounded-lg p-4 shadow-md">
-                    <div className="mb-2">
-                      <span className="font-bold text-lg text-indigo-100">{quiz.title}</span>
-                      <span className="ml-4 text-indigo-300 text-sm">Due: {quiz.dueDate ? new Date(quiz.dueDate).toLocaleString() : 'N/A'}</span>
-                      <div className="text-indigo-200 text-sm">{quiz.questions?.length || 0} Questions</div>
+                  <div key={quiz._id} className="bg-gradient-to-r from-[#23263a] to-[#2a2f45] rounded-xl p-4 sm:p-6 shadow-lg border border-indigo-700/30 hover:border-indigo-600/50 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+                    <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center gap-4">
+                      <div className="flex-1 min-w-0 space-y-2">{/* Added space-y for better vertical spacing */}
+                        <div className="font-bold text-lg sm:text-xl text-indigo-100 break-words leading-tight">{quiz.title}</div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                          <div className="text-indigo-300 text-sm bg-indigo-900/30 px-3 py-1 rounded-full inline-flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Due: {quiz.dueDate ? new Date(quiz.dueDate).toLocaleString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric', 
+                              hour: 'numeric', 
+                              minute: '2-digit',
+                              hour12: true 
+                            }) : 'N/A'}
+                          </div>
+                          <div className="text-indigo-200 text-sm bg-blue-900/30 px-3 py-1 rounded-full inline-flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {quiz.questions?.length || 0} Questions
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteQuiz(quiz._id)}
+                        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-2 sm:px-3 sm:py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 shrink-0 w-full sm:w-auto shadow-lg hover:shadow-xl transform hover:scale-105"
+                        title="Delete Quiz"
+                      >
+                        <FaTrash className="text-xs" />
+                        <span className="sm:hidden">Delete Quiz</span>{/* Show full text on mobile */}
+                        <span className="hidden sm:inline">Delete</span>{/* Show short text on desktop */}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -506,9 +831,9 @@ export default function CreateQuizz() {
         {/* Submissions Modal - all quizzes */}
         {showSubModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl p-8 shadow-2xl w-full max-w-4xl border-4 border-indigo-500 animate-fadeIn pointer-events-auto relative">
+            <div className="bg-gradient-to-br from-green-900 to-blue-900 rounded-2xl p-8 shadow-2xl w-full max-w-4xl border-4 border-green-500 animate-fadeIn pointer-events-auto relative">
               <button
-                className="absolute top-4 right-4 text-indigo-200 hover:text-white text-2xl font-bold focus:outline-none"
+                className="absolute top-4 right-4 text-green-200 hover:text-white text-2xl font-bold focus:outline-none"
                 onClick={() => setShowSubModal(false)}
               >
                 ×
@@ -516,28 +841,28 @@ export default function CreateQuizz() {
               <h2 className="text-2xl font-extrabold text-white mb-4">All Student Submissions</h2>
               <div className="overflow-x-auto max-h-[70vh]">
                 {createdQuizzes.length === 0 ? (
-                  <div className="text-indigo-300">No quizzes created yet.</div>
+                  <div className="text-green-300">No quizzes created yet.</div>
                 ) : (
                   createdQuizzes.map(quiz => (
                     <div key={quiz._id} className="mb-8">
-                      <div className="font-bold text-lg text-indigo-100 mb-2">{quiz.title}</div>
-                      <table className="min-w-full text-indigo-100 text-sm border border-indigo-800 rounded-lg mb-2">
+                      <div className="font-bold text-lg text-green-100 mb-2">{quiz.title}</div>
+                      <table className="min-w-full text-green-100 text-sm border border-green-600 rounded-lg mb-2">
                         <thead>
-                          <tr className="bg-indigo-900 text-indigo-100">
-                            <th className="px-3 py-2 border-b border-indigo-800">Student Name</th>
-                            <th className="px-3 py-2 border-b border-indigo-800">Student Email</th>
-                            <th className="px-3 py-2 border-b border-indigo-800">Score</th>
-                            <th className="px-3 py-2 border-b border-indigo-800">Submitted At</th>
+                          <tr className="bg-gradient-to-r from-green-800 to-blue-800 text-white">
+                            <th className="px-3 py-2 border-b border-green-600">Student Name</th>
+                            <th className="px-3 py-2 border-b border-green-600">Student Email</th>
+                            <th className="px-3 py-2 border-b border-green-600">Score</th>
+                            <th className="px-3 py-2 border-b border-green-600">Submitted At</th>
                           </tr>
                         </thead>
                         <tbody>
                           {(submissionsByQuiz[quiz._id] || []).length === 0 ? (
-                            <tr><td colSpan="4" className="text-indigo-400 text-center py-3">No submissions yet.</td></tr>
+                            <tr><td colSpan="4" className="text-green-400 text-center py-3">No submissions yet.</td></tr>
                           ) : (
                             submissionsByQuiz[quiz._id].map((sub, i) => (
-                              <tr key={sub._id || i} className="border-b border-indigo-800">
-                                <td className="px-3 py-2">{sub.student?.name || sub.studentName || 'N/A'}</td>
-                                <td className="px-3 py-2">{sub.student?.email || sub.studentEmail || 'N/A'}</td>
+                              <tr key={sub._id || i} className="border-b border-green-700 hover:bg-green-800/20 transition-colors">
+                                <td className="px-3 py-2">{sub.studentId?.name || sub.student?.name || sub.studentName || 'N/A'}</td>
+                                <td className="px-3 py-2">{sub.studentId?.email || sub.student?.email || sub.studentEmail || 'N/A'}</td>
                                 <td className="px-3 py-2">{typeof sub.score === 'number' ? sub.score : 'N/A'}</td>
                                 <td className="px-3 py-2">{sub.submittedAt ? new Date(sub.submittedAt).toLocaleString() : (sub.createdAt ? new Date(sub.createdAt).toLocaleString() : 'N/A')}</td>
                               </tr>
@@ -548,6 +873,207 @@ export default function CreateQuizz() {
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Modal */}
+        {showAnalyticsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-gradient-to-br from-purple-900 to-pink-900 rounded-2xl p-8 shadow-2xl w-full max-w-6xl border-4 border-purple-500 animate-fadeIn pointer-events-auto relative max-h-[90vh] overflow-y-auto">
+              <button
+                className="absolute top-4 right-4 text-purple-200 hover:text-white text-2xl font-bold focus:outline-none"
+                onClick={() => setShowAnalyticsModal(false)}
+              >
+                ×
+              </button>
+              <h2 className="text-2xl font-extrabold text-white mb-6 flex items-center gap-3">
+                <svg className="w-8 h-8 text-purple-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Quiz Analytics Dashboard
+              </h2>
+              <div className="space-y-8">
+                {(() => {
+                  const analytics = calculateQuizAnalytics();
+                  if (analytics.length === 0) {
+                    return (
+                      <div className="text-purple-300 text-center py-8">
+                        No quiz data available for analytics. Students need to submit quizzes first.
+                      </div>
+                    );
+                  }
+                  return analytics.map(({ quiz, totalSubmissions, questionAnalytics }) => (
+                    <div key={quiz._id} className="bg-purple-800/30 rounded-xl p-6 border border-purple-600">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold text-purple-100">{quiz.title}</h3>
+                        <span className="bg-purple-700 text-purple-100 px-3 py-1 rounded-full text-sm">
+                          {totalSubmissions} submissions
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Overall Stats */}
+                        <div className="bg-purple-900/50 rounded-lg p-4">
+                          <h4 className="text-lg font-semibold text-purple-200 mb-3">Overall Performance</h4>
+                          <div className="space-y-2">
+                            {(() => {
+                              const avgDifficulty = questionAnalytics.reduce((sum, q) => sum + q.difficultyPercentage, 0) / questionAnalytics.length;
+                              const avgSuccess = questionAnalytics.reduce((sum, q) => sum + q.successPercentage, 0) / questionAnalytics.length;
+                              return (
+                                <>
+                                  <div className="flex justify-between">
+                                    <span className="text-purple-300">Average Success Rate:</span>
+                                    <span className="text-green-400 font-bold">{Math.round(avgSuccess)}%</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-purple-300">Average Difficulty:</span>
+                                    <span className="text-red-400 font-bold">{Math.round(avgDifficulty)}%</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-purple-300">Total Questions:</span>
+                                    <span className="text-purple-200 font-bold">{questionAnalytics.length}</span>
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
+
+                        {/* Difficult Questions */}
+                        <div className="bg-purple-900/50 rounded-lg p-4">
+                          <h4 className="text-lg font-semibold text-purple-200 mb-3">Most Difficult Questions</h4>
+                          <div className="space-y-3">
+                            {questionAnalytics
+                              .sort((a, b) => b.difficultyPercentage - a.difficultyPercentage)
+                              .slice(0, 3)
+                              .map((q) => (
+                                <div key={q.questionIndex} className="border-l-4 border-red-500 pl-3">
+                                  <div className="text-sm text-purple-200">Question {q.questionIndex + 1}</div>
+                                  <div className="text-red-400 font-bold">{q.difficultyPercentage}% incorrect</div>
+                                  <div className="text-xs text-purple-300 truncate">{q.question}</div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Detailed Question Analysis */}
+                      <div className="mt-6">
+                        <h4 className="text-lg font-semibold text-purple-200 mb-4">Question-by-Question Analysis</h4>
+                        <div className="space-y-4">
+                          {questionAnalytics.map(q => {
+                            const questionKey = `${quiz._id}-${q.questionIndex}`;
+                            const isExpanded = expandedQuestions[questionKey];
+                            
+                            return (
+                              <div key={q.questionIndex} className="bg-purple-900/30 rounded-lg p-4 border border-purple-700">
+                                <div className="flex justify-between items-start mb-3">
+                                  <div className="flex-1">
+                                    <div className="font-semibold text-purple-100">Q{q.questionIndex + 1}: {q.question}</div>
+                                    <div className="text-sm text-purple-300 mt-1">Correct Answer: {String(q.correctAnswer)}</div>
+                                  </div>
+                                  <div className="text-right ml-4">
+                                    <div className={`text-lg font-bold ${q.difficultyPercentage > 50 ? 'text-red-400' : q.difficultyPercentage > 25 ? 'text-yellow-400' : 'text-green-400'}`}>
+                                      {q.successPercentage}% correct
+                                    </div>
+                                    <div className="text-sm text-purple-300">{q.totalAttempts} attempts</div>
+                                  </div>
+                                </div>
+                                
+                                {/* Progress bar */}
+                                <div className="w-full bg-purple-800 rounded-full h-3 mb-3">
+                                  <div 
+                                    className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500"
+                                    style={{ width: `${q.successPercentage}%` }}
+                                  ></div>
+                                </div>
+                                
+                                {/* Common wrong answers */}
+                                {q.commonWrongAnswers.length > 0 && (
+                                  <div className="mt-3">
+                                    <div className="text-sm font-semibold text-purple-200 mb-2">Common Wrong Answers:</div>
+                                    <div className="flex flex-wrap gap-2">
+                                      {q.commonWrongAnswers.map((wrong, idx) => (
+                                        <span key={idx} className="bg-red-900/50 text-red-200 px-2 py-1 rounded text-xs border border-red-700">
+                                          "{wrong.answer}" ({wrong.count}x)
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {/* Toggle button for student details */}
+                                <div className="mt-4">
+                                  <button
+                                    onClick={() => setExpandedQuestions(prev => ({
+                                      ...prev,
+                                      [questionKey]: !prev[questionKey]
+                                    }))}
+                                    className="bg-purple-700 hover:bg-purple-600 text-purple-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                                  >
+                                    <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                    {isExpanded ? 'Hide' : 'Show'} Student Responses ({q.allStudentResponses.length})
+                                  </button>
+                                </div>
+                                
+                                {/* Expandable student responses */}
+                                {isExpanded && (
+                                  <div className="mt-4 space-y-4">
+                                    {/* Correct answers section */}
+                                    {q.correctStudents.length > 0 && (
+                                      <div className="bg-green-900/20 rounded-lg p-4 border border-green-700">
+                                        <h5 className="text-green-300 font-semibold mb-3 flex items-center gap-2">
+                                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                                          </svg>
+                                          Correct Answers ({q.correctStudents.length})
+                                        </h5>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                          {q.correctStudents.map((student, idx) => (
+                                            <div key={idx} className="bg-green-800/30 rounded p-3 border border-green-600">
+                                              <div className="font-medium text-green-100">{student.studentName}</div>
+                                              <div className="text-sm text-green-300">{student.studentEmail}</div>
+                                              <div className="text-sm text-green-200 mt-1">Answer: "{student.answer}"</div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Incorrect answers section */}
+                                    {q.incorrectStudents.length > 0 && (
+                                      <div className="bg-red-900/20 rounded-lg p-4 border border-red-700">
+                                        <h5 className="text-red-300 font-semibold mb-3 flex items-center gap-2">
+                                          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                          </svg>
+                                          Incorrect Answers ({q.incorrectStudents.length})
+                                        </h5>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                          {q.incorrectStudents.map((student, idx) => (
+                                            <div key={idx} className="bg-red-800/30 rounded p-3 border border-red-600">
+                                              <div className="font-medium text-red-100">{student.studentName}</div>
+                                              <div className="text-sm text-red-300">{student.studentEmail}</div>
+                                              <div className="text-sm text-red-200 mt-1">Answer: "{student.answer}"</div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           </div>

@@ -16,6 +16,7 @@ const announcementRoutes = require('./routes/announcementRoutes');
 const scheduleRoutes = require('./routes/schedule');
 const attendanceRoutes = require('./routes/AttendanceRoutes');
 const quizRoutes = require('./routes/quizRoutes');
+const fileRoutes = require('./routes/fileRoutes');
 
 // ADD: Import submission routes
 const submissionRoutes = require('./routes/submissionRoutes');
@@ -45,6 +46,14 @@ app.use(
 );
 app.use(express.json());
 
+// Add timeout middleware for file uploads
+app.use('/api/file', (req, res, next) => {
+  // Set timeout to 5 minutes for file uploads
+  req.setTimeout(300000); // 5 minutes
+  res.setTimeout(300000); // 5 minutes
+  next();
+});
+
 // Ensure uploads folder exists
 const uploadDirActivities = path.join(__dirname, 'uploads', 'activities');
 if (!fs.existsSync(uploadDirActivities)) {
@@ -56,6 +65,12 @@ const uploadDirSubmissions = path.join(__dirname, 'uploads', 'submissions');
 if (!fs.existsSync(uploadDirSubmissions)) {
   fs.mkdirSync(uploadDirSubmissions, { recursive: true });
   console.log('Created uploads/submissions directory');
+}
+
+const uploadDirTemp = path.join(__dirname, 'uploads', 'temp');
+if (!fs.existsSync(uploadDirTemp)) {
+  fs.mkdirSync(uploadDirTemp, { recursive: true });
+  console.log('Created uploads/temp directory');
 }
 
 // Serve static uploads folder
@@ -77,6 +92,9 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/quizzes', quizRoutes);
+console.log('[DEBUG] Mounting /api/files routes...');
+app.use('/api/files', fileRoutes);
+console.log('[DEBUG] Mounted /api/files routes.');
 // ADD: Mount submission routes (for /api/submissions/student/:studentId)
 app.use('/api/submissions', submissionRoutes);
 

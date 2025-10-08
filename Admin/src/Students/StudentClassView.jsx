@@ -102,6 +102,16 @@ const StudentClassView = () => {
   }, [classId, componentMap]);
   const [error, setError] = useState(null);
 
+  // Function to convert 24-hour format to 12-hour format with AM/PM
+  const formatTime = (time24) => {
+    if (!time24) return '';
+    const [hours, minutes] = time24.split(':');
+    const hour24 = parseInt(hours, 10);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const ampm = hour24 >= 12 ? 'PM' : 'AM';
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
   useEffect(() => {
     const fetchClassDetails = async () => {
       try {
@@ -163,9 +173,9 @@ const StudentClassView = () => {
         </div>
       )}
       {selectedClass && (
-  <div className="relative bg-gradient-to-r from-indigo-900 via-indigo-700 to-purple-900 text-white px-2 py-0.5 text-base flex flex-col sm:flex-row sm:flex-wrap justify-start sm:justify-between items-start sm:items-center gap-0.5 sm:gap-1 shadow-xl border-b-4 border-indigo-900 overflow-hidden transition-all duration-[3000ms] animate-fade-in-down max-w-full" style={{animationDelay:'0.05s', animationDuration:'3s'}}>
+  <div className="relative bg-gradient-to-r from-indigo-900 via-indigo-700 to-purple-900 text-white px-2 sm:px-4 py-2 sm:py-3 md:py-4 text-base flex flex-col justify-start items-start gap-1 sm:gap-2 shadow-xl border-b-4 border-indigo-900 overflow-hidden transition-all duration-[3000ms] animate-fade-in-down max-w-full min-h-[80px] sm:min-h-[100px] md:min-h-[120px]" style={{animationDelay:'0.05s', animationDuration:'3s'}}>
           {/* Decorative blob or icon on the right */}
-          <div className="hidden sm:block absolute right-0 top-0 h-full w-60 pointer-events-none select-none z-0">
+          <div className="hidden sm:block absolute right-0 top-0 h-full w-40 sm:w-50 md:w-60 pointer-events-none select-none z-0">
             {/* Main dark blob */}
             <svg viewBox="0 0 160 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-full w-full">
               <ellipse cx="120" cy="50" rx="60" ry="40" fill="url(#darkgrad1)" />
@@ -177,7 +187,7 @@ const StudentClassView = () => {
               </defs>
             </svg>
             {/* Soft blurred glow */}
-            <div className="absolute top-8 right-10 w-24 h-24 rounded-full bg-pink-400 opacity-30 blur-2xl"></div>
+            <div className="absolute top-4 sm:top-6 md:top-8 right-6 sm:right-8 md:right-10 w-16 sm:w-20 md:w-24 h-16 sm:h-20 md:h-24 rounded-full bg-pink-400 opacity-30 blur-2xl"></div>
             {/* Extra accent ring */}
             <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute top-2 right-16 w-10 h-10 opacity-30">
               <circle cx="25" cy="25" r="20" stroke="#f472b6" strokeWidth="4" fill="none" />
@@ -211,29 +221,36 @@ const StudentClassView = () => {
             </svg>
           </div>
           {/* Welcome message */}
-          <div className={`w-full mb-2 flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 md:pl-4 lg:pl-8 overflow-hidden ${isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12'}`}>
-            <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-1.5 sm:p-2 md:p-3 rounded-full shadow-lg ring-2 ring-yellow-200/40 flex items-center justify-center flex-shrink-0">
-              <FaBullhorn className="text-white text-sm sm:text-lg md:text-2xl" />
+          <div className={`w-full flex items-center gap-1 sm:gap-2 pl-1 sm:pl-2 md:pl-4 overflow-hidden relative z-10 ${isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12'}`}>
+            <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-1 sm:p-1.5 rounded-full shadow-lg ring-1 ring-yellow-200/40 flex items-center justify-center flex-shrink-0">
+              <FaBullhorn className="text-white text-xs sm:text-sm" />
             </span>
-            <span className="text-sm sm:text-lg md:text-xl lg:text-2xl font-extrabold tracking-wide drop-shadow truncate">Welcome <span className="text-yellow-200">{getStudentName()}</span> to <span className="text-yellow-200">{selectedClass.className}</span>!</span>
+            <span className="text-xs sm:text-sm md:text-base font-bold tracking-wide drop-shadow truncate">Welcome <span className="text-yellow-200">{getStudentName()}</span> to <span className="text-yellow-200">{selectedClass.className}</span>!</span>
           </div>
-          <div className={`flex flex-col gap-1 sm:gap-2 md:gap-4 mt-2 relative overflow-hidden max-w-full transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 pl-1 sm:pl-2 md:pl-4 lg:pl-12' : 'ml-10 sm:ml-12 pl-1 sm:pl-2 md:pl-4 lg:pl-8'}`}>
-            {/* Decorative dark glassy background */}
-            <div className="absolute inset-0 -z-1 rounded-2xl bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 backdrop-blur-md shadow-2xl border border-indigo-900/40" style={{filter:'blur(0.5px)'}} />
-            <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-lg bg-white/10 shadow-inner relative z-10 text-xs sm:text-sm md:text-base">
-              <FaChalkboardTeacher className="text-yellow-300 text-sm sm:text-base md:text-lg flex-shrink-0" />
-              <span className="font-semibold text-yellow-100 drop-shadow whitespace-nowrap">Teacher:</span>
-              <span className="font-bold text-white truncate">{selectedClass.teacherName || (selectedClass.teacher && selectedClass.teacher.name) || 'N/A'}</span>
+          <div className={`flex flex-col gap-0.5 sm:gap-1 relative overflow-hidden max-w-full transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 pl-1 sm:pl-2 md:pl-4' : 'ml-10 sm:ml-12 pl-1 sm:pl-2 md:pl-4'}`}>
+            <div className="flex items-center gap-1 sm:gap-2 px-1 py-0.5 relative z-10 text-xs sm:text-sm">
+              <FaChalkboardTeacher className="text-yellow-300 text-xs sm:text-sm flex-shrink-0" />
+              <span className="font-medium text-yellow-100 whitespace-nowrap">Teacher:</span>
+              <span className="font-semibold text-white truncate">{selectedClass.teacherName || (selectedClass.teacher && selectedClass.teacher.name) || 'N/A'}</span>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-lg bg-white/10 shadow-inner relative z-10 text-xs sm:text-sm md:text-base">
-              <FaClock className="text-blue-300 text-sm sm:text-base md:text-lg flex-shrink-0" />
-              <span className="font-semibold text-blue-100 drop-shadow whitespace-nowrap">Schedule:</span>
-              <span className="font-bold text-white truncate">{selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}</span>
+            <div className="flex items-center gap-1 sm:gap-2 px-1 py-0.5 relative z-10 text-xs sm:text-sm">
+              <FaClock className="text-blue-300 text-xs sm:text-sm flex-shrink-0" />
+              <span className="font-medium text-blue-100 whitespace-nowrap">Schedule:</span>
+              <span className="font-semibold text-white truncate">
+                {selectedClass.day && selectedClass.time 
+                  ? `${selectedClass.day} at ${formatTime(selectedClass.time)}` 
+                  : selectedClass.day 
+                    ? selectedClass.day 
+                    : selectedClass.time 
+                      ? formatTime(selectedClass.time)
+                      : 'TBA'
+                }
+              </span>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-lg bg-white/10 shadow-inner relative z-10 text-xs sm:text-sm md:text-base">
-              <FaDoorOpen className="text-pink-300 text-sm sm:text-base md:text-lg flex-shrink-0" />
-              <span className="font-semibold text-pink-100 drop-shadow whitespace-nowrap">Room:</span>
-              <span className="font-bold text-white truncate">{selectedClass.roomNumber || 'N/A'}</span>
+            <div className="flex items-center gap-1 sm:gap-2 px-1 py-0.5 relative z-10 text-xs sm:text-sm">
+              <FaDoorOpen className="text-pink-300 text-xs sm:text-sm flex-shrink-0" />
+              <span className="font-medium text-pink-100 whitespace-nowrap">Room:</span>
+              <span className="font-semibold text-white truncate">{selectedClass.roomNumber || 'N/A'}</span>
             </div>
           </div>
         </div>

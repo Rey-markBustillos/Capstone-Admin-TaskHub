@@ -185,7 +185,7 @@ const QuizzHub = () => {
           // Check if student has already taken this quiz
           const alreadyTaken = Array.isArray(qz.submissions) && qz.submissions.some(sub => sub.studentId === studentId);
           return (
-            <div key={qz._id || idx} className="mb-6 p-4 bg-white/80 dark:bg-gray-900/80 rounded-xl shadow-lg w-full max-w-none">
+            <div key={qz._id || idx} className="mb-6 p-4 rounded-xl shadow-lg w-full max-w-none" style={{ backgroundColor: "#393E46" }}>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
                 <div>
                   <div className="font-bold text-lg text-gray-100">{qz.title}</div>
@@ -230,16 +230,17 @@ const QuizzHub = () => {
               </div>
             {/* Render questions if this quiz is active and not showing score */}
             {activeQuizId === qz._id && !showScore && (
-              <form onSubmit={e=>{e.preventDefault();submitQuiz(qz._id);}}>
-                {qz.questions && qz.questions.length > 0 && (
-                  <div>
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-lg text-gray-100 drop-shadow mb-2" style={{textShadow:'0 1px 4px #23263a'}}>
-                          {currentQuestion+1}. {qz.questions[currentQuestion].question}
-                        </span>
-                        <span className="text-red-300 font-bold text-lg bg-[#23263a] px-3 py-1 rounded-lg shadow">Time left: {questionTimers[currentQuestion]}s</span>
-                      </div>
+              <div className="mt-4 p-4 sm:p-6 bg-gradient-to-br from-amber-100 via-orange-50 to-yellow-100 dark:from-amber-900/40 dark:via-orange-900/30 dark:to-yellow-900/40 rounded-xl shadow-lg border-2 border-amber-300/50 dark:border-amber-600/50">
+                <form onSubmit={e=>{e.preventDefault();submitQuiz(qz._id);}}>
+                  {qz.questions && qz.questions.length > 0 && (
+                    <div>
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-lg text-amber-900 dark:text-amber-100 drop-shadow mb-2" style={{textShadow:'0 1px 4px rgba(0,0,0,0.3)'}}>
+                            {currentQuestion+1}. {qz.questions[currentQuestion].question}
+                          </span>
+                          <span className="text-red-700 dark:text-red-300 font-bold text-lg bg-amber-200 dark:bg-amber-800 px-3 py-1 rounded-lg shadow">Time left: {questionTimers[currentQuestion]}s</span>
+                        </div>
                       {/* Render answer input for current question only */}
                       {(() => {
                         const q = qz.questions[currentQuestion];
@@ -279,11 +280,11 @@ const QuizzHub = () => {
                         if(type==='true_false') {
                           answerInput = (
                             <div className="w-full mt-3 sm:mt-4">
-                              <span className="block text-green-200 font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
+                              <span className="block text-amber-800 dark:text-amber-200 font-semibold mb-3 sm:mb-4 text-sm sm:text-base">
                                 True or False:
                               </span>
                               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                                <label className={`flex items-center justify-center gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg cursor-pointer transition-all duration-200 border-2 flex-1 ${studentAnswers[i]==='True' ? 'bg-gradient-to-r from-green-600 to-green-700 text-white border-green-400 shadow-green-500/30' : 'bg-gradient-to-r from-[#23263a] to-[#2a2f47] text-green-100 border-gray-600/50 hover:border-green-500/70 hover:bg-gradient-to-r hover:from-green-700/20 hover:to-green-600/20'}` }>
+                                <label className={`flex items-center justify-center gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg cursor-pointer transition-all duration-200 border-2 flex-1 ${studentAnswers[i]==='True' ? 'bg-gradient-to-r from-green-500 to-green-600 text-white border-green-400 shadow-green-500/30' : 'bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-800/60 dark:to-orange-800/60 text-amber-900 dark:text-amber-100 border-amber-400/70 hover:border-green-500/70 hover:bg-gradient-to-r hover:from-green-200/30 hover:to-green-100/30'}` }>
                                   <input 
                                     type="radio" 
                                     name={`q${i}`} 
@@ -295,7 +296,7 @@ const QuizzHub = () => {
                                   />
                                   <span className="font-bold text-sm sm:text-base">True</span>
                                 </label>
-                                <label className={`flex items-center justify-center gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg cursor-pointer transition-all duration-200 border-2 flex-1 ${studentAnswers[i]==='False' ? 'bg-gradient-to-r from-red-600 to-red-700 text-white border-red-400 shadow-red-500/30' : 'bg-gradient-to-r from-[#23263a] to-[#2a2f47] text-red-100 border-gray-600/50 hover:border-red-500/70 hover:bg-gradient-to-r hover:from-red-700/20 hover:to-red-600/20'}` }>
+                                <label className={`flex items-center justify-center gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg cursor-pointer transition-all duration-200 border-2 flex-1 ${studentAnswers[i]==='False' ? 'bg-gradient-to-r from-red-500 to-red-600 text-white border-red-400 shadow-red-500/30' : 'bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-800/60 dark:to-orange-800/60 text-amber-900 dark:text-amber-100 border-amber-400/70 hover:border-red-500/70 hover:bg-gradient-to-r hover:from-red-200/30 hover:to-red-100/30'}` }>
                                   <input 
                                     type="radio" 
                                     name={`q${i}`} 
@@ -314,11 +315,11 @@ const QuizzHub = () => {
                           answerInput = (
                             <div className="w-full mt-3 sm:mt-4">
                               <div className="space-y-2 sm:space-y-3">
-                                <span className="block text-green-200 font-semibold mb-2 text-sm sm:text-base">
+                                <span className="block text-amber-800 dark:text-amber-200 font-semibold mb-2 text-sm sm:text-base">
                                   Choose your answer:
                                 </span>
                                 {mcqChoices.map((choice, ci) => (
-                                  <label key={ci} className={`flex items-start gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 rounded-xl shadow-lg cursor-pointer transition-all duration-200 border-2 ${studentAnswers[i]===choice ? 'bg-gradient-to-r from-green-600 to-green-700 text-white border-green-400 shadow-green-500/30' : 'bg-gradient-to-r from-[#23263a] to-[#2a2f47] text-green-100 border-gray-600/50 hover:border-green-500/70 hover:bg-gradient-to-r hover:from-green-700/20 hover:to-green-600/20'}`}>
+                                  <label key={ci} className={`flex items-start gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 rounded-xl shadow-lg cursor-pointer transition-all duration-200 border-2 ${studentAnswers[i]===choice ? 'bg-gradient-to-r from-green-500 to-green-600 text-white border-green-400 shadow-green-500/30' : 'bg-gradient-to-r from-amber-200 to-orange-200 dark:from-amber-800/60 dark:to-orange-800/60 text-amber-900 dark:text-amber-100 border-amber-400/70 hover:border-green-500/70 hover:bg-gradient-to-r hover:from-green-200/30 hover:to-green-100/30'}`}>
                                     <input 
                                       type="radio" 
                                       name={`q${i}`} 
@@ -338,21 +339,29 @@ const QuizzHub = () => {
                           // Default fallback for identification/text input questions
                           answerInput = (
                             <div className="w-full mt-3 sm:mt-4">
-                              <div className="bg-gradient-to-r from-[#181a20] to-[#23263a] border-2 border-green-600/70 rounded-xl p-3 sm:p-4 shadow-lg backdrop-blur-sm">
-                                <label className="block text-green-200 font-semibold mb-2 text-sm sm:text-base">
+                              <div className="bg-gradient-to-r from-amber-100 via-orange-100 to-yellow-100 dark:bg-orange-500 border-2 border-amber-400/70 dark:border-amber-500/70 rounded-xl p-3 sm:p-4 shadow-lg backdrop-blur-sm">
+                                <label className="block text-amber-800 dark:text-amber-200 font-semibold mb-2 text-sm sm:text-base">
                                   Your Answer:
                                 </label>
                                 <input 
                                   type="text" 
-                                  className="w-full bg-[#23263a] text-gray-100 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium tracking-wide shadow-inner outline-none border-2 border-gray-600/50 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 placeholder-gray-400 transition-all duration-200 text-sm sm:text-base" 
+                                  className="w-full bg-amber-50 dark:bg-amber-900/50 text-amber-900 dark:text-amber-100 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium tracking-wide shadow-inner outline-none border-2 border-amber-300/50 dark:border-amber-600/50 focus:border-amber-500 dark:focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30 placeholder-amber-600 dark:placeholder-amber-400 transition-all duration-200 text-sm sm:text-base" 
                                   value={studentAnswers[i]||''} 
                                   onChange={e=>handleAnswer(i,e.target.value)} 
-                                  placeholder="Type your answer here..." 
+                                  placeholder="Type your answer here (case insensitive)..." 
                                   disabled={questionTimers[i]===0}
                                   maxLength="200"
+                                  title="Case doesn't matter - EDEN, eden, and Eden are all correct"
                                 />
-                                <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
-                                  <span>{questionTimers[i] === 0 ? 'Time expired' : 'Press Tab to move to next field'}</span>
+                                <div className="flex justify-between items-center mt-2 text-xs text-amber-700 dark:text-amber-300">
+                                  <span>
+                                    {questionTimers[i] === 0 ? 'Time expired' : (
+                                      <span className="flex items-center gap-1">
+                                        <span className="text-amber-600 dark:text-amber-400">💡</span>
+                                        <span>Case doesn't matter (EDEN = eden = Eden)</span>
+                                      </span>
+                                    )}
+                                  </span>
                                   <span>{(studentAnswers[i]||'').length}/200</span>
                                 </div>
                               </div>
@@ -377,7 +386,8 @@ const QuizzHub = () => {
                     </div>
                   </div>
                 )}
-              </form>
+                </form>
+              </div>
             )}
             {/* Show score if submitted for this quiz */}
             {activeQuizId === qz._id && showScore && (

@@ -222,9 +222,14 @@ exports.updateQuiz = async (req, res) => {
 exports.deleteQuiz = async (req, res) => {
   try {
     const { quizId } = req.params;
+    
+    // Delete the quiz and all related submissions
     await Quiz.findByIdAndDelete(quizId);
-    res.json({ message: 'Quiz deleted' });
+    await QuizSubmission.deleteMany({ quizId });
+    
+    res.json({ message: 'Quiz and related submissions deleted successfully' });
   } catch (err) {
+    console.error('[ERROR] deleteQuiz failed:', err);
     res.status(500).json({ message: err.message });
   }
 };

@@ -1,0 +1,20 @@
+This is a test document for quiz generation.
+
+Chapter 1: Introduction to Programming
+Programming is the process of creating instructions for computers to follow. Key concepts include:
+- Variables: Store data values
+- Functions: Reusable blocks of code
+- Loops: Repeat code multiple times
+- Conditionals: Make decisions in code
+
+Chapter 2: Data Types
+Common data types include:
+1. Strings - Text data
+2. Numbers - Numeric values
+3. Booleans - True/false values
+4. Arrays - Lists of items
+
+Practice Questions:
+What is a variable?
+How do you create a loop?
+What are the main data types?
