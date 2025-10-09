@@ -26,9 +26,15 @@ dotenv.config();
 console.log('GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'Loaded' : 'Missing');
 
 // Connect to MongoDB
-connectDB().catch((err) => {
-  console.error('MongoDB connection failed:', err);
-  process.exit(1);
+connectDB().then((connected) => {
+  if (connected) {
+    console.log('Database: MongoDB connected - using full database functionality');
+  } else {
+    console.log('Database: Running in fallback mode with mock data');
+  }
+}).catch((err) => {
+  console.error('Database connection error:', err);
+  console.log('Continuing in fallback mode...');
 });
 
 const app = express();
@@ -39,6 +45,8 @@ app.use(
     origin: [
       'https://taskhub-for-als.netlify.app', // Netlify frontend
       'http://localhost:5173', // allow local dev too
+      'http://localhost:5174', // Vite alternate port
+      'http://localhost:5175', // Vite alternate port 2
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true
@@ -65,6 +73,13 @@ const uploadDirSubmissions = path.join(__dirname, 'uploads', 'submissions');
 if (!fs.existsSync(uploadDirSubmissions)) {
   fs.mkdirSync(uploadDirSubmissions, { recursive: true });
   console.log('Created uploads/submissions directory');
+}
+
+// Ensure profiles folder exists
+const uploadDirProfiles = path.join(__dirname, 'uploads', 'profiles');
+if (!fs.existsSync(uploadDirProfiles)) {
+  fs.mkdirSync(uploadDirProfiles, { recursive: true });
+  console.log('Created uploads/profiles directory');
 }
 
 const uploadDirTemp = path.join(__dirname, 'uploads', 'temp');

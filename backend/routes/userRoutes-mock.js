@@ -11,7 +11,7 @@ const {
   loginUser,
   uploadProfile,
   getProfileImage,
-} = require('../controllers/userController');
+} = require('../controllers/userController-mock');
 
 // Get all users
 router.get('/', getUsers);

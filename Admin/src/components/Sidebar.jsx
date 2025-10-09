@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import TeacherAdminProfileAvatar from './TeacherAdminProfileAvatar';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -128,7 +128,7 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
         <div className={`flex flex-col items-center ${borderClass} border-b ${isOpen ? 'px-2 sm:px-4' : 'px-1 sm:px-2'} py-2 sm:py-4 md:py-6`}>
           {isOpen && (
             <>
-              {/* Student profile upload and preview at the very top */}
+              {/* Profile upload section at the very top */}
               <span className="flex items-center gap-1 sm:gap-2 text-sm sm:text-lg md:text-2xl font-extrabold text-violet-700 tracking-tight drop-shadow mb-1 sm:mb-2">
                 <img
                   src="/taskhublogos.png"
@@ -139,7 +139,22 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
                 <span className="hidden sm:inline">TaskHub</span>
                 <span className="sm:hidden text-xs">TH</span>
               </span>
+              
+              {/* Profile sections - consistent layout for all roles */}
               {role === 'student' && <StudentProfileAvatar />}
+              {(role === 'teacher' || role === 'admin') && (
+                <TeacherAdminProfileAvatar 
+                  currentUser={(() => {
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    console.log('Sidebar passing user to TeacherAdminProfileAvatar:', user);
+                    return user;
+                  })()} 
+                  onProfileUpdate={() => {
+                    // Force re-render by reloading (optional)
+                    console.log('Profile updated callback triggered');
+                  }}
+                />
+              )}
             </>
           )}
         </div>

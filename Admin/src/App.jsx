@@ -4,6 +4,7 @@ import { SidebarProvider } from './contexts/SidebarContext';
 
 // Import Components
 import Sidebar from './components/Sidebar';
+import PWAStatus from './components/PWAStatus';
 import AdminDashboard from './pages/dashboard';
 import UserManagement from './pages/UserManagement';
 import ClassManagement from './pages/ClassManagement';
@@ -165,14 +166,16 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<RedirectIfLoggedIn user={user}><LandingPage onContinue={() => navigate('/login')} /></RedirectIfLoggedIn>} />
-      <Route path="/login" element={<RedirectIfLoggedIn user={user}><Login onLoginSuccess={handleLoginSuccess} onBack={() => navigate('/')} /></RedirectIfLoggedIn>} />
-      <Route path="/unauthorized" element={<div className="flex justify-center items-center h-screen"><h1 className="text-2xl">Unauthorized Access</h1></div>} />
+    <>
+      <PWAStatus />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<RedirectIfLoggedIn user={user}><LandingPage onContinue={() => navigate('/login')} /></RedirectIfLoggedIn>} />
+        <Route path="/login" element={<RedirectIfLoggedIn user={user}><Login onLoginSuccess={handleLoginSuccess} onBack={() => navigate('/')} /></RedirectIfLoggedIn>} />
+        <Route path="/unauthorized" element={<div className="flex justify-center items-center h-screen"><h1 className="text-2xl">Unauthorized Access</h1></div>} />
 
-      {/* Admin Routes */}
-      <Route element={<ProtectedRoute user={user} requiredRole="admin"><ProtectedLayout user={user} onLogout={handleLogout} /></ProtectedRoute>}>
+        {/* Admin Routes */}
+        <Route element={<ProtectedRoute user={user} requiredRole="admin"><ProtectedLayout user={user} onLogout={handleLogout} /></ProtectedRoute>}>
         <Route path="/admindashboard" element={<AdminDashboard />} />
         <Route path="/usermanagement" element={<UserManagement />} />
         <Route path="/classmanagement" element={<ClassManagement />} />
@@ -217,5 +220,6 @@ export default function App() {
           '/studentdashboard'
         } replace /> : <Navigate to="/login" replace />} />
     </Routes>
+    </>
   );
 }

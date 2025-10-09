@@ -1,0 +1,92 @@
+{
+  "name": "TaskHub - Educational Management System",
+  "short_name": "TaskHub",
+  "description": "Complete educational management system for students, teachers, and administrators",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1b2e",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["education", "productivity", "tools"],
+  "icons": [
+    {
+      "src": "/taskhublogos.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/taskhublogos.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/taskhublogos.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "/taskhublogos.png",
+      "sizes": "96x96", 
+      "type": "image/png"
+    },
+    {
+      "src": "/taskhublogos.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/taskhublogos.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/taskhublogos.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "TaskHub Dashboard"
+    },
+    {
+      "src": "/taskhublogos.png", 
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "TaskHub Mobile View"
+    }
+  ],
+  "features": [
+    "Cross Platform",
+    "Background Sync", 
+    "Offline Support",
+    "Push Notifications"
+  ],
+  "shortcuts": [
+    {
+      "name": "Student Portal",
+      "short_name": "Student",
+      "description": "Access student dashboard and activities",
+      "url": "/student",
+      "icons": [{ "src": "/taskhublogos.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Teacher Portal", 
+      "short_name": "Teacher",
+      "description": "Access teacher dashboard and quiz creation",
+      "url": "/teacher",
+      "icons": [{ "src": "/taskhublogos.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Admin Portal",
+      "short_name": "Admin", 
+      "description": "Access admin dashboard and user management",
+      "url": "/admin",
+      "icons": [{ "src": "/taskhublogos.png", "sizes": "96x96" }]
+    }
+  ]
+}

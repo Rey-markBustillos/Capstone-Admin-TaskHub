@@ -10,6 +10,7 @@ const UserSchema = new mongoose.Schema({
   teacherId: { type: String, default: null },
   adminId: { type: String, default: null },
   active: { type: Boolean, default: true },
+  profileImage: { type: String, default: null }, // Profile image URL
    // studentId removed, use lrn instead
 });
 

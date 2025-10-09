@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+import PWAInstallPrompt from './PWAInstallPrompt';
 import {
   FaBullhorn,
   FaPlusSquare,
@@ -93,6 +94,9 @@ const Navbar = ({ selectedClass }) => {
           >
             <FaUsers className="mr-2 text-yellow-200 text-lg animate-pulse" /> Student List
           </Link>
+          
+          {/* PWA Install Button */}
+          <PWAInstallPrompt />
         </div>
 
         {/* Mobile Menu Button */}
