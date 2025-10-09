@@ -85,6 +85,7 @@ export default function CreateQuizz() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [questionTime, setQuestionTime] = useState(30);
+  // const [isProcessingFile, setIsProcessingFile] = useState(false);
   // const [selectedQuizId, setSelectedQuizId] = useState(null);
   // const [showCreatedQuizzes, setShowCreatedQuizzes] = useState(false);
   // const [showSubmissions, setShowSubmissions] = useState(false);
@@ -110,42 +111,31 @@ export default function CreateQuizz() {
   //   fetchCreatedQuizzes();
   // }, [classId, teacherId, selectedQuizId]);
 
-  // Handle file upload - supports multiple file types with AI processing
+  // Handle file upload - only supports text files for simplicity
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    console.log('[DEBUG] File upload started:', file.name, file.type, file.size);
-
     console.log('[DEBUG] File upload started:', {
       name: file.name,
       type: file.type,
-      size: file.size,
-      lastModified: new Date(file.lastModified)
+      size: file.size
     });
 
+    // Support multiple file types for educational content
     const allowedTypes = [
-      'text/plain',
-      'application/pdf',
-      'image/jpeg',
+      'text/plain', // .txt
+      'application/pdf', // .pdf
+      'image/jpeg', // .jpg
       'image/jpg', 
-      'image/png',
+      'image/png', // .png
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
       'application/msword', // .doc
       'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
       'application/vnd.ms-powerpoint' // .ppt
     ];
-
-    // Also check file extension as backup
     const fileExtension = file.name.toLowerCase().split('.').pop();
     const allowedExtensions = ['txt', 'pdf', 'jpg', 'jpeg', 'png', 'docx', 'doc', 'pptx', 'ppt'];
-
-    console.log('[DEBUG] File validation:', {
-      extension: fileExtension,
-      mimeType: file.type,
-      extensionAllowed: allowedExtensions.includes(fileExtension),
-      mimeTypeAllowed: allowedTypes.includes(file.type)
-    });
 
     if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
       alert(`File type not supported. Please upload: ${allowedExtensions.join(', ')} files`);
@@ -153,13 +143,14 @@ export default function CreateQuizz() {
       return;
     }
 
-    if (file.size > 50 * 1024 * 1024) { // 50MB limit
+    if (file.size > 50 * 1024 * 1024) { // 50MB limit for all file types
       alert('File size too large. Maximum size is 50MB.');
       e.target.value = '';
       return;
     }
 
-    setLoading(true);
+    // setIsProcessingFile(true);
+
     try {
       if (file.type === 'text/plain' || fileExtension === 'txt') {
         // Handle text files directly
@@ -226,7 +217,7 @@ export default function CreateQuizz() {
       
       alert(errorMessage);
     } finally {
-      setLoading(false);
+      // setIsProcessingFile(false);
       e.target.value = ''; // Reset file input
     }
   };
@@ -522,8 +513,8 @@ export default function CreateQuizz() {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <label className="flex items-center gap-2 cursor-pointer bg-[#23263a] hover:bg-[#23263a]/80 border-2 border-indigo-900 px-4 py-2 rounded-lg shadow-md transition group">
             <FaUpload className="text-indigo-300 group-hover:text-green-400 transition" />
-            <input type="file" accept=".txt,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.pdf" className="hidden" onChange={handleFileChange} />
-            <span className="font-medium text-indigo-200 group-hover:text-green-400 transition">Upload file (TXT, DOCX, JPG, PNG, PPT, PDF)</span>
+            <input type="file" accept=".txt,.pdf,.jpg,.jpeg,.png,.docx,.doc,.pptx,.ppt" className="hidden" onChange={handleFileChange} />
+            <span className="font-medium text-indigo-200 group-hover:text-green-400 transition">Upload file</span>
           </label>
           <label className="flex-1 flex items-start gap-2">
             <FaPaste className="mt-2 text-indigo-400" />

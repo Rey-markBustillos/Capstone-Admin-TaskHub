@@ -35,11 +35,15 @@ exports.extractTextFromFile = async (req, res) => {
     const model = genAI.getGenerativeModel({ model: 'models/gemini-2.0-flash' });
 
     try {
-      if (fileType === 'text/plain') {
-        // Handle text files directly
+      // Handle different file types with appropriate processing
+      if (fileType === 'text/plain' || filePath.endsWith('.txt')) {
+        console.log(`[DEBUG] Processing text file: ${fileName}`);
         extractedText = await fs.readFile(filePath, 'utf8');
+        console.log(`[DEBUG] Successfully read text file. Length: ${extractedText.length} characters`);
+        
       } else if (fileType.startsWith('image/')) {
         // Handle image files (JPG, PNG) using Gemini Vision
+        console.log(`[DEBUG] Processing image file: ${fileName}`);
         const imageData = await fs.readFile(filePath);
         const base64Image = imageData.toString('base64');
         
@@ -61,41 +65,130 @@ exports.extractTextFromFile = async (req, res) => {
         console.log(`[DEBUG] Extracted text from image: ${extractedText.substring(0, 100)}...`);
         
       } else if (fileType.includes('pdf')) {
-        // For PDF files, we'll use AI to extract text
-        // Note: For production, consider using specialized PDF libraries like pdf-parse
-        const fileBuffer = await fs.readFile(filePath);
-        const base64File = fileBuffer.toString('base64');
+        // For PDF files, use AI to attempt text extraction
+        console.log(`[DEBUG] PDF file detected: ${fileName}`);
         
-        const prompt = "This is a PDF document. Extract all the text content from it, maintaining the structure and organization. Include headings, paragraphs, lists, and any other textual content.";
-        
-        // Note: Gemini might not directly process PDF. In production, use pdf-parse or similar
-        extractedText = "PDF processing requires specialized libraries. Please convert to text or image format.";
-        
-      } else if (fileType.includes('word') || fileType.includes('document')) {
-        // For DOCX files, provide helpful guidance
-        console.log(`[DEBUG] Word document detected: ${fileName}`);
-        
-        extractedText = `This is a Word document file (${req.file.originalname}).
+        try {
+          const fileBuffer = await fs.readFile(filePath);
+          const base64File = fileBuffer.toString('base64');
+          
+          const prompt = "This is a PDF document. Extract ALL text content from it. Include:\n- All headings, titles, and subtitles\n- All paragraphs and body text\n- Bullet points and numbered lists\n- Any tables or structured content\n- Page numbers and headers/footers if relevant\n\nOrganize the text in logical reading order and preserve the document structure. If there are multiple pages, separate them clearly.";
+          
+          // Try to process with Gemini AI
+          const result = await model.generateContent([
+            prompt,
+            {
+              inlineData: {
+                mimeType: fileType,
+                data: base64File
+              }
+            }
+          ]);
+          
+          const response = await result.response;
+          extractedText = response.text();
+          
+          if (!extractedText || extractedText.trim().length === 0) {
+            throw new Error('No text extracted from PDF');
+          }
+          
+          console.log(`[DEBUG] Successfully extracted text from PDF: ${extractedText.substring(0, 100)}...`);
+          
+        } catch (pdfError) {
+          console.warn(`[WARN] PDF processing failed: ${pdfError.message}`);
+          extractedText = `Unable to automatically extract text from this PDF file (${req.file.originalname}). 
 
-For best results with quiz generation, please:
-1. Copy and paste the text content directly into the text area below
+For best results, please:
+1. Copy text directly from the PDF and paste it below
+2. Take screenshots of PDF pages and upload as images (JPG/PNG)
+3. Use a PDF to text converter tool
+
+The AI can read text from images of PDF pages very accurately.`;
+        }
+        
+      } else if (fileType.includes('presentation') || fileType.includes('powerpoint') || filePath.toLowerCase().endsWith('.ppt') || filePath.toLowerCase().endsWith('.pptx')) {
+        // For PPT/PPTX files, use AI to attempt text extraction - CHECK THIS FIRST
+        console.log(`[DEBUG] PowerPoint file detected: ${fileName} (${fileType})`);
+        
+        try {
+          const fileBuffer = await fs.readFile(filePath);
+          const base64File = fileBuffer.toString('base64');
+          
+          const prompt = "This is a Microsoft PowerPoint presentation. Extract ALL text content from all slides. Include:\n- Slide titles and headings\n- All bullet points and text content\n- Speaker notes if present\n- Any text from charts or diagrams\n- Slide numbers if relevant\n\nOrganize by slide and preserve the presentation structure. Clearly separate each slide's content.";
+          
+          // Try to process with Gemini AI
+          const result = await model.generateContent([
+            prompt,
+            {
+              inlineData: {
+                mimeType: fileType,
+                data: base64File
+              }
+            }
+          ]);
+          
+          const response = await result.response;
+          extractedText = response.text();
+          
+          if (!extractedText || extractedText.trim().length === 0) {
+            throw new Error('No text extracted from PowerPoint');
+          }
+          
+          console.log(`[DEBUG] Successfully extracted text from PowerPoint: ${extractedText.substring(0, 100)}...`);
+          
+        } catch (pptError) {
+          console.warn(`[WARN] PowerPoint processing failed: ${pptError.message}`);
+          extractedText = `Unable to automatically extract text from this PowerPoint presentation (${req.file.originalname}). 
+
+For best results, please:
+1. Convert your slides to images (JPG/PNG) and upload them
+2. Copy and paste the text content directly below
+3. Export individual slides as images and upload them one by one
+
+The AI excels at extracting text from images of slides, including titles, bullet points, and any text content.`;
+        }
+        
+      } else if ((fileType.includes('word') || fileType.includes('wordprocessingml')) && !fileType.includes('presentation') || filePath.toLowerCase().endsWith('.doc') || filePath.toLowerCase().endsWith('.docx')) {
+        // For DOCX files, use AI to attempt text extraction  
+        console.log(`[DEBUG] Word document detected: ${fileName} (${fileType})`);
+        
+        try {
+          const fileBuffer = await fs.readFile(filePath);
+          const base64File = fileBuffer.toString('base64');
+          
+          const prompt = "This is a Microsoft Word document. Extract ALL text content from it. Include:\n- All headings, titles, and subtitles\n- All paragraphs and body text\n- Bullet points and numbered lists\n- Any tables or structured content\n- Headers and footers if present\n\nOrganize the text in logical reading order and preserve the document structure.";
+          
+          // Try to process with Gemini AI
+          const result = await model.generateContent([
+            prompt,
+            {
+              inlineData: {
+                mimeType: fileType,
+                data: base64File
+              }
+            }
+          ]);
+          
+          const response = await result.response;
+          extractedText = response.text();
+          
+          if (!extractedText || extractedText.trim().length === 0) {
+            throw new Error('No text extracted from Word document');
+          }
+          
+          console.log(`[DEBUG] Successfully extracted text from Word document: ${extractedText.substring(0, 100)}...`);
+          
+        } catch (docError) {
+          console.warn(`[WARN] Word document processing failed: ${docError.message}`);
+          extractedText = `Unable to automatically extract text from this Word document (${req.file.originalname}). 
+
+For best results, please:
+1. Copy and paste the text content directly below
 2. Take screenshots of document pages and upload as images (JPG/PNG)
 3. Export the document as PDF and try uploading that
 
 The AI works excellently with plain text or images of document pages.`;
-        
-      } else if (fileType.includes('presentation') || fileType.includes('powerpoint')) {
-        // For PPT/PPTX files, provide helpful guidance
-        console.log(`[DEBUG] PowerPoint file detected: ${fileName}`);
-        
-        extractedText = `This is a PowerPoint presentation file (${req.file.originalname}). 
-
-For best results with quiz generation, please:
-1. Convert your slides to images (JPG/PNG) and upload them - the AI can read text from slide images very accurately
-2. Copy and paste the text content directly into the text area below
-3. Export individual slides as images and upload them one by one
-
-The AI excels at extracting text from images of slides, including titles, bullet points, and any text content.`;
+        }
         
       } else {
         throw new Error('Unsupported file type for text extraction');

@@ -29,13 +29,13 @@ const upload = multer({
   fileFilter: function (req, file, cb) {
     console.log(`[DEBUG] File upload attempt: ${file.originalname}, type: ${file.mimetype}`);
     
-    // Check file types - be more permissive with MIME types
+    // Support multiple file types for educational content
     const allowedTypes = [
-      'text/plain',
-      'application/pdf',
-      'image/jpeg',
+      'text/plain', // .txt
+      'application/pdf', // .pdf
+      'image/jpeg', // .jpg
       'image/jpg', 
-      'image/png',
+      'image/png', // .png
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
       'application/msword', // .doc
       'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
@@ -55,7 +55,7 @@ const upload = multer({
       cb(null, true);
     } else {
       console.log(`[ERROR] Unsupported file type: ${file.mimetype} / ${fileExtension}`);
-      cb(new Error(`Unsupported file type: ${file.mimetype}. Please upload JPG, PNG, TXT, DOCX, PPT, PPTX, or PDF files.`), false);
+      cb(new Error(`Unsupported file type. Please upload TXT, PDF, JPG, PNG, DOCX, DOC, PPTX, or PPT files.`), false);
     }
   }
 });
