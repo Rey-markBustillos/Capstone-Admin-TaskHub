@@ -51,12 +51,10 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 exports.generateQuiz = async (req, res) => {
   // Load Gemini API key at runtime
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-  console.log('[DEBUG] GEMINI_API_KEY (raw):', process.env.GEMINI_API_KEY);
   if (!GEMINI_API_KEY) {
     console.error('[ERROR] No GEMINI_API_KEY found in environment variables.');
     return res.status(500).json({ message: 'No GEMINI_API_KEY found in environment variables.' });
   }
-  console.log('[DEBUG] /api/quizzes/generate called', { body: req.body });
   const { count = 3, moduleText, quizType } = req.body;
   // Batching logic: max 10 per API call for reliability
   const batchSize = 10;
@@ -82,7 +80,6 @@ exports.generateQuiz = async (req, res) => {
     try {
       let questions = [];
       // Gemini SDK call
-      console.log(`[DEBUG] [Batch ${i+1}/${numBatches}] Using Gemini SDK`);
       const result = await model.generateContent(prompt);
       const response = await result.response;
       let text = response.text().trim();
@@ -177,7 +174,6 @@ exports.getQuizzesByClass = async (req, res) => {
   try {
     const { classId } = req.params;
     const { studentId } = req.query;
-    console.log('[DEBUG] getQuizzesByClass called with classId:', classId, 'studentId:', studentId);
     if (!classId || !ObjectId.isValid(classId)) {
       console.error('[ERROR] Invalid classId parameter:', classId);
       return res.status(400).json({ message: 'Invalid classId parameter.' });
@@ -239,7 +235,6 @@ exports.getQuizSubmissions = async (req, res) => {
   try {
     const { quizId } = req.params;
     const submissions = await QuizSubmission.find({ quizId }).populate('studentId', 'name email');
-    console.log('[DEBUG] Returning quiz submissions:', submissions.map(s => ({ id: s._id, student: s.studentId, score: s.score, submittedAt: s.submittedAt })));
     res.json(submissions);
   } catch (err) {
     console.error('[ERROR] getQuizSubmissions:', err);

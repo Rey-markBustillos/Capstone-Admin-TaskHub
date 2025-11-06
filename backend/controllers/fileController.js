@@ -4,14 +4,8 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Extract text from various file types using AI
 exports.extractTextFromFile = async (req, res) => {
-  console.log('[DEBUG] File upload endpoint hit');
-  console.log('[DEBUG] Request headers:', req.headers);
-  console.log('[DEBUG] Request method:', req.method);
-  
   try {
-    console.log('[DEBUG] Checking if file exists in request...');
     if (!req.file) {
-      console.error('[ERROR] No file found in request');
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
@@ -19,15 +13,11 @@ exports.extractTextFromFile = async (req, res) => {
     const fileType = req.file.mimetype;
     const fileName = req.file.filename;
 
-    console.log(`[DEBUG] Processing file: ${fileName}, type: ${fileType}, path: ${filePath}`);
-    console.log(`[DEBUG] File size: ${req.file.size} bytes`);
-
     let extractedText = '';
 
     // Load Gemini API key
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_API_KEY) {
-      console.error('[ERROR] No GEMINI_API_KEY found in environment variables.');
       return res.status(500).json({ message: 'AI service not configured' });
     }
 
@@ -37,13 +27,10 @@ exports.extractTextFromFile = async (req, res) => {
     try {
       // Handle different file types with appropriate processing
       if (fileType === 'text/plain' || filePath.endsWith('.txt')) {
-        console.log(`[DEBUG] Processing text file: ${fileName}`);
         extractedText = await fs.readFile(filePath, 'utf8');
-        console.log(`[DEBUG] Successfully read text file. Length: ${extractedText.length} characters`);
         
       } else if (fileType.startsWith('image/')) {
         // Handle image files (JPG, PNG) using Gemini Vision
-        console.log(`[DEBUG] Processing image file: ${fileName}`);
         const imageData = await fs.readFile(filePath);
         const base64Image = imageData.toString('base64');
         

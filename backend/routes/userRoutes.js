@@ -9,8 +9,6 @@ const {
   deleteUser,
   addStudent,
   loginUser,
-  uploadProfile,
-  getProfileImage,
 } = require('../controllers/userController');
 
 // Get all users
@@ -33,11 +31,5 @@ router.delete('/:id', deleteUser);
 
 // Add a student to a user
 router.post('/add-student', addStudent);
-
-// Profile image upload (teachers and admins only)
-router.post('/upload-profile', uploadProfile);
-
-// Get user profile image
-router.get('/profile-image/:userId', getProfileImage);
 
 module.exports = router;

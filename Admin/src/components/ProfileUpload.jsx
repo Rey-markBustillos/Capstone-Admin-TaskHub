@@ -1,217 +1,284 @@
-import React, { useState, useRef } from 'react';
-import { FaCamera, FaUser, FaUpload, FaTimes } from 'react-icons/fa';
+import React, { useState, useRef, useEffect } from 'react';
 
-const ProfileUpload = ({ currentUser, onProfileUpdate }) => {
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+const ProfileUpload = ({ currentUser, onProfileUpdate, size = 'large' }) => {
+  const [profileImage, setProfileImage] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Only show for teachers and admins
-  if (!currentUser || currentUser.role === 'student') {
-    return null;
-  }
+  // Size configurations
+  const sizeClasses = {
+    small: 'w-12 h-12',
+    medium: 'w-20 h-20',
+    large: 'w-24 h-24 sm:w-32 sm:h-32'
+  };
+
+  const textSizes = {
+    small: 'text-xs',
+    medium: 'text-sm',
+    large: 'text-base'
+  };
+
+  useEffect(() => {
+    // Load existing profile image when component mounts
+    const loadProfileImage = async () => {
+      try {
+        console.log('🔍 Loading profile for user:', currentUser._id);
+        const response = await fetch(`${API_BASE_URL}/api/profiles/${currentUser._id}`);
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            console.log('✅ Profile loaded:', result.data.imageUrl);
+            setProfileImage(`${API_BASE_URL}${result.data.imageUrl}`);
+          }
+        } else if (response.status !== 404) {
+          console.error('❌ Failed to load profile');
+        } else {
+          console.log('📋 No profile found for user');
+        }
+      } catch (error) {
+        console.error('❌ Error loading profile:', error);
+      }
+    };
+
+    if (currentUser?._id) {
+      loadProfileImage();
+    }
+  }, [currentUser]);
 
   const handleFileSelect = (event) => {
+    console.log('🔥 handleFileSelect triggered!');
     const file = event.target.files[0];
+    console.log('📁 Selected file:', file);
     if (file) {
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-      if (!allowedTypes.includes(file.type)) {
-        alert('Please select a valid image file (JPG, PNG, or GIF)');
-        return;
-      }
-
-      // Validate file size (max 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        alert('File size must be less than 5MB');
-        return;
-      }
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewImage(e.target.result);
-        setShowModal(true);
-      };
-      reader.readAsDataURL(file);
+      console.log('✅ File found, calling handleFileUpload');
+      handleFileUpload(file);
+    } else {
+      console.log('❌ No file selected');
     }
   };
 
-  const handleUpload = async () => {
-    if (!previewImage) return;
+  const handleFileUpload = async (file) => {
+    console.log('🚀 handleFileUpload started!');
+    console.log('📁 File to upload:', file);
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      console.log('❌ Invalid file type:', file.type);
+      setError('Please select a valid image file (JPEG, PNG, GIF, or WEBP)');
+      return;
+    }
 
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      console.log('❌ File too large:', file.size);
+      setError('File size must be less than 5MB');
+      return;
+    }
+
+    console.log('✅ File validation passed');
     setIsUploading(true);
-    try {
-      // Convert base64 to file
-      const response = await fetch(previewImage);
-      const blob = await response.blob();
-      
-      const formData = new FormData();
-      formData.append('profileImage', blob, 'profile.jpg');
-      formData.append('userId', currentUser.id);
-      formData.append('userRole', currentUser.role);
+    setError(null);
+    setSuccessMessage(null);
+    setUploadProgress(0);
 
-      // Upload to backend
-      const uploadResponse = await fetch('http://localhost:3000/api/users/upload-profile', {
+    try {
+      console.log('📤 Starting profile upload for user:', currentUser._id);
+      console.log('📁 File details:', { name: file.name, size: file.size, type: file.type });
+      console.log('🌐 API URL:', `${API_BASE_URL}/api/profiles/upload`);
+
+      const formData = new FormData();
+      formData.append('profileImage', file);
+      formData.append('userId', currentUser._id);
+
+      const response = await fetch(`${API_BASE_URL}/api/profiles/upload`, {
         method: 'POST',
         body: formData,
       });
 
-      if (uploadResponse.ok) {
-        const result = await uploadResponse.json();
-        
-        // Update user profile in localStorage
-        const updatedUser = {
-          ...currentUser,
-          profileImage: result.profileImageUrl
-        };
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response OK:', response.ok);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Upload failed');
+      }
+
+      const result = await response.json();
+      console.log('✅ Profile upload successful:', result);
+
+      if (result.success && result.data) {
+        // Update the profile image URL with the server URL
+        const newImageUrl = `${API_BASE_URL}${result.data.imageUrl}`;
+        setProfileImage(newImageUrl);
+        setUploadProgress(100);
+
+        // Update localStorage with new user data (if needed)
+        const updatedUser = { ...currentUser, profileImage: result.data.imageUrl };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         
-        // Call parent callback if provided
+        // Call parent callback to update state
         if (onProfileUpdate) {
           onProfileUpdate(updatedUser);
         }
-        
-        alert('Profile image updated successfully!');
-        setShowModal(false);
-        setPreviewImage(null);
+
+        // Show success message
+        setSuccessMessage('Profile uploaded successfully!');
+        setError(null); // Clear any previous errors
+
+        // Hide success message and progress after 3 seconds
+        setTimeout(() => {
+          setUploadProgress(0);
+          setSuccessMessage(null);
+        }, 3000);
       } else {
-        const error = await uploadResponse.json();
-        alert(`Failed to upload profile image: ${error.message}`);
+        throw new Error('Invalid response format');
       }
+
     } catch (error) {
-      console.error('Profile upload error:', error);
-      alert('Failed to upload profile image. Please try again.');
+      console.error('❌ Profile upload error:', error);
+      setError(error.message || 'Failed to upload profile image');
+      setUploadProgress(0);
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleCancel = () => {
-    setShowModal(false);
-    setPreviewImage(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  const handleClick = () => {
+    console.log('🖱️ Profile image clicked!');
+    console.log('🔄 isUploading:', isUploading);
+    if (!isUploading) {
+      console.log('📂 Opening file picker...');
+      fileInputRef.current?.click();
+    } else {
+      console.log('⏳ Upload in progress, ignoring click');
     }
   };
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
+  const getInitials = () => {
+    if (!currentUser?.name) return '?';
+    const names = currentUser.name.split(' ');
+    if (names.length >= 2) {
+      return `${names[0].charAt(0)}${names[names.length - 1].charAt(0)}`.toUpperCase();
+    }
+    return currentUser.name.charAt(0).toUpperCase();
+  };
+
+  const getRoleColor = () => {
+    switch (currentUser?.role) {
+      case 'admin':
+        return 'from-purple-500 to-indigo-600';
+      case 'teacher':
+        return 'from-blue-500 to-cyan-600';
+      case 'student':
+        return 'from-green-500 to-emerald-600';
+      default:
+        return 'from-gray-500 to-gray-600';
+    }
   };
 
   return (
-    <>
-      {/* Profile Picture with Upload Button */}
-      <div className="relative inline-block">
-        <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 border-4 border-white shadow-lg">
-          {currentUser.profileImage ? (
-            <img
-              src={currentUser.profileImage}
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500">
-              <FaUser className="text-white text-2xl" />
+    <div className="flex flex-col items-center space-y-2">
+      {/* Profile Image Container */}
+      <div 
+        className={`${sizeClasses[size]} rounded-full relative cursor-pointer overflow-hidden border-2 border-white shadow-lg hover:shadow-xl transition-all duration-300 ${isUploading ? 'opacity-70' : 'hover:scale-105'}`}
+        onClick={handleClick}
+      >
+        {profileImage ? (
+          <img 
+            src={profileImage} 
+            alt="Profile" 
+            className="w-full h-full object-cover"
+            onError={() => {
+              console.error('Failed to load profile image');
+              setProfileImage(null);
+            }}
+          />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center`}>
+            <span className={`font-bold text-white ${size === 'small' ? 'text-sm' : size === 'medium' ? 'text-lg' : 'text-xl'}`}>
+              {getInitials()}
+            </span>
+          </div>
+        )}
+
+        {/* Upload Progress Overlay */}
+        {isUploading && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="text-white text-xs font-semibold">
+              {uploadProgress > 0 ? `${uploadProgress}%` : 'Uploading...'}
             </div>
-          )}
-        </div>
-        
-        {/* Upload Button Overlay */}
-        <button
-          onClick={triggerFileInput}
-          className="absolute -bottom-1 -right-1 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg transition-colors duration-200 border-2 border-white"
-          title="Upload Profile Picture"
-        >
-          <FaCamera className="text-sm" />
-        </button>
+          </div>
+        )}
+
+        {/* Success Overlay */}
+        {successMessage && !isUploading && (
+          <div className="absolute inset-0 bg-green-500 bg-opacity-70 flex items-center justify-center">
+            <div className="text-white text-xs font-semibold">
+              ✅
+            </div>
+          </div>
+        )}
+
+        {/* Upload Icon Overlay */}
+        {!isUploading && (
+          <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center transition-all duration-300">
+            <div className="text-white opacity-0 hover:opacity-100 text-xs font-semibold">
+              📷
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Hidden File Input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
-
-      {/* Upload Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Update Profile Picture
-              </h3>
-              <button
-                onClick={handleCancel}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <FaTimes className="text-xl" />
-              </button>
-            </div>
-
-            {/* Preview */}
-            {previewImage && (
-              <div className="mb-6">
-                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-gray-200">
-                  <img
-                    src={previewImage}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Upload Info */}
-            <div className="mb-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <h4 className="text-sm font-medium text-blue-800 mb-2">
-                  Image Requirements:
-                </h4>
-                <ul className="text-xs text-blue-600 space-y-1">
-                  <li>• Format: JPG, PNG, or GIF</li>
-                  <li>• Maximum size: 5MB</li>
-                  <li>• Recommended: Square image for best results</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <button
-                onClick={handleUpload}
-                disabled={isUploading || !previewImage}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-2 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
-              >
-                {isUploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <FaUpload />
-                    Upload
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={isUploading}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-lg font-medium transition-colors duration-200"
-              >
-                Cancel
-              </button>
-            </div>
+      {/* User Info */}
+      {size === 'large' && (
+        <div className="text-center">
+          <div className={`font-semibold text-gray-700 ${textSizes[size]}`}>
+            {currentUser?.name || 'User'}
+          </div>
+          <div className={`text-gray-500 ${textSizes[size]} capitalize`}>
+            {currentUser?.role || 'Role'}
           </div>
         </div>
       )}
-    </>
+
+      {/* Error Message */}
+      {error && (
+        <div className="text-red-500 text-xs text-center max-w-xs">
+          {error}
+        </div>
+      )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="text-green-500 text-xs text-center max-w-xs font-semibold animate-pulse">
+          ✅ {successMessage}
+        </div>
+      )}
+
+      {/* Upload Instructions */}
+      {size === 'large' && !isUploading && (
+        <div className="text-xs text-gray-400 text-center max-w-xs">
+          Click to upload profile picture
+        </div>
+      )}
+
+      {/* File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        accept="image/*"
+        className="hidden"
+        disabled={isUploading}
+      />
+    </div>
   );
 };
 

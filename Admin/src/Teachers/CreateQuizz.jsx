@@ -47,7 +47,6 @@ export default function CreateQuizz() {
       for (const quiz of createdQuizzes) {
         try {
           const res = await axios.get(`${API_BASE_URL}/quizzes/${quiz._id}/submissions`);
-          console.log('[DEBUG] Submissions data for quiz:', quiz._id, res.data);
           results[quiz._id] = res.data || [];
         } catch {
           results[quiz._id] = [];
@@ -116,12 +115,6 @@ export default function CreateQuizz() {
     const file = e.target.files[0];
     if (!file) return;
 
-    console.log('[DEBUG] File upload started:', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
-
     // Support multiple file types for educational content
     const allowedTypes = [
       'text/plain', // .txt
@@ -154,37 +147,20 @@ export default function CreateQuizz() {
     try {
       if (file.type === 'text/plain' || fileExtension === 'txt') {
         // Handle text files directly
-        console.log('[DEBUG] Processing text file directly');
         const text = await file.text();
-        console.log('[DEBUG] Text file content length:', text.length);
         setModuleText(text);
         alert(`Text file loaded successfully! ${text.length} characters imported.`);
       } else {
         // Handle other file types using backend AI processing
-        console.log('[DEBUG] Sending file to backend for processing');
         const formData = new FormData();
         formData.append('file', file);
-
-        // Debug FormData
-        console.log('[DEBUG] FormData contents:');
-        for (let [key, value] of formData.entries()) {
-          console.log(`${key}:`, value);
-        }
-
-        console.log('[DEBUG] Making request to:', `${API_BASE_URL}/files/extract-text`);
 
         const response = await axios.post(`${API_BASE_URL}/files/extract-text`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
           timeout: 300000, // 5 minutes
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            console.log('[DEBUG] Upload progress:', percentCompleted + '%');
-          }
         });
-
-        console.log('[DEBUG] Server response:', response.data);
 
         if (response.data && response.data.text) {
           setModuleText(response.data.text);
@@ -194,13 +170,6 @@ export default function CreateQuizz() {
         }
       }
     } catch (error) {
-      console.error('[DEBUG] File processing error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        statusText: error.response?.statusText
-      });
-      
       let errorMessage = 'Failed to process file. Please try again or use a different file.';
       
       if (error.code === 'ECONNABORTED') {
@@ -328,8 +297,7 @@ export default function CreateQuizz() {
         return newSubs;
       });
       alert('Quiz deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting quiz:', error);
+    } catch {
       alert('Failed to delete quiz. Please try again.');
     }
   };

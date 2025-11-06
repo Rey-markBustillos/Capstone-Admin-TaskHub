@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import TeacherAdminProfileAvatar from './TeacherAdminProfileAvatar';
 import { NavLink } from 'react-router-dom';
+import ProfileUpload from './ProfileUpload';
 import {
   LayoutDashboard,
   FileText,
@@ -74,6 +74,16 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
   const [isOpen, setIsOpen] = useState(
     typeof isOpenProp === 'boolean' ? isOpenProp : window.innerWidth > 768
   );
+  const [currentUser, setCurrentUser] = useState(() => {
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
+  // Handle profile update callback
+  const handleProfileUpdate = (updatedUser) => {
+    console.log('🔄 Profile updated in sidebar:', updatedUser);
+    setCurrentUser(updatedUser);
+  };
 
   // Allow parent to control sidebar open state if props are provided
   useEffect(() => {
@@ -143,16 +153,10 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
               {/* Profile sections - consistent layout for all roles */}
               {role === 'student' && <StudentProfileAvatar />}
               {(role === 'teacher' || role === 'admin') && (
-                <TeacherAdminProfileAvatar 
-                  currentUser={(() => {
-                    const user = JSON.parse(localStorage.getItem('user') || '{}');
-                    console.log('Sidebar passing user to TeacherAdminProfileAvatar:', user);
-                    return user;
-                  })()} 
-                  onProfileUpdate={() => {
-                    // Force re-render by reloading (optional)
-                    console.log('Profile updated callback triggered');
-                  }}
+                <ProfileUpload 
+                  currentUser={currentUser}
+                  onProfileUpdate={handleProfileUpdate}
+                  size="large"
                 />
               )}
             </>

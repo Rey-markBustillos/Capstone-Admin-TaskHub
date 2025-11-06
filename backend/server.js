@@ -1,4 +1,3 @@
-console.log("[Startup] server.js is running. If you see this, logging works.");
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -17,13 +16,13 @@ const scheduleRoutes = require('./routes/schedule');
 const attendanceRoutes = require('./routes/AttendanceRoutes');
 const quizRoutes = require('./routes/quizRoutes');
 const fileRoutes = require('./routes/fileRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 
 // ADD: Import submission routes
 const submissionRoutes = require('./routes/submissionRoutes');
 
 
 dotenv.config();
-console.log('GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? 'Loaded' : 'Missing');
 
 // Connect to MongoDB
 connectDB().then((connected) => {
@@ -52,6 +51,13 @@ app.use(
     credentials: true
   })
 );
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`🌐 ${req.method} ${req.url} - ${new Date().toISOString()}`);
+  next();
+});
+
 app.use(express.json());
 
 // Add timeout middleware for file uploads
@@ -97,19 +103,20 @@ app.get('/', (req, res) => {
 });
 
 
-console.log('[DEBUG] Mounting /api/users routes...');
 app.use('/api/users', userRoutes);
-console.log('[DEBUG] Mounted /api/users routes.');
-
 app.use('/api/class', classRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/quizzes', quizRoutes);
-console.log('[DEBUG] Mounting /api/files routes...');
-app.use('/api/files', fileRoutes);
-console.log('[DEBUG] Mounted /api/files routes.');
+app.use('/api/profiles', profileRoutes);
+
+// Add a simple test route
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Server is working!', timestamp: new Date() });
+});
+
 // ADD: Mount submission routes (for /api/submissions/student/:studentId)
 app.use('/api/submissions', submissionRoutes);
 
