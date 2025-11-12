@@ -125,52 +125,51 @@ export default function StudentAnnouncements() {
   // ...availableReactions imported from shared constants...
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
-      <div className="w-full max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh] px-1 sm:px-2 md:px-4 lg:px-8">
-        <div className="mb-4 sm:mb-6 mt-2 sm:mt-4 ml-2 sm:ml-4 self-start">
+    <div className={`min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-2 sm:p-4 pb-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+      <div className="w-full max-w-none mx-auto min-h-screen px-1 sm:px-2 md:px-4 lg:px-6">
+        <div className="mb-4 sm:mb-6 mt-2 sm:mt-4">
           <NavLink
             to={`/student/class/${classId}`}
-            className="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 text-sm sm:text-base rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800 transition mb-2 sm:mb-4"
+            className="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg bg-indigo-600 text-white font-medium shadow-sm hover:bg-indigo-700 transition mb-2 sm:mb-4"
           >
             <FaArrowLeft className="text-xs sm:text-sm" /> <span className="hidden xs:inline sm:inline">Back to Class Menu</span><span className="xs:hidden sm:hidden">Back</span>
           </NavLink>
         </div>
-        <div className="bg-white/80 dark:bg-gray-900/80 rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4 md:p-8 lg:p-12 xl:p-16 border-4 sm:border-8 border-indigo-600 dark:border-indigo-800 backdrop-blur-md w-full max-w-none overflow-x-auto">
+        <div className="w-full max-w-none pb-6">
           {/* Header Section */}
           <div className="mb-4 sm:mb-6">
-            <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-2 sm:gap-3">
-              <FaBullhorn className="text-base sm:text-xl lg:text-2xl" />
+            <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white flex items-center gap-2 sm:gap-3">
+              <FaBullhorn className="text-base sm:text-xl lg:text-2xl text-indigo-300" />
               <span className="hidden sm:inline">Announcements</span>
               <span className="sm:hidden">News</span>
             </h1>
           </div>
 
-          {/* Main Content - Scrollable Area */}
+          {/* Main Content - No Height Restriction */}
           <div className={`transition-all duration-300 ${viewersInfo.isOpen ? 'blur-sm pointer-events-none' : ''}`}>
-            <div className="max-h-[60vh] overflow-y-auto">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center min-h-[40vh]">
-              <FaBullhorn className="animate-bounce text-indigo-400 mb-4" size={48} />
-              <p className="text-center text-lg dark:text-gray-300">Loading announcements...</p>
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center min-h-[40vh]">
-              <FaTimes className="text-red-500 mb-4" size={48} />
-              <p className="text-center text-red-500">{error}</p>
-            </div>
-          ) : announcements.length === 0 ? (
-            <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-gray-800 dark:text-gray-100">
-              <FaBullhorn className="mx-auto mb-4 text-indigo-400 dark:text-indigo-500" size={36} />
-              <p>No announcements posted yet.</p>
-            </div>
-          ) : (
-            <ul className="space-y-8 pb-16">
-              {announcements.map((ann) => {
-                const reactionCounts = getReactionCounts(ann.reactions);
-                const isCommentsOpen = openComments[ann._id];
+            {loading ? (
+              <div className="flex flex-col items-center justify-center min-h-[40vh]">
+                <FaBullhorn className="animate-bounce text-indigo-400 mb-4" size={48} />
+                <p className="text-center text-lg text-gray-300">Loading announcements...</p>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center min-h-[40vh]">
+                <FaTimes className="text-red-500 mb-4" size={48} />
+                <p className="text-center text-red-500">{error}</p>
+              </div>
+            ) : announcements.length === 0 ? (
+              <div className="text-center py-12 bg-white/10 backdrop-blur-sm rounded-lg shadow-sm border border-indigo-500/30 p-8 text-gray-300">
+                <FaBullhorn className="mx-auto mb-4 text-indigo-400" size={36} />
+                <p>No announcements posted yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {announcements.map((ann) => {
+                  const reactionCounts = getReactionCounts(ann.reactions);
+                  const isCommentsOpen = openComments[ann._id];
 
-                return (
-                  <li
+                  return (
+                  <div
                     key={ann._id}
                     ref={announcementCardRef}
                     data-ann-id={ann._id}
@@ -269,52 +268,51 @@ export default function StudentAnnouncements() {
                         </form>
                       </div>
                     )}
-                  </li>
+                  </div>
                 );
               })}
-            </ul>
-          )}
-        </div>
-      </div>
-
-      {/* Viewers Modal */}
-      {viewersInfo.isOpen && (
-        <div
-          className="fixed inset-0 flex justify-center items-end sm:items-center z-50"
-          onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}
-        >
-          <div
-            className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-lg shadow-xl w-full max-w-md relative transition-transform duration-300 ease-out transform translate-y-full animate-slide-up"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="p-4 sm:p-6">
-                <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                  <FaEye className="text-indigo-400" /> Viewed By
-                </h3>
-                <button
-                  onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                >
-                  <FaTimes size={20} />
-                </button>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 truncate">For: "{viewersInfo.title}"</p>
-              <ul className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                {viewersInfo.viewers.length > 0 ? viewersInfo.viewers.map(viewer => (
-                  <li key={viewer._id} className="flex items-center gap-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700/50 p-3 rounded-md">
-                    <FaUserCircle className="text-indigo-400" /> {viewer.name}
-                  </li>
-                )) : (
-                  <li className="text-gray-500 dark:text-gray-400 text-center py-4">No one has viewed this announcement yet.</li>
-                )}
-              </ul>
+            )}
+          </div>
+
+        {/* Viewers Modal */}
+        {viewersInfo.isOpen && (
+          <div
+            className="fixed inset-0 flex justify-center items-end sm:items-center z-50"
+            onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}
+          >
+            <div
+              className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-lg shadow-xl w-full max-w-md relative transition-transform duration-300 ease-out transform translate-y-full animate-slide-up"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-4 sm:p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                    <FaEye className="text-indigo-400" /> Viewed By
+                  </h3>
+                  <button
+                    onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  >
+                    <FaTimes size={20} />
+                  </button>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 truncate">For: "{viewersInfo.title}"</p>
+                <ul className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                  {viewersInfo.viewers.length > 0 ? viewersInfo.viewers.map(viewer => (
+                    <li key={viewer._id} className="flex items-center gap-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700/50 p-3 rounded-md">
+                      <FaUserCircle className="text-indigo-400" /> {viewer.name}
+                    </li>
+                  )) : (
+                    <li className="text-gray-500 dark:text-gray-400 text-center py-4">No one has viewed this announcement yet.</li>
+                  )}
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-        </div>
+        )}
       </div>
+    </div>
     </div>
   );
 }

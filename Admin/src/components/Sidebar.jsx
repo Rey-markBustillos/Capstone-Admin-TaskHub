@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import ProfileUpload from './ProfileUpload';
 import {
   LayoutDashboard,
   FileText,
@@ -74,16 +73,6 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
   const [isOpen, setIsOpen] = useState(
     typeof isOpenProp === 'boolean' ? isOpenProp : window.innerWidth > 768
   );
-  const [currentUser, setCurrentUser] = useState(() => {
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
-
-  // Handle profile update callback
-  const handleProfileUpdate = (updatedUser) => {
-    console.log('🔄 Profile updated in sidebar:', updatedUser);
-    setCurrentUser(updatedUser);
-  };
 
   // Allow parent to control sidebar open state if props are provided
   useEffect(() => {
@@ -138,7 +127,7 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
         <div className={`flex flex-col items-center ${borderClass} border-b ${isOpen ? 'px-2 sm:px-4' : 'px-1 sm:px-2'} py-2 sm:py-4 md:py-6`}>
           {isOpen && (
             <>
-              {/* Profile upload section at the very top */}
+              {/* Profile section at the very top */}
               <span className="flex items-center gap-1 sm:gap-2 text-sm sm:text-lg md:text-2xl font-extrabold text-violet-700 tracking-tight drop-shadow mb-1 sm:mb-2">
                 <img
                   src="/taskhublogos.png"
@@ -151,14 +140,7 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
               </span>
               
               {/* Profile sections - consistent layout for all roles */}
-              {role === 'student' && <StudentProfileAvatar />}
-              {(role === 'teacher' || role === 'admin') && (
-                <ProfileUpload 
-                  currentUser={currentUser}
-                  onProfileUpdate={handleProfileUpdate}
-                  size="large"
-                />
-              )}
+              {/* Profile circles removed for clean UI */}
             </>
           )}
         </div>
@@ -209,52 +191,6 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
           {isOpen && <span className="text-xs sm:text-base font-semibold tracking-wide">Logout</span>}
         </button>
       </div>
-    </div>
-  );
-}
-
-// StudentProfileAvatar: local-only, per-student (localStorage key per user)
-function StudentProfileAvatar() {
-  const storedUser = localStorage.getItem('user');
-  const user = storedUser ? JSON.parse(storedUser) : null;
-  const studentId = user && user.role === 'student' ? user._id : null;
-  const storageKey = studentId ? `student_profile_${studentId}` : 'student_profile_default';
-  const [profile, setProfile] = React.useState(() => localStorage.getItem(storageKey) || '');
-  const fileInputRef = React.useRef();
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setProfile(ev.target.result);
-      localStorage.setItem(storageKey, ev.target.result);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  return (
-    <div className="flex flex-col items-center w-full">
-      <div
-        className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gray-200 border-2 border-violet-400 overflow-hidden mb-1 cursor-pointer hover:ring-2 hover:ring-violet-400 transition"
-        title="Upload profile picture"
-        onClick={() => fileInputRef.current && fileInputRef.current.click()}
-      >
-        {profile ? (
-          <img src={profile} alt="Profile" className="w-full h-full object-cover" />
-        ) : (
-          <span className="flex items-center justify-center w-full h-full text-gray-400 text-xl sm:text-2xl">👤</span>
-        )}
-      </div>
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        className="hidden"
-        onChange={handleFileChange}
-      />
-      <span className="text-xs text-gray-500">Profile</span>
-      <span className="text-xs text-yellow-600 mt-1 text-center">Click the profile picture to upload or change your photo.</span>
     </div>
   );
 }

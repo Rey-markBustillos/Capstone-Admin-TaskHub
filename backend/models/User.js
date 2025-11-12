@@ -9,8 +9,7 @@ const UserSchema = new mongoose.Schema({
   lrn: { type: String, default: null }, // Learner Reference Number for students
   teacherId: { type: String, default: null },
   adminId: { type: String, default: null },
-  active: { type: Boolean, default: true },
-  profileImage: { type: String, default: null }, // Profile image URL
+  active: { type: Boolean, default: true }
    // studentId removed, use lrn instead
 });
 

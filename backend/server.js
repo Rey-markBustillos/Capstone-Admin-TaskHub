@@ -16,7 +16,6 @@ const scheduleRoutes = require('./routes/schedule');
 const attendanceRoutes = require('./routes/AttendanceRoutes');
 const quizRoutes = require('./routes/quizRoutes');
 const fileRoutes = require('./routes/fileRoutes');
-const profileRoutes = require('./routes/profileRoutes');
 
 // ADD: Import submission routes
 const submissionRoutes = require('./routes/submissionRoutes');
@@ -81,13 +80,6 @@ if (!fs.existsSync(uploadDirSubmissions)) {
   console.log('Created uploads/submissions directory');
 }
 
-// Ensure profiles folder exists
-const uploadDirProfiles = path.join(__dirname, 'uploads', 'profiles');
-if (!fs.existsSync(uploadDirProfiles)) {
-  fs.mkdirSync(uploadDirProfiles, { recursive: true });
-  console.log('Created uploads/profiles directory');
-}
-
 const uploadDirTemp = path.join(__dirname, 'uploads', 'temp');
 if (!fs.existsSync(uploadDirTemp)) {
   fs.mkdirSync(uploadDirTemp, { recursive: true });
@@ -110,7 +102,6 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/quizzes', quizRoutes);
-app.use('/api/profiles', profileRoutes);
 
 // Add a simple test route
 app.get('/api/test', (req, res) => {
