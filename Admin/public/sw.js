@@ -20,7 +20,6 @@ const STATIC_FILES = [
 // API endpoints to cache (for offline functionality)
 const API_ENDPOINTS = [
   '/api/classes',
-  '/api/users/profile',
   '/api/announcements',
   '/api/activities',
   '/api/quizzes'

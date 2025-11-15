@@ -17,6 +17,7 @@ import StudentActivities from './Students/StudentActivities';
 import StudentClassList from './Students/StudentsClassList';
 import SubmitActivity from './Students/SubmitActivity';
 import StudentAttendance from './Students/Attendance';
+import StudentModules from './Students/StudentModules';
 import Attendance from './Teachers/Attendance';
 import TeacherDashboard from './Teachers/Dashboard';
 import TeacherPortal from './Teachers/TeacherPortal';
@@ -25,6 +26,7 @@ import TeacherAnnouncement from './Teachers/TeacherAnnouncement';
 import CreateActivity from './Teachers/CreateActivity';
 import CreateQuizz from './Teachers/CreateQuizz';
 import StudentList from './Teachers/Studentlist';
+import UploadModule from './Teachers/UploadModule';
 import TeacherClassView from './Teachers/TeacherClassView'; // AYOS: Import ng bagong layout
 import LandingPage from './LandingPage/LandingPage';
 import Login from './LandingPage/Login';
@@ -192,6 +194,7 @@ export default function App() {
           <Route path="activities" element={<StudentActivities />} />
           <Route path="quiz" element={<QuizzHub />} />
           <Route path="classlist" element={<StudentClassList />} />
+          <Route path="modules" element={<StudentModules />} />
         </Route>
         <Route path="/student/class/:classId/activity/:activityId/submit" element={<SubmitActivity />} />
       </Route>
@@ -210,6 +213,7 @@ export default function App() {
   <Route path="createactivity" element={<CreateActivity />} />
   <Route path="createquiz" element={<CreateQuizz />} />
   <Route path="studentlist" element={<StudentList />} />
+  <Route path="uploadmodule" element={<UploadModule />} />
     </Route>
       </Route>
       

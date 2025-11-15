@@ -21,10 +21,8 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   /* Or your preferred font */
-}
-
-@keyframes slideInRight {
-  from { transform: translateX(100%); opacity: 0; }
+  overflow: auto;
+  scracity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
 .animate-slideInRight {

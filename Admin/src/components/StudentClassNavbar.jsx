@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
-import { FaBullhorn, FaTasks, FaUsers, FaArrowLeft, FaBars, FaTimes, FaChalkboardTeacher, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaBullhorn, FaTasks, FaUsers, FaArrowLeft, FaBars, FaTimes, FaChalkboardTeacher, FaClock, FaMapMarkerAlt, FaBook } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
 
 const StudentClassNavbar = ({ selectedClass }) => {
@@ -110,6 +110,20 @@ const StudentClassNavbar = ({ selectedClass }) => {
             <span className="hidden lg:inline">Class List</span>
             <span className="lg:hidden">People</span>
           </NavLink>
+          <NavLink
+            to={`/student/class/${classId}/modules`}
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap min-w-fit ${
+                isActive
+                  ? 'bg-indigo-500 text-white shadow-md transform scale-105'
+                  : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 hover:shadow-sm'
+              }`
+            }
+          >
+            <FaBook className="text-sm flex-shrink-0" />
+            <span className="hidden lg:inline">Modules</span>
+            <span className="lg:hidden">Books</span>
+          </NavLink>
         </div>
 
         {/* Mobile Menu Button */}
@@ -185,6 +199,22 @@ const StudentClassNavbar = ({ selectedClass }) => {
                   <FaUsers className="text-sm text-indigo-600" />
                 </div>
                 <span className="font-medium text-base">Class List</span>
+              </NavLink>
+              <NavLink
+                to={`/student/class/${classId}/modules`}
+                className={({ isActive }) =>
+                  `flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? 'bg-indigo-500 text-white shadow-lg'
+                      : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
+                  }`
+                }
+                onClick={() => setOpen(false)}
+              >
+                <div className="p-2 rounded-lg bg-indigo-100">
+                  <FaBook className="text-sm text-indigo-600" />
+                </div>
+                <span className="font-medium text-base">Modules</span>
               </NavLink>
               
               {/* Divider */}

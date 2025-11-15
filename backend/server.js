@@ -16,6 +16,7 @@ const scheduleRoutes = require('./routes/schedule');
 const attendanceRoutes = require('./routes/AttendanceRoutes');
 const quizRoutes = require('./routes/quizRoutes');
 const fileRoutes = require('./routes/fileRoutes');
+const moduleRoutes = require('./routes/moduleRoutes');
 
 // ADD: Import submission routes
 const submissionRoutes = require('./routes/submissionRoutes');
@@ -86,6 +87,12 @@ if (!fs.existsSync(uploadDirTemp)) {
   console.log('Created uploads/temp directory');
 }
 
+const uploadDirModules = path.join(__dirname, 'uploads', 'modules');
+if (!fs.existsSync(uploadDirModules)) {
+  fs.mkdirSync(uploadDirModules, { recursive: true });
+  console.log('Created uploads/modules directory');
+}
+
 // Serve static uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -102,6 +109,7 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/quizzes', quizRoutes);
+app.use('/api/modules', moduleRoutes);
 
 // Add a simple test route
 app.get('/api/test', (req, res) => {
