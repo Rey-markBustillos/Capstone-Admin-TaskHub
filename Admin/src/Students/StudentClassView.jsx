@@ -15,7 +15,7 @@ const FallingBooksAnimation = () => (
 import { useParams, Outlet } from 'react-router-dom';
 import axios from 'axios';
 import { NavLink, useLocation } from 'react-router-dom';
-import { FaBullhorn, FaTasks, FaUsers, FaChalkboardTeacher, FaClock, FaDoorOpen, FaCalendarCheck, FaRocket } from 'react-icons/fa';
+import { FaBullhorn, FaTasks, FaUsers, FaChalkboardTeacher, FaClock, FaDoorOpen, FaCalendarCheck, FaRocket, FaBook } from 'react-icons/fa';
 import { FaQuestionCircle } from 'react-icons/fa';
 import { useContext } from 'react';
 import SidebarContext from '../contexts/SidebarContext';
@@ -60,6 +60,13 @@ const StudentClassView = () => {
       color: 'pink', 
       path: 'quiz',
       description: 'Take quizzes'
+    },
+    modules: { 
+      name: 'Modules', 
+      icon: FaBook, 
+      color: 'teal', 
+      path: 'modules',
+      description: 'Learning materials'
     },
     classlist: { 
       name: 'Class List', 
@@ -142,6 +149,7 @@ const StudentClassView = () => {
     `/student/class/${classId}/attendance`,
     `/student/class/${classId}/announcements`,
     `/student/class/${classId}/activities`,
+    `/student/class/${classId}/modules`,
     `/student/class/${classId}/quiz`,
     `/student/class/${classId}/classlist`,
   ];
@@ -379,11 +387,25 @@ const StudentClassView = () => {
           <span className="text-xs text-gray-300">Submit work</span>
         </NavLink>
 
+        {/* Modules */}
+        <NavLink
+          to={`modules`}
+          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          style={{ textDecoration: 'none', animationDelay: '0.35s', animationDuration: '3s' }}
+        >
+          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-teal-400 rounded-l-xl sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-teal-400 via-cyan-400 to-blue-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-teal-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaBook className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
+          </span>
+          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Modules</span>
+          <span className="text-xs text-gray-300">Learning materials</span>
+        </NavLink>
+
         {/* Quiz Hub */}
         <NavLink
           to={`quiz`}
           className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
-          style={{ textDecoration: 'none', animationDelay: '0.35s', animationDuration: '3s' }}
+          style={{ textDecoration: 'none', animationDelay: '0.4s', animationDuration: '3s' }}
         >
           <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-pink-400 rounded-l-xl sm:rounded-l-2xl"></div>
           <span className="bg-gradient-to-tr from-pink-400 via-fuchsia-400 to-yellow-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-pink-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -397,7 +419,7 @@ const StudentClassView = () => {
         <NavLink
           to={`classlist`}
           className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
-          style={{ textDecoration: 'none', animationDelay: '0.4s', animationDuration: '3s' }}
+          style={{ textDecoration: 'none', animationDelay: '0.45s', animationDuration: '3s' }}
         >
           <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-green-400 rounded-l-xl sm:rounded-l-2xl"></div>
           <span className="bg-gradient-to-tr from-green-400 via-emerald-400 to-yellow-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-green-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">

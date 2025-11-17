@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   FaBook, 
@@ -9,33 +9,52 @@ import {
   FaExclamationTriangle,
   FaFileAlt,
   FaCalendarAlt,
-  FaUser
+  FaUser,
+  FaArrowLeft
 } from 'react-icons/fa';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 const StudentModules = () => {
   const { classId } = useParams();
+  const navigate = useNavigate();
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Debug: Log component mount and classId
+  useEffect(() => {
+    console.log('StudentModules component mounted');
+    console.log('ClassId from params:', classId);
+    console.log('API_BASE_URL:', API_BASE_URL);
+  }, [classId]);
+
     const fetchModules = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('Fetching modules for classId:', classId);
+      console.log('API URL:', `${API_BASE_URL}/modules?classId=${classId}`);
       const response = await axios.get(`${API_BASE_URL}/modules?classId=${classId}`);
+      console.log('Modules response:', response.data);
       setModules(response.data || []);
     } catch (err) {
       console.error('Error fetching modules:', err);
-      setError('Failed to load modules');
+      console.error('Error details:', err.response?.data);
+      setError(err.response?.data?.message || err.message || 'Failed to load modules');
     } finally {
       setLoading(false);
     }
   }, [classId]);
 
   useEffect(() => {
-    fetchModules();
-  }, [fetchModules]);
+    if (classId) {
+      fetchModules();
+    } else {
+      setError('Class ID not found');
+      setLoading(false);
+    }
+  }, [fetchModules, classId]);
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -68,6 +87,9 @@ const StudentModules = () => {
 
   const handleDownload = async (moduleId, fileName) => {
     try {
+      console.log('Downloading module:', moduleId, fileName);
+      console.log('Download URL:', `${API_BASE_URL}/modules/download/${moduleId}`);
+      
       const response = await axios.get(`${API_BASE_URL}/modules/download/${moduleId}`, {
         responseType: 'blob'
       });
@@ -83,16 +105,28 @@ const StudentModules = () => {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download error:', err);
-      alert('Failed to download module');
+      console.error('Download error details:', err.response?.data);
+      alert(`Failed to download module: ${err.response?.data?.message || err.message}`);
     }
   };
 
   const handleView = (moduleId) => {
+    console.log('Opening view for module:', moduleId);
+    console.log('View URL:', `${API_BASE_URL}/modules/view/${moduleId}`);
     window.open(`${API_BASE_URL}/modules/view/${moduleId}`, '_blank');
   };
 
   return (
     <div className="max-w-6xl mx-auto p-4 space-y-6">
+      {/* Back Button */}
+      <button
+        onClick={() => navigate(`/student/class/${classId}`)}
+        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium shadow-md hover:shadow-lg"
+      >
+        <FaArrowLeft className="text-sm" />
+        Back to Class Menu
+      </button>
+
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-lg shadow-lg">
         <h1 className="text-2xl font-bold flex items-center gap-3 mb-2">
