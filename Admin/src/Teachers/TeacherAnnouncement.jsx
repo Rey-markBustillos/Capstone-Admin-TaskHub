@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn, FaFileUpload, FaDownload, FaTimes } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
@@ -23,9 +23,9 @@ export default function TeacherAnnouncement() {
   const [commentInputs, setCommentInputs] = useState({});
   const [openComments, setOpenComments] = useState({});
   const [viewersInfo, setViewersInfo] = useState({ isOpen: false, viewers: [], title: '' });
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
-  const observer = useRef();
-  const viewedInSessionRef = useRef(new Set());
+  // Removed view tracking refs since teachers don't need to track their own announcement views
 
 
   const fetchData = useCallback(async () => {
@@ -51,51 +51,21 @@ export default function TeacherAnnouncement() {
   }, [userId, classId]);
 
 
-  const markAsViewed = useCallback(async (announcementId) => {
-    if (viewedInSessionRef.current.has(announcementId)) return;
-    const announcement = announcements.find(ann => ann._id === announcementId);
-    const alreadyViewed = announcement?.viewedBy.some(viewer => viewer._id === userId);
-    if (alreadyViewed) {
-      viewedInSessionRef.current.add(announcementId);
-      return;
-    }
-    viewedInSessionRef.current.add(announcementId);
-    try {
-  const res = await axios.post(`${API_BASE_URL}/announcements/${announcementId}/view`, { userId });
-      updateAnnouncementInState(res.data);
-    } catch {
-      // Silent fail
-    }
-  }, [userId, announcements]);
+  // Removed markAsViewed function since teachers don't need to mark their own announcements as viewed
 
-  // Mark all announcements as viewed on load
-  useEffect(() => {
-    if (!loading && announcements.length > 0 && userId) {
-      announcements.forEach(ann => {
-        markAsViewed(ann._id);
-      });
-    }
-  }, [loading, announcements, userId, markAsViewed]);
+  // Teachers don't need to mark their own announcements as viewed automatically
+  // Only students should mark announcements as viewed when they actually view them
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
+  // Teachers don't need intersection observer to mark their own announcements as viewed
+  // Only students should use intersection observer for view tracking
   const announcementCardRef = useCallback(node => {
-    if (loading) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const annId = entry.target.dataset.annId;
-          if (annId) {
-            markAsViewed(annId);
-          }
-        }
-      });
-    }, { threshold: 0.5 });
-    if (node) observer.current.observe(node);
-  }, [loading, markAsViewed]);
+    // No intersection observer for teachers
+    return;
+  }, []);
 
   const toggleComments = (announcementId) => {
     setOpenComments(prev => ({ ...prev, [announcementId]: !prev[announcementId] }));
@@ -145,18 +115,54 @@ export default function TeacherAnnouncement() {
       return;
     }
     try {
-      const payload = { title: title.value, content: content.value, postedBy: userId, classId };
+      const formData = new FormData();
+      formData.append('title', title.value);
+      formData.append('content', content.value);
+      formData.append('postedBy', userId);
+      formData.append('classId', classId);
+      
+      // Add selected files
+      selectedFiles.forEach(file => {
+        formData.append('attachments', file);
+      });
+
       if (form.id) {
-  await axios.put(`${API_BASE_URL}/announcements/${form.id}`, payload);
+        // For updates, we'll use regular JSON for now (file updates can be added later)
+        const payload = { title: title.value, content: content.value, postedBy: userId, classId };
+        await axios.put(`${API_BASE_URL}/announcements/${form.id}`, payload);
       } else {
-  await axios.post(`${API_BASE_URL}/announcements`, payload);
+        await axios.post(`${API_BASE_URL}/announcements`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
       }
       setForm({ title: '', content: '', id: null });
+      setSelectedFiles([]);
       fetchData();
       setIsModalOpen(false);
     } catch (err) {
       setError(err.response?.data?.message || err.message);
     }
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const downloadFile = (filename, originalName) => {
+    const downloadUrl = `${API_BASE_URL}/announcements/attachment/${filename}?download=true`;
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = originalName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleEdit = (ann) => {
@@ -177,6 +183,7 @@ export default function TeacherAnnouncement() {
 
   const openModalForCreate = () => {
     setForm({ title: '', content: '', id: null });
+    setSelectedFiles([]);
     setError(null);
     setIsModalOpen(true);
   };
@@ -221,6 +228,104 @@ export default function TeacherAnnouncement() {
                       <h2 className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-yellow-100 mb-0 drop-shadow">{ann.title}</h2>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line leading-relaxed text-base">{ann.content}</p>
+                    
+                    {/* Display attachments if any */}
+                    {ann.attachments && ann.attachments.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">
+                          <FaFileUpload className="inline mr-1" />
+                          Attached Files ({ann.attachments.length})
+                        </p>
+                        <div className="space-y-3">
+                          {ann.attachments.map((attachment, index) => {
+                            const fileUrl = `${API_BASE_URL}/announcements/attachment/${attachment.filename}`;
+                            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment.originalName);
+                            const isPdf = /\.pdf$/i.test(attachment.originalName);
+                            const isVideo = /\.(mp4|webm|ogg)$/i.test(attachment.originalName);
+                            const isAudio = /\.(mp3|wav|ogg)$/i.test(attachment.originalName);
+                            
+                            return (
+                              <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {attachment.originalName}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                      {(attachment.fileSize / 1024 / 1024).toFixed(1)}MB
+                                    </span>
+                                    <button
+                                      onClick={() => downloadFile(attachment.filename, attachment.originalName)}
+                                      className="text-blue-500 hover:text-blue-400 p-1"
+                                      title="Download file"
+                                    >
+                                      <FaDownload />
+                                    </button>
+                                  </div>
+                                </div>
+                                
+                                {/* Display content based on file type */}
+                                {isImage && (
+                                  <div className="mt-2">
+                                    <img 
+                                      src={fileUrl} 
+                                      alt={attachment.originalName}
+                                      className="max-w-full h-auto rounded-lg shadow-md max-h-96 object-contain"
+                                      loading="lazy"
+                                    />
+                                  </div>
+                                )}
+                                
+                                {isPdf && (
+                                  <div className="mt-2">
+                                    <iframe
+                                      src={`${fileUrl}#toolbar=0`}
+                                      className="w-full h-96 rounded-lg border border-gray-300 dark:border-gray-600"
+                                      title={attachment.originalName}
+                                    />
+                                  </div>
+                                )}
+                                
+                                {isVideo && (
+                                  <div className="mt-2">
+                                    <video 
+                                      controls 
+                                      className="w-full max-h-96 rounded-lg"
+                                      preload="metadata"
+                                    >
+                                      <source src={fileUrl} type={attachment.mimeType} />
+                                      Your browser does not support the video tag.
+                                    </video>
+                                  </div>
+                                )}
+                                
+                                {isAudio && (
+                                  <div className="mt-2">
+                                    <audio 
+                                      controls 
+                                      className="w-full"
+                                      preload="metadata"
+                                    >
+                                      <source src={fileUrl} type={attachment.mimeType} />
+                                      Your browser does not support the audio tag.
+                                    </audio>
+                                  </div>
+                                )}
+                                
+                                {!isImage && !isPdf && !isVideo && !isAudio && (
+                                  <div className="mt-2 p-3 bg-white dark:bg-gray-600 rounded border text-center">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                      Click download to view this file
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="pt-3 mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs sm:text-sm">
                       <p className="text-gray-500 dark:text-gray-400 mb-2 sm:mb-0">
                         Posted by: <span className="font-semibold text-yellow-200">{ann.postedBy?.name || 'You'}</span> on {new Date(ann.datePosted).toLocaleDateString()}
@@ -302,10 +407,50 @@ export default function TeacherAnnouncement() {
                 <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">Title</label>
                 <input type="text" id="title" name="title" defaultValue={form.title} className="w-full border border-gray-600 rounded-lg p-2.5 bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
               </div>
-              <div className="mb-6">
+              <div className="mb-4">
                 <label htmlFor="content" className="block text-sm font-medium text-gray-300 mb-1">Content</label>
                 <textarea id="content" name="content" defaultValue={form.content} rows="5" className="w-full border border-gray-600 rounded-lg p-2.5 bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" required ></textarea>
               </div>
+              
+              {/* File Upload Section */}
+              {!form.id && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <FaFileUpload className="inline mr-2" />
+                    Attach Files (Optional)
+                  </label>
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="w-full border border-gray-600 rounded-lg p-2.5 bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.mp4,.mp3,.zip,.rar"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Max 10MB per file. Allowed: images, documents, videos, audio, archives</p>
+                </div>
+              )}
+
+              {/* Selected Files Display */}
+              {selectedFiles.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-300 mb-2">Selected Files:</p>
+                  <div className="space-y-2">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-700 p-2 rounded">
+                        <span className="text-sm text-gray-300 truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="text-red-400 hover:text-red-300 ml-2"
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end space-x-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
                 <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">{form.id ? 'Update' : 'Create'}</button>

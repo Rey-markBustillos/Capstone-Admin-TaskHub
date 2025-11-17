@@ -25,7 +25,6 @@ const QuizzHub = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [questionTimers, setQuestionTimers] = useState([]); // seconds left per question
   const timerRef = useRef();
-  const QUESTION_TIME = 30; // seconds per question (change as needed)
   const [activeQuizId, setActiveQuizId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -53,7 +52,9 @@ const QuizzHub = () => {
       const quiz = quizzes.find(qz => qz._id === activeQuizId);
       if (quiz && quiz.questions) {
         setCurrentQuestion(0);
-        setQuestionTimers(Array(quiz.questions.length).fill(QUESTION_TIME));
+        // Use the quiz's questionTime if available, otherwise default to 30 seconds
+        const timePerQuestion = quiz.questionTime || 30;
+        setQuestionTimers(Array(quiz.questions.length).fill(timePerQuestion));
       }
     }
   }, [activeQuizId, quizzes]);

@@ -55,6 +55,9 @@ app.use(
 // Add request logging middleware
 app.use((req, res, next) => {
   console.log(`🌐 ${req.method} ${req.url} - ${new Date().toISOString()}`);
+  if (req.url.includes('/quizzes/generate')) {
+    console.log('📝 Quiz generation request body:', req.body);
+  }
   next();
 });
 

@@ -11,6 +11,14 @@ const reactionSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
+const fileAttachmentSchema = new mongoose.Schema({
+  filename: { type: String, required: true },
+  originalName: { type: String, required: true },
+  fileSize: { type: Number, required: true },
+  mimeType: { type: String, required: true },
+  uploadedAt: { type: Date, default: Date.now }
+});
+
 const AnnouncementSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
@@ -21,7 +29,9 @@ const AnnouncementSchema = new mongoose.Schema(
     comments: [commentSchema],
     reactions: [reactionSchema],
     // AYOS: Idinagdag ang field para sa mga nakakita na ng announcement
-    viewedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+    viewedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    // File attachments for announcements
+    attachments: [fileAttachmentSchema]
   },
   { timestamps: true }
 );

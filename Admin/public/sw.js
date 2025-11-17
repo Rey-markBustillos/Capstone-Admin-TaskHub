@@ -1,6 +1,6 @@
 // TaskHub Service Worker
-const CACHE_NAME = 'taskhub-v1.0.1';
-const API_CACHE_NAME = 'taskhub-api-v1.0.1';
+const CACHE_NAME = 'taskhub-v1.0.3';
+const API_CACHE_NAME = 'taskhub-api-v1.0.3';
 
 // Static files to cache
 const STATIC_FILES = [

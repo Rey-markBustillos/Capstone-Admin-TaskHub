@@ -12,10 +12,10 @@ const WelcomeScreen = ({ onContinue }) => {
         return (
           <div>
             <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-              <FaEye className="text-indigo-300" /> Our Vision
+              <FaEye className="text-indigo-300" /> Vision
             </h3>
             <p className="text-slate-300 mt-2">
-              To empower Filipino out-of-school youth and adults to continue learning and transform their lives and communities.
+              By 2022, we will have nation-loving and competent lifelong learners who are able to respond to challenges and opportunities through quality, accessible, relevant, and liberating K to 12 Program delivered by a modern, professional, pro-active, nimble, trusted and nurturing DepEd.
             </p>
           </div>
         );
@@ -23,10 +23,10 @@ const WelcomeScreen = ({ onContinue }) => {
         return (
           <div>
             <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-              <FaBullseye className="text-indigo-300" /> Our Mission
+              <FaBullseye className="text-indigo-300" /> Mission
             </h3>
             <p className="text-slate-300 mt-2">
-              To provide a viable alternative to the existing formal education system, encompassing all basic education needs of diverse learners through a range of flexible learning pathways.
+              To develop exemplary programs and open learning opportunities for out-of-school youth and adults to achieve multiple competencies and skills for Industry 4.0.
             </p>
           </div>
         );
@@ -72,17 +72,13 @@ const WelcomeScreen = ({ onContinue }) => {
       <div className="relative bg-gradient-to-br from-indigo-900/80 via-slate-900/80 to-blue-900/80 backdrop-blur-2xl p-6 sm:p-10 md:p-14 rounded-2xl shadow-2xl shadow-black/30 max-w-3xl w-full text-center border-2 border-indigo-700/40">
         {/* TaskHub Logo and ALS Title */}
         <div className="flex flex-col items-center mb-8">
-          <span className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 via-violet-500 to-blue-500 shadow-lg border-4 border-white mb-2 animate-bounce-slow">
-            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="url(#landingLogoGradient)" />
-              <defs>
-                <linearGradient id="landingLogoGradient" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" />
-                  <stop offset="100%" stopColor="#06b6d4" />
-                </linearGradient>
-              </defs>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h8M12 8v8" />
-            </svg>
+          <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 via-violet-500 to-blue-500 shadow-lg border-4 border-white mb-2 animate-bounce-slow overflow-hidden">
+            <img
+              src="/taskhublogos.png"
+              alt="TaskHub Logo"
+              className="w-20 h-20 object-cover rounded-full"
+              style={{ imageRendering: 'crisp-edges' }}
+            />
           </span>
           <div className="flex items-center justify-center gap-2 mb-2 mt-2">
             <span className="text-blue-500 text-5xl sm:text-6xl font-extrabold drop-shadow-lg animate-pulse">A</span>

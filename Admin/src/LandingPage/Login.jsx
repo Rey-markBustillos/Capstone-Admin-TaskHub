@@ -66,17 +66,13 @@ export default function Login({ onBack, onLoginSuccess }) {
 
       <div className="relative bg-gradient-to-br from-indigo-900/80 via-slate-900/80 to-blue-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/40">
         <div className="flex flex-col items-center mb-8">
-          <span className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 via-violet-500 to-blue-500 shadow-lg border-4 border-white mb-2 animate-bounce-slow">
-            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="url(#loginLogoGradient)" />
-              <defs>
-                <linearGradient id="loginLogoGradient" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" />
-                  <stop offset="100%" stopColor="#06b6d4" />
-                </linearGradient>
-              </defs>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h8M12 8v8" />
-            </svg>
+          <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 via-violet-500 to-blue-500 shadow-lg border-4 border-white mb-2 animate-bounce-slow overflow-hidden">
+            <img
+              src="/taskhublogos.png"
+              alt="TaskHub Logo"
+              className="w-20 h-20 object-cover rounded-full"
+              style={{ imageRendering: 'crisp-edges' }}
+            />
           </span>
           <h1 className="text-4xl font-extrabold text-slate-100 tracking-tight flex items-center gap-2 drop-shadow-lg">
             TaskHub

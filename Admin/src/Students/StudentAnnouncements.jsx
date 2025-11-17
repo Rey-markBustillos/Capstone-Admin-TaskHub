@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, useContext } from 'react';
 import axios from 'axios';
 import { useParams, NavLink } from 'react-router-dom';
-import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, FaRegSmile, FaRegSadTear, FaRegLaughBeam, FaRegHeart, FaRegSurprise, FaArrowLeft } from 'react-icons/fa';
+import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, FaRegSmile, FaRegSadTear, FaRegLaughBeam, FaRegHeart, FaRegSurprise, FaArrowLeft, FaFileUpload, FaDownload } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
 import SidebarContext from '../contexts/SidebarContext';
 
@@ -102,6 +102,16 @@ export default function StudentAnnouncements() {
     }
   };
 
+  const downloadFile = (filename, originalName) => {
+    const downloadUrl = `${API_BASE_URL}/announcements/attachment/${filename}?download=true`;
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = originalName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleReaction = async (announcementId, emoji) => {
     if (!user) return;
     try {
@@ -180,10 +190,134 @@ export default function StudentAnnouncements() {
                         <FaBullhorn className="mr-2" /> {ann.title}
                       </h2>
                       <p className="text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line leading-relaxed text-sm sm:text-base">{ann.content}</p>
+                      
+                      {/* Display attachments if any */}
+                      {ann.attachments && ann.attachments.length > 0 && (
+                        <div className="mb-4">
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">
+                            <FaFileUpload className="inline mr-1" />
+                            Attached Files ({ann.attachments.length})
+                          </p>
+                          <div className="space-y-3">
+                            {ann.attachments.map((attachment, index) => {
+                              const fileUrl = `${API_BASE_URL}/announcements/attachment/${attachment.filename}`;
+                              const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment.originalName);
+                              const isPdf = /\.pdf$/i.test(attachment.originalName);
+                              const isVideo = /\.(mp4|webm|ogg)$/i.test(attachment.originalName);
+                              const isAudio = /\.(mp3|wav|ogg)$/i.test(attachment.originalName);
+                              
+                              return (
+                                <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                      {attachment.originalName}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                                        {(attachment.fileSize / 1024 / 1024).toFixed(1)}MB
+                                      </span>
+                                      <button
+                                        onClick={() => downloadFile(attachment.filename, attachment.originalName)}
+                                        className="text-blue-500 hover:text-blue-400 p-1"
+                                        title="Download file"
+                                      >
+                                        <FaDownload />
+                                      </button>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Display content based on file type */}
+                                  {isImage && (
+                                    <div className="mt-2">
+                                      <img 
+                                        src={fileUrl} 
+                                        alt={attachment.originalName}
+                                        className="max-w-full h-auto rounded-lg shadow-md max-h-96 object-contain"
+                                        loading="lazy"
+                                      />
+                                    </div>
+                                  )}
+                                  
+                                  {isPdf && (
+                                    <div className="mt-2">
+                                      <iframe
+                                        src={`${fileUrl}#toolbar=0`}
+                                        className="w-full h-96 rounded-lg border border-gray-300 dark:border-gray-600"
+                                        title={attachment.originalName}
+                                      />
+                                    </div>
+                                  )}
+                                  
+                                  {isVideo && (
+                                    <div className="mt-2">
+                                      <video 
+                                        controls 
+                                        className="w-full max-h-96 rounded-lg"
+                                        preload="metadata"
+                                      >
+                                        <source src={fileUrl} type={attachment.mimeType} />
+                                        Your browser does not support the video tag.
+                                      </video>
+                                    </div>
+                                  )}
+                                  
+                                  {isAudio && (
+                                    <div className="mt-2">
+                                      <audio 
+                                        controls 
+                                        className="w-full"
+                                        preload="metadata"
+                                      >
+                                        <source src={fileUrl} type={attachment.mimeType} />
+                                        Your browser does not support the audio tag.
+                                      </audio>
+                                    </div>
+                                  )}
+                                  
+                                  {!isImage && !isPdf && !isVideo && !isAudio && (
+                                    <div className="mt-2 p-3 bg-white dark:bg-gray-600 rounded border text-center">
+                                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        Click download to view this file
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="pt-3 mt-4 text-xs sm:text-sm flex items-center gap-2">
                         <FaUserCircle className="text-indigo-400" />
                         <span className="text-gray-500 dark:text-gray-400">
-                          Posted by: <span className="font-medium">{ann.postedBy?.name || 'Teacher'}</span> on {new Date(ann.date).toLocaleDateString()}
+                          Posted by: <span className="font-medium">{ann.postedBy?.name || 'Teacher'}</span> on {(() => {
+                            const dateToUse = ann.createdAt || ann.date || new Date().toISOString();
+                            const dateObj = new Date(dateToUse);
+                            
+                            if (dateObj && !isNaN(dateObj.getTime())) {
+                              return `${dateObj.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })} at ${dateObj.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              })}`;
+                            } else {
+                              const now = new Date();
+                              return `${now.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })} at ${now.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              })}`;
+                            }
+                          })()}
                         </span>
                       </div>
                     </div>
@@ -241,7 +375,33 @@ export default function StudentAnnouncements() {
                               <div>
                                 <p className="text-sm">
                                   <span className="font-bold text-gray-900 dark:text-white">{comment.postedBy?.name || 'User'}</span>
-                                  <span className="text-gray-500 dark:text-gray-400 ml-2 text-xs">{new Date(comment.date).toLocaleDateString()}</span>
+                                  <span className="text-gray-500 dark:text-gray-400 ml-2 text-xs">
+                                    {(() => {
+                                      const dateToUse = comment.createdAt || comment.date || new Date().toISOString();
+                                      const dateObj = new Date(dateToUse);
+                                      
+                                      if (dateObj && !isNaN(dateObj.getTime())) {
+                                        return `${dateObj.toLocaleDateString('en-US', {
+                                          month: 'short',
+                                          day: 'numeric'
+                                        })} at ${dateObj.toLocaleTimeString('en-US', {
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                          hour12: true
+                                        })}`;
+                                      } else {
+                                        const now = new Date();
+                                        return `${now.toLocaleDateString('en-US', {
+                                          month: 'short',
+                                          day: 'numeric'
+                                        })} at ${now.toLocaleTimeString('en-US', {
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                          hour12: true
+                                        })}`;
+                                      }
+                                    })()}
+                                  </span>
                                 </p>
                                 <p className="text-gray-700 dark:text-gray-300 text-sm">{comment.text}</p>
                               </div>

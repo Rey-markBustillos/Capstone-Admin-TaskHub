@@ -156,6 +156,12 @@ const StudentModules = () => {
             <FaBook className="text-6xl mb-4 mx-auto opacity-50" />
             <h3 className="text-xl font-semibold mb-2">No Modules Available</h3>
             <p>Your teacher hasn't uploaded any learning modules yet.</p>
+            <div className="mt-4 text-sm text-gray-400">
+              <p>Debug Info:</p>
+              <p>Class ID: {classId}</p>
+              <p>API URL: {API_BASE_URL}/modules?classId={classId}</p>
+              <p>Modules Array Length: {modules.length}</p>
+            </div>
           </div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-600">

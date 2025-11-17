@@ -25,7 +25,25 @@ exports.createAnnouncement = async (req, res) => {
       return res.status(400).json({ message: 'Invalid user ID or class ID' });
     }
 
-    const newAnnouncement = new Announcement({ title, content, postedBy, classId });
+    // Handle file attachments if present
+    let attachments = [];
+    if (req.files && req.files.length > 0) {
+      attachments = req.files.map(file => ({
+        filename: file.filename,
+        originalName: file.originalname,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        uploadedAt: new Date()
+      }));
+    }
+
+    const newAnnouncement = new Announcement({ 
+      title, 
+      content, 
+      postedBy, 
+      classId,
+      attachments 
+    });
     await newAnnouncement.save();
     const populatedAnnouncement = await populateFields(Announcement.findById(newAnnouncement._id));
     res.status(201).json(populatedAnnouncement);

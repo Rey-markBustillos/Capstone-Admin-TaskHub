@@ -387,7 +387,7 @@ const StudentClassView = () => {
           <span className="text-xs text-gray-300">Submit work</span>
         </NavLink>
 
-        {/* Modules */}
+        {/* Modules - Learning Materials */}
         <NavLink
           to={`modules`}
           className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
