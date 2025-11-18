@@ -395,10 +395,13 @@ exports.getSubmissionForActivity = async (req, res) => {
 exports.getStudentSubmissions = async (req, res) => {
   try {
     const { studentId } = req.params;
+    console.log('🔍 [getStudentSubmissions] Request received for studentId:', studentId);
 
     const submissions = await Submission.find({ studentId })
       .populate("activityId", "title description dueDate")
       .sort({ submissionDate: -1 });
+
+    console.log('✅ [getStudentSubmissions] Found submissions:', submissions.length);
 
     const formatted = submissions.map((s) => ({
       ...s.toObject(),
@@ -409,7 +412,8 @@ exports.getStudentSubmissions = async (req, res) => {
 
     res.json({ submissions: formatted });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching submissions", error });
+    console.error('❌ [getStudentSubmissions] Error fetching submissions:', error);
+    res.status(500).json({ message: "Error fetching submissions", error: error.message });
   }
 };
 

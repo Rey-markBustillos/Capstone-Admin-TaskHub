@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone, Users } from 'lucide-react';
+import useAutoScrollToBottom from '../hooks/useAutoScrollToBottom';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -52,6 +53,8 @@ const StudentDashboard = () => {
   const [classes, setClasses] = useState([]);
   const [activities, setActivities] = useState([]);
   const [submissions, setSubmissions] = useState([]);
+  const [quizzes, setQuizzes] = useState([]);
+  const [quizSubmissions, setQuizSubmissions] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
@@ -73,6 +76,9 @@ const StudentDashboard = () => {
   const closeActivityModal = () => {
     setActivityModal({ isOpen: false, type: '', activities: [], title: '' });
   };
+
+  // Auto-scroll to bottom hook - triggers on data changes (using lengths to avoid array size warnings)
+  useAutoScrollToBottom([classes.length, announcements.length, activities.length, submissions.length, quizzes.length, quizSubmissions.length]);
 
   useEffect(() => {
     if (!studentId) {
@@ -180,6 +186,45 @@ const StudentDashboard = () => {
     fetchAnnouncements();
   }, [studentId, classes]);
 
+  // Fetch quizzes
+  useEffect(() => {
+    if (!studentId || classes.length === 0) {
+      setQuizzes([]);
+      return;
+    }
+    const fetchQuizzes = async () => {
+      try {
+        const classIds = classes.map(cls => cls._id).join(',');
+        if (!classIds) {
+          setQuizzes([]);
+          return;
+        }
+        const res = await axios.get(`${API_BASE_URL}/quiz?classIds=${classIds}`);
+        setQuizzes(res.data || []);
+      } catch (err) {
+        console.error('Error fetching quizzes:', err.response?.data || err.message);
+      }
+    };
+    fetchQuizzes();
+  }, [studentId, classes]);
+
+  // Fetch quiz submissions
+  useEffect(() => {
+    if (!studentId) {
+      setQuizSubmissions([]);
+      return;
+    }
+    const fetchQuizSubmissions = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/quiz-submissions/student/${studentId}`);
+        setQuizSubmissions(res.data || []);
+      } catch (err) {
+        console.error('Error fetching quiz submissions:', err.response?.data || err.message);
+      }
+    };
+    fetchQuizSubmissions();
+  }, [studentId, quizzes]);
+
   const now = new Date();
   const submissionMap = {};
   submissions.forEach(sub => {
@@ -193,21 +238,46 @@ const StudentDashboard = () => {
     classes.some(cls => cls._id === (a.classId?._id || a.classId))
   );
 
-  const totalSubmitted = filteredActivities.filter(a => submissionMap[a._id]).length;
-  const totalLate = filteredActivities.filter(a => {
+  const filteredQuizzes = quizzes.filter(q =>
+    classes.some(cls => cls._id === (q.classId?._id || q.classId))
+  );
+
+  // Quiz submission mapping
+  const quizSubmissionMap = {};
+  quizSubmissions.forEach(sub => {
+    const quizId = sub.quizId && sub.quizId._id ? sub.quizId._id : sub.quizId;
+    if (quizId) {
+      quizSubmissionMap[quizId] = sub;
+    }
+  });
+
+  // Activity calculations
+  const totalPendingActivities = filteredActivities.filter(a => !submissionMap[a._id] && new Date(a.date) >= now).length;
+  const totalLateActivities = filteredActivities.filter(a => {
     const sub = submissionMap[a._id];
     return sub && new Date(sub.submissionDate) > new Date(a.date);
   }).length;
-  const totalMissing = filteredActivities.filter(a => {
+  const totalMissingActivities = filteredActivities.filter(a => {
     const sub = submissionMap[a._id];
     return !sub && new Date(a.date) < now;
   }).length;
 
+  // Quiz calculations
+  const totalPendingQuizzes = filteredQuizzes.filter(q => !quizSubmissionMap[q._id] && new Date(q.dueDate) >= now).length;
+  const totalLateQuizzes = filteredQuizzes.filter(q => {
+    const sub = quizSubmissionMap[q._id];
+    return sub && new Date(sub.submissionDate) > new Date(q.dueDate);
+  }).length;
+  const totalMissingQuizzes = filteredQuizzes.filter(q => {
+    const sub = quizSubmissionMap[q._id];
+    return !sub && new Date(q.dueDate) < now;
+  }).length;
+
   return (
     // This page is intentionally full width, no sidebar allowed
-    <div className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden w-full max-w-none mx-0">
-      {/* Welcome section at the very top, no margin above */}
-      <div className="w-full flex items-center justify-center pt-8 pb-6">
+    <div className="relative min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 w-full min-w-0 mx-0 scrollbar-hidden overflow-y-auto overflow-x-hidden pt-4 pb-8 sm:pb-12">
+      {/* Welcome section */}
+      <div className="w-full flex items-center justify-center py-6">
         <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight w-full text-center">Welcome, {studentName}!</h1>
       </div>
       {/* Decorative background blobs (same as login) */}
@@ -228,7 +298,7 @@ const StudentDashboard = () => {
         <FallingBooksAnimation />
       </div>
 
-  <div className="relative z-10 w-full h-full overflow-y-auto p-2 sm:p-4 md:p-6 max-w-none mx-auto">
+  <div className="relative z-10 w-full max-w-full p-2 sm:p-4 md:p-6 mx-auto overflow-x-hidden min-w-0 mb-4 sm:mb-6">
 
 
 
@@ -239,23 +309,23 @@ const StudentDashboard = () => {
           </div>
         )}
 
-  <main className="rounded-lg p-2 sm:p-4 md:p-6 shadow-lg backdrop-blur-xl border border-indigo-700 w-full max-w-none">
+  <main className="rounded-lg p-2 sm:p-4 md:p-6 shadow-lg backdrop-blur-xl border border-indigo-700 w-full max-w-none overflow-x-hidden">
           {/* Summary Section */}
           <section className="mb-6">
             <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Activity Summary</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 text-center">
               <button 
                 onClick={(e) => {
                   e.preventDefault();
-                  const submittedActivities = filteredActivities.filter(a => submissionMap[a._id]);
-                  console.log('Submitted button clicked:', submittedActivities.length);
-                  openActivityModal('submitted', submittedActivities, 'Submitted Activities');
+                  const pendingActivities = filteredActivities.filter(a => !submissionMap[a._id] && new Date(a.date) >= now);
+                  console.log('Pending Activities button clicked:', pendingActivities.length);
+                  openActivityModal('pending', pendingActivities, 'Pending Activities');
                 }}
-                className="bg-indigo-100/80 p-3 sm:p-4 rounded shadow flex flex-col items-center hover:bg-indigo-200/80 transition-colors cursor-pointer"
+                className="bg-indigo-100/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-indigo-200/80 transition-colors cursor-pointer"
               >
-                <CheckCircle className="text-indigo-600 mb-1" size={32} />
-                <p className="text-2xl sm:text-3xl font-bold text-indigo-700">{totalSubmitted}</p>
-                <p className="text-indigo-900 font-semibold text-xs sm:text-base">Submitted</p>
+                <CheckCircle className="text-indigo-600 mb-1" size={24} />
+                <p className="text-lg sm:text-2xl font-bold text-indigo-700">{totalPendingActivities}</p>
+                <p className="text-indigo-900 font-semibold text-xs">Pending Activities</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -264,14 +334,14 @@ const StudentDashboard = () => {
                     const sub = submissionMap[a._id];
                     return sub && new Date(sub.submissionDate) > new Date(a.date);
                   });
-                  console.log('Late button clicked:', lateActivities.length);
-                  openActivityModal('late', lateActivities, 'Late Submissions');
+                  console.log('Late Activities button clicked:', lateActivities.length);
+                  openActivityModal('late', lateActivities, 'Late Activities');
                 }}
-                className="bg-yellow-100/80 p-3 sm:p-4 rounded shadow flex flex-col items-center hover:bg-yellow-200/80 transition-colors cursor-pointer"
+                className="bg-yellow-100/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-yellow-200/80 transition-colors cursor-pointer"
               >
-                <Clock className="text-yellow-600 mb-1" size={32} />
-                <p className="text-2xl sm:text-3xl font-bold text-yellow-700">{totalLate}</p>
-                <p className="text-yellow-900 font-semibold text-xs sm:text-base">Late</p>
+                <Clock className="text-yellow-600 mb-1" size={24} />
+                <p className="text-lg sm:text-2xl font-bold text-yellow-700">{totalLateActivities}</p>
+                <p className="text-yellow-900 font-semibold text-xs">Late Activities</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -280,27 +350,67 @@ const StudentDashboard = () => {
                     const sub = submissionMap[a._id];
                     return !sub && new Date(a.date) < now;
                   });
-                  console.log('Missing button clicked:', missingActivities.length);
+                  console.log('Missing Activities button clicked:', missingActivities.length);
                   openActivityModal('missing', missingActivities, 'Missing Activities');
                 }}
-                className="bg-red-100/80 p-3 sm:p-4 rounded shadow flex flex-col items-center hover:bg-red-200/80 transition-colors cursor-pointer"
+                className="bg-red-100/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-red-200/80 transition-colors cursor-pointer"
               >
-                <AlertTriangle className="text-red-600 mb-1" size={32} />
-                <p className="text-2xl sm:text-3xl font-bold text-red-700">{totalMissing}</p>
-                <p className="text-red-900 font-semibold text-xs sm:text-base">Missing</p>
+                <AlertTriangle className="text-red-600 mb-1" size={24} />
+                <p className="text-lg sm:text-2xl font-bold text-red-700">{totalMissingActivities}</p>
+                <p className="text-red-900 font-semibold text-xs">Missing Activities</p>
               </button>
-              <div className="bg-green-100/80 p-3 sm:p-4 rounded shadow flex flex-col items-center">
-                <Megaphone className="text-green-600 mb-1" size={32} />
-                <p className="text-2xl sm:text-3xl font-bold text-green-700">{announcements.length}</p>
-                <p className="text-green-900 font-semibold text-xs sm:text-base">Announcements</p>
-              </div>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  const pendingQuizzes = filteredQuizzes.filter(q => !quizSubmissionMap[q._id] && new Date(q.dueDate) >= now);
+                  console.log('Pending Quizzes button clicked:', pendingQuizzes.length);
+                  openActivityModal('pending-quiz', pendingQuizzes, 'Pending Quizzes');
+                }}
+                className="bg-blue-100/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-blue-200/80 transition-colors cursor-pointer"
+              >
+                <CheckCircle className="text-blue-600 mb-1" size={24} />
+                <p className="text-lg sm:text-2xl font-bold text-blue-700">{totalPendingQuizzes}</p>
+                <p className="text-blue-900 font-semibold text-xs">Pending Quiz</p>
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  const lateQuizzes = filteredQuizzes.filter(q => {
+                    const sub = quizSubmissionMap[q._id];
+                    return sub && new Date(sub.submissionDate) > new Date(q.dueDate);
+                  });
+                  console.log('Late Quizzes button clicked:', lateQuizzes.length);
+                  openActivityModal('late-quiz', lateQuizzes, 'Late Quizzes');
+                }}
+                className="bg-orange-100/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-orange-200/80 transition-colors cursor-pointer"
+              >
+                <Clock className="text-orange-600 mb-1" size={24} />
+                <p className="text-lg sm:text-2xl font-bold text-orange-700">{totalLateQuizzes}</p>
+                <p className="text-orange-900 font-semibold text-xs">Late Quiz</p>
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  const missingQuizzes = filteredQuizzes.filter(q => {
+                    const sub = quizSubmissionMap[q._id];
+                    return !sub && new Date(q.dueDate) < now;
+                  });
+                  console.log('Missing Quizzes button clicked:', missingQuizzes.length);
+                  openActivityModal('missing-quiz', missingQuizzes, 'Missing Quizzes');
+                }}
+                className="bg-red-200/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-red-300/80 transition-colors cursor-pointer"
+              >
+                <AlertTriangle className="text-red-700 mb-1" size={24} />
+                <p className="text-lg sm:text-2xl font-bold text-red-800">{totalMissingQuizzes}</p>
+                <p className="text-red-900 font-semibold text-xs">Missing Quiz</p>
+              </button>
             </div>
           </section>
 
-          {/* Classes and Announcements Side by Side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-            {/* Classes List */}
-            <section>
+          {/* Classes and Announcements - Mobile: Stacked, Desktop: Side by Side */}
+          <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-8 min-w-0 w-full mb-8">
+            {/* Classes List - Always appears first on mobile */}
+            <section className="min-w-0 w-full order-1">
               {loadingClasses && <LoadingSpinner />}
               {error && <p className="text-red-600">{error}</p>}
               {!loadingClasses && !error && classes.length === 0 && <p className="text-white">You are not enrolled in any classes.</p>}
@@ -308,7 +418,7 @@ const StudentDashboard = () => {
               {!loadingClasses && !error && classes.length > 0 && (
                 <>
                   <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Your Enrolled Classes</h2>
-                  <ul className="space-y-3 sm:space-y-4">
+                  <ul className="space-y-3 sm:space-y-4 pb-4">
                     {classes.map((cls) => {
                       // Find soonest schedule for this class
                       let soonestSched = null;
@@ -324,19 +434,19 @@ const StudentDashboard = () => {
                         });
                       }
                       return (
-                        <li key={cls._id} className="bg-gray-200/80 p-3 sm:p-4 rounded shadow">
-                          <h3 className="text-lg sm:text-xl text-black font-bold">{cls.className}</h3>
-                          <div className="flex flex-col sm:flex-row sm:items-center">
-                            <p className="text-black mr-0 sm:mr-4"><strong>Teacher:</strong> {cls.teacherName}</p>
-                            <p className="text-black mr-0 sm:mr-4"><strong>Room:</strong> {cls.roomNumber}</p>
-                            <p className="text-black">
-                              <strong>Time:</strong> {
+                        <li key={cls._id} className="bg-gray-200/80 p-3 sm:p-4 rounded shadow min-w-0">
+                          <h3 className="text-lg sm:text-xl text-black font-bold truncate">{cls.className}</h3>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+                            <p className="text-black mr-0 sm:mr-4 text-sm sm:text-base"><strong>Teacher:</strong> <span className="truncate">{cls.teacherName}</span></p>
+                            <p className="text-black mr-0 sm:mr-4 text-sm sm:text-base"><strong>Room:</strong> <span className="truncate">{cls.roomNumber}</span></p>
+                            <p className="text-black text-sm sm:text-base">
+                              <strong>Time:</strong> <span className="truncate">{
                                 soonestSched
                                   ? soonestSched.dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ` | ${soonestSched.dt.toLocaleString('en-US', { weekday: 'long' })}`
                                   : (cls.time && !isNaN(new Date(`1970-01-01T${cls.time}`).getTime())
                                       ? new Date(`1970-01-01T${cls.time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                                       : 'TBA')
-                              }
+                              }</span>
                             </p>
                           </div>
                         </li>
@@ -347,16 +457,16 @@ const StudentDashboard = () => {
               )}
             </section>
 
-            {/* Announcements Section */}
-            <section>
+            {/* Announcements Section - Always appears second on mobile */}
+            <section className="min-w-0 w-full order-2">
               <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Announcements</h2>
               {loadingAnnouncements && <LoadingSpinner />}
               {!loadingAnnouncements && announcements.length === 0 && <p className="text-white">No announcements available.</p>}
               {!loadingAnnouncements && announcements.length > 0 && (
-                <ul className="space-y-2 sm:space-y-3">
+                <ul className="space-y-2 sm:space-y-3 pb-8">
                   {announcements.map((ann) => (
-                    <li key={ann._id} className="bg-green-100/80 p-2 sm:p-3 rounded shadow text-green-900">
-                      <p className="font-semibold">{ann.title}</p>
+                    <li key={ann._id} className="bg-green-100/80 p-2 sm:p-3 rounded shadow text-green-900 min-w-0">
+                      <p className="font-semibold text-sm sm:text-base truncate">{ann.title}</p>
                       <p className="text-xs sm:text-sm italic">
                         {(() => {
                           // Try different date fields in order of preference
@@ -396,6 +506,9 @@ const StudentDashboard = () => {
             </section>
           </div>
         </main>
+        
+        {/* Extra spacing for mobile scroll */}
+        <div className="h-8 sm:h-12 w-full"></div>
       </div>
 
       {/* Activity Details Modal */}

@@ -171,16 +171,23 @@ const updateClass = async (req, res) => {
 const getClassesByStudent = async (req, res) => {
   try {
     const { studentId } = req.params;
+    console.log('🔍 [getClassesByStudent] Request received for studentId:', studentId);
+    
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      console.log('❌ [getClassesByStudent] Invalid student ID format');
       return res.status(400).json({ message: 'Invalid student ID' });
     }
+    
+    console.log('🔎 [getClassesByStudent] Searching for classes with student:', studentId);
     const classes = await Class.find({ students: studentId })
       .populate('teacher', 'name email')
       .populate('students', 'name email')
       .sort({ createdAt: -1 });
+    
+    console.log('✅ [getClassesByStudent] Found classes:', classes.length);
     res.json(classes);
   } catch (error) {
-    console.error('Error fetching student classes:', error);
+    console.error('❌ [getClassesByStudent] Error fetching student classes:', error);
     res.status(500).json({ message: 'Server error while fetching student classes' });
   }
 };

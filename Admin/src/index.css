@@ -46,3 +46,20 @@ body {
 .animate-bounceOnce {
   animation: bounceOnce 0.7s cubic-bezier(0.4,0,0.2,1);
 }
+
+/* Hidden scrollbar for dashboard and other components */
+.scrollbar-hidden {
+  /* For Webkit browsers (Chrome, Safari, Edge) */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  overflow-y: auto; /* Allow vertical scrolling only */
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Webkit browsers */
+}
+
+.scrollbar-hidden::-webkit-scrollbar-horizontal {
+  display: none; /* Specifically hide horizontal scrollbar */
+}
