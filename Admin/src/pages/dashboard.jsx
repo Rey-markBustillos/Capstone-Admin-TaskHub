@@ -27,6 +27,14 @@ const AdminDashboard = () => {
   const [errorUsers, setErrorUsers] = useState("");
   const [newUserName, setNewUserName] = useState("");
   const [newUserRole, setNewUserRole] = useState("Student");
+  
+  // Statistics states
+  const [totalVisits, setTotalVisits] = useState(0);
+  const [statistics, setStatistics] = useState({
+    totalStudents: 0,
+    totalTeachers: 0,
+    totalAdmins: 0
+  });
 
   // Fetch users on component mount or when User Management menu is selected
   useEffect(() => {
@@ -34,6 +42,27 @@ const AdminDashboard = () => {
       fetchUsers();
     }
   }, [selectedMenu]);
+  
+  // Track visits on component mount
+  useEffect(() => {
+    // Get current visits from localStorage or start at 0
+    const currentVisits = parseInt(localStorage.getItem('adminVisits') || '0');
+    const newVisitCount = currentVisits + 1;
+    localStorage.setItem('adminVisits', newVisitCount.toString());
+    setTotalVisits(newVisitCount);
+  }, []);
+  
+  // Calculate statistics when users data changes
+  useEffect(() => {
+    if (users.length > 0) {
+      const stats = {
+        totalStudents: users.filter(user => user.role === 'student').length,
+        totalTeachers: users.filter(user => user.role === 'teacher').length,
+        totalAdmins: users.filter(user => user.role === 'admin').length
+      };
+      setStatistics(stats);
+    }
+  }, [users]);
   
 
   
@@ -122,16 +151,67 @@ const AdminDashboard = () => {
             <p className="text-gray-500 font-medium">Welcome, Admin! Manage users, classes, and monitor activities here.</p>
           </div>
         </div>
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-100 via-white to-blue-200 p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center border-t-4 border-blue-400">
-            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-200 text-blue-700 mb-2 shadow border-2 border-white">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 014.5 20.25v-.75z" /></svg>
-            </span>
-            <h3 className="text-blue-700 font-semibold">Total Users</h3>
-            <p className="text-3xl font-extrabold text-blue-900 drop-shadow">{users.length}</p>
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Total Students */}
+          <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6 rounded-2xl shadow-lg border-t-4 border-blue-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-600 text-sm font-semibold uppercase tracking-wide">Total Students</p>
+                <p className="text-3xl font-bold text-blue-800">{statistics.totalStudents}</p>
+              </div>
+              <div className="bg-blue-200 p-3 rounded-full">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 014.5 20.25v-.75z" />
+                </svg>
+              </div>
+            </div>
           </div>
 
+          {/* Total Teachers */}
+          <div className="bg-gradient-to-br from-green-50 via-white to-green-100 p-6 rounded-2xl shadow-lg border-t-4 border-green-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-600 text-sm font-semibold uppercase tracking-wide">Total Teachers</p>
+                <p className="text-3xl font-bold text-green-800">{statistics.totalTeachers}</p>
+              </div>
+              <div className="bg-green-200 p-3 rounded-full">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443a55.381 55.381 0 015.25 2.882V15" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Total Admins */}
+          <div className="bg-gradient-to-br from-yellow-50 via-white to-yellow-100 p-6 rounded-2xl shadow-lg border-t-4 border-yellow-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-600 text-sm font-semibold uppercase tracking-wide">Total Admins</p>
+                <p className="text-3xl font-bold text-yellow-800">{statistics.totalAdmins}</p>
+              </div>
+              <div className="bg-yellow-200 p-3 rounded-full">
+                <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Total Visits */}
+          <div className="bg-gradient-to-br from-purple-50 via-white to-purple-100 p-6 rounded-2xl shadow-lg border-t-4 border-purple-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-600 text-sm font-semibold uppercase tracking-wide">Total Visits</p>
+                <p className="text-3xl font-bold text-purple-800">{totalVisits.toLocaleString()}</p>
+              </div>
+              <div className="bg-purple-200 p-3 rounded-full">
+                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Table with filter */}
