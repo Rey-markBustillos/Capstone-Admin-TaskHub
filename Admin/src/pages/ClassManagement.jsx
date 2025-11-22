@@ -83,23 +83,44 @@ const ClassManagement = () => {
     reader.readAsBinaryString(file);
   };
 
-  // Auto-enroll imported students
-  const handleAutoEnrollStudents = (studentIds, count) => {
+  // Auto-enroll imported students (preserving existing enrollments)
+  const handleAutoEnrollStudents = (newStudentIds, count) => {
     if (!selectedClassId) {
       setImportError('Please select a class first.');
       setTimeout(() => setImportError(''), 3000);
       return;
     }
     
+    // Get currently enrolled students in the selected class
+    const selectedClass = classes.find(cls => cls._id === selectedClassId);
+    const existingStudentIds = selectedClass?.students?.map(student => student._id) || [];
+    
+    // Filter out students who are already enrolled
+    const studentsToAdd = newStudentIds.filter(id => !existingStudentIds.includes(id));
+    
+    if (studentsToAdd.length === 0) {
+      setImportError('All students from the Excel file are already enrolled in this class.');
+      setTimeout(() => setImportError(''), 3000);
+      return;
+    }
+    
+    // Combine existing and new student IDs
+    const allStudentIds = [...existingStudentIds, ...studentsToAdd];
+    
     axios.put(`${API_BASE_URL}/class/${selectedClassId}/students`, {
-      studentIds: studentIds,
+      studentIds: allStudentIds,
     })
       .then((response) => {
         setClasses(classes.map(cls =>
           cls._id === selectedClassId ? response.data : cls
         ));
-        setImportSuccess(`${count} student(s) automatically enrolled in the class!`);
-        setTimeout(() => setImportSuccess(''), 3000);
+        const alreadyEnrolled = count - studentsToAdd.length;
+        let message = `${studentsToAdd.length} new student(s) enrolled successfully!`;
+        if (alreadyEnrolled > 0) {
+          message += ` (${alreadyEnrolled} were already enrolled)`;
+        }
+        setImportSuccess(message);
+        setTimeout(() => setImportSuccess(''), 4000);
         // Reset the file input
         const fileInput = document.querySelector('input[type="file"]');
         if (fileInput) fileInput.value = '';
