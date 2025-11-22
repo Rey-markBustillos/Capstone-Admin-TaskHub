@@ -35,6 +35,8 @@ const ClassManagement = () => {
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [classToDelete, setClassToDelete] = useState(null);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const [classToArchive, setClassToArchive] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
   const [archivedClasses, setArchivedClasses] = useState([]);
   // Handle Excel import for students with automatic enrollment
@@ -58,8 +60,6 @@ const ClassManagement = () => {
       // Assume first row is header, look for required columns
       const header = data[0].map(h => h.toLowerCase());
       const emailIdx = header.indexOf('email');
-      const nameIdx = header.indexOf('name');
-      const lrnIdx = header.indexOf('lrn');
       
       if (emailIdx === -1) {
         setImportError('Excel must have an Email column.');
@@ -276,18 +276,30 @@ const ClassManagement = () => {
       });
   };
 
-  // Archive a class
+  // Show archive confirmation modal
   const handleArchiveClass = (classItem) => {
-    axios.put(`${API_BASE_URL}/class/${classItem._id}/archive`)
+    setClassToArchive(classItem);
+    setShowArchiveModal(true);
+  };
+
+  // Confirm archive class
+  const confirmArchiveClass = () => {
+    if (!classToArchive) return;
+    
+    axios.put(`${API_BASE_URL}/class/${classToArchive._id}/archive`)
       .then(() => {
-        setClasses(classes.filter(cls => cls._id !== classItem._id));
-        setSuccess('Class archived successfully!');
-        setTimeout(() => setSuccess(''), 3000);
+        setClasses(classes.filter(cls => cls._id !== classToArchive._id));
+        setSuccess('Class archived successfully! Students will no longer see this class.');
+        setTimeout(() => setSuccess(''), 4000);
+        setShowArchiveModal(false);
+        setClassToArchive(null);
       })
       .catch((error) => {
         console.error('Error archiving class:', error);
         setError('Failed to archive class. Please try again.');
         setTimeout(() => setError(''), 3000);
+        setShowArchiveModal(false);
+        setClassToArchive(null);
       });
   };
 
@@ -959,6 +971,69 @@ const ClassManagement = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
                 Delete Class
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Archive Confirmation Modal */}
+      {showArchiveModal && classToArchive && (
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50 p-4">
+          <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full border-t-8 border-yellow-500 relative">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 text-3xl shadow border-2 border-white">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 8.25l-3.75-3.75h2.25V12h3V15h2.25L12 18.75zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+              <h3 className="text-2xl font-bold text-gray-800">Archive Class</h3>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-600 text-lg mb-4">
+                Are you sure you want to archive this class?
+              </p>
+              <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-yellow-500">
+                <p className="font-semibold text-gray-800">{classToArchive.className}</p>
+                <p className="text-sm text-gray-600">
+                  Teacher: {classToArchive.teacher?.name || 'N/A'}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Students: {(classToArchive.students || []).length} enrolled
+                </p>
+              </div>
+              <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400 mt-4">
+                <p className="text-yellow-800 text-sm font-medium mb-2">
+                  ⚠️ <strong>Important:</strong> When you archive this class:
+                </p>
+                <ul className="text-yellow-700 text-sm space-y-1 ml-4">
+                  <li>• Students will no longer see this class</li>
+                  <li>• All activities and content will be hidden</li>
+                  <li>• The class can be restored later if needed</li>
+                  <li>• No data will be permanently deleted</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4">
+              <button
+                className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors font-medium"
+                onClick={() => {
+                  setShowArchiveModal(false);
+                  setClassToArchive(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-yellow-600 text-white px-6 py-2 rounded-md hover:bg-yellow-700 transition-colors font-medium flex items-center gap-2"
+                onClick={confirmArchiveClass}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+                Archive Class
               </button>
             </div>
           </div>
