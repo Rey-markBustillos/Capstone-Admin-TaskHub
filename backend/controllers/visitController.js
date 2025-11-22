@@ -2,6 +2,9 @@ const Visit = require('../models/Visit');
 
 // Record a visit
 const recordVisit = async (req, res) => {
+  console.log('🔥 recordVisit API called');
+  console.log('📝 Request body:', req.body);
+  
   try {
     const { page, userId, sessionId } = req.body;
     const userAgent = req.get('User-Agent') || '';
@@ -58,15 +61,18 @@ const recordVisit = async (req, res) => {
 
 // Get total visits count
 const getTotalVisits = async (req, res) => {
+  console.log('📊 getTotalVisits API called');
+  
   try {
     const totalVisits = await Visit.countDocuments();
+    console.log('📊 Total visits count:', totalVisits);
     
     res.json({
       totalVisits,
       message: 'Total visits retrieved successfully'
     });
   } catch (error) {
-    console.error('Error getting total visits:', error);
+    console.error('❌ Error getting total visits:', error);
     res.status(500).json({ 
       message: 'Error getting total visits', 
       error: error.message 

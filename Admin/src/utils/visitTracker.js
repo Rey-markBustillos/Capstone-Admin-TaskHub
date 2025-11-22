@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 // Generate a unique session ID for this browser session
 const generateSessionId = () => {
@@ -19,7 +19,9 @@ const getSessionId = () => {
 
 // Check if this session has already been counted
 const hasSessionBeenCounted = () => {
-  return sessionStorage.getItem('visit_counted') === 'true';
+  const counted = sessionStorage.getItem('visit_counted') === 'true';
+  console.log('🔍 Has session been counted?', counted);
+  return counted;
 };
 
 // Mark session as counted
@@ -29,27 +31,37 @@ const markSessionAsCounted = () => {
 
 // Record application visit (called once per session)
 export const recordApplicationVisit = async () => {
+  console.log('🔥 recordApplicationVisit called');
+  
   // Only count once per session
   if (hasSessionBeenCounted()) {
-    console.log('Visit already counted for this session');
+    console.log('✅ Visit already counted for this session');
     return;
   }
 
   try {
     const sessionId = getSessionId();
+    console.log('📝 Recording visit with sessionId:', sessionId);
+    console.log('🌐 API URL:', `${API_BASE_URL}/visits`);
     
-    await axios.post(`${API_BASE_URL}visits`, {
+    const response = await axios.post(`${API_BASE_URL}/visits`, {
       page: 'application-access',
       userId: null,
       sessionId: sessionId
     });
     
+    console.log('✅ Visit response:', response.data);
+    
     // Mark this session as counted
     markSessionAsCounted();
-    console.log('Application visit recorded successfully');
+    console.log('🎉 Application visit recorded successfully');
     
   } catch (error) {
-    console.error('Error recording application visit:', error);
+    console.error('❌ Error recording application visit:', error);
+    if (error.response) {
+      console.error('❌ Response data:', error.response.data);
+      console.error('❌ Response status:', error.response.status);
+    }
     // Don't throw error to prevent breaking the app for unauthenticated users
   }
 };
@@ -57,10 +69,16 @@ export const recordApplicationVisit = async () => {
 // Get total visits count
 export const fetchTotalVisits = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}visits/total`);
+    console.log('📊 Fetching total visits from:', `${API_BASE_URL}/visits/total`);
+    const response = await axios.get(`${API_BASE_URL}/visits/total`);
+    console.log('📊 Total visits response:', response.data);
     return response.data.totalVisits;
   } catch (error) {
-    console.error('Error fetching total visits:', error);
+    console.error('❌ Error fetching total visits:', error);
+    if (error.response) {
+      console.error('❌ Response data:', error.response.data);
+      console.error('❌ Response status:', error.response.status);
+    }
     return 0;
   }
 };
@@ -70,7 +88,7 @@ export const recordPageVisit = async (pageName, userId = null) => {
   try {
     const sessionId = getSessionId();
     
-    await axios.post(`${API_BASE_URL}visits`, {
+    await axios.post(`${API_BASE_URL}/visits`, {
       page: pageName,
       userId: userId,
       sessionId: sessionId
