@@ -128,7 +128,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         {/* Statistics Cards */}
-        <div className="flex flex-col gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Total Classes */}
           <div className="bg-gradient-to-r from-indigo-50 via-white to-indigo-100 p-4 rounded-xl shadow-md border-l-4 border-indigo-400 flex items-center justify-between">
             <div className="flex items-center gap-4">
