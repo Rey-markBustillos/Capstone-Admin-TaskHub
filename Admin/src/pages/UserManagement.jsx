@@ -407,6 +407,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
                 <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Name</th>
                 <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Email</th>
                 <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Role</th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">LRN/ID</th>
                 <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Actions</th>
               </tr>
             </thead>
@@ -428,6 +429,11 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
                         {user.role === 'admin' && <span className="text-lg">🧑‍💼</span>}
                         {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                       </span>
+                    </td>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle text-gray-700">
+                      {user.role === 'student' ? (user.lrn || 'N/A') : 
+                       user.role === 'teacher' ? (user.teacherId || 'N/A') : 
+                       (user.adminId || 'N/A')}
                     </td>
                     <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
                       <button
