@@ -4,8 +4,7 @@ const {
   recordVisit,
   getTotalVisits,
   getVisitsByPage,
-  getVisitStatistics,
-  getDailyActiveUsers
+  getVisitStatistics
 } = require('../controllers/visitController');
 
 // POST /api/visits - Record a new visit
@@ -19,8 +18,5 @@ router.get('/page/:page', getVisitsByPage);
 
 // GET /api/visits/statistics - Get comprehensive visit statistics
 router.get('/statistics', getVisitStatistics);
-
-// GET /api/visits/daily-active-users - Get daily active users chart data
-router.get('/daily-active-users', getDailyActiveUsers);
 
 module.exports = router;

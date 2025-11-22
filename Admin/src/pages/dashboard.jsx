@@ -53,7 +53,7 @@ const AdminDashboard = () => {
   // Fetch daily active users chart data
   const fetchDailyActiveUsers = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/visits/daily-active-users`);
+      const response = await axios.get(`${API_BASE_URL}/users/daily-active-users`);
       setChartData(response.data.chartData);
     } catch (error) {
       console.error('Error fetching daily active users:', error);

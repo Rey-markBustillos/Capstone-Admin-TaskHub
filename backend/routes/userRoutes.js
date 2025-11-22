@@ -9,6 +9,7 @@ const {
   deleteUser,
   addStudent,
   loginUser,
+  getDailyActiveUsers,
 } = require('../controllers/userController');
 
 // Get all users
@@ -31,5 +32,8 @@ router.delete('/:id', deleteUser);
 
 // Add a student to a user
 router.post('/add-student', addStudent);
+
+// Get daily active users statistics
+router.get('/daily-active-users', getDailyActiveUsers);
 
 module.exports = router;

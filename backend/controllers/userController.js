@@ -176,3 +176,124 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// Get daily active users statistics
+exports.getDailyActiveUsers = async (req, res) => {
+  console.log('📊 getDailyActiveUsers API called');
+  
+  try {
+    const Visit = require('../models/Visit');
+    
+    // Get last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    // Generate array of last 7 days
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      last7Days.push(date.toISOString().split('T')[0]);
+    }
+
+    // Get visits with user info for the last 7 days
+    const dailyUserActivity = await Visit.aggregate([
+      {
+        $match: {
+          timestamp: { $gte: sevenDaysAgo },
+          userId: { $ne: null }
+        }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: '$user'
+      },
+      {
+        $group: {
+          _id: {
+            date: {
+              $dateToString: { format: "%Y-%m-%d", date: "$timestamp" }
+            },
+            userId: '$userId',
+            role: '$user.role'
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            date: '$_id.date',
+            role: '$_id.role'
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: '$_id.date',
+          students: {
+            $sum: {
+              $cond: [{ $eq: ['$_id.role', 'student'] }, '$count', 0]
+            }
+          },
+          teachers: {
+            $sum: {
+              $cond: [{ $eq: ['$_id.role', 'teacher'] }, '$count', 0]
+            }
+          },
+          admins: {
+            $sum: {
+              $cond: [{ $eq: ['$_id.role', 'admin'] }, '$count', 0]
+            }
+          }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    // Create a map for easier lookup
+    const activityMap = {};
+    dailyUserActivity.forEach(day => {
+      activityMap[day._id] = {
+        students: day.students,
+        teachers: day.teachers,
+        admins: day.admins
+      };
+    });
+
+    // Fill in missing days with zeros
+    const chartData = {
+      labels: last7Days.map(date => {
+        const d = new Date(date);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }),
+      students: last7Days.map(date => activityMap[date]?.students || 0),
+      teachers: last7Days.map(date => activityMap[date]?.teachers || 0),
+      admins: last7Days.map(date => activityMap[date]?.admins || 0)
+    };
+
+    console.log('📊 Daily active users data:', chartData);
+
+    res.json({
+      chartData,
+      totalDays: 7,
+      message: 'Daily active users retrieved successfully'
+    });
+  } catch (error) {
+    console.error('❌ Error getting daily active users:', error);
+    res.status(500).json({ 
+      message: 'Error getting daily active users', 
+      error: error.message 
+    });
+  }
+};
