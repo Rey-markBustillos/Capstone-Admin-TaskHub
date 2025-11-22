@@ -81,9 +81,15 @@ const AdminDashboard = () => {
   };
 
   // Filtered users for display
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(filter.toLowerCase())
-  );
+  const filteredUsers = users.filter((user) => {
+    const filterLower = filter.toLowerCase();
+    return (
+      user.name.toLowerCase().includes(filterLower) ||
+      (user.lrn && user.lrn.toLowerCase().includes(filterLower)) ||
+      (user.teacherId && user.teacherId.toLowerCase().includes(filterLower)) ||
+      (user.adminId && user.adminId.toLowerCase().includes(filterLower))
+    );
+  });
 
   // Add new user
   const handleAddUser = async () => {
@@ -205,7 +211,7 @@ const AdminDashboard = () => {
               <h2 className="text-xl font-semibold">User Management</h2>
               <input
                 type="text"
-                placeholder="Filter by name"
+                placeholder="Filter by name, LRN, or ID"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className="border border-gray-300 rounded px-3 py-1"
@@ -235,6 +241,10 @@ const AdminDashboard = () => {
                           <svg className="w-5 h-5 text-green-500 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5v2.25m0 0a2.25 2.25 0 01-2.25-2.25h4.5A2.25 2.25 0 0112 18.75z" /></svg>
                           Role
                         </th>
+                        <th className="px-4 py-2 text-left text-blue-800 font-bold text-base flex items-center gap-2">
+                          <svg className="w-5 h-5 text-purple-500 inline-block" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0z" /></svg>
+                          LRN/ID
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -248,6 +258,24 @@ const AdminDashboard = () => {
                             {user.role === 'student' && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold"><span className="text-lg">👨‍🎓</span>Student</span>}
                             {user.role === 'teacher' && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold"><span className="text-lg">👨‍🏫</span>Teacher</span>}
                             {user.role === 'admin' && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold"><span className="text-lg">🧑‍💼</span>Admin</span>}
+                          </td>
+                          <td className="px-4 py-2 border-b border-blue-100 text-gray-700 flex items-center gap-2">
+                            <svg className="w-4 h-4 text-purple-400 group-hover:text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0z" /></svg>
+                            {user.role === 'student' && (
+                              <span className="text-sm font-medium text-blue-700">
+                                {user.lrn || user.studentId || 'No LRN'}
+                              </span>
+                            )}
+                            {user.role === 'teacher' && (
+                              <span className="text-sm font-medium text-green-700">
+                                {user.teacherId || user._id?.slice(-8) || 'No ID'}
+                              </span>
+                            )}
+                            {user.role === 'admin' && (
+                              <span className="text-sm font-medium text-yellow-700">
+                                {user.adminId || user._id?.slice(-8) || 'No ID'}
+                              </span>
+                            )}
                           </td>
                         </tr>
                       ))}
