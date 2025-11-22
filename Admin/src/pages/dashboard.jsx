@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { fetchTotalVisits, recordPageVisit } from '../utils/visitTracker';
+import ActiveUsersChart from '../components/ActiveUsersChart';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -24,19 +25,46 @@ const AdminDashboard = () => {
     totalAdmins: 0,
     totalClasses: 0
   });
+  const [chartData, setChartData] = useState({
+    labels: [],
+    students: [],
+    teachers: [],
+    admins: []
+  });
 
   // Fetch users and classes on component mount
   useEffect(() => {
     fetchUsers();
     fetchClasses();
     loadTotalVisits();
-    recordPageVisit('admin-dashboard'); // Record specific page visit for analytics
+    fetchDailyActiveUsers();
+    
+    // Get current user for visit tracking
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    recordPageVisit('admin-dashboard', currentUser.id); // Record specific page visit for analytics
   }, []);
   
   // Load total visits from backend
   const loadTotalVisits = async () => {
     const visits = await fetchTotalVisits();
     setTotalVisits(visits);
+  };
+
+  // Fetch daily active users chart data
+  const fetchDailyActiveUsers = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/visits/daily-active-users`);
+      setChartData(response.data.chartData);
+    } catch (error) {
+      console.error('Error fetching daily active users:', error);
+      // Set default empty data
+      setChartData({
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        students: [0, 0, 0, 0, 0, 0, 0],
+        teachers: [0, 0, 0, 0, 0, 0, 0],
+        admins: [0, 0, 0, 0, 0, 0, 0]
+      });
+    }
   };
   
   // Calculate statistics when users or classes data changes
@@ -205,23 +233,28 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* User Management Section - Moved up for better visibility */}
-        <div className="mb-8 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+        {/* User Management and Chart Section */}
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* User Management Section */}
+          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">User Management</h2>
-              <input
-                type="text"
-                placeholder="Filter by name, LRN, or ID"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1"
-              />
-              <button
-                onClick={() => setModalOpen(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                Add New
-              </button>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Filter by name, LRN, or ID"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="border border-gray-300 rounded px-3 py-1 text-sm"
+                />
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+                >
+                  Add New
+                </button>
+              </div>
             </div>
             <div className="overflow-x-auto max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-blue-100 rounded-lg bg-gradient-to-br from-blue-50 via-white to-blue-100 shadow-md">
                 {loadingUsers && <p className="flex items-center gap-2 text-blue-600 font-semibold p-4"><svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>Loading users...</p>}
@@ -275,6 +308,23 @@ const AdminDashboard = () => {
                   </div>
                 )}
             </div>
+          </div>
+
+          {/* Daily Active Users Chart Section */}
+          <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Daily Active Users
+              </h2>
+              <div className="text-xs text-gray-500">Last 7 Days</div>
+            </div>
+            <div className="h-80">
+              <ActiveUsersChart data={chartData} type="line" />
+            </div>
+          </div>
         </div>
 
         {/* Add User Modal */}

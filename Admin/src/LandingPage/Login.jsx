@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaUserCircle, FaLock, FaSignInAlt, FaArrowLeft } from "react-icons/fa";
-import { recordApplicationVisit, recordPageVisit } from '../utils/visitTracker';
+import { recordApplicationVisit, recordPageVisit, recordUserLogin } from '../utils/visitTracker';
 
 // Switch between local and deployed backend here:
 // For Vite:
@@ -45,6 +45,10 @@ export default function Login({ onBack, onLoginSuccess }) {
         setError(data.message || "Invalid email or password.");
       } else {
         localStorage.setItem("user", JSON.stringify(data));
+        // Record user login for active user tracking
+        if (data.id && data.role) {
+          recordUserLogin(data.id, data.role);
+        }
         onLoginSuccess(data);
       }
     } catch (err) {

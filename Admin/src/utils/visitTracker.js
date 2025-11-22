@@ -87,6 +87,7 @@ export const fetchTotalVisits = async () => {
 export const recordPageVisit = async (pageName, userId = null) => {
   try {
     const sessionId = getSessionId();
+    console.log('📝 Recording page visit:', { pageName, userId, sessionId });
     
     await axios.post(`${API_BASE_URL}/visits`, {
       page: pageName,
@@ -94,7 +95,26 @@ export const recordPageVisit = async (pageName, userId = null) => {
       sessionId: sessionId
     });
     
+    console.log('✅ Page visit recorded successfully');
   } catch (error) {
-    console.error('Error recording page visit:', error);
+    console.error('❌ Error recording page visit:', error);
+  }
+};
+
+// Record user login visit (tracks authenticated user activity)
+export const recordUserLogin = async (userId, userRole) => {
+  try {
+    const sessionId = getSessionId();
+    console.log('🔑 Recording user login:', { userId, userRole, sessionId });
+    
+    await axios.post(`${API_BASE_URL}/visits`, {
+      page: `${userRole}-login`,
+      userId: userId,
+      sessionId: sessionId
+    });
+    
+    console.log('✅ User login visit recorded successfully');
+  } catch (error) {
+    console.error('❌ Error recording user login:', error);
   }
 };
