@@ -28,16 +28,31 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchUsers();
     fetchClasses();
+    recordVisit();
+    fetchTotalVisits();
   }, []);
   
-  // Track visits on component mount
-  useEffect(() => {
-    // Get current visits from localStorage or start at 0
-    const currentVisits = parseInt(localStorage.getItem('adminVisits') || '0');
-    const newVisitCount = currentVisits + 1;
-    localStorage.setItem('adminVisits', newVisitCount.toString());
-    setTotalVisits(newVisitCount);
-  }, []);
+  // Record visit and fetch total visits
+  const recordVisit = async () => {
+    try {
+      await axios.post(`${API_BASE_URL}visits`, {
+        page: 'admin-dashboard',
+        userId: null // You can add user ID if available
+      });
+    } catch (error) {
+      console.error('Error recording visit:', error);
+    }
+  };
+
+  const fetchTotalVisits = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}visits/total`);
+      setTotalVisits(response.data.totalVisits);
+    } catch (error) {
+      console.error('Error fetching total visits:', error);
+      setTotalVisits(0);
+    }
+  };
   
   // Calculate statistics when users or classes data changes
   useEffect(() => {

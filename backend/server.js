@@ -20,6 +20,7 @@ const moduleRoutes = require('./routes/moduleRoutes');
 
 // ADD: Import submission routes
 const submissionRoutes = require('./routes/submissionRoutes');
+const visitRoutes = require('./routes/visitRoutes');
 
 
 dotenv.config();
@@ -121,6 +122,9 @@ app.get('/api/test', (req, res) => {
 
 // ADD: Mount submission routes (for /api/submissions/student/:studentId)
 app.use('/api/submissions', submissionRoutes);
+
+// ADD: Mount visit routes (for /api/visits)
+app.use('/api/visits', visitRoutes);
 
 // 404 handler (keep this AFTER all routes)
 app.use((req, res, next) => {
