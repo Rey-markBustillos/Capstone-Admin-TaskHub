@@ -205,8 +205,8 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Table with filter */}
-        <div className="mb-8 bg-white p-6 rounded shadow">
+        {/* User Management Section - Moved up for better visibility */}
+        <div className="mb-8 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">User Management</h2>
               <input
