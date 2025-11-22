@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaUserCircle, FaLock, FaSignInAlt, FaArrowLeft } from "react-icons/fa";
+import { recordApplicationVisit, recordPageVisit } from '../utils/visitTracker';
 
 // Switch between local and deployed backend here:
 // For Vite:
@@ -9,6 +10,12 @@ export default function Login({ onBack, onLoginSuccess }) {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Track visits when login page loads
+  useEffect(() => {
+    recordApplicationVisit(); // Count application visit
+    recordPageVisit('login-page'); // Track specific page visit
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

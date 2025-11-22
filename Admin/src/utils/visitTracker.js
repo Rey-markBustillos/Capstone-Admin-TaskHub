@@ -50,6 +50,7 @@ export const recordApplicationVisit = async () => {
     
   } catch (error) {
     console.error('Error recording application visit:', error);
+    // Don't throw error to prevent breaking the app for unauthenticated users
   }
 };
 

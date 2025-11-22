@@ -2,10 +2,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
-import { recordApplicationVisit } from './utils/visitTracker'
-
-// Record application visit immediately when app loads
-recordApplicationVisit();
 
 // Service Worker Registration
 if ('serviceWorker' in navigator) {

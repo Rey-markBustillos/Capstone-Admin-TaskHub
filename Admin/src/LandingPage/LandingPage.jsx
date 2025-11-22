@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Login from "./Login";
 import { FaEye, FaBullseye, FaHeart, FaBookOpen, FaArrowRight } from "react-icons/fa";
+import { recordApplicationVisit, recordPageVisit } from '../utils/visitTracker';
 
 // Welcome Screen component with improved responsiveness, icons, and design
 const WelcomeScreen = ({ onContinue }) => {
@@ -147,6 +148,12 @@ const WelcomeScreen = ({ onContinue }) => {
 // Main LandingPage component
 export default function LandingPage() {
   const [view, setView] = useState('welcome'); // 'welcome' or 'login'
+
+  // Track visits when landing page loads
+  useEffect(() => {
+    recordApplicationVisit(); // Count application visit
+    recordPageVisit('landing-page'); // Track specific page visit
+  }, []);
 
   const handleLoginSuccess = () => {
     window.location.reload();
