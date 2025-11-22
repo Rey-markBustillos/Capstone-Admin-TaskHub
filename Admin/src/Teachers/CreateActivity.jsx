@@ -75,7 +75,6 @@ const CreateActivity = () => {
       if (activityData.attachment) {
         formData.append('attachment', activityData.attachment);
       }
-  const API_BASE_URL = "https://capstone-admin-taskhub-1.onrender.com/api";
   await axios.post(`${API_BASE_URL}/activities`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSuccess('Activity created successfully!');
       fetchClassData();

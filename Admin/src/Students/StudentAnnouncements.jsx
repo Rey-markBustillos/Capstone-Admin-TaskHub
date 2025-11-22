@@ -5,7 +5,7 @@ import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, F
 import { availableReactions } from '../constants/reactions';
 import SidebarContext from '../contexts/SidebarContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 export default function StudentAnnouncements() {
   const { classId } = useParams();
