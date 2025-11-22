@@ -1,23 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-const sidebarItems = [
-  "User Management",
-];
-
-
-
-
-
-
-
-
-
-
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 const AdminDashboard = () => {
-  const [selectedMenu, setSelectedMenu] = useState("User Management");
   const [modalOpen, setModalOpen] = useState(false);
   const [filter, setFilter] = useState("");
   
@@ -36,12 +21,10 @@ const AdminDashboard = () => {
     totalAdmins: 0
   });
 
-  // Fetch users on component mount or when User Management menu is selected
+  // Fetch users on component mount
   useEffect(() => {
-    if (selectedMenu === "User Management") {
-      fetchUsers();
-    }
-  }, [selectedMenu]);
+    fetchUsers();
+  }, []);
   
   // Track visits on component mount
   useEffect(() => {
@@ -66,12 +49,7 @@ const AdminDashboard = () => {
   
 
   
-  // Fetch users on menu change
-  useEffect(() => {
-    if (selectedMenu === "User Management") {
-      fetchUsers();
-    }
-  }, [selectedMenu]);
+
 
   const fetchUsers = async () => {
     setLoadingUsers(true);
@@ -116,29 +94,7 @@ const AdminDashboard = () => {
   };
 
   return (
-  <div className="flex min-h-screen bg-white">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md">
-        <h2 className="text-2xl font-bold p-6 border-b border-gray-300">
-          Admin Dashboard
-        </h2>
-        <nav className="p-4">
-          {sidebarItems.map((item) => (
-            <button
-              key={item}
-              onClick={() => setSelectedMenu(item)}
-              className={`block w-full text-left px-4 py-2 rounded mb-2 ${
-                selectedMenu === item ? "bg-blue-600 text-white" : "hover:bg-blue-100"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-  <main className="flex-grow p-8 bg-white">
+    <div className="min-h-screen bg-white p-8">
         {/* Admin Dashboard Header */}
         <div className="flex items-center gap-4 mb-8">
           <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 via-indigo-400 to-blue-600 text-white shadow-lg border-4 border-white">
@@ -215,10 +171,9 @@ const AdminDashboard = () => {
         </div>
 
         {/* Table with filter */}
-        {selectedMenu === "User Management" && (
-          <div className="mb-8 bg-white p-6 rounded shadow">
+        <div className="mb-8 bg-white p-6 rounded shadow">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">{selectedMenu}</h2>
+              <h2 className="text-xl font-semibold">User Management</h2>
               <input
                 type="text"
                 placeholder="Filter by name"
@@ -271,12 +226,7 @@ const AdminDashboard = () => {
                   </table>
                 )}
             </div>
-          </div>
-        )}
-
-
-
-
+        </div>
 
         {/* Add User Modal */}
         {modalOpen && (
@@ -318,7 +268,6 @@ const AdminDashboard = () => {
             </div>
           </div>
         )}
-      </main>
     </div>
   );
 };
