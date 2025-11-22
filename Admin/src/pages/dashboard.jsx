@@ -46,6 +46,7 @@ const AdminDashboard = () => {
       totalAdmins: users.filter(user => user.role === 'admin').length,
       totalClasses: classes.length
     };
+    console.log("Calculating stats:", { users: users.length, classes: classes.length, stats }); // Debug log
     setStatistics(stats);
   }, [users, classes]);
   
@@ -70,12 +71,25 @@ const AdminDashboard = () => {
 
   const fetchClasses = async () => {
     try {
+      console.log("Fetching classes from:", `${API_BASE_URL}class`);
       const response = await fetch(`${API_BASE_URL}class`);
-      if (!response.ok) throw new Error("Failed to fetch classes");
+      console.log("Response status:", response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setClasses(data);
+      console.log("Classes data received:", data);
+      console.log("Number of classes:", Array.isArray(data) ? data.length : 'Not an array');
+      
+      // Ensure data is an array
+      const classesArray = Array.isArray(data) ? data : [];
+      setClasses(classesArray);
     } catch (err) {
       console.error("Error fetching classes:", err.message);
+      // Fallback to empty array
+      setClasses([]);
     }
   };
 
