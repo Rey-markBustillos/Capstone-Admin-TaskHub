@@ -15,15 +15,18 @@ const AdminDashboard = () => {
   
   // Statistics states
   const [totalVisits, setTotalVisits] = useState(0);
+  const [classes, setClasses] = useState([]);
   const [statistics, setStatistics] = useState({
     totalStudents: 0,
     totalTeachers: 0,
-    totalAdmins: 0
+    totalAdmins: 0,
+    totalClasses: 0
   });
 
-  // Fetch users on component mount
+  // Fetch users and classes on component mount
   useEffect(() => {
     fetchUsers();
+    fetchClasses();
   }, []);
   
   // Track visits on component mount
@@ -35,17 +38,16 @@ const AdminDashboard = () => {
     setTotalVisits(newVisitCount);
   }, []);
   
-  // Calculate statistics when users data changes
+  // Calculate statistics when users or classes data changes
   useEffect(() => {
-    if (users.length > 0) {
-      const stats = {
-        totalStudents: users.filter(user => user.role === 'student').length,
-        totalTeachers: users.filter(user => user.role === 'teacher').length,
-        totalAdmins: users.filter(user => user.role === 'admin').length
-      };
-      setStatistics(stats);
-    }
-  }, [users]);
+    const stats = {
+      totalStudents: users.filter(user => user.role === 'student').length,
+      totalTeachers: users.filter(user => user.role === 'teacher').length,
+      totalAdmins: users.filter(user => user.role === 'admin').length,
+      totalClasses: classes.length
+    };
+    setStatistics(stats);
+  }, [users, classes]);
   
 
   
@@ -55,14 +57,25 @@ const AdminDashboard = () => {
     setLoadingUsers(true);
     setErrorUsers("");
     try {
-      const res = await fetch(`${API_BASE_URL}/users`);
-      if (!res.ok) throw new Error("Failed to fetch users");
-      const data = await res.json();
+      const response = await fetch(`${API_BASE_URL}/users`);
+      if (!response.ok) throw new Error("Failed to fetch users");
+      const data = await response.json();
       setUsers(data);
     } catch (err) {
       setErrorUsers(err.message);
     } finally {
       setLoadingUsers(false);
+    }
+  };
+
+  const fetchClasses = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/classes`);
+      if (!response.ok) throw new Error("Failed to fetch classes");
+      const data = await response.json();
+      setClasses(data);
+    } catch (err) {
+      console.error("Error fetching classes:", err.message);
     }
   };
 
@@ -108,7 +121,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           {/* Total Students */}
           <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 p-6 rounded-2xl shadow-lg border-t-4 border-blue-300">
             <div className="flex items-center justify-between">
@@ -164,6 +177,21 @@ const AdminDashboard = () => {
               <div className="bg-purple-200 p-3 rounded-full">
                 <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Total Classes */}
+          <div className="bg-gradient-to-br from-indigo-50 via-white to-indigo-100 p-6 rounded-2xl shadow-lg border-t-4 border-indigo-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-600 text-sm font-semibold uppercase tracking-wide">Total Classes</p>
+                <p className="text-3xl font-bold text-indigo-800">{statistics.totalClasses}</p>
+              </div>
+              <div className="bg-indigo-200 p-3 rounded-full">
+                <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                 </svg>
               </div>
             </div>
