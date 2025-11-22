@@ -37,10 +37,17 @@ const ClassManagement = () => {
   const [classToDelete, setClassToDelete] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
   const [archivedClasses, setArchivedClasses] = useState([]);
-  // Handle Excel import for students
+  // Handle Excel import for students with automatic enrollment
   const handleImportExcel = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    
+    // Check if a class is selected first
+    if (!selectedClassId) {
+      setImportError('Please select a class first before importing students.');
+      setTimeout(() => setImportError(''), 3000);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (evt) => {
       const bstr = evt.target.result;
@@ -48,14 +55,18 @@ const ClassManagement = () => {
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
       const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-      // Assume first row is header, look for 'email' column
+      // Assume first row is header, look for required columns
       const header = data[0].map(h => h.toLowerCase());
       const emailIdx = header.indexOf('email');
+      const nameIdx = header.indexOf('name');
+      const lrnIdx = header.indexOf('lrn');
+      
       if (emailIdx === -1) {
         setImportError('Excel must have an Email column.');
         setTimeout(() => setImportError(''), 3000);
         return;
       }
+      
       const emails = data.slice(1).map(row => row[emailIdx]).filter(Boolean);
       // Find matching students by email
       const matched = students.filter(s => emails.includes(s.email));
@@ -64,13 +75,40 @@ const ClassManagement = () => {
         setTimeout(() => setImportError(''), 3000);
         return;
       }
-      // Add only matched student IDs
+      
+      // Automatically enroll matched students
       const newIds = matched.map(s => s._id);
-      setSelectedStudentIds(prev => Array.from(new Set([...prev, ...newIds])));
-      setImportSuccess(`${matched.length} student(s) matched and selected.`);
-      setTimeout(() => setImportSuccess(''), 3000);
+      handleAutoEnrollStudents(newIds, matched.length);
     };
     reader.readAsBinaryString(file);
+  };
+
+  // Auto-enroll imported students
+  const handleAutoEnrollStudents = (studentIds, count) => {
+    if (!selectedClassId) {
+      setImportError('Please select a class first.');
+      setTimeout(() => setImportError(''), 3000);
+      return;
+    }
+    
+    axios.put(`${API_BASE_URL}/class/${selectedClassId}/students`, {
+      studentIds: studentIds,
+    })
+      .then((response) => {
+        setClasses(classes.map(cls =>
+          cls._id === selectedClassId ? response.data : cls
+        ));
+        setImportSuccess(`${count} student(s) automatically enrolled in the class!`);
+        setTimeout(() => setImportSuccess(''), 3000);
+        // Reset the file input
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) fileInput.value = '';
+      })
+      .catch((error) => {
+        setImportError('Error enrolling students automatically.');
+        setTimeout(() => setImportError(''), 3000);
+        console.error('Error auto-enrolling students:', error);
+      });
   };
 
   // Helper to format time as hh:mm AM/PM in PH time
@@ -796,7 +834,7 @@ const ClassManagement = () => {
                 autoComplete="off"
               />
               <label className="inline-block cursor-pointer">
-                <span className="bg-green-600 hover:bg-green-700 text-white font-semibold text-sm px-4 py-2 rounded transition-colors">Import Excel</span>
+                <span className="bg-green-600 hover:bg-green-700 text-white font-semibold text-sm px-4 py-2 rounded transition-colors">Import & Auto-Enroll</span>
                 <input
                   type="file"
                   accept=".xlsx,.xls"
@@ -804,6 +842,9 @@ const ClassManagement = () => {
                   className="hidden"
                 />
               </label>
+            </div>
+            <div className="bg-blue-50 text-blue-700 p-2 rounded mb-2 text-xs">
+              💡 <strong>Tip:</strong> Import Excel with Name, Email, and LRN columns to automatically enroll students in the selected class.
             </div>
             {importError && <div className="bg-red-100 text-red-700 p-2 rounded mb-2 text-sm">{importError}</div>}
             {importSuccess && <div className="bg-green-100 text-green-700 p-2 rounded mb-2 text-sm">{importSuccess}</div>}
