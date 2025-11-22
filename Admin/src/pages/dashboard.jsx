@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -46,7 +47,6 @@ const AdminDashboard = () => {
       totalAdmins: users.filter(user => user.role === 'admin').length,
       totalClasses: classes.length
     };
-    console.log("Calculating stats:", { users: users.length, classes: classes.length, stats }); // Debug log
     setStatistics(stats);
   }, [users, classes]);
   
@@ -71,24 +71,11 @@ const AdminDashboard = () => {
 
   const fetchClasses = async () => {
     try {
-      console.log("Fetching classes from:", `${API_BASE_URL}class`);
-      const response = await fetch(`${API_BASE_URL}class`);
-      console.log("Response status:", response.status);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log("Classes data received:", data);
-      console.log("Number of classes:", Array.isArray(data) ? data.length : 'Not an array');
-      
-      // Ensure data is an array
-      const classesArray = Array.isArray(data) ? data : [];
-      setClasses(classesArray);
+      const response = await axios.get(`${API_BASE_URL}/class`);
+      const classesData = response.data || [];
+      setClasses(classesData);
     } catch (err) {
       console.error("Error fetching classes:", err.message);
-      // Fallback to empty array
       setClasses([]);
     }
   };
