@@ -100,7 +100,7 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
   let sidebarBg = '';
   let sidebarShadow = '';
    if (role === 'admin') {
-     sidebarBg = isOpen ? 'bg-gradient-to-br from-violet-200/80 via-white/60 to-blue-100/80 backdrop-blur-xl' : 'bg-gray-200 dark:bg-gray-800';
+     sidebarBg = 'bg-gradient-to-br from-violet-200/80 via-white/60 to-blue-100/80 backdrop-blur-xl';
      sidebarShadow = isOpen ? 'shadow-2xl border-violet-200' : 'border-violet-200';
    } else if (role === 'teacher') {
      sidebarBg = 'bg-white dark:bg-gray-800';

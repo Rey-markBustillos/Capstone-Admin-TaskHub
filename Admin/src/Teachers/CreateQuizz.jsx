@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { FaUpload, FaPaste, FaTrash, FaEdit, FaPlus, FaSave, FaTimes } from 'react-icons/fa';
+import { FaUpload, FaPaste, FaTrash, FaEdit, FaPlus, FaSave, FaTimes, FaFileWord, FaDownload } from 'react-icons/fa';
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
@@ -84,6 +84,10 @@ export default function CreateQuizz() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [questionTime, setQuestionTime] = useState(30);
+  // Mixed quiz type counts
+  const [mcqCount, setMcqCount] = useState(2);
+  const [trueFalseCount, setTrueFalseCount] = useState(2);
+  const [identificationCount, setIdentificationCount] = useState(1);
   // const [isProcessingFile, setIsProcessingFile] = useState(false);
   // const [selectedQuizId, setSelectedQuizId] = useState(null);
   // const [showCreatedQuizzes, setShowCreatedQuizzes] = useState(false);
@@ -194,25 +198,92 @@ export default function CreateQuizz() {
   // Generate quiz questions from module text using backend AI
   const handleGenerate = async () => {
     if (count < 1) return alert('Enter a valid number of questions.');
+    
+    // Validate mixed type counts
+    if (quizType === 'mixed') {
+      const totalMixed = mcqCount + trueFalseCount + identificationCount;
+      if (totalMixed === 0) {
+        return alert('Please specify at least one question for mixed type quiz.');
+      }
+      if (totalMixed !== count) {
+        setCount(totalMixed); // Auto-sync the total count
+      }
+    }
+    
     setLoading(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
-        count,
-        moduleText: moduleText.trim() ? moduleText : undefined,
-        quizType: quizType !== 'mixed' ? quizType : undefined,
-      });
-      if (response.data && Array.isArray(response.data.questions)) {
-        // If quizType is 'mcq', force all generated questions with options to type 'mcq'
-        let fixedQuestions = response.data.questions;
-        if (quizType === 'mcq') {
-          fixedQuestions = fixedQuestions.map(q => {
-            if (Array.isArray(q.options) && q.options.length > 0) {
-              return { ...q, type: 'mcq', displayType: 'Multiple Choice' };
-            }
-            return q;
-          });
+      let allQuestions = [];
+      
+      if (quizType === 'mixed') {
+        // Generate questions for each type separately
+        const requests = [];
+        
+        if (mcqCount > 0) {
+          requests.push(
+            axios.post(`${API_BASE_URL}/quizzes/generate`, {
+              count: mcqCount,
+              moduleText: moduleText.trim() ? moduleText : undefined,
+              quizType: 'mcq',
+            })
+          );
         }
-        setQuestions(fixedQuestions);
+        
+        if (trueFalseCount > 0) {
+          requests.push(
+            axios.post(`${API_BASE_URL}/quizzes/generate`, {
+              count: trueFalseCount,
+              moduleText: moduleText.trim() ? moduleText : undefined,
+              quizType: 'true_false',
+            })
+          );
+        }
+        
+        if (identificationCount > 0) {
+          requests.push(
+            axios.post(`${API_BASE_URL}/quizzes/generate`, {
+              count: identificationCount,
+              moduleText: moduleText.trim() ? moduleText : undefined,
+              quizType: 'identification',
+            })
+          );
+        }
+        
+        // Execute all requests
+        const responses = await Promise.all(requests);
+        responses.forEach(response => {
+          if (response.data && Array.isArray(response.data.questions)) {
+            allQuestions = [...allQuestions, ...response.data.questions];
+          }
+        });
+        
+        // Shuffle the mixed questions for variety
+        allQuestions = allQuestions.sort(() => Math.random() - 0.5);
+        
+      } else {
+        // Single type quiz generation
+        const response = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
+          count,
+          moduleText: moduleText.trim() ? moduleText : undefined,
+          quizType: quizType,
+        });
+        
+        if (response.data && Array.isArray(response.data.questions)) {
+          allQuestions = response.data.questions;
+          
+          // If quizType is 'mcq', force all generated questions with options to type 'mcq'
+          if (quizType === 'mcq') {
+            allQuestions = allQuestions.map(q => {
+              if (Array.isArray(q.options) && q.options.length > 0) {
+                return { ...q, type: 'mcq', displayType: 'Multiple Choice' };
+              }
+              return q;
+            });
+          }
+        }
+      }
+      
+      if (allQuestions.length > 0) {
+        setQuestions(allQuestions);
       } else {
         alert('No questions generated.');
       }
@@ -300,6 +371,422 @@ export default function CreateQuizz() {
     } catch {
       alert('Failed to delete quiz. Please try again.');
     }
+  };
+
+  // Export quiz to Word document
+  const handleExportToWord = () => {
+    if (!questions || questions.length === 0) {
+      alert('No questions available to export. Please generate or create questions first.');
+      return;
+    }
+
+    // Create HTML content for the Word document
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    let htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${title || 'Quiz'} - Test Paper</title>
+        <style>
+          body { 
+            font-family: 'Times New Roman', serif; 
+            margin: 1in; 
+            line-height: 1.5;
+            font-size: 12pt;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+          }
+          .school-name { 
+            font-size: 16pt; 
+            font-weight: bold; 
+            margin-bottom: 5px;
+          }
+          .als-info {
+            font-size: 14pt;
+            margin-bottom: 10px;
+          }
+          .quiz-title { 
+            font-size: 14pt; 
+            font-weight: bold; 
+            margin: 15px 0;
+          }
+          .student-info { 
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+          }
+          .info-line {
+            border-bottom: 1px solid #000;
+            display: inline-block;
+            min-width: 200px;
+            margin-left: 10px;
+          }
+          .question { 
+            margin: 20px 0;
+            page-break-inside: avoid;
+          }
+          .question-number { 
+            font-weight: bold; 
+          }
+          .options { 
+            margin: 10px 0; 
+            margin-left: 20px;
+          }
+          .option { 
+            margin: 5px 0;
+          }
+          .answer-space {
+            border-bottom: 1px solid #000;
+            display: inline-block;
+            min-width: 300px;
+            margin-left: 10px;
+          }
+          .instructions {
+            background-color: #f5f5f5;
+            padding: 15px;
+            margin: 20px 0;
+            border: 1px solid #ccc;
+          }
+          .score-box {
+            float: right;
+            border: 2px solid #000;
+            padding: 10px;
+            margin-bottom: 20px;
+          }
+          @media print {
+            body { margin: 0.5in; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="school-name">ALTERNATIVE LEARNING SYSTEM (ALS)</div>
+          <div class="als-info">Department of Education</div>
+          <div class="quiz-title">${title || 'QUIZ'}</div>
+        </div>
+
+        <div class="score-box">
+          <strong>Score: _____ / ${questions.length}</strong>
+        </div>
+
+        <div class="student-info">
+          <div>
+            <strong>Name:</strong> <span class="info-line"></span>
+          </div>
+          <div>
+            <strong>Date:</strong> <span class="info-line">${currentDate}</span>
+          </div>
+        </div>
+
+        <div class="instructions">
+          <strong>INSTRUCTIONS:</strong>
+          <ul>
+            <li>Read each question carefully.</li>
+            <li>Choose the best answer for multiple choice questions.</li>
+            <li>Write TRUE or FALSE for true/false questions.</li>
+            <li>Write your answer clearly for identification questions.</li>
+            <li>Use black or blue pen only.</li>
+            <li>No erasures allowed.</li>
+          </ul>
+        </div>
+    `;
+
+    // Add questions
+    questions.forEach((q, index) => {
+      htmlContent += `<div class="question">`;
+      htmlContent += `<span class="question-number">${index + 1}.</span> ${q.question}`;
+      
+      if (q.type === 'mcq' && q.options && q.options.length > 0) {
+        htmlContent += `<div class="options">`;
+        q.options.forEach((option, optIndex) => {
+          const letter = String.fromCharCode(65 + optIndex); // A, B, C, D
+          htmlContent += `<div class="option">${letter}. ${option}</div>`;
+        });
+        htmlContent += `</div>`;
+        htmlContent += `<div><strong>Answer:</strong> <span class="answer-space"></span></div>`;
+      } else if (q.type === 'true_false') {
+        htmlContent += `<div class="options">`;
+        htmlContent += `<div class="option">A. TRUE</div>`;
+        htmlContent += `<div class="option">B. FALSE</div>`;
+        htmlContent += `</div>`;
+        htmlContent += `<div><strong>Answer:</strong> <span class="answer-space"></span></div>`;
+      } else {
+        // Identification type
+        htmlContent += `<div style="margin-top: 15px;"><strong>Answer:</strong> <span class="answer-space"></span></div>`;
+      }
+      
+      htmlContent += `</div>`;
+    });
+
+    htmlContent += `
+        <div style="margin-top: 50px; text-align: center; font-style: italic;">
+          --- END OF TEST ---
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Create and download the file
+    const blob = new Blob([htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title || 'Quiz'}_TestPaper_${currentDate.replace(/\s+/g, '_')}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Export quiz analytics to Excel (Proper Excel file)
+  const handleExportAnalyticsToExcel = () => {
+    const analytics = calculateQuizAnalytics();
+    if (analytics.length === 0) {
+      alert('No quiz data available for export. Students need to submit quizzes first.');
+      return;
+    }
+
+    // Create proper Excel XML format
+    let excelXML = `<?xml version="1.0"?>
+    <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+              xmlns:o="urn:schemas-microsoft-com:office:office"
+              xmlns:x="urn:schemas-microsoft-com:office:excel"
+              xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+              xmlns:html="http://www.w3.org/TR/REC-html40">
+    <Styles>
+      <Style ss:ID="HeaderStyle">
+        <Font ss:Bold="1"/>
+        <Interior ss:Color="#4CAF50" ss:Pattern="Solid"/>
+      </Style>
+      <Style ss:ID="NumberStyle">
+        <NumberFormat ss:Format="0"/>
+      </Style>
+      <Style ss:ID="PercentStyle">
+        <NumberFormat ss:Format="0.0%"/>
+      </Style>
+    </Styles>
+    <Worksheet ss:Name="Quiz Analytics">
+      <Table>
+        <Row ss:StyleID="HeaderStyle">
+          <Cell><Data ss:Type="String">Quiz Name</Data></Cell>
+          <Cell><Data ss:Type="String">Student Name</Data></Cell>
+          <Cell><Data ss:Type="String">Student Email</Data></Cell>
+          <Cell><Data ss:Type="String">Score</Data></Cell>
+          <Cell><Data ss:Type="String">Total Questions</Data></Cell>
+          <Cell><Data ss:Type="String">Percentage</Data></Cell>
+          <Cell><Data ss:Type="String">Submission Date</Data></Cell>
+          <Cell><Data ss:Type="String">Time Taken</Data></Cell>
+        </Row>`;
+    
+    // Add data rows for each quiz
+    analytics.forEach(({ quiz, totalSubmissions }) => {
+      const submissions = submissionsByQuiz[quiz._id] || [];
+      
+      submissions.forEach(submission => {
+        const studentName = submission.studentId?.name || submission.student?.name || submission.studentName || 'Unknown Student';
+        const studentEmail = submission.studentId?.email || submission.student?.email || submission.studentEmail || 'N/A';
+        const score = submission.score || 0;
+        const totalQuestions = quiz.questions?.length || 0;
+        const percentage = totalQuestions > 0 ? (score / totalQuestions) : 0;
+        const submissionDate = submission.createdAt ? 
+          new Date(submission.createdAt).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }) : 'N/A';
+        const timeTaken = submission.timeTaken ? 
+          `${Math.floor(submission.timeTaken / 60)}:${String(submission.timeTaken % 60).padStart(2, '0')}` : 'N/A';
+        
+        // Escape XML characters
+        const escapeXML = (text) => {
+          return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
+        };
+        
+        excelXML += `
+        <Row>
+          <Cell><Data ss:Type="String">${escapeXML(quiz.title)}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXML(studentName)}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXML(studentEmail)}</Data></Cell>
+          <Cell ss:StyleID="NumberStyle"><Data ss:Type="Number">${score}</Data></Cell>
+          <Cell ss:StyleID="NumberStyle"><Data ss:Type="Number">${totalQuestions}</Data></Cell>
+          <Cell ss:StyleID="PercentStyle"><Data ss:Type="Number">${percentage}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXML(submissionDate)}</Data></Cell>
+          <Cell><Data ss:Type="String">${escapeXML(timeTaken)}</Data></Cell>
+        </Row>`;
+      });
+    });
+
+    excelXML += `
+      </Table>
+    </Worksheet>
+    </Workbook>`;
+
+    // Create and download the Excel file
+    const blob = new Blob([excelXML], { 
+      type: 'application/vnd.ms-excel' 
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    
+    const currentDate = new Date().toISOString().split('T')[0];
+    const currentTime = new Date().toLocaleTimeString('en-US', { 
+      hour12: false, 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }).replace(':', '');
+    link.download = `Quiz_Analytics_${currentDate}_${currentTime}.xls`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    alert('Quiz analytics exported to Excel file successfully!');
+  };
+
+  // Export detailed analytics with question breakdown (Proper Excel file)
+  const handleExportDetailedAnalytics = () => {
+    const analytics = calculateQuizAnalytics();
+    if (analytics.length === 0) {
+      alert('No quiz data available for export.');
+      return;
+    }
+
+    // Create proper Excel XML format
+    let excelXML = `<?xml version="1.0"?>
+    <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+              xmlns:o="urn:schemas-microsoft-com:office:office"
+              xmlns:x="urn:schemas-microsoft-com:office:excel"
+              xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+              xmlns:html="http://www.w3.org/TR/REC-html40">
+    <Styles>
+      <Style ss:ID="HeaderStyle">
+        <Font ss:Bold="1"/>
+        <Interior ss:Color="#2196F3" ss:Pattern="Solid"/>
+      </Style>
+      <Style ss:ID="CorrectStyle">
+        <Interior ss:Color="#C8E6C9" ss:Pattern="Solid"/>
+      </Style>
+      <Style ss:ID="IncorrectStyle">
+        <Interior ss:Color="#FFCDD2" ss:Pattern="Solid"/>
+      </Style>
+      <Style ss:ID="NumberStyle">
+        <NumberFormat ss:Format="0"/>
+      </Style>
+    </Styles>
+    <Worksheet ss:Name="Detailed Analytics">
+      <Table>
+        <Row ss:StyleID="HeaderStyle">
+          <Cell><Data ss:Type="String">Quiz Name</Data></Cell>
+          <Cell><Data ss:Type="String">Student Name</Data></Cell>
+          <Cell><Data ss:Type="String">Student Email</Data></Cell>
+          <Cell><Data ss:Type="String">Question #</Data></Cell>
+          <Cell><Data ss:Type="String">Question Text</Data></Cell>
+          <Cell><Data ss:Type="String">Student Answer</Data></Cell>
+          <Cell><Data ss:Type="String">Correct Answer</Data></Cell>
+          <Cell><Data ss:Type="String">Is Correct</Data></Cell>
+          <Cell><Data ss:Type="String">Score</Data></Cell>
+          <Cell><Data ss:Type="String">Submission Date</Data></Cell>
+        </Row>`;
+    
+    analytics.forEach(({ quiz }) => {
+      const submissions = submissionsByQuiz[quiz._id] || [];
+      
+      submissions.forEach(submission => {
+        const studentName = submission.studentId?.name || submission.student?.name || submission.studentName || 'Unknown Student';
+        const studentEmail = submission.studentId?.email || submission.student?.email || submission.studentEmail || 'N/A';
+        const submissionDate = submission.createdAt ? 
+          new Date(submission.createdAt).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          }) : 'N/A';
+        
+        quiz.questions?.forEach((question, qIndex) => {
+          const studentAnswer = submission.answers?.find(a => a.questionIndex === qIndex);
+          const studentResponse = studentAnswer?.answer || 'No Answer';
+          const correctAnswer = question.answer || 'N/A';
+          const isCorrect = studentAnswer ? 
+            (String(question.answer).trim().toLowerCase() === String(studentAnswer.answer).trim().toLowerCase()) : false;
+          const questionScore = isCorrect ? 1 : 0;
+          const rowStyle = isCorrect ? 'CorrectStyle' : 'IncorrectStyle';
+          
+          // Escape XML characters
+          const escapeXML = (text) => {
+            return String(text)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&apos;');
+          };
+          
+          excelXML += `
+          <Row ss:StyleID="${rowStyle}">
+            <Cell><Data ss:Type="String">${escapeXML(quiz.title)}</Data></Cell>
+            <Cell><Data ss:Type="String">${escapeXML(studentName)}</Data></Cell>
+            <Cell><Data ss:Type="String">${escapeXML(studentEmail)}</Data></Cell>
+            <Cell ss:StyleID="NumberStyle"><Data ss:Type="Number">${qIndex + 1}</Data></Cell>
+            <Cell><Data ss:Type="String">${escapeXML(question.question)}</Data></Cell>
+            <Cell><Data ss:Type="String">${escapeXML(studentResponse)}</Data></Cell>
+            <Cell><Data ss:Type="String">${escapeXML(correctAnswer)}</Data></Cell>
+            <Cell><Data ss:Type="String">${isCorrect ? 'YES' : 'NO'}</Data></Cell>
+            <Cell ss:StyleID="NumberStyle"><Data ss:Type="Number">${questionScore}</Data></Cell>
+            <Cell><Data ss:Type="String">${escapeXML(submissionDate)}</Data></Cell>
+          </Row>`;
+        });
+      });
+    });
+
+    excelXML += `
+      </Table>
+    </Worksheet>
+    </Workbook>`;
+
+    // Create and download the Excel file
+    const blob = new Blob([excelXML], { 
+      type: 'application/vnd.ms-excel' 
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    
+    const currentDate = new Date().toISOString().split('T')[0];
+    const currentTime = new Date().toLocaleTimeString('en-US', { 
+      hour12: false, 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    }).replace(':', '');
+    link.download = `Quiz_Detailed_Analytics_${currentDate}_${currentTime}.xls`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    alert('Detailed quiz analytics exported to Excel file successfully!');
   };
 
   // Calculate quiz analytics
@@ -502,11 +989,17 @@ export default function CreateQuizz() {
               type="number"
               min={1}
               max={100}
-              className="w-20 border border-indigo-700 rounded bg-[#23263a] text-indigo-100 p-1 focus:ring-2 focus:ring-green-400"
+              className={`w-20 border border-indigo-700 rounded bg-[#23263a] text-indigo-100 p-1 focus:ring-2 focus:ring-green-400 ${
+                quizType === 'mixed' ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
               value={count}
               onChange={e => setCount(Math.max(1, Number(e.target.value)))}
+              disabled={quizType === 'mixed'}
               required
             />
+            {quizType === 'mixed' && (
+              <span className="text-indigo-400 text-xs">(Auto-calculated)</span>
+            )}
           </div>
           <div className="flex items-center gap-2 bg-[#23263a] border-2 border-indigo-900 rounded-lg px-4 py-2 shadow">
             <label className="text-indigo-200 font-semibold">Quiz Type:</label>
@@ -521,6 +1014,63 @@ export default function CreateQuizz() {
               <option value="identification">Identification</option>
             </select>
           </div>
+
+          {/* Mixed Type Question Count Inputs */}
+          {quizType === 'mixed' && (
+            <div className="bg-[#1a1d2e] border-2 border-indigo-800 rounded-lg p-4 space-y-3">
+              <h3 className="text-indigo-200 font-semibold text-sm mb-3">Question Type Distribution:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="flex items-center gap-2 bg-[#23263a] border border-indigo-700 rounded-lg px-3 py-2">
+                  <label className="text-indigo-200 text-sm font-medium">Multiple Choice:</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={50}
+                    className="w-16 border border-indigo-600 rounded bg-[#2a2d42] text-indigo-100 p-1 text-sm focus:ring-2 focus:ring-green-400"
+                    value={mcqCount}
+                    onChange={e => {
+                      const value = Math.max(0, Number(e.target.value));
+                      setMcqCount(value);
+                      setCount(value + trueFalseCount + identificationCount);
+                    }}
+                  />
+                </div>
+                <div className="flex items-center gap-2 bg-[#23263a] border border-indigo-700 rounded-lg px-3 py-2">
+                  <label className="text-indigo-200 text-sm font-medium">True/False:</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={50}
+                    className="w-16 border border-indigo-600 rounded bg-[#2a2d42] text-indigo-100 p-1 text-sm focus:ring-2 focus:ring-green-400"
+                    value={trueFalseCount}
+                    onChange={e => {
+                      const value = Math.max(0, Number(e.target.value));
+                      setTrueFalseCount(value);
+                      setCount(mcqCount + value + identificationCount);
+                    }}
+                  />
+                </div>
+                <div className="flex items-center gap-2 bg-[#23263a] border border-indigo-700 rounded-lg px-3 py-2">
+                  <label className="text-indigo-200 text-sm font-medium">Identification:</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={50}
+                    className="w-16 border border-indigo-600 rounded bg-[#2a2d42] text-indigo-100 p-1 text-sm focus:ring-2 focus:ring-green-400"
+                    value={identificationCount}
+                    onChange={e => {
+                      const value = Math.max(0, Number(e.target.value));
+                      setIdentificationCount(value);
+                      setCount(mcqCount + trueFalseCount + value);
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="text-indigo-300 text-sm text-center mt-2">
+                Total Questions: <span className="font-bold text-green-400">{mcqCount + trueFalseCount + identificationCount}</span>
+              </div>
+            </div>
+          )}
         </div>
         <button
           className="bg-gradient-to-r from-indigo-800 to-blue-800 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:from-indigo-900 hover:to-blue-900 transition mb-8 w-full text-lg disabled:opacity-60 tracking-wider focus:ring-4 focus:ring-green-400"
@@ -543,7 +1093,17 @@ export default function CreateQuizz() {
         {questions.length > 0 && (
           <>
             <div className="border-b-2 border-indigo-900 mb-6"></div>
-            <h3 className="text-2xl font-bold mb-4 text-indigo-200 flex items-center gap-2">Quiz Questions</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-2xl font-bold text-indigo-200 flex items-center gap-2">Quiz Questions</h3>
+              <button
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition flex items-center gap-2"
+                onClick={handleExportToWord}
+                title="Export as Word Test Paper for ALS"
+              >
+                <FaFileWord className="w-4 h-4" />
+                Export Test Paper
+              </button>
+            </div>
             <div className="flex flex-col gap-4 mb-8">
               {questions.map((q, idx) => {
                 // Ensure MCQ always has a correct answer
@@ -661,9 +1221,24 @@ export default function CreateQuizz() {
             </div>
           </>
         )}
-        {/* Save Quiz Button outside main box, only visible if questions.length > 0, with bounce animation */}
+        {/* Action Buttons - Save Quiz and Export to Word */}
         {questions.length > 0 && (
-          <div ref={bounceRef} className="fixed bottom-8 right-8 z-50">
+          <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
+            {/* Export to Word Button */}
+            <button
+              className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white px-8 py-3 rounded-2xl font-bold shadow-2xl hover:from-blue-800 hover:to-indigo-900 transition text-lg border-4 border-blue-400 hover:border-indigo-500 focus:ring-4 focus:ring-blue-300 focus:outline-none group overflow-hidden"
+              onClick={handleExportToWord}
+              disabled={loading}
+              title="Export as Word Test Paper"
+            >
+              <span className="absolute left-0 top-0 w-full h-full bg-blue-400 opacity-0 group-hover:opacity-10 transition-all rounded-2xl"></span>
+              <span className="flex items-center gap-2">
+                <FaFileWord className="w-5 h-5 text-white drop-shadow-lg" />
+                Export Test Paper
+              </span>
+            </button>
+            
+            {/* Save Quiz Button */}
             <button
               className="relative bg-gradient-to-br from-green-600 via-green-700 to-blue-800 text-white px-10 py-4 rounded-3xl font-extrabold shadow-2xl hover:from-green-800 hover:to-blue-900 transition text-xl animate-slideInRight animate-bounceOnce border-4 border-green-400 hover:border-blue-500 focus:ring-4 focus:ring-green-300 focus:outline-none group overflow-hidden"
               onClick={() => setShowSaveModal(true)}
@@ -840,42 +1415,64 @@ export default function CreateQuizz() {
         {/* Analytics Modal */}
         {showAnalyticsModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-gradient-to-br from-purple-900 to-pink-900 rounded-2xl p-8 shadow-2xl w-full max-w-6xl border-4 border-purple-500 animate-fadeIn pointer-events-auto relative max-h-[90vh] overflow-y-auto">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 shadow-2xl w-full max-w-6xl border-4 border-slate-600 animate-fadeIn pointer-events-auto relative max-h-[90vh] overflow-y-auto">
               <button
-                className="absolute top-4 right-4 text-purple-200 hover:text-white text-2xl font-bold focus:outline-none"
+                className="absolute top-4 right-4 text-slate-300 hover:text-white text-2xl font-bold focus:outline-none"
                 onClick={() => setShowAnalyticsModal(false)}
               >
                 ×
               </button>
-              <h2 className="text-2xl font-extrabold text-white mb-6 flex items-center gap-3">
-                <svg className="w-8 h-8 text-purple-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                Quiz Analytics Dashboard
-              </h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-extrabold text-white flex items-center gap-3">
+                  <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                  </svg>
+                  Quiz Analytics Dashboard
+                </h2>
+                
+                {/* Export Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition flex items-center gap-2 text-sm"
+                    onClick={handleExportAnalyticsToExcel}
+                    title="Export student scores to Excel"
+                  >
+                    <FaDownload className="w-4 h-4" />
+                    Export Scores
+                  </button>
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition flex items-center gap-2 text-sm"
+                    onClick={handleExportDetailedAnalytics}
+                    title="Export detailed question-by-question analysis"
+                  >
+                    <FaDownload className="w-4 h-4" />
+                    Export Details
+                  </button>
+                </div>
+              </div>
               <div className="space-y-8">
                 {(() => {
                   const analytics = calculateQuizAnalytics();
                   if (analytics.length === 0) {
                     return (
-                      <div className="text-purple-300 text-center py-8">
+                      <div className="text-slate-300 text-center py-8">
                         No quiz data available for analytics. Students need to submit quizzes first.
                       </div>
                     );
                   }
                   return analytics.map(({ quiz, totalSubmissions, questionAnalytics }) => (
-                    <div key={quiz._id} className="bg-purple-800/30 rounded-xl p-6 border border-purple-600">
+                    <div key={quiz._id} className="bg-slate-700/40 rounded-xl p-6 border border-slate-500">
                       <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold text-purple-100">{quiz.title}</h3>
-                        <span className="bg-purple-700 text-purple-100 px-3 py-1 rounded-full text-sm">
+                        <h3 className="text-xl font-bold text-slate-100">{quiz.title}</h3>
+                        <span className="bg-slate-600 text-slate-200 px-3 py-1 rounded-full text-sm">
                           {totalSubmissions} submissions
                         </span>
                       </div>
                       
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Overall Stats */}
-                        <div className="bg-purple-900/50 rounded-lg p-4">
-                          <h4 className="text-lg font-semibold text-purple-200 mb-3">Overall Performance</h4>
+                        <div className="bg-slate-800/50 rounded-lg p-4">
+                          <h4 className="text-lg font-semibold text-slate-200 mb-3">Overall Performance</h4>
                           <div className="space-y-2">
                             {(() => {
                               const avgDifficulty = questionAnalytics.reduce((sum, q) => sum + q.difficultyPercentage, 0) / questionAnalytics.length;
@@ -883,16 +1480,16 @@ export default function CreateQuizz() {
                               return (
                                 <>
                                   <div className="flex justify-between">
-                                    <span className="text-purple-300">Average Success Rate:</span>
-                                    <span className="text-green-400 font-bold">{Math.round(avgSuccess)}%</span>
+                                    <span className="text-slate-300">Average Success Rate:</span>
+                                    <span className="text-emerald-400 font-bold">{Math.round(avgSuccess)}%</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-purple-300">Average Difficulty:</span>
-                                    <span className="text-red-400 font-bold">{Math.round(avgDifficulty)}%</span>
+                                    <span className="text-slate-300">Average Difficulty:</span>
+                                    <span className="text-orange-400 font-bold">{Math.round(avgDifficulty)}%</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-purple-300">Total Questions:</span>
-                                    <span className="text-purple-200 font-bold">{questionAnalytics.length}</span>
+                                    <span className="text-slate-300">Total Questions:</span>
+                                    <span className="text-slate-200 font-bold">{questionAnalytics.length}</span>
                                   </div>
                                 </>
                               );
@@ -901,17 +1498,17 @@ export default function CreateQuizz() {
                         </div>
 
                         {/* Difficult Questions */}
-                        <div className="bg-purple-900/50 rounded-lg p-4">
-                          <h4 className="text-lg font-semibold text-purple-200 mb-3">Most Difficult Questions</h4>
+                        <div className="bg-slate-800/50 rounded-lg p-4">
+                          <h4 className="text-lg font-semibold text-slate-200 mb-3">Most Difficult Questions</h4>
                           <div className="space-y-3">
                             {questionAnalytics
                               .sort((a, b) => b.difficultyPercentage - a.difficultyPercentage)
                               .slice(0, 3)
                               .map((q) => (
-                                <div key={q.questionIndex} className="border-l-4 border-red-500 pl-3">
-                                  <div className="text-sm text-purple-200">Question {q.questionIndex + 1}</div>
-                                  <div className="text-red-400 font-bold">{q.difficultyPercentage}% incorrect</div>
-                                  <div className="text-xs text-purple-300 truncate">{q.question}</div>
+                                <div key={q.questionIndex} className="border-l-4 border-orange-500 pl-3">
+                                  <div className="text-sm text-slate-200">Question {q.questionIndex + 1}</div>
+                                  <div className="text-orange-400 font-bold">{q.difficultyPercentage}% incorrect</div>
+                                  <div className="text-xs text-slate-300 truncate">{q.question}</div>
                                 </div>
                               ))}
                           </div>
@@ -920,31 +1517,31 @@ export default function CreateQuizz() {
 
                       {/* Detailed Question Analysis */}
                       <div className="mt-6">
-                        <h4 className="text-lg font-semibold text-purple-200 mb-4">Question-by-Question Analysis</h4>
+                        <h4 className="text-lg font-semibold text-slate-200 mb-4">Question-by-Question Analysis</h4>
                         <div className="space-y-4">
                           {questionAnalytics.map(q => {
                             const questionKey = `${quiz._id}-${q.questionIndex}`;
                             const isExpanded = expandedQuestions[questionKey];
                             
                             return (
-                              <div key={q.questionIndex} className="bg-purple-900/30 rounded-lg p-4 border border-purple-700">
+                              <div key={q.questionIndex} className="bg-slate-800/30 rounded-lg p-4 border border-slate-600">
                                 <div className="flex justify-between items-start mb-3">
                                   <div className="flex-1">
-                                    <div className="font-semibold text-purple-100">Q{q.questionIndex + 1}: {q.question}</div>
-                                    <div className="text-sm text-purple-300 mt-1">Correct Answer: {String(q.correctAnswer)}</div>
+                                    <div className="font-semibold text-slate-100">Q{q.questionIndex + 1}: {q.question}</div>
+                                    <div className="text-sm text-slate-300 mt-1">Correct Answer: {String(q.correctAnswer)}</div>
                                   </div>
                                   <div className="text-right ml-4">
-                                    <div className={`text-lg font-bold ${q.difficultyPercentage > 50 ? 'text-red-400' : q.difficultyPercentage > 25 ? 'text-yellow-400' : 'text-green-400'}`}>
+                                    <div className={`text-lg font-bold ${q.difficultyPercentage > 50 ? 'text-orange-400' : q.difficultyPercentage > 25 ? 'text-amber-400' : 'text-emerald-400'}`}>
                                       {q.successPercentage}% correct
                                     </div>
-                                    <div className="text-sm text-purple-300">{q.totalAttempts} attempts</div>
+                                    <div className="text-sm text-slate-300">{q.totalAttempts} attempts</div>
                                   </div>
                                 </div>
                                 
                                 {/* Progress bar */}
-                                <div className="w-full bg-purple-800 rounded-full h-3 mb-3">
+                                <div className="w-full bg-slate-700 rounded-full h-3 mb-3">
                                   <div 
-                                    className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500"
+                                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-3 rounded-full transition-all duration-500"
                                     style={{ width: `${q.successPercentage}%` }}
                                   ></div>
                                 </div>
@@ -952,10 +1549,10 @@ export default function CreateQuizz() {
                                 {/* Common wrong answers */}
                                 {q.commonWrongAnswers.length > 0 && (
                                   <div className="mt-3">
-                                    <div className="text-sm font-semibold text-purple-200 mb-2">Common Wrong Answers:</div>
+                                    <div className="text-sm font-semibold text-slate-200 mb-2">Common Wrong Answers:</div>
                                     <div className="flex flex-wrap gap-2">
                                       {q.commonWrongAnswers.map((wrong, idx) => (
-                                        <span key={idx} className="bg-red-900/50 text-red-200 px-2 py-1 rounded text-xs border border-red-700">
+                                        <span key={idx} className="bg-orange-900/40 text-orange-200 px-2 py-1 rounded text-xs border border-orange-600">
                                           "{wrong.answer}" ({wrong.count}x)
                                         </span>
                                       ))}
@@ -970,7 +1567,7 @@ export default function CreateQuizz() {
                                       ...prev,
                                       [questionKey]: !prev[questionKey]
                                     }))}
-                                    className="bg-purple-700 hover:bg-purple-600 text-purple-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                                    className="bg-slate-600 hover:bg-slate-500 text-slate-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                                   >
                                     <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
@@ -984,8 +1581,8 @@ export default function CreateQuizz() {
                                   <div className="mt-4 space-y-4">
                                     {/* Correct answers section */}
                                     {q.correctStudents.length > 0 && (
-                                      <div className="bg-green-900/20 rounded-lg p-4 border border-green-700">
-                                        <h5 className="text-green-300 font-semibold mb-3 flex items-center gap-2">
+                                      <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-600">
+                                        <h5 className="text-emerald-300 font-semibold mb-3 flex items-center gap-2">
                                           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
                                           </svg>
@@ -993,10 +1590,10 @@ export default function CreateQuizz() {
                                         </h5>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                           {q.correctStudents.map((student, idx) => (
-                                            <div key={idx} className="bg-green-800/30 rounded p-3 border border-green-600">
-                                              <div className="font-medium text-green-100">{student.studentName}</div>
-                                              <div className="text-sm text-green-300">{student.studentEmail}</div>
-                                              <div className="text-sm text-green-200 mt-1">Answer: "{student.answer}"</div>
+                                            <div key={idx} className="bg-emerald-800/30 rounded p-3 border border-emerald-500">
+                                              <div className="font-medium text-emerald-100">{student.studentName}</div>
+                                              <div className="text-sm text-emerald-300">{student.studentEmail}</div>
+                                              <div className="text-sm text-emerald-200 mt-1">Answer: "{student.answer}"</div>
                                             </div>
                                           ))}
                                         </div>
@@ -1005,8 +1602,8 @@ export default function CreateQuizz() {
                                     
                                     {/* Incorrect answers section */}
                                     {q.incorrectStudents.length > 0 && (
-                                      <div className="bg-red-900/20 rounded-lg p-4 border border-red-700">
-                                        <h5 className="text-red-300 font-semibold mb-3 flex items-center gap-2">
+                                      <div className="bg-orange-900/20 rounded-lg p-4 border border-orange-600">
+                                        <h5 className="text-orange-300 font-semibold mb-3 flex items-center gap-2">
                                           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                           </svg>
@@ -1014,10 +1611,10 @@ export default function CreateQuizz() {
                                         </h5>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                           {q.incorrectStudents.map((student, idx) => (
-                                            <div key={idx} className="bg-red-800/30 rounded p-3 border border-red-600">
-                                              <div className="font-medium text-red-100">{student.studentName}</div>
-                                              <div className="text-sm text-red-300">{student.studentEmail}</div>
-                                              <div className="text-sm text-red-200 mt-1">Answer: "{student.answer}"</div>
+                                            <div key={idx} className="bg-orange-800/30 rounded p-3 border border-orange-500">
+                                              <div className="font-medium text-orange-100">{student.studentName}</div>
+                                              <div className="text-sm text-orange-300">{student.studentEmail}</div>
+                                              <div className="text-sm text-orange-200 mt-1">Answer: "{student.answer}"</div>
                                             </div>
                                           ))}
                                         </div>

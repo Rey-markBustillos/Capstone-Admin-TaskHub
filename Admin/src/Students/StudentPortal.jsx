@@ -34,17 +34,26 @@ const StudentPortal = () => {
   const studentId = user && user.role === 'student' ? user._id : null;
 
   // Helper to format time as hh:mm AM/PM in PH time
-  const formatTimePH = (timeStr) => {
-    if (!timeStr) return 'TBA';
-    const [hour, minute] = timeStr.split(':');
-    if (isNaN(Number(hour)) || isNaN(Number(minute))) return timeStr;
-    const date = new Date(`1970-01-01T${hour}:${minute}:00`);
-    return date.toLocaleTimeString('en-PH', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'Asia/Manila'
-    });
+  const formatTimePH = (startTimeStr, endTimeStr) => {
+    if (!startTimeStr) return 'TBA';
+    
+    const formatSingleTime = (timeStr) => {
+      const [hour, minute] = timeStr.split(':');
+      if (isNaN(Number(hour)) || isNaN(Number(minute))) return timeStr;
+      const date = new Date(`1970-01-01T${hour}:${minute}:00`);
+      return date.toLocaleTimeString('en-PH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Manila'
+      });
+    };
+    
+    const startTime = formatSingleTime(startTimeStr);
+    if (!endTimeStr) return startTime;
+    
+    const endTime = formatSingleTime(endTimeStr);
+    return `${startTime} - ${endTime}`;
   };
 
   useEffect(() => {
@@ -190,7 +199,7 @@ const StudentPortal = () => {
                       <p className="text-indigo-100 flex items-center">
                         <FaClock size={18} className="mr-3 text-indigo-400" />
                         <strong>Time:</strong>&nbsp;
-                        {formatTimePH(cls.time)}
+                        {formatTimePH(cls.time, cls.endTime)}
                       </p>
                       <p className="text-indigo-100 flex items-center">
                         <FaMapMarkerAlt size={18} className="mr-3 text-indigo-400" />

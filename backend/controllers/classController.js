@@ -6,9 +6,14 @@ const mongoose = require('mongoose');
 // GET /api/class - Kunin lahat ng klase, optional filter by teacherId
 const getAllClasses = async (req, res) => {
   try {
-    const filter = {};
+    const filter = { isArchived: { $ne: true } }; // Exclude archived classes by default
     if (req.query.teacherId && mongoose.Types.ObjectId.isValid(req.query.teacherId)) {
       filter.teacher = req.query.teacherId;
+    }
+    // If specifically requesting archived classes
+    if (req.query.archived === 'true') {
+      filter.isArchived = true;
+      delete filter.isArchived.$ne;
     }
     const classes = await Class.find(filter)
       .populate('teacher', 'name email')
@@ -23,7 +28,7 @@ const getAllClasses = async (req, res) => {
 
 // POST /api/class - Gumawa ng bagong klase
 const createClass = async (req, res) => {
-  const { className, teacher, time, day, roomNumber } = req.body;
+  const { className, teacher, time, endTime, day, roomNumber } = req.body;
 
   try {
     if (!className || !teacher || !day) {
@@ -42,6 +47,7 @@ const createClass = async (req, res) => {
       className,
       teacher,
       time: typeof time === 'string' ? time : '',
+      endTime: typeof endTime === 'string' ? endTime : '',
       day,
       roomNumber,
       students: [],
@@ -142,7 +148,7 @@ const getClassById = async (req, res) => {
 // PUT /api/class/:id - I-update ang class details
 const updateClass = async (req, res) => {
   const { id } = req.params;
-  const { className, teacher, time, day, roomNumber } = req.body;
+  const { className, teacher, time, endTime, day, roomNumber } = req.body;
 
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -154,7 +160,7 @@ const updateClass = async (req, res) => {
     // Always save time as string "HH:mm"
     const updated = await Class.findByIdAndUpdate(
       id,
-      { className, teacher, time: typeof time === 'string' ? time : '', day, roomNumber },
+      { className, teacher, time: typeof time === 'string' ? time : '', endTime: typeof endTime === 'string' ? endTime : '', day, roomNumber },
       { new: true, runValidators: true }
     ).populate('teacher', 'name email').populate('students', 'name email');
     if (!updated) {
@@ -164,6 +170,62 @@ const updateClass = async (req, res) => {
   } catch (error) {
     console.error('Error updating class:', error);
     res.status(500).json({ message: 'Server error while updating class' });
+  }
+};
+
+// PUT /api/class/:id/archive - Archive a class
+const archiveClass = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid class ID' });
+    }
+    
+    const classToArchive = await Class.findByIdAndUpdate(
+      id,
+      { 
+        isArchived: true, 
+        archivedAt: new Date() 
+      },
+      { new: true }
+    ).populate('teacher', 'name email').populate('students', 'name email');
+    
+    if (!classToArchive) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+    
+    res.json({ message: 'Class archived successfully', class: classToArchive });
+  } catch (error) {
+    console.error('Error archiving class:', error);
+    res.status(500).json({ message: 'Server error while archiving class' });
+  }
+};
+
+// PUT /api/class/:id/restore - Restore an archived class
+const restoreClass = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid class ID' });
+    }
+    
+    const classToRestore = await Class.findByIdAndUpdate(
+      id,
+      { 
+        isArchived: false, 
+        $unset: { archivedAt: 1 } 
+      },
+      { new: true }
+    ).populate('teacher', 'name email').populate('students', 'name email');
+    
+    if (!classToRestore) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+    
+    res.json({ message: 'Class restored successfully', class: classToRestore });
+  } catch (error) {
+    console.error('Error restoring class:', error);
+    res.status(500).json({ message: 'Server error while restoring class' });
   }
 };
 
@@ -179,7 +241,10 @@ const getClassesByStudent = async (req, res) => {
     }
     
     console.log('🔎 [getClassesByStudent] Searching for classes with student:', studentId);
-    const classes = await Class.find({ students: studentId })
+    const classes = await Class.find({ 
+      students: studentId,
+      isArchived: { $ne: true } // Exclude archived classes
+    })
       .populate('teacher', 'name email')
       .populate('students', 'name email')
       .sort({ createdAt: -1 });
@@ -199,5 +264,7 @@ module.exports = {
   updateClassStudents,
   updateClass,
   getClassById,
-  getClassesByStudent
+  getClassesByStudent,
+  archiveClass,
+  restoreClass
 };

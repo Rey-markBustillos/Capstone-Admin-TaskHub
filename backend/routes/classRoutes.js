@@ -11,7 +11,9 @@ const {
   updateClassStudents,
   getClassById,
   updateClass,
-  getClassesByStudent // <-- add this
+  getClassesByStudent,
+  archiveClass,
+  restoreClass
 } = classController;
 
 // Get all classes (admin/teacher) or create class
@@ -28,6 +30,10 @@ router.route('/:id')
 // Update students in a class
 router.route('/:id/students')
   .put(updateClassStudents);
+
+// Archive and restore class
+router.put('/:id/archive', archiveClass);
+router.put('/:id/restore', restoreClass);
 
 // GET all classes for a student (student view only)
 router.get('/my-classes/:studentId', getClassesByStudent);

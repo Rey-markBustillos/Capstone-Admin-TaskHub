@@ -17,6 +17,7 @@ const ClassManagement = () => {
     teacher: '',
     className: '',
     time: '',
+    endTime: '',
     day: '',
     roomNumber: '',
   });
@@ -32,6 +33,10 @@ const ClassManagement = () => {
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [classToDelete, setClassToDelete] = useState(null);
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedClasses, setArchivedClasses] = useState([]);
   // Handle Excel import for students
   const handleImportExcel = (e) => {
     const file = e.target.files[0];
@@ -69,17 +74,26 @@ const ClassManagement = () => {
   };
 
   // Helper to format time as hh:mm AM/PM in PH time
-  const formatTimePH = (timeStr) => {
-    if (!timeStr) return 'N/A';
-    const [hour, minute] = timeStr.split(':');
-    if (isNaN(Number(hour)) || isNaN(Number(minute))) return timeStr;
-    const date = new Date(`1970-01-01T${hour}:${minute}:00`);
-    return date.toLocaleTimeString('en-PH', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'Asia/Manila'
-    });
+  const formatTimePH = (startTimeStr, endTimeStr) => {
+    if (!startTimeStr) return 'N/A';
+    
+    const formatSingleTime = (timeStr) => {
+      const [hour, minute] = timeStr.split(':');
+      if (isNaN(Number(hour)) || isNaN(Number(minute))) return timeStr;
+      const date = new Date(`1970-01-01T${hour}:${minute}:00`);
+      return date.toLocaleTimeString('en-PH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Manila'
+      });
+    };
+    
+    const startTime = formatSingleTime(startTimeStr);
+    if (!endTimeStr) return startTime;
+    
+    const endTime = formatSingleTime(endTimeStr);
+    return `${startTime} - ${endTime}`;
   };
 
   const fetchAllData = useCallback(() => {
@@ -127,6 +141,7 @@ const ClassManagement = () => {
       className: newClass.className,
       teacher: newClass.teacher,
       time: newClass.time,
+      endTime: newClass.endTime,
       day: newClass.day,
       roomNumber: newClass.roomNumber,
     };
@@ -135,7 +150,7 @@ const ClassManagement = () => {
       .then((response) => {
         setClasses(prevClasses => [response.data, ...prevClasses]);
         setShowAddClassModal(false);
-        setNewClass({ teacher: '', className: '', time: '', day: '', roomNumber: '' });
+        setNewClass({ teacher: '', className: '', time: '', endTime: '', day: '', roomNumber: '' });
       })
       .catch((error) => {
         console.error('Error adding class:', error);
@@ -155,6 +170,7 @@ const ClassManagement = () => {
       className: editClass.className,
       teacher: editClass.teacher,
       time: editClass.time,
+      endTime: editClass.endTime,
       day: editClass.day,
       roomNumber: editClass.roomNumber,
     };
@@ -174,13 +190,83 @@ const ClassManagement = () => {
       });
   };
 
-  // Delete class and cascade delete activities and submissions
-  const handleDeleteClass = (id) => {
-    axios.delete(`${API_BASE_URL}/class/${id}`)
+  // Show delete confirmation modal
+  const handleDeleteClass = (classItem) => {
+    setClassToDelete(classItem);
+    setShowDeleteModal(true);
+  };
+
+  // Actually delete the class after confirmation
+  const confirmDeleteClass = () => {
+    if (!classToDelete) return;
+    
+    axios.delete(`${API_BASE_URL}/class/${classToDelete._id}`)
       .then(() => {
-        setClasses(classes.filter((classItem) => classItem._id !== id));
+        setClasses(classes.filter((classItem) => classItem._id !== classToDelete._id));
+        setShowDeleteModal(false);
+        setClassToDelete(null);
+        setSuccess('Class deleted successfully!');
+        setTimeout(() => setSuccess(''), 3000);
       })
-      .catch((error) => console.error('Error deleting class:', error));
+      .catch((error) => {
+        console.error('Error deleting class:', error);
+        setError('Failed to delete class. Please try again.');
+        setTimeout(() => setError(''), 3000);
+        setShowDeleteModal(false);
+        setClassToDelete(null);
+      });
+  };
+
+  // Archive a class
+  const handleArchiveClass = (classItem) => {
+    axios.put(`${API_BASE_URL}/class/${classItem._id}/archive`)
+      .then(() => {
+        setClasses(classes.filter(cls => cls._id !== classItem._id));
+        setSuccess('Class archived successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+      })
+      .catch((error) => {
+        console.error('Error archiving class:', error);
+        setError('Failed to archive class. Please try again.');
+        setTimeout(() => setError(''), 3000);
+      });
+  };
+
+  // Restore an archived class
+  const handleRestoreClass = (classItem) => {
+    axios.put(`${API_BASE_URL}/class/${classItem._id}/restore`)
+      .then(() => {
+        setArchivedClasses(archivedClasses.filter(cls => cls._id !== classItem._id));
+        fetchAllData(); // Refresh active classes
+        setSuccess('Class restored successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+      })
+      .catch((error) => {
+        console.error('Error restoring class:', error);
+        setError('Failed to restore class. Please try again.');
+        setTimeout(() => setError(''), 3000);
+      });
+  };
+
+  // Fetch archived classes
+  const fetchArchivedClasses = () => {
+    axios.get(`${API_BASE_URL}/class?archived=true`)
+      .then((response) => {
+        setArchivedClasses(response.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching archived classes:', error);
+        setError('Failed to fetch archived classes.');
+        setTimeout(() => setError(''), 3000);
+      });
+  };
+
+  // Toggle between active and archived classes view
+  const toggleArchivedView = () => {
+    if (!showArchived) {
+      fetchArchivedClasses();
+    }
+    setShowArchived(!showArchived);
   };
 
   const openAddStudentModal = (classId) => {
@@ -199,6 +285,9 @@ const ClassManagement = () => {
       time: typeof classItem.time === "string"
         ? classItem.time
         : (classItem.time ? new Date(classItem.time).toISOString().slice(11, 16) : ''),
+      endTime: typeof classItem.endTime === "string"
+        ? classItem.endTime
+        : (classItem.endTime ? new Date(classItem.endTime).toISOString().slice(11, 16) : ''),
       day: classItem.day || '',
       roomNumber: classItem.roomNumber || '',
     });
@@ -261,29 +350,63 @@ const ClassManagement = () => {
       </h1>
       {/* Only show Add Class button for admin/teacher */}
       {user && user.role !== 'student' && (
-        <button
-          className="bg-indigo-600 text-white px-5 py-2 rounded-lg shadow hover:bg-indigo-700 transition-colors"
-          onClick={() => {
-            setShowAddClassModal(true);
-            setError('');
-          }}
-        >
-          Add New Class
-        </button>
+        <div className="flex gap-3 flex-wrap">
+          <button
+            className="bg-indigo-600 text-white px-5 py-2 rounded-lg shadow hover:bg-indigo-700 transition-colors"
+            onClick={() => {
+              setShowAddClassModal(true);
+              setError('');
+            }}
+          >
+            Add New Class
+          </button>
+          <button
+            className={`px-5 py-2 rounded-lg shadow transition-colors ${
+              showArchived 
+                ? 'bg-orange-600 text-white hover:bg-orange-700' 
+                : 'bg-gray-600 text-white hover:bg-gray-700'
+            }`}
+            onClick={toggleArchivedView}
+          >
+            {showArchived ? 'View Active Classes' : 'View Archived Classes'}
+          </button>
+        </div>
       )}
 
       <div className="mt-8 p-6 border-gray-300 bg-gradient-to-br from-indigo-50 to-white rounded-2xl shadow-lg">
         <h2 className="text-2xl font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <svg className="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <svg className={`w-7 h-7 ${showArchived ? 'text-orange-500' : 'text-indigo-500'}`} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
             <circle cx="12" cy="12" r="9" />
           </svg>
-          Existing Classes
+          {showArchived ? 'Archived Classes' : 'Active Classes'}
+          <span className="text-lg font-normal text-gray-500">
+            ({showArchived ? archivedClasses.length : classes.length})
+          </span>
         </h2>
         <div className="max-h-[500px] overflow-y-scroll pr-2">
-          <ul className="space-y-5">
-            {classes.map((classItem) => (
-              <li key={classItem._id} className="border border-gray-200 bg-white/80 p-5 rounded-2xl shadow-md hover:shadow-xl transition-shadow flex flex-col md:flex-row justify-between items-start gap-4">
+          {(showArchived ? archivedClasses : classes).length === 0 ? (
+            <div className="text-center py-12">
+              <svg className={`w-16 h-16 mx-auto mb-4 ${showArchived ? 'text-orange-300' : 'text-gray-300'}`} fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-500 mb-2">
+                {showArchived ? 'No archived classes found' : 'No active classes found'}
+              </h3>
+              <p className="text-gray-400">
+                {showArchived 
+                  ? 'Classes that have been archived will appear here.' 
+                  : 'Create your first class to get started.'}
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-5">
+              {(showArchived ? archivedClasses : classes).map((classItem) => (
+              <li key={classItem._id} className={`border p-5 rounded-2xl shadow-md hover:shadow-xl transition-shadow flex flex-col md:flex-row justify-between items-start gap-4 ${
+                showArchived 
+                  ? 'border-orange-200 bg-orange-50/80' 
+                  : 'border-gray-200 bg-white/80'
+              }`}>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-indigo-100 text-indigo-600">
@@ -321,7 +444,7 @@ const ClassManagement = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
                         <circle cx="12" cy="12" r="9" />
                       </svg>
-                      <b>Time:</b> {formatTimePH(classItem.time)}
+                      <b>Time:</b> {formatTimePH(classItem.time, classItem.endTime)}
                     </span>
                   </div>
                   <div className="text-gray-600 mt-2 text-sm">
@@ -332,6 +455,20 @@ const ClassManagement = () => {
                         : 'No students enrolled.'}
                     </span>
                   </div>
+                  {showArchived && classItem.archivedAt && (
+                    <div className="text-orange-600 mt-2 text-sm font-medium">
+                      <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 8l6 6M8 12l-3 3 3 3M15 12l3-3-3-3" />
+                      </svg>
+                      Archived on: {new Date(classItem.archivedAt).toLocaleDateString('en-PH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  )}
                 </div>
                 {/* Only show management buttons for admin/teacher */}
                 {user && user.role !== 'student' && (
@@ -354,20 +491,55 @@ const ClassManagement = () => {
                       </svg>
                       Edit Class
                     </button>
-                    <button
-                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors text-sm font-medium flex items-center gap-2"
-                      onClick={() => handleDeleteClass(classItem._id)}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      Delete Class
-                    </button>
+                    {!showArchived ? (
+                      <>
+                        <button
+                          className="bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition-colors text-sm font-medium flex items-center gap-2"
+                          onClick={() => handleArchiveClass(classItem)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 8l6 6M8 12l-3 3 3 3M15 12l3-3-3-3" />
+                          </svg>
+                          Archive
+                        </button>
+                        <button
+                          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors text-sm font-medium flex items-center gap-2"
+                          onClick={() => handleDeleteClass(classItem)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Delete Class
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors text-sm font-medium flex items-center gap-2"
+                          onClick={() => handleRestoreClass(classItem)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Restore
+                        </button>
+                        <button
+                          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors text-sm font-medium flex items-center gap-2"
+                          onClick={() => handleDeleteClass(classItem)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Delete Permanently
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </li>
-            ))}
-          </ul>
+              ))}
+            </ul>
+          )}
         </div>
       </div>  
 
@@ -431,18 +603,32 @@ const ClassManagement = () => {
                   ))}
                 </select>
               </label>
-              <label className="block" htmlFor="time">
-                <span className="text-gray-700 font-medium">Time</span>
-                <input
-                  id="time"
-                  name="time"
-                  type="time"
-                  value={newClass.time}
-                  onChange={(e) => setNewClass({ ...newClass, time: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-2 focus:ring-indigo-500"
-                  autoComplete="off"
-                />
-              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="block" htmlFor="time">
+                  <span className="text-gray-700 font-medium">Start Time</span>
+                  <input
+                    id="time"
+                    name="time"
+                    type="time"
+                    value={newClass.time}
+                    onChange={(e) => setNewClass({ ...newClass, time: e.target.value })}
+                    className="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-2 focus:ring-indigo-500"
+                    autoComplete="off"
+                  />
+                </label>
+                <label className="block" htmlFor="endTime">
+                  <span className="text-gray-700 font-medium">End Time</span>
+                  <input
+                    id="endTime"
+                    name="endTime"
+                    type="time"
+                    value={newClass.endTime}
+                    onChange={(e) => setNewClass({ ...newClass, endTime: e.target.value })}
+                    className="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-2 focus:ring-indigo-500"
+                    autoComplete="off"
+                  />
+                </label>
+              </div>
               <label className="block" htmlFor="roomNumber">
                 <span className="text-gray-700 font-medium">Room Number</span>
                 <input
@@ -535,18 +721,32 @@ const ClassManagement = () => {
                   ))}
                 </select>
               </label>
-              <label className="block" htmlFor="editTime">
-                <span className="text-gray-700 font-medium">Time</span>
-                <input
-                  id="editTime"
-                  name="editTime"
-                  type="time"
-                  value={editClass.time}
-                  onChange={(e) => setEditClass({ ...editClass, time: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-2 focus:ring-indigo-500"
-                  autoComplete="off"
-                />
-              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="block" htmlFor="editTime">
+                  <span className="text-gray-700 font-medium">Start Time</span>
+                  <input
+                    id="editTime"
+                    name="editTime"
+                    type="time"
+                    value={editClass.time}
+                    onChange={(e) => setEditClass({ ...editClass, time: e.target.value })}
+                    className="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-2 focus:ring-indigo-500"
+                    autoComplete="off"
+                  />
+                </label>
+                <label className="block" htmlFor="editEndTime">
+                  <span className="text-gray-700 font-medium">End Time</span>
+                  <input
+                    id="editEndTime"
+                    name="editEndTime"
+                    type="time"
+                    value={editClass.endTime}
+                    onChange={(e) => setEditClass({ ...editClass, endTime: e.target.value })}
+                    className="w-full p-2 border border-gray-300 rounded-md mt-1 focus:ring-2 focus:ring-indigo-500"
+                    autoComplete="off"
+                  />
+                </label>
+              </div>
               <label className="block" htmlFor="editRoomNumber">
                 <span className="text-gray-700 font-medium">Room Number</span>
                 <input
@@ -642,6 +842,61 @@ const ClassManagement = () => {
                 onClick={handleAddStudentsToClass}
               >
                 Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && classToDelete && (
+        <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50 p-4">
+          <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full border-t-8 border-red-500 relative">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 text-red-600 text-3xl shadow border-2 border-white">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </span>
+              <h3 className="text-2xl font-bold text-gray-800">Delete Class</h3>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-600 text-lg mb-4">
+                Are you sure you want to delete this class?
+              </p>
+              <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-red-500">
+                <p className="font-semibold text-gray-800">{classToDelete.className}</p>
+                <p className="text-sm text-gray-600">
+                  Teacher: {classToDelete.teacher?.name || 'N/A'}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Students: {(classToDelete.students || []).length} enrolled
+                </p>
+              </div>
+              <p className="text-red-600 text-sm mt-3 font-medium">
+                ⚠️ This action cannot be undone. All associated data will be permanently deleted.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-4">
+              <button
+                className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors font-medium"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setClassToDelete(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors font-medium flex items-center gap-2"
+                onClick={confirmDeleteClass}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Delete Class
               </button>
             </div>
           </div>

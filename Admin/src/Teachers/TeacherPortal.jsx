@@ -36,17 +36,26 @@ const FallingBooksAnimation = () => {
 };
 
 // Helper to format time as hh:mm AM/PM in PH time
-const formatTimePH = (timeStr) => {
-  if (!timeStr) return 'TBA';
-  const [hour, minute] = timeStr.split(':');
-  if (isNaN(Number(hour)) || isNaN(Number(minute))) return timeStr;
-  const date = new Date(`1970-01-01T${hour}:${minute}:00`);
-  return date.toLocaleTimeString('en-PH', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'Asia/Manila'
-  });
+const formatTimePH = (startTimeStr, endTimeStr) => {
+  if (!startTimeStr) return 'TBA';
+  
+  const formatSingleTime = (timeStr) => {
+    const [hour, minute] = timeStr.split(':');
+    if (isNaN(Number(hour)) || isNaN(Number(minute))) return timeStr;
+    const date = new Date(`1970-01-01T${hour}:${minute}:00`);
+    return date.toLocaleTimeString('en-PH', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Manila'
+    });
+  };
+  
+  const startTime = formatSingleTime(startTimeStr);
+  if (!endTimeStr) return startTime;
+  
+  const endTime = formatSingleTime(endTimeStr);
+  return `${startTime} - ${endTime}`;
 };
 
 const TeacherPortal = () => {
@@ -168,7 +177,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
                     <p className="text-gray-300 flex items-center">
                       <FaClock size={14} className="mr-3 text-indigo-400 flex-shrink-0" />
                       <span className="font-medium">Time:</span>&nbsp;
-                      {cls.time ? formatTimePH(cls.time) : <span className="italic text-gray-400">TBA</span>}
+                      {cls.time ? formatTimePH(cls.time, cls.endTime) : <span className="italic text-gray-400">TBA</span>}
                     </p>
                     <p className="text-gray-300 flex items-center">
                       <FaMapMarkerAlt size={14} className="mr-3 text-indigo-400 flex-shrink-0" />
