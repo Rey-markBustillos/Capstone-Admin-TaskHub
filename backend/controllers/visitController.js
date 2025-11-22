@@ -3,19 +3,38 @@ const Visit = require('../models/Visit');
 // Record a visit
 const recordVisit = async (req, res) => {
   try {
-    const { page, userId } = req.body;
+    const { page, userId, sessionId } = req.body;
     const userAgent = req.get('User-Agent') || '';
-    const ipAddress = req.ip || req.connection.remoteAddress || '';
+    const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
     
-    // Generate or get session ID from request
-    const sessionId = req.sessionID || req.headers['x-session-id'] || '';
+    // Use session ID from request body or generate from headers
+    const finalSessionId = sessionId || req.sessionID || req.headers['x-session-id'] || '';
+
+    // For application access visits, check if we already have a visit for this session
+    if (page === 'application-access' && finalSessionId) {
+      const existingVisit = await Visit.findOne({ 
+        sessionId: finalSessionId, 
+        page: 'application-access' 
+      });
+      
+      if (existingVisit) {
+        return res.status(200).json({
+          message: 'Visit already recorded for this session',
+          visit: {
+            id: existingVisit._id,
+            timestamp: existingVisit.timestamp,
+            page: existingVisit.page
+          }
+        });
+      }
+    }
 
     const visit = new Visit({
       page,
       userId: userId || null,
       userAgent,
       ipAddress,
-      sessionId
+      sessionId: finalSessionId
     });
 
     await visit.save();
