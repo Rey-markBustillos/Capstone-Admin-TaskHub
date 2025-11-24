@@ -1,12 +1,12 @@
 
 // ...existing imports and code...
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn, FaFileUpload, FaDownload, FaTimes } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 export default function TeacherAnnouncement() {
   const { classId } = useParams();
@@ -37,8 +37,8 @@ export default function TeacherAnnouncement() {
     try {
       setLoading(true);
       const [announcementsRes, classRes] = await Promise.all([
-  axios.get(`${API_BASE_URL}/announcements?classId=${classId}`),
-  axios.get(`${API_BASE_URL}/class/${classId}`)
+        axios.get(`${API_BASE_URL}/announcements?classId=${classId}`),
+        axios.get(`${API_BASE_URL}/class/${classId}`)
       ]);
       setAnnouncements(announcementsRes.data);
       setClassName(classRes.data.className);
@@ -62,10 +62,6 @@ export default function TeacherAnnouncement() {
 
   // Teachers don't need intersection observer to mark their own announcements as viewed
   // Only students should use intersection observer for view tracking
-  const announcementCardRef = useCallback(node => {
-    // No intersection observer for teachers
-    return;
-  }, []);
 
   const toggleComments = (announcementId) => {
     setOpenComments(prev => ({ ...prev, [announcementId]: !prev[announcementId] }));
@@ -84,7 +80,7 @@ export default function TeacherAnnouncement() {
     const text = commentInputs[announcementId];
     if (!text || !text.trim()) return;
     try {
-  const res = await axios.post(`${API_BASE_URL}/announcements/${announcementId}/comments`, { text, postedBy: userId });
+      const res = await axios.post(`${API_BASE_URL}/announcements/${announcementId}/comments`, { text, postedBy: userId });
       updateAnnouncementInState(res.data);
       setCommentInputs(prev => ({ ...prev, [announcementId]: '' }));
     } catch {
@@ -94,7 +90,7 @@ export default function TeacherAnnouncement() {
 
   const handleReaction = async (announcementId, emoji) => {
     try {
-  const res = await axios.post(`${API_BASE_URL}/announcements/${announcementId}/reactions`, { emoji, userId });
+      const res = await axios.post(`${API_BASE_URL}/announcements/${announcementId}/reactions`, { emoji, userId });
       updateAnnouncementInState(res.data);
     } catch {
       alert("Could not react.");
@@ -112,6 +108,14 @@ export default function TeacherAnnouncement() {
     const { title, content } = e.target.elements;
     if (!title.value.trim() || !content.value.trim()) {
       setError('Title and content are required');
+      return;
+    }
+    if (!userId) {
+      setError('User information not found. Please log in again.');
+      return;
+    }
+    if (!classId) {
+      setError('Class information not found.');
       return;
     }
     try {
@@ -174,7 +178,7 @@ export default function TeacherAnnouncement() {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure?')) return;
     try {
-  await axios.delete(`${API_BASE_URL}/announcements/${id}`);
+      await axios.delete(`${API_BASE_URL}/announcements/${id}`);
       fetchData();
     } catch (err) {
       setError(err.response?.data?.message || err.message);
@@ -221,7 +225,7 @@ export default function TeacherAnnouncement() {
               const isCommentsOpen = openComments[ann._id];
 
               return (
-                <li key={ann._id} ref={announcementCardRef} data-ann-id={ann._id} className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl border border-indigo-100 dark:border-indigo-900 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
+                <li key={ann._id} data-ann-id={ann._id} className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl border border-indigo-100 dark:border-indigo-900 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <FaBullhorn className="text-yellow-300 text-xl" />

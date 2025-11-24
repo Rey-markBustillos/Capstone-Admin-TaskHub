@@ -18,6 +18,7 @@ const CreateActivity = () => {
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const teacherId = user?._id;
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
   const fetchClassData = useCallback(async () => {
     if (!classId) {
@@ -27,7 +28,6 @@ const CreateActivity = () => {
     setLoadingActivities(true);
     setActivitiesError('');
     try {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
       const [classRes, activitiesRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/class/${classId}`),
         axios.get(`${API_BASE_URL}/activities?classId=${classId}`)
@@ -39,7 +39,7 @@ const CreateActivity = () => {
     } finally {
       setLoadingActivities(false);
     }
-  }, [classId]);
+  }, [classId, API_BASE_URL]);
 
   useEffect(() => {
     fetchClassData();
@@ -64,18 +64,26 @@ const CreateActivity = () => {
       setError('Title and Deadline are required.');
       return;
     }
+    if (!teacherId) {
+      setError('Teacher information not found. Please log in again.');
+      return;
+    }
+    if (!classId) {
+      setError('Class information not found.');
+      return;
+    }
     try {
       const formData = new FormData();
       formData.append('title', activityData.title);
       formData.append('description', activityData.description);
       formData.append('date', moment.tz(activityData.date, 'Asia/Manila').toISOString());
-      formData.append('score', activityData.score);
+      formData.append('totalPoints', activityData.score);
       formData.append('classId', classId);
       formData.append('createdBy', teacherId);
       if (activityData.attachment) {
         formData.append('attachment', activityData.attachment);
       }
-  await axios.post(`${API_BASE_URL}/activities`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await axios.post(`${API_BASE_URL}/activities`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSuccess('Activity created successfully!');
       fetchClassData();
       setTimeout(() => {

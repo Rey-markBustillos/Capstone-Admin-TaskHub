@@ -25,7 +25,7 @@ exports.createActivity = async (req, res) => {
       title,
       description,
       date,
-      totalPoints,
+      score: totalPoints, // Map totalPoints to score field in the model
       link,
       attachment: attachmentPath,
       createdBy,
