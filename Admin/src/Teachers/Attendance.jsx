@@ -4,7 +4,11 @@ import { FaCheckCircle, FaTimesCircle, FaClock, FaCalendarCheck, FaArrowLeft } f
 import { useParams, NavLink } from 'react-router-dom';
 
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+// Ensure API_BASE_URL always ends with /api/
+const API_BASE_URL = (() => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  return baseUrl.endsWith('/api/') ? baseUrl : `${baseUrl.replace(/\/$/, '')}/api/`;
+})();
 
 const statusOptions = [
   { label: 'Present', icon: <FaCheckCircle className="text-green-400" /> },
@@ -25,7 +29,7 @@ useEffect(() => {
 // Fetch enrolled students in class
 const fetchStudents = async () => {
 	try {
-		const res = await axios.get(`${API_BASE_URL}/class/${classId}`);
+		const res = await axios.get(`${API_BASE_URL}class/${classId}`);
 		setStudents(res.data.students || []);
 	} catch {
 		setStudents([]);
