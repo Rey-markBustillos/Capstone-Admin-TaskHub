@@ -126,12 +126,10 @@ return (
 			>
 				<FaArrowLeft /> Back to Class
 			</NavLink>
-			<div className="flex flex-col lg:flex-row gap-8">
+			<div className="flex flex-col lg:flex-row gap-8 min-h-0 flex-1">
 				{/* Mark Attendance for Today */}
-				<div className="flex-1 w-full max-w-full overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-					{/* ...existing Mark Attendance code... */}
-					{(() => (
-						<div className="bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl p-8 border border-indigo-100 dark:border-gray-700 backdrop-blur-md mb-8 lg:mb-0">
+				<div className="flex-1 w-full max-w-full overflow-hidden">
+					<div className="bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl p-6 sm:p-8 border border-indigo-100 dark:border-gray-700 backdrop-blur-md mb-8 lg:mb-0 overflow-hidden flex flex-col max-h-[calc(100vh-200px)]">
 						<div className="mb-4">
 							<h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-2 mb-2">
 								<FaCalendarCheck className="flex-shrink-0" /> 
@@ -139,10 +137,16 @@ return (
 							</h2>
 							<p className="text-sm text-indigo-600 dark:text-indigo-400">Today: {today}</p>
 						</div>
-							<div className="overflow-x-auto">
+							<div className="overflow-x-auto flex-1 min-h-0">
 								<div 
-									style={{ maxHeight: '400px', overflowY: 'auto' }} 
-									className="scrollbar-thin scrollbar-thumb-indigo-300 scrollbar-track-gray-100 dark:scrollbar-thumb-indigo-600 dark:scrollbar-track-gray-700"
+									style={{ 
+										maxHeight: 'calc(100vh - 400px)', 
+										minHeight: '300px',
+										overflowY: 'auto',
+										scrollbarWidth: 'thin',
+										scrollbarColor: '#6366f1 #e5e7eb'
+									}} 
+									className="border border-gray-200 dark:border-gray-600 rounded-lg"
 								>
 									<table className="w-full text-left mb-4">
 										<thead className="sticky top-0 bg-indigo-50 dark:bg-gray-800 z-10">
@@ -222,14 +226,11 @@ return (
 							{message && (
 								<div className="mt-4 text-center font-semibold text-indigo-700 dark:text-indigo-300">{message}</div>
 							)}
-						</div>
-					))()}
+					</div>
 				</div>
 				{/* Attendance History */}
-				<div className="flex-1 w-full max-w-full overflow-x-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-					{/* ...existing Attendance History code... */}
-					{(() => (
-						<div className="bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl p-8 border border-indigo-100 dark:border-gray-700 backdrop-blur-md mt-8 lg:mt-0">
+				<div className="flex-1 w-full max-w-full overflow-hidden">
+					<div className="bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl p-6 sm:p-8 border border-indigo-100 dark:border-gray-700 backdrop-blur-md mt-8 lg:mt-0 overflow-hidden flex flex-col max-h-[calc(100vh-200px)]">
 							<h3 className="text-xl font-bold text-indigo-700 dark:text-indigo-300 mb-4">Attendance History ({history.length} days)</h3>
 					{history.length === 0 && (
 						<div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-center">
@@ -238,8 +239,16 @@ return (
 							</p>
 						</div>
 					)}
-							<div className="overflow-x-auto scrollbar-hide">
-								<table className="min-w-full text-left">
+							<div className="overflow-x-auto flex-1 min-h-0" style={{
+								scrollbarWidth: 'thin',
+								scrollbarColor: '#6366f1 #e5e7eb'
+							}}>
+								<div style={{
+									maxHeight: 'calc(100vh - 300px)',
+									overflowY: 'auto',
+									padding: '1rem'
+								}}>
+									<table className="min-w-full text-left border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
 									<thead>
 										<tr className="text-indigo-700 dark:text-indigo-200">
 											<th className="py-2 px-4">Date</th>
@@ -266,11 +275,11 @@ return (
 								</table>
 							</div>
 						</div>
-					))()}
+					</div>
 				</div>
 			</div>
 		</div>
-		</div>
+	</div>
 	);
 }
 
