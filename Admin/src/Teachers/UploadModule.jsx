@@ -300,7 +300,13 @@ const UploadModule = () => {
                 <div className="text-gray-400 text-xs">↓</div>
               </div>
             )}
-            <div className="max-h-96 overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-indigo-300 scrollbar-track-gray-100 dark:scrollbar-thumb-indigo-600 dark:scrollbar-track-gray-700">
+            <div 
+              className="max-h-96 overflow-y-auto pr-2 space-y-3 border border-gray-200 dark:border-gray-600 rounded-lg p-3"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#6366f1 #e5e7eb'
+              }}
+            >
               {modules.map((module) => (
               <div
                 key={module._id}
