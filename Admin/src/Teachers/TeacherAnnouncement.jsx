@@ -243,11 +243,23 @@ export default function TeacherAnnouncement() {
                         </p>
                         <div className="space-y-3">
                           {ann.attachments.map((attachment, index) => {
-                            const fileUrl = `${API_BASE_URL}/announcements/attachment/${attachment.filename}`;
-                            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment.originalName);
+                            // Construct file URL properly
+                            const baseUrl = API_BASE_URL.replace('/api', '');
+                            const fileUrl = `${baseUrl}/api/announcements/attachment/${attachment.filename}`;
+                            const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName);
                             const isPdf = /\.pdf$/i.test(attachment.originalName);
-                            const isVideo = /\.(mp4|webm|ogg)$/i.test(attachment.originalName);
-                            const isAudio = /\.(mp3|wav|ogg)$/i.test(attachment.originalName);
+                            const isVideo = /\.(mp4|webm|ogg|avi|mov)$/i.test(attachment.originalName);
+                            const isAudio = /\.(mp3|wav|ogg|m4a|flac)$/i.test(attachment.originalName);
+                            
+                            console.log('Attachment details:', {
+                              filename: attachment.filename,
+                              originalName: attachment.originalName,
+                              fileUrl,
+                              isImage,
+                              fileType: attachment.mimeType,
+                              API_BASE_URL,
+                              baseUrl
+                            });
                             
                             return (
                               <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
@@ -271,13 +283,43 @@ export default function TeacherAnnouncement() {
                                 
                                 {/* Display content based on file type */}
                                 {isImage && (
-                                  <div className="mt-2">
-                                    <img 
-                                      src={fileUrl} 
-                                      alt={attachment.originalName}
-                                      className="max-w-full h-auto rounded-lg shadow-md max-h-96 object-contain"
-                                      loading="lazy"
-                                    />
+                                  <div className="mt-3 bg-white dark:bg-gray-800 p-2 rounded-lg">
+                                    <div className="relative">
+                                      <img 
+                                        src={fileUrl} 
+                                        alt={attachment.originalName}
+                                        className="max-w-full h-auto rounded-lg shadow-lg max-h-96 object-contain mx-auto block border border-gray-200 dark:border-gray-600"
+                                        loading="lazy"
+                                        style={{ minHeight: '100px', background: '#f3f4f6' }}
+                                        onError={(e) => {
+                                          console.error('Image failed to load:', fileUrl);
+                                          e.target.style.display = 'none';
+                                          // Show fallback message
+                                          const fallback = e.target.parentNode.querySelector('.image-fallback');
+                                          if (fallback) fallback.style.display = 'block';
+                                        }}
+                                        onLoad={() => {
+                                          console.log('Image loaded successfully:', fileUrl);
+                                          // Hide fallback if image loads
+                                          const fallback = document.querySelector('.image-fallback');
+                                          if (fallback) fallback.style.display = 'none';
+                                        }}
+                                      />
+                                      <div className="image-fallback" style={{display: 'none'}}>
+                                        <div className="p-6 bg-gray-100 dark:bg-gray-700 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 text-center">
+                                          <FaFileUpload className="mx-auto mb-2 text-gray-400 text-2xl" />
+                                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
+                                            Image cannot be displayed
+                                          </p>
+                                          <p className="text-gray-500 dark:text-gray-500 text-xs">
+                                            URL: {fileUrl}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
+                                      {attachment.originalName} • {(attachment.fileSize / 1024 / 1024).toFixed(1)}MB
+                                    </p>
                                   </div>
                                 )}
                                 

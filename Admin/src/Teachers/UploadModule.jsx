@@ -271,9 +271,16 @@ const UploadModule = () => {
         {/* Modules List */}
         <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl border border-indigo-100 dark:border-indigo-900 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
           <div className="p-6">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-          <FaFileAlt className="text-indigo-500" />
-          Uploaded Modules
+        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FaFileAlt className="text-indigo-500" />
+            Uploaded Modules
+          </div>
+          {modules.length > 0 && (
+            <span className="text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded-full">
+              {modules.length} module{modules.length !== 1 ? 's' : ''}
+            </span>
+          )}
         </h2>
 
         {loading ? (
@@ -287,57 +294,77 @@ const UploadModule = () => {
             <p>No modules uploaded yet</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {modules.map((module) => (
+          <div className="relative">
+            {modules.length > 3 && (
+              <div className="absolute top-0 right-0 z-10 bg-gradient-to-l from-white dark:from-gray-800 to-transparent w-8 h-6 flex items-center justify-end pr-1">
+                <div className="text-gray-400 text-xs">↓</div>
+              </div>
+            )}
+            <div className="max-h-96 overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-indigo-300 scrollbar-track-gray-100 dark:scrollbar-thumb-indigo-600 dark:scrollbar-track-gray-700">
+              {modules.map((module) => (
               <div
                 key={module._id}
-                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-start justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm hover:shadow-md"
               >
-                <div className="flex items-center gap-4">
-                  {getFileIcon(module.fileName)}
-                  <div>
-                    <h3 className="font-semibold text-gray-800 dark:text-white">{module.title}</h3>
+                <div className="flex items-start gap-4 flex-1 min-w-0">
+                  <div className="flex-shrink-0 mt-1">
+                    {getFileIcon(module.fileName)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-800 dark:text-white truncate">{module.title}</h3>
                     {module.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{module.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mt-1">{module.description}</p>
                     )}
-                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      <span>File: {module.fileName}</span>
-                      <span>Size: {formatFileSize(module.fileSize)}</span>
-                      <span>Uploaded: {new Date(module.uploadDate).toLocaleDateString()}</span>
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      <span className="bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded">
+                        {module.fileName}
+                      </span>
+                      <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                        {formatFileSize(module.fileSize)}
+                      </span>
+                      <span className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded">
+                        {new Date(module.uploadDate).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 ml-4 flex-shrink-0">
                   <a
                     href={`${API_BASE_URL}/modules/download/${module._id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-md transition-colors"
+                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-md transition-colors"
                     title="Download"
                   >
-                    <FaDownload />
+                    <FaDownload size={14} />
                   </a>
                   <a
                     href={`${API_BASE_URL}/modules/view/${module._id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-md transition-colors"
+                    className="p-2 text-green-600 hover:text-green-800 hover:bg-green-100 dark:hover:bg-green-900 rounded-md transition-colors"
                     title="View"
                   >
-                    <FaEye />
+                    <FaEye size={14} />
                   </a>
                   <button
                     onClick={() => handleDelete(module._id)}
-                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-md transition-colors"
+                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 dark:hover:bg-red-900 rounded-md transition-colors"
                     title="Delete"
                   >
-                    <FaTrash />
+                    <FaTrash size={14} />
                   </button>
                 </div>
               </div>
             ))}
           </div>
+          {modules.length > 3 && (
+            <div className="absolute bottom-0 right-0 z-10 bg-gradient-to-l from-white dark:from-gray-800 to-transparent w-8 h-6 flex items-center justify-end pr-1">
+              <div className="text-gray-400 text-xs">↑</div>
+            </div>
+          )}
+        </div>
         )}
           </div>
         </div>
