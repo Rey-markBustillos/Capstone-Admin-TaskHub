@@ -189,10 +189,79 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
   <div className="max-w-5xl mx-auto p-2 sm:p-4 md:p-6 font-sans w-full">
       <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center flex items-center justify-center gap-2">
         <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 014.5 20.25v-.75z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 717.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 014.5 20.25v-.75z" />
         </svg>
         User Management
       </h1>
+
+      {/* User List Table - Moved to top for better visibility */}
+      <section className="mb-8 sm:mb-12">
+        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">User List</h2>
+        <div className="mb-3 flex flex-wrap gap-2 items-center">
+          <label className="font-medium text-gray-700">Filter by Role:</label>
+          <select
+            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={roleFilter}
+            onChange={e => setRoleFilter(e.target.value)}
+          >
+            <option value="all">All Roles</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div className="overflow-x-auto w-full max-h-[50vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
+          <table className="min-w-[600px] w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs sm:text-sm">
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="bg-gradient-to-r from-blue-200 via-green-100 to-yellow-100">
+                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Name</th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Email</th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Role</th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">LRN/ID</th>
+                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users
+                .filter(user => roleFilter === 'all' ? true : user.role === roleFilter)
+                .map((user, idx) => (
+                  <tr key={user._id || user.id} className={"transition-all " + (idx % 2 === 1 ? "bg-gray-50" : "bg-white") + " hover:bg-blue-50"}>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle font-medium text-gray-900 break-words max-w-[120px] sm:max-w-none">{user.name}</td>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle text-gray-700 break-words max-w-[140px] sm:max-w-none">{user.email}</td>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
+                      <span className={
+                        user.role === 'student' ? "inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold" :
+                        user.role === 'teacher' ? "inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold" :
+                        "inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold"
+                      }>
+                        {user.role === 'student' && <span className="text-lg">👨‍🎓</span>}
+                        {user.role === 'teacher' && <span className="text-lg">👨‍🏫</span>}
+                        {user.role === 'admin' && <span className="text-lg">🧑‍💼</span>}
+                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle text-gray-700">
+                      {user.role === 'student' ? (user.lrn || 'N/A') : 
+                       user.role === 'teacher' ? (user.teacherId || 'N/A') : 
+                       (user.adminId || 'N/A')}
+                    </td>
+                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
+                      <button
+                        className="inline-block bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-red-300 text-xs sm:text-sm"
+                        onClick={() => handleDeleteUser(user._id || user.id)}
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          Delete
+                        </span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {/* Add User Card Boxes */}
   <section className="mb-8 sm:mb-12">
@@ -380,77 +449,6 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
             </div>
           </div>
         )}
-      </section>
-      
-
-
-      {/* User List Table */}
-      <section>
-        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">User List</h2>
-        <div className="mb-3 flex flex-wrap gap-2 items-center">
-          <label className="font-medium text-gray-700">Filter by Role:</label>
-          <select
-            className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
-            value={roleFilter}
-            onChange={e => setRoleFilter(e.target.value)}
-          >
-            <option value="all">All Roles</option>
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div className="overflow-x-auto w-full max-h-[50vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
-          <table className="min-w-[600px] w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs sm:text-sm">
-            <thead className="sticky top-0 z-10 bg-white">
-              <tr className="bg-gradient-to-r from-blue-200 via-green-100 to-yellow-100">
-                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Name</th>
-                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Email</th>
-                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Role</th>
-                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">LRN/ID</th>
-                <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users
-                .filter(user => roleFilter === 'all' ? true : user.role === roleFilter)
-                .map((user, idx) => (
-                  <tr key={user._id || user.id} className={"transition-all " + (idx % 2 === 1 ? "bg-gray-50" : "bg-white") + " hover:bg-blue-50"}>
-                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle font-medium text-gray-900 break-words max-w-[120px] sm:max-w-none">{user.name}</td>
-                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle text-gray-700 break-words max-w-[140px] sm:max-w-none">{user.email}</td>
-                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
-                      <span className={
-                        user.role === 'student' ? "inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold" :
-                        user.role === 'teacher' ? "inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold" :
-                        "inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-xs font-semibold"
-                      }>
-                        {user.role === 'student' && <span className="text-lg">👨‍🎓</span>}
-                        {user.role === 'teacher' && <span className="text-lg">👨‍🏫</span>}
-                        {user.role === 'admin' && <span className="text-lg">🧑‍💼</span>}
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle text-gray-700">
-                      {user.role === 'student' ? (user.lrn || 'N/A') : 
-                       user.role === 'teacher' ? (user.teacherId || 'N/A') : 
-                       (user.adminId || 'N/A')}
-                    </td>
-                    <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
-                      <button
-                        className="inline-block bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-red-300 text-xs sm:text-sm"
-                        onClick={() => handleDeleteUser(user._id || user.id)}
-                      >
-                        <span className="inline-flex items-center gap-1">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                          Delete
-                        </span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
       </section>
 
      </div>
