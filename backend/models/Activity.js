@@ -9,6 +9,7 @@ const ActivitySchema = new mongoose.Schema({
   attachment: { type: String }, // could be a file path or URL
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true },
+  isLocked: { type: Boolean, default: false }, // New field to lock/unlock activities
 }, {
   timestamps: true,
 });

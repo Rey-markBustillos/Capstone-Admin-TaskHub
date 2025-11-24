@@ -135,6 +135,42 @@ exports.deleteActivity = async (req, res) => {
 };
 
 // ============================
+// Toggle Lock/Unlock Activity
+// ============================
+exports.toggleActivityLock = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isLocked } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid activity ID' });
+    }
+
+    if (typeof isLocked !== 'boolean') {
+      return res.status(400).json({ message: 'isLocked must be a boolean value' });
+    }
+
+    const updated = await Activity.findByIdAndUpdate(
+      id,
+      { isLocked },
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Activity not found' });
+    }
+
+    res.json({ 
+      message: `Activity ${isLocked ? 'locked' : 'unlocked'} successfully`, 
+      activity: updated 
+    });
+  } catch (error) {
+    console.error('Error toggling activity lock:', error);
+    res.status(500).json({ message: 'Error toggling activity lock', error: error.message });
+  }
+};
+
+// ============================
 // Teacher Activity Submissions
 // ============================
 exports.getActivitySubmissionsByTeacher = async (req, res) => {
@@ -270,6 +306,11 @@ exports.submitActivity = async (req, res) => {
       return res.status(404).json({ message: 'Activity not found.' });
     }
 
+    // Check if activity is locked
+    if (activity.isLocked) {
+      return res.status(403).json({ message: 'This activity is locked and no longer accepts submissions.' });
+    }
+
     const existingSubmission = await Submission.findOne({ activityId, studentId });
     if (existingSubmission) {
       return res.status(409).json({ message: 'You have already submitted this activity. Please use the resubmit option.' });
@@ -309,6 +350,17 @@ exports.resubmitActivity = async (req, res) => {
     }
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid Submission ID.' });
+    }
+
+    // Check if the activity is locked before allowing resubmission
+    const submission = await Submission.findById(id);
+    if (!submission) {
+      return res.status(404).json({ message: 'Submission not found.' });
+    }
+
+    const activity = await Activity.findById(submission.activityId);
+    if (activity && activity.isLocked) {
+      return res.status(403).json({ message: 'This activity is locked and no longer accepts resubmissions.' });
     }
 
     const updatedSubmission = await Submission.findByIdAndUpdate(

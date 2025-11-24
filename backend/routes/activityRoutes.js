@@ -108,4 +108,7 @@ router.put('/:id', uploadActivity.single('attachment'), activityController.updat
 // DELETE an activity
 router.delete('/:id', activityController.deleteActivity);
 
+// PATCH to toggle lock/unlock an activity
+router.patch('/:id/lock', activityController.toggleActivityLock);
+
 module.exports = router;

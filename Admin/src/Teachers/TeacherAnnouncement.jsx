@@ -219,8 +219,9 @@ export default function TeacherAnnouncement() {
             <p className="text-lg text-gray-800 dark:text-gray-300">No announcements posted yet.</p>
           </div>
         ) : (
-          <ul className="space-y-8">
-            {announcements.map((ann) => {
+          <div className="max-h-screen overflow-y-auto pr-2">
+            <ul className="space-y-8">
+              {announcements.map((ann) => {
               const reactionCounts = getReactionCounts(ann.reactions);
               const isCommentsOpen = openComments[ann._id];
 
@@ -396,8 +397,9 @@ export default function TeacherAnnouncement() {
                   )}
                 </li>
               );
-            })}
-          </ul>
+              })}
+            </ul>
+          </div>
         )}
       </div>
 

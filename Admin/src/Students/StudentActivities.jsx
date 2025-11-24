@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate, NavLink } from 'react-router-dom';
-import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf } from 'react-icons/fa';
+import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf, FaLock } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
@@ -16,6 +16,7 @@ const statusIcons = {
   'Missing': <FaTimesCircle className="text-red-500 mr-1" />,
   'Pending': <FaHourglassHalf className="text-yellow-500 mr-1" />,
   'Needs Resubmission': <FaRedoAlt className="text-purple-500 mr-1" />,
+  'Locked': <FaLock className="text-gray-500 mr-1" />,
 };
 
 const StudentActivities = () => {
@@ -87,8 +88,13 @@ const StudentActivities = () => {
     });
   };
 
-  // Show "Graded" if scored, "Late Graded" if late but scored, "Late" if late and not graded, "Submitted" if on time and not graded, "Missing" if overdue and no submission, "Pending" if not yet due
+  // Show "Graded" if scored, "Late Graded" if late but scored, "Late" if late and not graded, "Submitted" if on time and not graded, "Missing" if overdue and no submission, "Pending" if not yet due, "Locked" if activity is locked
   const getStatus = (activity, submission) => {
+    // Check if activity is locked first
+    if (activity.isLocked) {
+      return { text: 'Locked', style: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' };
+    }
+    
     const dueDate = new Date(activity.date);
     if (submission) {
       const submissionDate = new Date(submission.submissionDate);
@@ -113,6 +119,12 @@ const StudentActivities = () => {
   };
 
   const handleSubmission = (activityId) => {
+    // Find the activity to check if it's locked
+    const activity = activities.find(act => act._id === activityId);
+    if (activity && activity.isLocked) {
+      // Don't navigate if activity is locked
+      return;
+    }
     navigate(`/student/class/${classId}/activity/${activityId}/submit`);
   };
 
@@ -178,13 +190,21 @@ const StudentActivities = () => {
                     <div
                       key={activity._id}
                       onClick={() => handleSubmission(activity._id)}
-                      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 flex flex-col justify-between hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-indigo-100 dark:border-indigo-900 relative"
-                      title="Click to view/submit activity"
+                      className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 flex flex-col justify-between transition-all duration-300 border border-indigo-100 dark:border-indigo-900 relative ${
+                        activity.isLocked 
+                          ? 'cursor-not-allowed opacity-75' 
+                          : 'hover:shadow-2xl hover:-translate-y-1 cursor-pointer'
+                      }`}
+                      title={activity.isLocked ? 'This activity is locked' : 'Click to view/submit activity'}
                     >
                       <div>
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white pr-2 flex items-center gap-2">
-                            <FaBookOpen className="text-indigo-400" /> {activity.title}
+                            <FaBookOpen className="text-indigo-400" /> 
+                            {activity.title}
+                            {activity.isLocked && (
+                              <FaLock className="text-gray-500 ml-2" size={16} title="This activity is locked" />
+                            )}
                           </h3>
                           <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.style}`}>
                             {statusIcons[statusInfo.text] || null}
@@ -231,7 +251,12 @@ const StudentActivities = () => {
                             <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm">No Attachment</span>
                           )}
 
-                          {((statusInfo.text !== 'Missing' && new Date() < new Date(activity.date)) || statusInfo.text === 'Needs Resubmission') ? (
+                          {activity.isLocked ? (
+                            <div className="flex items-center gap-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                              <FaLock />
+                              <span>Locked</span>
+                            </div>
+                          ) : ((statusInfo.text !== 'Missing' && new Date() < new Date(activity.date)) || statusInfo.text === 'Needs Resubmission') ? (
                             <div className="flex items-center gap-1 text-xs sm:text-sm font-medium text-indigo-600 dark:text-indigo-400">
                               <FaUpload />
                               <span>{submission ? 'Resubmit' : 'Submit'}</span>
@@ -241,7 +266,7 @@ const StudentActivities = () => {
                           )}
                         </div>
                         <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3 sm:mt-4">
-                          Click to view details or submit
+                          {activity.isLocked ? 'Activity is locked - submissions not allowed' : 'Click to view details or submit'}
                         </p>
                       </div>
                     </div>
