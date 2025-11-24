@@ -53,11 +53,28 @@ console.error('Failed to fetch attendance history:', error);
 setHistory([]);
 }
 };
+// Load existing attendance for today
+const loadTodaysAttendance = async () => {
+try {
+const res = await axios.get(`${API_BASE_URL}attendance/class/${classId}`);
+const todaysRecord = res.data.history?.find(day => day.date === today);
+if (todaysRecord && todaysRecord.records) {
+  const todaysAttendance = {};
+  todaysRecord.records.forEach(rec => {
+    todaysAttendance[rec.student._id] = rec.status;
+  });
+  setAttendance(todaysAttendance);
+}
+} catch (error) {
+console.error('Failed to load today\'s attendance:', error);
+}
+};
 if (classId) {
 fetchStudents();
 fetchHistory();
+loadTodaysAttendance();
 }
-}, [classId]);
+}, [classId, today]);
 
 
 
@@ -97,9 +114,9 @@ status: attendance[s._id] || 'Absent',
 date: today,
 classId,
 }));
-		await axios.post(`${API_BASE_URL}attendance/mark`, { records });
-		setMessage('Attendance marked successfully!');
-		setAttendance({}); // Clear the form after successful submit
+		const response = await axios.post(`${API_BASE_URL}attendance/mark`, { records });
+		setMessage(response.data.message || 'Attendance marked successfully!');
+		// Don't clear the form - keep the marked attendance visible
 		
 		// Refresh history after successful submit
 		try {
@@ -135,8 +152,13 @@ return (
 								<FaCalendarCheck className="flex-shrink-0" /> 
 								<span className="truncate">Mark Attendance</span>
 							</h2>
-						<p className="text-sm text-indigo-600 dark:text-indigo-400">Today: {today}</p>
-					</div>
+							<p className="text-sm text-indigo-600 dark:text-indigo-400">Today: {today}</p>
+							{Object.keys(attendance).length > 0 && (
+								<p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+									📝 Attendance already marked for today - changes will update existing records
+								</p>
+							)}
+						</div>
 							<div className="flex-1 min-h-0">
 								<div 
 									style={{ 

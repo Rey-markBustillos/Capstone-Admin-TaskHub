@@ -13,11 +13,40 @@ exports.markAttendance = async (req, res) => {
       return res.status(400).json({ message: 'Invalid records' });
     }
     
-    // Save each attendance record
-    const saved = await Attendance.insertMany(records);
-    console.log('✅ Successfully saved', saved.length, 'attendance records');
+    // Use upsert to update existing records for the same day or create new ones
+    const upsertResults = [];
+    for (const record of records) {
+      const filter = {
+        studentId: record.studentId,
+        classId: record.classId,
+        date: record.date
+      };
+      
+      const update = {
+        status: record.status,
+        updatedAt: new Date()
+      };
+      
+      // Update if exists, create if not (upsert: true)
+      const result = await Attendance.findOneAndUpdate(
+        filter,
+        { ...filter, ...update },
+        { 
+          upsert: true, // Create if doesn't exist
+          new: true,    // Return updated document
+          runValidators: true
+        }
+      );
+      
+      upsertResults.push(result);
+    }
     
-    res.status(201).json({ message: 'Attendance marked', saved });
+    console.log('✅ Successfully processed', upsertResults.length, 'attendance records (updated/created)');
+    
+    res.status(200).json({ 
+      message: 'Attendance marked successfully! Records updated for today.',
+      saved: upsertResults 
+    });
   } catch (err) {
     console.error('❌ Error marking attendance:', err);
     res.status(500).json({ message: 'Error marking attendance', error: err.message });
