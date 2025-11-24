@@ -243,8 +243,8 @@ export default function TeacherAnnouncement() {
                         </p>
                         <div className="space-y-3">
                           {ann.attachments.map((attachment, index) => {
-                            // Use the working /files/ endpoint with cache busting
-                            const fileUrl = `http://localhost:5000/api/announcements/files/${attachment.filename}?v=${Date.now()}`;
+                            // Use the API_BASE_URL to work in both development and production
+                            const fileUrl = `${API_BASE_URL}/announcements/files/${attachment.filename}?v=${Date.now()}`;
                             const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName);
                             const isPdf = /\.pdf$/i.test(attachment.originalName);
                             const isVideo = /\.(mp4|webm|ogg|avi|mov)$/i.test(attachment.originalName);
@@ -287,10 +287,10 @@ export default function TeacherAnnouncement() {
                                       onError={(e) => {
 
                                         
-                                        // Try alternative URL patterns - all using /files/
+                                        // Try alternative URL patterns - using API_BASE_URL
                                         const retryUrls = [
-                                          `http://localhost:5000/api/announcements/files/${attachment.filename}?v=${Date.now()}`,
-                                          `http://localhost:5000/api/announcements/files/${attachment.filename}`
+                                          `${API_BASE_URL}/announcements/files/${attachment.filename}?v=${Date.now()}`,
+                                          `${API_BASE_URL}/announcements/files/${attachment.filename}`
                                         ];
                                         
                                         const currentUrl = e.target.src;
