@@ -288,18 +288,35 @@ export default function TeacherAnnouncement() {
                                         style={{ maxWidth: '100%', height: 'auto' }}
                                         onError={(e) => {
                                           console.error('❌ Image load failed:', fileUrl);
-                                          // Try alternative URL
-                                          const altUrl = `http://localhost:5000/api/announcements/files/${attachment.filename}`;
-                                          if (e.target.src !== altUrl) {
-                                            console.log('🔄 Trying alternative:', altUrl);
-                                            e.target.src = altUrl;
+                                          
+                                          // Try different URL variations
+                                          const currentSrc = e.target.src;
+                                          const attempts = [
+                                            `http://localhost:5000/api/announcements/files/${attachment.filename}`,
+                                            `http://localhost:5000/uploads/announcements/${attachment.filename}`,
+                                            `http://localhost:5000/api/announcements/attachment/${attachment.filename}?v=${Date.now()}`
+                                          ];
+                                          
+                                          const nextUrl = attempts.find(url => url !== currentSrc);
+                                          
+                                          if (nextUrl) {
+                                            console.log('🔄 Trying alternative URL:', nextUrl);
+                                            e.target.src = nextUrl;
                                           } else {
-                                            // Show fallback
+                                            // All URLs failed, show user-friendly fallback
+                                            console.log('❌ All image URLs failed');
                                             e.target.style.display = 'none';
-                                            const fallback = document.createElement('div');
-                                            fallback.className = 'p-3 bg-gray-50 border border-gray-200 rounded text-center text-sm text-gray-500';
-                                            fallback.innerHTML = `📷 Image preview unavailable<br><span class="text-xs">${attachment.originalName}</span>`;
-                                            e.target.parentNode.appendChild(fallback);
+                                            if (!e.target.parentNode.querySelector('.image-fallback')) {
+                                              const fallback = document.createElement('div');
+                                              fallback.className = 'image-fallback p-4 bg-blue-50 border border-blue-200 rounded-lg text-center';
+                                              fallback.innerHTML = `
+                                                <div class="text-blue-600 text-2xl mb-2">🖼️</div>
+                                                <p class="text-blue-800 text-sm font-medium">Image attachment</p>
+                                                <p class="text-blue-600 text-xs mt-1">${attachment.originalName}</p>
+                                                <p class="text-blue-500 text-xs mt-2">Click download to view file</p>
+                                              `;
+                                              e.target.parentNode.appendChild(fallback);
+                                            }
                                           }
                                         }}
                                         onLoad={() => {
