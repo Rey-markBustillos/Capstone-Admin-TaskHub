@@ -256,75 +256,39 @@ const UserManagement = () => {
           <h2 className="text-lg sm:text-xl font-semibold mb-3">Add User</h2>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
             {/* Compact Student Card */}
-            <div className="relative bg-gradient-to-br from-blue-100 via-blue-50 to-white shadow-md rounded-lg p-3 sm:p-4 flex-1 text-center border-2 border-blue-300 hover:shadow-lg transition-all duration-200 group overflow-hidden">
+            <div className="relative bg-gradient-to-br from-blue-100 via-blue-50 to-white shadow-md rounded-lg p-3 sm:p-4 flex-1 text-center border-2 border-blue-300 hover:scale-105 hover:shadow-lg transition-all duration-200 group overflow-hidden cursor-pointer"
+                 onClick={() => openModal('student')}>
               <div className="flex justify-center mb-2">
                 <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-200 group-hover:bg-blue-400 transition-all text-2xl shadow-md border-2 border-white">
                   👨‍🎓
                 </span>
               </div>
-              <div className="font-bold text-sm text-blue-800 mb-2">Add Student</div>
-              <div className="space-y-2">
-                <button
-                  onClick={() => openModal('student')}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded transition-all"
-                >
-                  Single Add
-                </button>
-                <label className="block cursor-pointer">
-                  <span className="w-full bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded transition-all inline-block">Import Excel</span>
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls"
-                    onChange={(e) => handleImportExcel(e, 'student')}
-                    className="hidden"
-                  />
-                </label>
-              </div>
+              <div className="font-bold text-sm text-blue-800 mb-1">Add Student</div>
+              <div className="text-gray-500 text-xs">Register student</div>
             </div>
             
             {/* Compact Teacher Card */}
-            <div className="relative bg-gradient-to-br from-green-100 via-green-50 to-white shadow-md rounded-lg p-3 sm:p-4 flex-1 text-center border-2 border-green-300 hover:shadow-lg transition-all duration-200 group overflow-hidden">
+            <div className="relative bg-gradient-to-br from-green-100 via-green-50 to-white shadow-md rounded-lg p-3 sm:p-4 flex-1 text-center border-2 border-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 group overflow-hidden cursor-pointer"
+                 onClick={() => openModal('teacher')}>
               <div className="flex justify-center mb-2">
                 <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-green-200 group-hover:bg-green-400 transition-all text-2xl shadow-md border-2 border-white">
                   👨‍🏫
                 </span>
               </div>
-              <div className="font-bold text-sm text-green-800 mb-2">Add Teacher</div>
-              <div className="space-y-2">
-                <button
-                  onClick={() => openModal('teacher')}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded transition-all"
-                >
-                  Single Add
-                </button>
-                <label className="block cursor-pointer">
-                  <span className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded transition-all inline-block">Import Excel</span>
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls"
-                    onChange={(e) => handleImportExcel(e, 'teacher')}
-                    className="hidden"
-                  />
-                </label>
-              </div>
+              <div className="font-bold text-sm text-green-800 mb-1">Add Teacher</div>
+              <div className="text-gray-500 text-xs">Register teacher</div>
             </div>
             
             {/* Compact Admin Card */}
-            <div className="relative bg-gradient-to-br from-yellow-100 via-yellow-50 to-white shadow-md rounded-lg p-3 sm:p-4 flex-1 text-center border-2 border-yellow-300 hover:shadow-lg transition-all duration-200 group overflow-hidden">
+            <div className="relative bg-gradient-to-br from-yellow-100 via-yellow-50 to-white shadow-md rounded-lg p-3 sm:p-4 flex-1 text-center border-2 border-yellow-300 hover:scale-105 hover:shadow-lg transition-all duration-200 group overflow-hidden cursor-pointer"
+                 onClick={() => openModal('admin')}>
               <div className="flex justify-center mb-2">
                 <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-yellow-200 group-hover:bg-yellow-400 transition-all text-2xl shadow-md border-2 border-white">
                   🧑‍💼
                 </span>
               </div>
-              <div className="font-bold text-sm text-yellow-800 mb-2">Add Admin</div>
-              <div className="space-y-2">
-                <button
-                  onClick={() => openModal('admin')}
-                  className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs px-3 py-1 rounded transition-all"
-                >
-                  Single Add
-                </button>
-              </div>
+              <div className="font-bold text-sm text-yellow-800 mb-1">Add Admin</div>
+              <div className="text-gray-500 text-xs">Register admin</div>
             </div>
           </div>
           
@@ -426,6 +390,36 @@ const UserManagement = () => {
                 Register {showModal.role.charAt(0).toUpperCase() + showModal.role.slice(1)}
               </h3>
               <form onSubmit={e => { e.preventDefault(); handleAddUser(); closeModal(); }}>
+                {/* Import Excel button for Student */}
+                {showModal.role === 'student' && (
+                  <div className="mb-4 text-center">
+                    <label className="inline-block cursor-pointer">
+                      <span className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded transition-all inline-block">📊 Import Excel</span>
+                      <input
+                        type="file"
+                        accept=".xlsx,.xls"
+                        onChange={(e) => handleImportExcel(e, 'student')}
+                        className="hidden"
+                      />
+                    </label>
+                    <div className="text-xs text-gray-500 mt-1">Or fill form below for single add</div>
+                  </div>
+                )}
+                {/* Import Excel button for Teacher */}
+                {showModal.role === 'teacher' && (
+                  <div className="mb-4 text-center">
+                    <label className="inline-block cursor-pointer">
+                      <span className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded transition-all inline-block">📊 Import Excel</span>
+                      <input
+                        type="file"
+                        accept=".xlsx,.xls"
+                        onChange={(e) => handleImportExcel(e, 'teacher')}
+                        className="hidden"
+                      />
+                    </label>
+                    <div className="text-xs text-gray-500 mt-1">Or fill form below for single add</div>
+                  </div>
+                )}
                 <div className="relative mb-3">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 text-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
