@@ -4,16 +4,18 @@ import { FaCheckCircle, FaTimesCircle, FaClock, FaCalendarCheck, FaArrowLeft } f
 import { useParams, NavLink } from 'react-router-dom';
 
 
-// Ensure API_BASE_URL has the correct format
+// Handle API base URL properly
 const API_BASE_URL = (() => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (!envUrl) return "http://localhost:5000/api/";
   
-  // If already contains /api/, use as is
-  if (envUrl.includes('/api/')) return envUrl;
+  // Remove any trailing /api/ or / and add /api/
+  const cleanUrl = envUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
+  const finalUrl = `${cleanUrl}/api/`;
   
-  // If it's just the domain, add /api/
-  return `${envUrl.replace(/\/$/, '')}/api/`;
+  // Debug log to see the final URL
+  console.log('API Base URL:', finalUrl);
+  return finalUrl;
 })();
 
 const statusOptions = [
@@ -44,12 +46,10 @@ const fetchStudents = async () => {
 // Fetch attendance history
 const fetchHistory = async () => {
 try {
-console.log('🏫 Fetching attendance for classId:', classId);
 const res = await axios.get(`${API_BASE_URL}attendance/class/${classId}`);
-console.log('📊 Attendance history response:', res.data);
 setHistory(res.data.history || []);
 } catch (error) {
-console.error('❌ Error fetching attendance history:', error.response?.data || error.message);
+console.error('Failed to fetch attendance history:', error);
 setHistory([]);
 }
 };
@@ -63,16 +63,23 @@ fetchHistory();
 
 // Helper: Count Present, Late, and Absent for each student
 const attendanceStats = {};
-history.forEach(day => {
-	day.records.forEach(rec => {
-		if (!attendanceStats[rec.student._id]) {
-			attendanceStats[rec.student._id] = { Present: 0, Late: 0, Absent: 0 };
+if (Array.isArray(history)) {
+	history.forEach(day => {
+		if (day && Array.isArray(day.records)) {
+			day.records.forEach(rec => {
+				if (rec && rec.student && rec.student._id && rec.status) {
+					if (!attendanceStats[rec.student._id]) {
+						attendanceStats[rec.student._id] = { Present: 0, Late: 0, Absent: 0 };
+					}
+					const status = rec.status;
+					if (status === 'Present' || status === 'Late' || status === 'Absent') {
+						attendanceStats[rec.student._id][status]++;
+					}
+				}
+			});
 		}
-		if (rec.status === 'Present') attendanceStats[rec.student._id].Present++;
-		if (rec.status === 'Late') attendanceStats[rec.student._id].Late++;
-		if (rec.status === 'Absent') attendanceStats[rec.student._id].Absent++;
 	});
-});
+}
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -90,22 +97,20 @@ status: attendance[s._id] || 'Absent',
 date: today,
 classId,
 }));
-console.log('📝 Submitting attendance records:', records);
-await axios.post(`${API_BASE_URL}attendance/mark`, { records });
-setMessage('Attendance marked successfully!');
-// Refresh history after successful submit
-const fetchHistory = async () => {
-try {
-const res = await axios.get(`${API_BASE_URL}attendance/class/${classId}`);
-setHistory(res.data.history || []);
+		await axios.post(`${API_BASE_URL}attendance/mark`, { records });
+		setMessage('Attendance marked successfully!');
+		setAttendance({}); // Clear the form after successful submit
+		
+		// Refresh history after successful submit
+		try {
+			const res = await axios.get(`${API_BASE_URL}attendance/class/${classId}`);
+			setHistory(res.data.history || []);
+		} catch (error) {
+			console.error('Failed to refresh attendance history:', error);
+		}
 } catch (error) {
-console.error('Error refreshing history:', error);
-}
-};
-fetchHistory();
-} catch (error) {
-console.error('❌ Error submitting attendance:', error.response?.data || error.message);
-setMessage('Failed to mark attendance.');
+console.error('Failed to submit attendance:', error);
+setMessage(`Failed to mark attendance: ${error.response?.data?.message || error.message}`);
 } finally {
 setSubmitting(false);
 }
@@ -226,10 +231,13 @@ return (
 					{(() => (
 						<div className="bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl p-8 border border-indigo-100 dark:border-gray-700 backdrop-blur-md mt-8 lg:mt-0">
 							<h3 className="text-xl font-bold text-indigo-700 dark:text-indigo-300 mb-4">Attendance History ({history.length} days)</h3>
-					{/* Debug info - can be removed in production */}
-					<div className="mb-4 p-2 bg-gray-100 dark:bg-gray-800 rounded text-sm opacity-75">
-						<strong>Debug:</strong> History: {history.length} days, Class: {classId}
-					</div>
+					{history.length === 0 && (
+						<div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-center">
+							<p className="text-blue-700 dark:text-blue-300 text-sm">
+								No attendance records found. Mark attendance to see history.
+							</p>
+						</div>
+					)}
 							<div className="overflow-x-auto scrollbar-hide">
 								<table className="min-w-full text-left">
 									<thead>
