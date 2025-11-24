@@ -187,16 +187,62 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
   return (
   <div className="w-full min-h-screen bg-white">
   <div className="max-w-5xl mx-auto p-2 sm:p-4 md:p-6 font-sans w-full">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center flex items-center justify-center gap-2">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center flex items-center justify-center gap-2">
         <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 717.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 014.5 20.25v-.75z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 717.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 714.5 20.25v-.75z" />
         </svg>
         User Management
       </h1>
 
-      {/* User List Table - Moved to top for better visibility */}
+      {/* Add User Card Boxes - Compact version at top */}
+      <section className="mb-6 sm:mb-8">
+        <h2 className="text-lg sm:text-xl font-semibold mb-3">Add User</h2>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
+          {/* Compact Student Card */}
+          <div
+            className="relative bg-gradient-to-br from-blue-100 via-blue-50 to-white shadow-md rounded-lg p-3 sm:p-4 flex-1 text-center cursor-pointer border-2 border-blue-300 hover:scale-105 hover:shadow-lg transition-all duration-200 group overflow-hidden"
+            onClick={() => openModal('student')}
+          >
+            <div className="flex justify-center mb-2">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-200 group-hover:bg-blue-400 transition-all text-2xl shadow-md border-2 border-white">
+                👨‍🎓
+              </span>
+            </div>
+            <div className="font-bold text-sm text-blue-800 mb-1">Add Student</div>
+            <div className="text-gray-500 text-xs">Register student</div>
+          </div>
+          {/* Compact Teacher Card */}
+          <div
+            className="relative bg-gradient-to-br from-green-100 via-green-50 to-white shadow-md rounded-lg p-3 sm:p-4 flex-1 text-center cursor-pointer border-2 border-green-300 hover:scale-105 hover:shadow-lg transition-all duration-200 group overflow-hidden"
+            onClick={() => openModal('teacher')}
+          >
+            <div className="flex justify-center mb-2">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-green-200 group-hover:bg-green-400 transition-all text-2xl shadow-md border-2 border-white">
+                👨‍🏫
+              </span>
+            </div>
+            <div className="font-bold text-sm text-green-800 mb-1">Add Teacher</div>
+            <div className="text-gray-500 text-xs">Register teacher</div>
+          </div>
+          {/* Compact Admin Card */}
+          <div
+            className="relative bg-gradient-to-br from-yellow-100 via-yellow-50 to-white shadow-md rounded-lg p-3 sm:p-4 flex-1 text-center cursor-pointer border-2 border-yellow-300 hover:scale-105 hover:shadow-lg transition-all duration-200 group overflow-hidden"
+            onClick={() => openModal('admin')}
+          >
+            <div className="flex justify-center mb-2">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-yellow-200 group-hover:bg-yellow-400 transition-all text-2xl shadow-md border-2 border-white">
+                🧑‍💼
+              </span>
+            </div>
+            <div className="font-bold text-sm text-yellow-800 mb-1">Add Admin</div>
+            <div className="text-gray-500 text-xs">Register admin</div>
+          </div>
+        </div>
+      </section>
+
+      {/* User List Table */}
       <section className="mb-8 sm:mb-12">
-        <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">User List</h2>
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">User List</h2>
         <div className="mb-3 flex flex-wrap gap-2 items-center">
           <label className="font-medium text-gray-700">Filter by Role:</label>
           <select
@@ -210,7 +256,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
             <option value="admin">Admin</option>
           </select>
         </div>
-        <div className="overflow-x-auto w-full max-h-[50vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
+        <div className="overflow-x-auto w-full max-h-[40vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
           <table className="min-w-[600px] w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs sm:text-sm">
             <thead className="sticky top-0 z-10 bg-white">
               <tr className="bg-gradient-to-r from-blue-200 via-green-100 to-yellow-100">
@@ -263,10 +309,10 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
         </div>
       </section>
 
-      {/* Add User Card Boxes */}
-  <section className="mb-8 sm:mb-12">
-        <h2 className="text-2xl font-semibold mb-4">Add User</h2>
-  <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-6 sm:mb-8">
+  {/* Original Add User Section for modals and import functionality */}
+  <section className="mb-8 sm:mb-12" style={{display: 'none'}}>
+    <h2 className="text-2xl font-semibold mb-4">Add User</h2>
+    <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-6 sm:mb-8">
           {/* Student Card */}
           <div
             className="relative bg-gradient-to-br from-blue-100 via-blue-50 to-white shadow-lg rounded-2xl p-5 sm:p-8 flex-1 text-center cursor-pointer border-2 border-blue-300 hover:scale-105 hover:shadow-2xl transition-all duration-200 group overflow-hidden min-w-[220px]"
