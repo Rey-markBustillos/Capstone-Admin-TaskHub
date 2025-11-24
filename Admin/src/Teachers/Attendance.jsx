@@ -4,10 +4,16 @@ import { FaCheckCircle, FaTimesCircle, FaClock, FaCalendarCheck, FaArrowLeft } f
 import { useParams, NavLink } from 'react-router-dom';
 
 
-// Ensure API_BASE_URL always ends with /api/
+// Ensure API_BASE_URL has the correct format
 const API_BASE_URL = (() => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-  return baseUrl.endsWith('/api/') ? baseUrl : `${baseUrl.replace(/\/$/, '')}/api/`;
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl) return "http://localhost:5000/api/";
+  
+  // If already contains /api/, use as is
+  if (envUrl.includes('/api/')) return envUrl;
+  
+  // If it's just the domain, add /api/
+  return `${envUrl.replace(/\/$/, '')}/api/`;
 })();
 
 const statusOptions = [
