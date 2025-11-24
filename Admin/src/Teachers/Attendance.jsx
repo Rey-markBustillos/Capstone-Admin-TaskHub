@@ -135,12 +135,12 @@ return (
 								<FaCalendarCheck className="flex-shrink-0" /> 
 								<span className="truncate">Mark Attendance</span>
 							</h2>
-							<p className="text-sm text-indigo-600 dark:text-indigo-400">Today: {today}</p>
-						</div>
-							<div className="overflow-x-auto flex-1 min-h-0">
+						<p className="text-sm text-indigo-600 dark:text-indigo-400">Today: {today}</p>
+					</div>
+							<div className="flex-1 min-h-0">
 								<div 
 									style={{ 
-										maxHeight: 'calc(100vh - 400px)', 
+										maxHeight: 'calc(100vh - 400px)',
 										minHeight: '300px',
 										overflowY: 'auto',
 										scrollbarWidth: 'thin',
@@ -239,14 +239,13 @@ return (
 							</p>
 						</div>
 					)}
-							<div className="overflow-x-auto flex-1 min-h-0" style={{
-								scrollbarWidth: 'thin',
-								scrollbarColor: '#6366f1 #e5e7eb'
-							}}>
+							<div className="flex-1 min-h-0">
 								<div style={{
 									maxHeight: 'calc(100vh - 300px)',
 									overflowY: 'auto',
-									padding: '1rem'
+									padding: '1rem',
+									scrollbarWidth: 'thin',
+									scrollbarColor: '#6366f1 #e5e7eb'
 								}}>
 									<table className="min-w-full text-left border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
 									<thead>
