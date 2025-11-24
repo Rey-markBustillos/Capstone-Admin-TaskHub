@@ -34,9 +34,12 @@ const fetchStudents = async () => {
 // Fetch attendance history
 const fetchHistory = async () => {
 try {
-const res = await axios.get(`${API_BASE_URL}/attendance/class/${classId}`);
+console.log('🏫 Fetching attendance for classId:', classId);
+const res = await axios.get(`${API_BASE_URL}attendance/class/${classId}`);
+console.log('📊 Attendance history response:', res.data);
 setHistory(res.data.history || []);
-} catch {
+} catch (error) {
+console.error('❌ Error fetching attendance history:', error.response?.data || error.message);
 setHistory([]);
 }
 };
@@ -77,9 +80,21 @@ status: attendance[s._id] || 'Absent',
 date: today,
 classId,
 }));
-await axios.post(`${API_BASE_URL}/attendance/mark`, { records });
+console.log('📝 Submitting attendance records:', records);
+await axios.post(`${API_BASE_URL}attendance/mark`, { records });
 setMessage('Attendance marked successfully!');
-} catch {
+// Refresh history after successful submit
+const fetchHistory = async () => {
+try {
+const res = await axios.get(`${API_BASE_URL}attendance/class/${classId}`);
+setHistory(res.data.history || []);
+} catch (error) {
+console.error('Error refreshing history:', error);
+}
+};
+fetchHistory();
+} catch (error) {
+console.error('❌ Error submitting attendance:', error.response?.data || error.message);
 setMessage('Failed to mark attendance.');
 } finally {
 setSubmitting(false);
@@ -172,7 +187,12 @@ return (
 					{/* ...existing Attendance History code... */}
 					{(() => (
 						<div className="bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl p-8 border border-indigo-100 dark:border-gray-700 backdrop-blur-md mt-8 lg:mt-0">
-							<h3 className="text-xl font-bold text-indigo-700 dark:text-indigo-300 mb-4">Attendance History</h3>
+							<h3 className="text-xl font-bold text-indigo-700 dark:text-indigo-300 mb-4">Attendance History ({history.length} days)</h3>
+					{process.env.NODE_ENV === 'development' && (
+						<div className="mb-4 p-2 bg-gray-100 rounded text-sm">
+							<strong>Debug:</strong> History length: {history.length}, ClassId: {classId}
+						</div>
+					)}
 							<div className="overflow-x-auto scrollbar-hide">
 								<table className="min-w-full text-left">
 									<thead>

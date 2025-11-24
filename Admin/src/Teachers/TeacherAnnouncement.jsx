@@ -250,14 +250,7 @@ export default function TeacherAnnouncement() {
                             const isVideo = /\.(mp4|webm|ogg|avi|mov)$/i.test(attachment.originalName);
                             const isAudio = /\.(mp3|wav|ogg|m4a|flac)$/i.test(attachment.originalName);
                             
-                            console.log('📷 Attachment Debug:', {
-                              filename: attachment.filename,
-                              originalName: attachment.originalName,
-                              url: fileUrl,
-                              isImage,
-                              fileType: typeof attachment.filename,
-                              hasFilename: !!attachment.filename
-                            });
+
                             
                             return (
                               <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
@@ -292,11 +285,7 @@ export default function TeacherAnnouncement() {
                                         display: 'block'
                                       }}
                                       onError={(e) => {
-                                        console.error('❌ Image failed to load:', {
-                                          url: fileUrl,
-                                          filename: attachment.filename,
-                                          originalName: attachment.originalName
-                                        });
+
                                         
                                         // Try alternative URL patterns - all using /files/
                                         const retryUrls = [
@@ -308,10 +297,8 @@ export default function TeacherAnnouncement() {
                                         const nextUrl = retryUrls.find(url => url !== currentUrl);
                                         
                                         if (nextUrl) {
-                                          console.log('🔄 Trying fallback URL:', nextUrl);
                                           e.target.src = nextUrl;
                                         } else {
-                                          console.log('❌ All URLs failed for:', attachment.filename);
                                           // Show placeholder
                                           e.target.style.display = 'none';
                                           const placeholder = document.createElement('div');
@@ -325,7 +312,7 @@ export default function TeacherAnnouncement() {
                                         }
                                       }}
                                       onLoad={() => {
-                                        console.log('✅ Image preview loaded successfully');
+                                        // Image loaded successfully
                                       }}
                                       onClick={() => {
                                         // Open full size in new tab
