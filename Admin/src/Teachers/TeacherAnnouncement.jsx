@@ -277,35 +277,35 @@ export default function TeacherAnnouncement() {
                                   </div>
                                 </div>
                                 
-                                {/* Display content based on file type */}
+                                {/* Display image preview directly */}
                                 {isImage && (
-                                  <div className="mt-3">
-                                    <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border">
-                                      <img 
-                                        src={fileUrl} 
-                                        alt={attachment.originalName}
-                                        className="w-full h-auto rounded-lg shadow-md max-h-80 object-contain mx-auto block"
-                                        style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
-                                        onError={(e) => {
-                                          console.error('❌ Image load failed:', fileUrl);
-                                          console.log('🔄 Retrying with cache bypass...');
-                                          
-                                          // Simple retry with cache bypass
-                                          if (!e.target.hasAttribute('data-retry')) {
-                                            e.target.setAttribute('data-retry', 'true');
-                                            e.target.src = fileUrl + '?v=' + Date.now();
-                                          }
-                                        }}
-                                        onLoad={(e) => {
-                                          console.log('✅ Image loaded successfully:', fileUrl);
-                                          e.target.style.display = 'block';
-                                          e.target.style.opacity = '1';
-                                        }}
-                                      />
-                                    </div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
-                                      {attachment.originalName} • {(attachment.fileSize / 1024 / 1024).toFixed(1)}MB
-                                    </p>
+                                  <div className="mt-2">
+                                    <img 
+                                      src={fileUrl} 
+                                      alt={attachment.originalName}
+                                      className="w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 cursor-pointer hover:opacity-90 transition-opacity"
+                                      style={{ 
+                                        maxHeight: '300px',
+                                        objectFit: 'cover',
+                                        display: 'block'
+                                      }}
+                                      onError={(e) => {
+                                        console.error('❌ Image preview failed:', fileUrl);
+                                        // Simple retry with cache bypass
+                                        if (!e.target.hasAttribute('data-retry')) {
+                                          e.target.setAttribute('data-retry', 'true');
+                                          e.target.src = fileUrl + '?v=' + Date.now();
+                                        }
+                                      }}
+                                      onLoad={() => {
+                                        console.log('✅ Image preview loaded successfully');
+                                      }}
+                                      onClick={() => {
+                                        // Open full size in new tab
+                                        window.open(fileUrl, '_blank');
+                                      }}
+                                      title="Click to view full size"
+                                    />
                                   </div>
                                 )}
                                 
