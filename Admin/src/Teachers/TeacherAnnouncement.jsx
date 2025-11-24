@@ -243,18 +243,20 @@ export default function TeacherAnnouncement() {
                         </p>
                         <div className="space-y-3">
                           {ann.attachments.map((attachment, index) => {
-                            // Simple and direct URL construction
-                            const fileUrl = `http://localhost:5000/api/announcements/attachment/${attachment.filename}`;
+                            // Use the working /files/ endpoint with cache busting
+                            const fileUrl = `http://localhost:5000/api/announcements/files/${attachment.filename}?v=${Date.now()}`;
                             const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName);
                             const isPdf = /\.pdf$/i.test(attachment.originalName);
                             const isVideo = /\.(mp4|webm|ogg|avi|mov)$/i.test(attachment.originalName);
                             const isAudio = /\.(mp3|wav|ogg|m4a|flac)$/i.test(attachment.originalName);
                             
-                            console.log('📷 Attachment:', {
+                            console.log('📷 Attachment Debug:', {
                               filename: attachment.filename,
                               originalName: attachment.originalName,
                               url: fileUrl,
-                              isImage
+                              isImage,
+                              fileType: typeof attachment.filename,
+                              hasFilename: !!attachment.filename
                             });
                             
                             return (
@@ -290,11 +292,36 @@ export default function TeacherAnnouncement() {
                                         display: 'block'
                                       }}
                                       onError={(e) => {
-                                        console.error('❌ Image preview failed:', fileUrl);
-                                        // Simple retry with cache bypass
-                                        if (!e.target.hasAttribute('data-retry')) {
-                                          e.target.setAttribute('data-retry', 'true');
-                                          e.target.src = fileUrl + '?v=' + Date.now();
+                                        console.error('❌ Image failed to load:', {
+                                          url: fileUrl,
+                                          filename: attachment.filename,
+                                          originalName: attachment.originalName
+                                        });
+                                        
+                                        // Try alternative URL patterns - all using /files/
+                                        const retryUrls = [
+                                          `http://localhost:5000/api/announcements/files/${attachment.filename}?v=${Date.now()}`,
+                                          `http://localhost:5000/api/announcements/files/${attachment.filename}`
+                                        ];
+                                        
+                                        const currentUrl = e.target.src;
+                                        const nextUrl = retryUrls.find(url => url !== currentUrl);
+                                        
+                                        if (nextUrl) {
+                                          console.log('🔄 Trying fallback URL:', nextUrl);
+                                          e.target.src = nextUrl;
+                                        } else {
+                                          console.log('❌ All URLs failed for:', attachment.filename);
+                                          // Show placeholder
+                                          e.target.style.display = 'none';
+                                          const placeholder = document.createElement('div');
+                                          placeholder.className = 'bg-gray-200 dark:bg-gray-600 p-8 rounded-lg text-center';
+                                          placeholder.innerHTML = `
+                                            <div class="text-gray-400 text-4xl mb-2">🖼️</div>
+                                            <p class="text-gray-600 dark:text-gray-400 text-sm">Image not available</p>
+                                            <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">${attachment.originalName}</p>
+                                          `;
+                                          e.target.parentNode.appendChild(placeholder);
                                         }
                                       }}
                                       onLoad={() => {

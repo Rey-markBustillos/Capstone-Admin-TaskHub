@@ -118,13 +118,29 @@ router.get('/attachment/:filename', (req, res) => {
 
 // Simple file serving route for direct access
 router.get('/files/:filename', (req, res) => {
-  const filename = req.params.filename;
-  const filePath = path.join(uploadsDir, filename);
-  
-  if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).send('File not found');
+  try {
+    const filename = req.params.filename;
+    const filePath = path.join(uploadsDir, filename);
+    
+    console.log('🌐 FILES REQUEST:', filename);
+    console.log('📁 File path:', filePath);
+    console.log('✅ File exists:', fs.existsSync(filePath));
+    
+    if (fs.existsSync(filePath)) {
+      // Set proper headers for images
+      const ext = path.extname(filename).toLowerCase();
+      if (['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)) {
+        res.setHeader('Content-Type', `image/${ext.slice(1) === 'jpg' ? 'jpeg' : ext.slice(1)}`);
+      }
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.sendFile(filePath);
+    } else {
+      console.log('❌ File not found:', filename);
+      res.status(404).send('File not found');
+    }
+  } catch (error) {
+    console.error('❌ Error in /files/ route:', error);
+    res.status(500).send('Server error');
   }
 });
 
