@@ -285,42 +285,21 @@ export default function TeacherAnnouncement() {
                                         src={fileUrl} 
                                         alt={attachment.originalName}
                                         className="w-full h-auto rounded-lg shadow-md max-h-80 object-contain mx-auto block"
-                                        style={{ maxWidth: '100%', height: 'auto' }}
+                                        style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
                                         onError={(e) => {
                                           console.error('❌ Image load failed:', fileUrl);
+                                          console.log('🔄 Retrying with cache bypass...');
                                           
-                                          // Try different URL variations
-                                          const currentSrc = e.target.src;
-                                          const attempts = [
-                                            `http://localhost:5000/api/announcements/files/${attachment.filename}`,
-                                            `http://localhost:5000/uploads/announcements/${attachment.filename}`,
-                                            `http://localhost:5000/api/announcements/attachment/${attachment.filename}?v=${Date.now()}`
-                                          ];
-                                          
-                                          const nextUrl = attempts.find(url => url !== currentSrc);
-                                          
-                                          if (nextUrl) {
-                                            console.log('🔄 Trying alternative URL:', nextUrl);
-                                            e.target.src = nextUrl;
-                                          } else {
-                                            // All URLs failed, show user-friendly fallback
-                                            console.log('❌ All image URLs failed');
-                                            e.target.style.display = 'none';
-                                            if (!e.target.parentNode.querySelector('.image-fallback')) {
-                                              const fallback = document.createElement('div');
-                                              fallback.className = 'image-fallback p-4 bg-blue-50 border border-blue-200 rounded-lg text-center';
-                                              fallback.innerHTML = `
-                                                <div class="text-blue-600 text-2xl mb-2">🖼️</div>
-                                                <p class="text-blue-800 text-sm font-medium">Image attachment</p>
-                                                <p class="text-blue-600 text-xs mt-1">${attachment.originalName}</p>
-                                                <p class="text-blue-500 text-xs mt-2">Click download to view file</p>
-                                              `;
-                                              e.target.parentNode.appendChild(fallback);
-                                            }
+                                          // Simple retry with cache bypass
+                                          if (!e.target.hasAttribute('data-retry')) {
+                                            e.target.setAttribute('data-retry', 'true');
+                                            e.target.src = fileUrl + '?v=' + Date.now();
                                           }
                                         }}
-                                        onLoad={() => {
+                                        onLoad={(e) => {
                                           console.log('✅ Image loaded successfully:', fileUrl);
+                                          e.target.style.display = 'block';
+                                          e.target.style.opacity = '1';
                                         }}
                                       />
                                     </div>
