@@ -48,7 +48,7 @@ app.use(
       'http://localhost:5174', // Vite alternate port
       'http://localhost:5175', // Vite alternate port 2
     ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true
   })
 );
