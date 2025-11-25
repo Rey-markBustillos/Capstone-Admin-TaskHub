@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 const Module = require('../models/Module');
 
 // Configure multer for module uploads
@@ -91,7 +92,7 @@ router.post('/upload', upload.single('module'), async (req, res) => {
       title: title.trim(),
       description: description ? description.trim() : '',
       fileName: req.file.originalname,
-      filePath: req.file.path,
+      filePath: req.file.filename, // Store only the filename
       fileSize: req.file.size,
       mimeType: req.file.mimetype,
       classId,
@@ -123,20 +124,45 @@ router.post('/upload', upload.single('module'), async (req, res) => {
 // Download a module
 router.get('/download/:id', async (req, res) => {
   try {
-    const module = await Module.findById(req.params.id);
+    const { id } = req.params;
+    console.log('Download request for module ID:', id);
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('Invalid ObjectId format:', id);
+      return res.status(400).json({ message: 'Invalid module ID format' });
+    }
+    
+    const module = await Module.findById(id);
     
     if (!module) {
+      console.log('Module not found with ID:', req.params.id);
       return res.status(404).json({ message: 'Module not found' });
     }
     
-    if (!fs.existsSync(module.filePath)) {
+    // Handle both old absolute paths and new relative paths
+    let filePath;
+    if (path.isAbsolute(module.filePath)) {
+      // Old format: absolute path
+      filePath = module.filePath;
+    } else {
+      // New format: relative path (filename only)
+      filePath = path.join(__dirname, '..', 'uploads', 'modules', module.filePath);
+    }
+    
+    console.log('Module found for download:', module.title);
+    console.log('Stored file path:', module.filePath);
+    console.log('Constructed file path:', filePath);
+    console.log('File exists:', fs.existsSync(filePath));
+    
+    if (!fs.existsSync(filePath)) {
+      console.log('File not found at path:', filePath);
       return res.status(404).json({ message: 'File not found on server' });
     }
     
     res.setHeader('Content-Disposition', `attachment; filename="${module.fileName}"`);
     res.setHeader('Content-Type', module.mimeType);
     
-    const fileStream = fs.createReadStream(module.filePath);
+    const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
   } catch (error) {
     console.error('Error downloading module:', error);
@@ -147,20 +173,45 @@ router.get('/download/:id', async (req, res) => {
 // View a module (for PDFs and other viewable files)
 router.get('/view/:id', async (req, res) => {
   try {
-    const module = await Module.findById(req.params.id);
+    const { id } = req.params;
+    console.log('View request for module ID:', id);
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('Invalid ObjectId format:', id);
+      return res.status(400).json({ message: 'Invalid module ID format' });
+    }
+    
+    const module = await Module.findById(id);
     
     if (!module) {
+      console.log('Module not found with ID:', req.params.id);
       return res.status(404).json({ message: 'Module not found' });
     }
     
-    if (!fs.existsSync(module.filePath)) {
+    // Handle both old absolute paths and new relative paths
+    let filePath;
+    if (path.isAbsolute(module.filePath)) {
+      // Old format: absolute path
+      filePath = module.filePath;
+    } else {
+      // New format: relative path (filename only)
+      filePath = path.join(__dirname, '..', 'uploads', 'modules', module.filePath);
+    }
+    
+    console.log('Module found:', module.title);
+    console.log('Stored file path:', module.filePath);
+    console.log('Constructed file path:', filePath);
+    console.log('File exists:', fs.existsSync(filePath));
+    
+    if (!fs.existsSync(filePath)) {
+      console.log('File not found at path:', filePath);
       return res.status(404).json({ message: 'File not found on server' });
     }
     
     res.setHeader('Content-Type', module.mimeType);
     res.setHeader('Content-Disposition', `inline; filename="${module.fileName}"`);
     
-    const fileStream = fs.createReadStream(module.filePath);
+    const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
   } catch (error) {
     console.error('Error viewing module:', error);
@@ -195,7 +246,15 @@ router.delete('/:id', async (req, res) => {
 // Get module info by ID
 router.get('/:id', async (req, res) => {
   try {
-    const module = await Module.findById(req.params.id)
+    const { id } = req.params;
+    console.log('Get module info request for ID:', id);
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log('Invalid ObjectId format:', id);
+      return res.status(400).json({ message: 'Invalid module ID format' });
+    }
+    
+    const module = await Module.findById(id)
       .populate('uploadedBy', 'name email');
     
     if (!module) {
@@ -205,6 +264,85 @@ router.get('/:id', async (req, res) => {
     res.json(module);
   } catch (error) {
     console.error('Error fetching module:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Check if module file exists without streaming it
+router.get('/check/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid module ID format' });
+    }
+    
+    const module = await Module.findById(id);
+    if (!module) {
+      return res.status(404).json({ message: 'Module not found' });
+    }
+    
+    // Handle both old absolute paths and new relative paths
+    let filePath;
+    if (path.isAbsolute(module.filePath)) {
+      filePath = module.filePath;
+    } else {
+      filePath = path.join(__dirname, '..', 'uploads', 'modules', module.filePath);
+    }
+    
+    const fileExists = fs.existsSync(filePath);
+    
+    res.json({
+      moduleId: module._id,
+      title: module.title,
+      fileName: module.fileName,
+      storedPath: module.filePath,
+      resolvedPath: filePath,
+      fileExists: fileExists,
+      fileSize: module.fileSize,
+      mimeType: module.mimeType
+    });
+    
+  } catch (error) {
+    console.error('Error checking module:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Debug endpoint to check and fix module file paths
+router.get('/debug/fix-paths', async (req, res) => {
+  try {
+    const modules = await Module.find({});
+    const results = [];
+    
+    for (const module of modules) {
+      const result = {
+        id: module._id,
+        title: module.title,
+        originalPath: module.filePath,
+        isAbsolute: path.isAbsolute(module.filePath),
+        fileExists: false
+      };
+      
+      // Check if file exists with current path
+      if (path.isAbsolute(module.filePath)) {
+        result.fileExists = fs.existsSync(module.filePath);
+      } else {
+        const constructedPath = path.join(__dirname, '..', 'uploads', 'modules', module.filePath);
+        result.fileExists = fs.existsSync(constructedPath);
+        result.constructedPath = constructedPath;
+      }
+      
+      results.push(result);
+    }
+    
+    res.json({
+      message: 'Module path debug information',
+      totalModules: modules.length,
+      modules: results
+    });
+  } catch (error) {
+    console.error('Error in debug endpoint:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

@@ -161,7 +161,7 @@ const StudentActivities = () => {
             <FaArrowLeft className="text-xs sm:text-sm" /> <span className="hidden xs:inline sm:inline">Back to Class Menu</span><span className="xs:hidden sm:hidden">Back</span>
           </NavLink>
         </div>
-        <div className="bg-white/80 dark:bg-gray-900/80 rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4 md:p-8 lg:p-12 xl:p-16 border-4 sm:border-8 border-indigo-600 dark:border-indigo-800 backdrop-blur-md w-full max-w-none overflow-x-auto">
+        <div className="bg-white/80 dark:bg-gray-900/80 rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl p-2 sm:p-3 md:p-4 lg:p-8 xl:p-12 border-2 sm:border-4 md:border-8 border-indigo-600 dark:border-indigo-800 backdrop-blur-md w-full max-w-none overflow-x-auto">
           <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
             <FaBookOpen className="text-indigo-600 dark:text-indigo-400 text-lg sm:text-2xl" />
             <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-indigo-700 dark:text-indigo-300">Class Activities</h1>
@@ -190,7 +190,7 @@ const StudentActivities = () => {
                     <div
                       key={activity._id}
                       onClick={() => handleSubmission(activity._id)}
-                      className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 flex flex-col justify-between transition-all duration-300 border border-indigo-100 dark:border-indigo-900 relative ${
+                      className={`bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-lg p-2 sm:p-3 md:p-4 lg:p-6 flex flex-col justify-between transition-all duration-300 border border-indigo-100 dark:border-indigo-900 relative ${
                         activity.isLocked 
                           ? 'cursor-not-allowed opacity-75' 
                           : 'hover:shadow-2xl hover:-translate-y-1 cursor-pointer'
@@ -198,44 +198,44 @@ const StudentActivities = () => {
                       title={activity.isLocked ? 'This activity is locked' : 'Click to view/submit activity'}
                     >
                       <div>
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white pr-2 flex items-center gap-2">
-                            <FaBookOpen className="text-indigo-400" /> 
-                            {activity.title}
+                        <div className="flex justify-between items-start mb-1 sm:mb-2">
+                          <h3 className="text-sm sm:text-lg md:text-xl font-bold text-gray-900 dark:text-white pr-2 flex items-center gap-1 sm:gap-2">
+                            <FaBookOpen className="text-indigo-400 text-xs sm:text-sm" /> 
+                            <span className="truncate">{activity.title}</span>
                             {activity.isLocked && (
-                              <FaLock className="text-gray-500 ml-2" size={16} title="This activity is locked" />
+                              <FaLock className="text-gray-500 ml-1 sm:ml-2 text-xs" title="This activity is locked" />
                             )}
                           </h3>
-                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusInfo.style}`}>
+                          <span className={`px-1 sm:px-2 py-0.5 sm:py-1 inline-flex text-[10px] sm:text-xs leading-4 sm:leading-5 font-semibold rounded-full ${statusInfo.style}`}>
                             {statusIcons[statusInfo.text] || null}
                             {statusInfo.text}
                           </span>
                         </div>
-                        <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4 gap-2">
-                          <FaCalendarAlt />
-                          <span>Due: {new Date(activity.date).toLocaleString()}</span>
+                        <div className="flex items-center text-[10px] sm:text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-2 sm:mb-4 gap-1 sm:gap-2">
+                          <FaCalendarAlt className="text-[10px] sm:text-xs" />
+                          <span className="truncate">Due: {new Date(activity.date).toLocaleString()}</span>
                         </div>
-                        <div className="flex items-center text-xs sm:text-sm text-gray-700 dark:text-gray-300 gap-2">
+                        <div className="flex items-center text-[10px] sm:text-xs md:text-sm text-gray-700 dark:text-gray-300 gap-1 sm:gap-2">
                           {submission && submission.score != null ? (
                             <div className="flex items-center">
-                              <FaStar className="mr-1.5 text-yellow-500" />
+                              <FaStar className="mr-1 sm:mr-1.5 text-yellow-500 text-[10px] sm:text-xs" />
                               <span className="font-semibold">{submission.score} / {activity.totalPoints || 100}</span>
                             </div>
                           ) : submission ? (
                             <div className="flex items-center text-gray-400 dark:text-gray-500">
-                              <FaStar className="mr-1.5" />
+                              <FaStar className="mr-1 sm:mr-1.5 text-[10px] sm:text-xs" />
                               <span>Not Graded</span>
                             </div>
                           ) : (
                             <div className="flex items-center text-gray-400 dark:text-gray-500">
-                              <FaStar className="mr-1.5" />
+                              <FaStar className="mr-1 sm:mr-1.5 text-[10px] sm:text-xs" />
                               <span>No Score</span>
                             </div>
                           )}
                         </div>
                       </div>
 
-                      <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <div className="mt-2 sm:mt-4 md:mt-6 pt-2 sm:pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-700">
                         <div className="flex justify-between items-center">
                           {attachmentUrl ? (
                             <a
@@ -243,30 +243,30 @@ const StudentActivities = () => {
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="flex items-center text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium text-xs sm:text-sm"
+                              className="flex items-center text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200 font-medium text-[10px] sm:text-xs md:text-sm"
                             >
-                              <FaPaperclip className="mr-1.5" /> View Attachment
+                              <FaPaperclip className="mr-1 sm:mr-1.5 text-[10px] sm:text-xs" /> View
                             </a>
                           ) : (
-                            <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm">No Attachment</span>
+                            <span className="text-gray-400 dark:text-gray-500 text-[10px] sm:text-xs md:text-sm">No File</span>
                           )}
 
                           {activity.isLocked ? (
-                            <div className="flex items-center gap-1 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
-                              <FaLock />
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400">
+                              <FaLock className="text-[10px] sm:text-xs" />
                               <span>Locked</span>
                             </div>
                           ) : ((statusInfo.text !== 'Missing' && new Date() < new Date(activity.date)) || statusInfo.text === 'Needs Resubmission') ? (
-                            <div className="flex items-center gap-1 text-xs sm:text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                              <FaUpload />
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs md:text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                              <FaUpload className="text-[10px] sm:text-xs" />
                               <span>{submission ? 'Resubmit' : 'Submit'}</span>
                             </div>
                           ) : (
-                            <span className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm">-</span>
+                            <span className="text-gray-400 dark:text-gray-500 text-[10px] sm:text-xs md:text-sm">-</span>
                           )}
                         </div>
-                        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3 sm:mt-4">
-                          {activity.isLocked ? 'Activity is locked - submissions not allowed' : 'Click to view details or submit'}
+                        <p className="text-center text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 sm:mt-3 md:mt-4">
+                          {activity.isLocked ? 'Locked' : 'Click to view/submit'}
                         </p>
                       </div>
                     </div>
@@ -274,7 +274,7 @@ const StudentActivities = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center p-6 sm:p-10 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+              <div className="text-center p-3 sm:p-6 md:p-10 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                 <FaBookOpen className="mx-auto mb-4 text-indigo-400 dark:text-indigo-500" size={36} />
                 <p className="text-gray-600 dark:text-gray-400">No activities posted for this class yet.</p>
               </div>

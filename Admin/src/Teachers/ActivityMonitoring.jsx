@@ -22,7 +22,7 @@ import {
 } from "react-icons/fa";
 import '../Css/ActivityMonitoring.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/+$/, "");
 
 const FallingBooksAnimation = () => {
   const bookEmojis = ["📚", "📖", "📘", "📙", "📗"];
@@ -341,8 +341,75 @@ export default function ActivityMonitoring() {
                   .filter(sub => sub.studentId?.name.toLowerCase().includes(submissionSearchTerm.toLowerCase()))
                   .map((sub, index) => {
                     const fileTypeIcon = getFileIcon(sub.fileName);
-                    // Use fileUrl from backend if available, else fallback to filePath
-                    const fileUrl = sub.fileUrl || (sub.filePath ? `${API_BASE_URL}/${sub.filePath.replace(/\\/g, "/")}` : null);
+                    // Create comprehensive download strategies
+                    const downloadStrategies = [];
+                    
+                    // Strategy 1: Download endpoint (most reliable)
+                    if (sub._id) {
+                      downloadStrategies.push({
+                        url: `${API_BASE_URL}/activities/submission/${sub._id}/download`,
+                        method: 'download-endpoint'
+                      });
+                    }
+                    
+                    // Strategy 2: File serving endpoint (alternative)
+                    if (sub._id) {
+                      downloadStrategies.push({
+                        url: `${API_BASE_URL}/activities/submission/${sub._id}/file`,
+                        method: 'file-serving-endpoint'
+                      });
+                    }
+                    
+                    // Strategy 3: Static file serving with original path
+                    if (sub.filePath) {
+                      const cleanPath = sub.filePath.replace(/\\/g, "/").replace(/^\.\//, "").replace(/^\/+/, "");
+                      const baseUrl = API_BASE_URL.replace('/api', '');
+                      downloadStrategies.push({
+                        url: `${baseUrl}/${cleanPath}`,
+                        method: 'static-original-path'
+                      });
+                    }
+                    
+                    // Strategy 4: Direct uploads/submissions path
+                    if (sub.fileName) {
+                      const baseUrl = API_BASE_URL.replace('/api', '');
+                      downloadStrategies.push({
+                        url: `${baseUrl}/uploads/submissions/${sub.fileName}`,
+                        method: 'direct-uploads-submissions'
+                      });
+                    }
+                    
+                    // Strategy 5: Alternative uploads path structure
+                    if (sub.fileName) {
+                      const baseUrl = API_BASE_URL.replace('/api', '');
+                      downloadStrategies.push({
+                        url: `${baseUrl}/uploads/${sub.fileName}`,
+                        method: 'direct-uploads-root'
+                      });
+                    }
+                    
+                    // Strategy 6: If filePath contains the full name, try extracting just the filename
+                    if (sub.filePath && sub.filePath.includes('/')) {
+                      const fileName = sub.filePath.split('/').pop();
+                      const baseUrl = API_BASE_URL.replace('/api', '');
+                      downloadStrategies.push({
+                        url: `${baseUrl}/uploads/submissions/${fileName}`,
+                        method: 'extracted-filename'
+                      });
+                    }
+                    
+                    // Strategy 7: Try with original filename from database (backup)
+                    if (sub.fileName && sub.fileName !== (sub.filePath?.split('/').pop())) {
+                      const baseUrl = API_BASE_URL.replace('/api', '');
+                      downloadStrategies.push({
+                        url: `${baseUrl}/uploads/submissions/${sub.fileName}`,
+                        method: 'original-filename-backup'
+                      });
+                    }
+                    
+                    const fileUrl = downloadStrategies[0]?.url || null;
+                    
+
                     const dueDate = selectedActivity.date ? new Date(selectedActivity.date) : null;
                     const submissionDate = sub.submissionDate ? new Date(sub.submissionDate) : null;
                     const statusText = submissionDate && dueDate ? (submissionDate > dueDate ? "Late" : "Submitted") : "Submitted";
@@ -403,11 +470,54 @@ export default function ActivityMonitoring() {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="flex items-center justify-center px-3 py-1 rounded-md bg-indigo-100 dark:bg-indigo-500/30 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-200 dark:hover:bg-indigo-500/50 w-fit shadow-sm gap-2"
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    
+                                    if (downloadStrategies.length === 0) {
+                                      alert('No download options available for this file.');
+                                      return;
+                                    }
+                                    
+
+                                    
+                                    // Try each download strategy until one works
+                                    for (let i = 0; i < downloadStrategies.length; i++) {
+                                      const strategy = downloadStrategies[i];
+
+                                      
+                                      try {
+                                        // For download endpoints, try them directly first
+                                        if (strategy.method === 'download-endpoint' || strategy.method === 'file-serving-endpoint') {
+                                          // Create a test link to see if it works
+                                          const testResponse = await fetch(strategy.url, { method: 'HEAD' });
+                                          if (testResponse.ok) {
+                                            window.open(strategy.url, '_blank');
+                                            console.log('✅ Download successful with strategy:', strategy.method);
+                                            return;
+                                          }
+                                        } else {
+                                          // For static files, check if they exist first
+                                          const response = await fetch(strategy.url, { method: 'HEAD' });
+                                          if (response.ok) {
+                                            window.open(strategy.url, '_blank');
+                                            return;
+                                          }
+                                        }
+                                      } catch {
+                                        // Error handled by continuing to next strategy
+                                      }
+                                    }
+                                    
+                                    // If all strategies failed, show error message
+                                    const errorMessage = `File could not be accessed.\n\nFile: ${sub.fileName || 'Unknown'}\n\nThis may be due to server storage limitations.`;
+                                    alert(errorMessage);
+                                  }}
                                 >
                                   <span className="text-lg">{fileTypeIcon}</span>
                                   <span className="text-sm font-medium">View Submission</span>
                                   <FaDownload />
                                 </a>
+
                               </>
                             ) : (
                               <span className="text-gray-400 dark:text-gray-500 italic flex items-center gap-1 justify-center">

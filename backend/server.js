@@ -97,8 +97,14 @@ if (!fs.existsSync(uploadDirModules)) {
   console.log('Created uploads/modules directory');
 }
 
-// Serve static uploads folder
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve static uploads folder with detailed logging
+app.use('/uploads', (req, res, next) => {
+  console.log('📁 Static file request:', req.path);
+  const requestedPath = path.join(__dirname, 'uploads', req.path);
+  console.log('📁 Full path:', requestedPath);
+  console.log('📁 File exists:', require('fs').existsSync(requestedPath));
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 // Health check
 app.get('/', (req, res) => {

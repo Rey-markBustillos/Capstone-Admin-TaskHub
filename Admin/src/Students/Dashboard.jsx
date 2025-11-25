@@ -54,7 +54,7 @@ const StudentDashboard = () => {
   const [activities, setActivities] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
-  const [quizSubmissions, setQuizSubmissions] = useState([]);
+
   const [announcements, setAnnouncements] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
@@ -78,7 +78,7 @@ const StudentDashboard = () => {
   };
 
   // Auto-scroll to bottom hook - triggers on data changes (using lengths to avoid array size warnings)
-  useAutoScrollToBottom([classes.length, announcements.length, activities.length, submissions.length, quizzes.length, quizSubmissions.length]);
+  useAutoScrollToBottom([classes.length, announcements.length, activities.length, submissions.length, quizzes.length]);
 
   useEffect(() => {
     if (!studentId) {
@@ -199,8 +199,19 @@ const StudentDashboard = () => {
           setQuizzes([]);
           return;
         }
-        const res = await axios.get(`${API_BASE_URL}/quiz?classIds=${classIds}`);
-        setQuizzes(res.data || []);
+        // Fetch quizzes from all classes with student submissions
+        const allQuizzes = [];
+        for (const classId of classIds.split(',')) {
+          try {
+            const res = await axios.get(`${API_BASE_URL}/quizzes/class/${classId.trim()}?studentId=${studentId}`);
+            if (res.data && Array.isArray(res.data)) {
+              allQuizzes.push(...res.data);
+            }
+          } catch (classErr) {
+            console.error(`Error fetching quizzes for class ${classId}:`, classErr.response?.data || classErr.message);
+          }
+        }
+        setQuizzes(allQuizzes);
       } catch (err) {
         console.error('Error fetching quizzes:', err.response?.data || err.message);
       }
@@ -208,22 +219,7 @@ const StudentDashboard = () => {
     fetchQuizzes();
   }, [studentId, classes]);
 
-  // Fetch quiz submissions
-  useEffect(() => {
-    if (!studentId) {
-      setQuizSubmissions([]);
-      return;
-    }
-    const fetchQuizSubmissions = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/quiz-submissions/student/${studentId}`);
-        setQuizSubmissions(res.data || []);
-      } catch (err) {
-        console.error('Error fetching quiz submissions:', err.response?.data || err.message);
-      }
-    };
-    fetchQuizSubmissions();
-  }, [studentId, quizzes]);
+  // Note: Quiz submissions are fetched through individual quiz endpoints when needed
 
   const now = new Date();
   const submissionMap = {};
@@ -242,12 +238,12 @@ const StudentDashboard = () => {
     classes.some(cls => cls._id === (q.classId?._id || q.classId))
   );
 
-  // Quiz submission mapping
+  // Quiz submission mapping (extract from quiz.submissions)
   const quizSubmissionMap = {};
-  quizSubmissions.forEach(sub => {
-    const quizId = sub.quizId && sub.quizId._id ? sub.quizId._id : sub.quizId;
-    if (quizId) {
-      quizSubmissionMap[quizId] = sub;
+  quizzes.forEach(quiz => {
+    if (quiz.submissions && quiz.submissions.length > 0) {
+      // Take the first submission (students can only submit once)
+      quizSubmissionMap[quiz._id] = quiz.submissions[0];
     }
   });
 
@@ -309,11 +305,11 @@ const StudentDashboard = () => {
           </div>
         )}
 
-  <main className="rounded-lg p-2 sm:p-4 md:p-6 shadow-lg backdrop-blur-xl border border-indigo-700 w-full max-w-none overflow-x-hidden">
+  <main className="rounded-lg p-1.5 sm:p-2 md:p-4 lg:p-6 shadow-lg backdrop-blur-xl border border-indigo-700 w-full max-w-none overflow-x-hidden">
           {/* Summary Section */}
           <section className="mb-6">
-            <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Activity Summary</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 text-center">
+            <h2 className="text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">Activity Summary</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 text-center">
               <button 
                 onClick={(e) => {
                   e.preventDefault();
@@ -321,11 +317,11 @@ const StudentDashboard = () => {
                   console.log('Pending Activities button clicked:', pendingActivities.length);
                   openActivityModal('pending', pendingActivities, 'Pending Activities');
                 }}
-                className="bg-indigo-100/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-indigo-200/80 transition-colors cursor-pointer"
+                className="bg-indigo-100/80 p-1 sm:p-2 md:p-3 rounded shadow flex flex-col items-center hover:bg-indigo-200/80 transition-colors cursor-pointer"
               >
-                <CheckCircle className="text-indigo-600 mb-1" size={24} />
-                <p className="text-lg sm:text-2xl font-bold text-indigo-700">{totalPendingActivities}</p>
-                <p className="text-indigo-900 font-semibold text-xs">Pending Activities</p>
+                <CheckCircle className="text-indigo-600 mb-0.5 sm:mb-1" size={16} />
+                <p className="text-sm sm:text-lg md:text-2xl font-bold text-indigo-700">{totalPendingActivities}</p>
+                <p className="text-indigo-900 font-semibold text-[10px] sm:text-xs">Pending</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -337,11 +333,11 @@ const StudentDashboard = () => {
                   console.log('Late Activities button clicked:', lateActivities.length);
                   openActivityModal('late', lateActivities, 'Late Activities');
                 }}
-                className="bg-yellow-100/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-yellow-200/80 transition-colors cursor-pointer"
+                className="bg-yellow-100/80 p-1 sm:p-2 md:p-3 rounded shadow flex flex-col items-center hover:bg-yellow-200/80 transition-colors cursor-pointer"
               >
-                <Clock className="text-yellow-600 mb-1" size={24} />
-                <p className="text-lg sm:text-2xl font-bold text-yellow-700">{totalLateActivities}</p>
-                <p className="text-yellow-900 font-semibold text-xs">Late Activities</p>
+                <Clock className="text-yellow-600 mb-0.5 sm:mb-1" size={16} />
+                <p className="text-sm sm:text-lg md:text-2xl font-bold text-yellow-700">{totalLateActivities}</p>
+                <p className="text-yellow-900 font-semibold text-[10px] sm:text-xs">Late</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -353,11 +349,11 @@ const StudentDashboard = () => {
                   console.log('Missing Activities button clicked:', missingActivities.length);
                   openActivityModal('missing', missingActivities, 'Missing Activities');
                 }}
-                className="bg-red-100/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-red-200/80 transition-colors cursor-pointer"
+                className="bg-red-100/80 p-1 sm:p-2 md:p-3 rounded shadow flex flex-col items-center hover:bg-red-200/80 transition-colors cursor-pointer"
               >
-                <AlertTriangle className="text-red-600 mb-1" size={24} />
-                <p className="text-lg sm:text-2xl font-bold text-red-700">{totalMissingActivities}</p>
-                <p className="text-red-900 font-semibold text-xs">Missing Activities</p>
+                <AlertTriangle className="text-red-600 mb-0.5 sm:mb-1" size={16} />
+                <p className="text-sm sm:text-lg md:text-2xl font-bold text-red-700">{totalMissingActivities}</p>
+                <p className="text-red-900 font-semibold text-[10px] sm:text-xs">Missing</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -366,11 +362,11 @@ const StudentDashboard = () => {
                   console.log('Pending Quizzes button clicked:', pendingQuizzes.length);
                   openActivityModal('pending-quiz', pendingQuizzes, 'Pending Quizzes');
                 }}
-                className="bg-blue-100/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-blue-200/80 transition-colors cursor-pointer"
+                className="bg-blue-100/80 p-1 sm:p-2 md:p-3 rounded shadow flex flex-col items-center hover:bg-blue-200/80 transition-colors cursor-pointer"
               >
-                <CheckCircle className="text-blue-600 mb-1" size={24} />
-                <p className="text-lg sm:text-2xl font-bold text-blue-700">{totalPendingQuizzes}</p>
-                <p className="text-blue-900 font-semibold text-xs">Pending Quiz</p>
+                <CheckCircle className="text-blue-600 mb-0.5 sm:mb-1" size={16} />
+                <p className="text-sm sm:text-lg md:text-2xl font-bold text-blue-700">{totalPendingQuizzes}</p>
+                <p className="text-blue-900 font-semibold text-[10px] sm:text-xs">Quiz</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -382,11 +378,11 @@ const StudentDashboard = () => {
                   console.log('Late Quizzes button clicked:', lateQuizzes.length);
                   openActivityModal('late-quiz', lateQuizzes, 'Late Quizzes');
                 }}
-                className="bg-orange-100/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-orange-200/80 transition-colors cursor-pointer"
+                className="bg-orange-100/80 p-1 sm:p-2 md:p-3 rounded shadow flex flex-col items-center hover:bg-orange-200/80 transition-colors cursor-pointer"
               >
-                <Clock className="text-orange-600 mb-1" size={24} />
-                <p className="text-lg sm:text-2xl font-bold text-orange-700">{totalLateQuizzes}</p>
-                <p className="text-orange-900 font-semibold text-xs">Late Quiz</p>
+                <Clock className="text-orange-600 mb-0.5 sm:mb-1" size={16} />
+                <p className="text-sm sm:text-lg md:text-2xl font-bold text-orange-700">{totalLateQuizzes}</p>
+                <p className="text-orange-900 font-semibold text-[10px] sm:text-xs">Late Quiz</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -398,11 +394,11 @@ const StudentDashboard = () => {
                   console.log('Missing Quizzes button clicked:', missingQuizzes.length);
                   openActivityModal('missing-quiz', missingQuizzes, 'Missing Quizzes');
                 }}
-                className="bg-red-200/80 p-2 sm:p-3 rounded shadow flex flex-col items-center hover:bg-red-300/80 transition-colors cursor-pointer"
+                className="bg-red-200/80 p-1 sm:p-2 md:p-3 rounded shadow flex flex-col items-center hover:bg-red-300/80 transition-colors cursor-pointer"
               >
-                <AlertTriangle className="text-red-700 mb-1" size={24} />
-                <p className="text-lg sm:text-2xl font-bold text-red-800">{totalMissingQuizzes}</p>
-                <p className="text-red-900 font-semibold text-xs">Missing Quiz</p>
+                <AlertTriangle className="text-red-700 mb-0.5 sm:mb-1" size={16} />
+                <p className="text-sm sm:text-lg md:text-2xl font-bold text-red-800">{totalMissingQuizzes}</p>
+                <p className="text-red-900 font-semibold text-[10px] sm:text-xs">Missing Quiz</p>
               </button>
             </div>
           </section>
@@ -417,8 +413,8 @@ const StudentDashboard = () => {
 
               {!loadingClasses && !error && classes.length > 0 && (
                 <>
-                  <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Your Enrolled Classes</h2>
-                  <ul className="space-y-3 sm:space-y-4 pb-4">
+                  <h2 className="text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">Your Enrolled Classes</h2>
+                  <ul className="space-y-2 sm:space-y-3 md:space-y-4 pb-4">
                     {classes.map((cls) => {
                       // Find soonest schedule for this class
                       let soonestSched = null;
@@ -434,12 +430,12 @@ const StudentDashboard = () => {
                         });
                       }
                       return (
-                        <li key={cls._id} className="bg-gray-200/80 p-3 sm:p-4 rounded shadow min-w-0">
-                          <h3 className="text-lg sm:text-xl text-black font-bold truncate">{cls.className}</h3>
+                        <li key={cls._id} className="bg-gray-200/80 p-2 sm:p-3 md:p-4 rounded shadow min-w-0">
+                          <h3 className="text-sm sm:text-lg md:text-xl text-black font-bold truncate">{cls.className}</h3>
                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
-                            <p className="text-black mr-0 sm:mr-4 text-sm sm:text-base"><strong>Teacher:</strong> <span className="truncate">{cls.teacherName}</span></p>
-                            <p className="text-black mr-0 sm:mr-4 text-sm sm:text-base"><strong>Room:</strong> <span className="truncate">{cls.roomNumber}</span></p>
-                            <p className="text-black text-sm sm:text-base">
+                            <p className="text-black mr-0 sm:mr-4 text-xs sm:text-sm md:text-base"><strong>Teacher:</strong> <span className="truncate">{cls.teacherName}</span></p>
+                            <p className="text-black mr-0 sm:mr-4 text-xs sm:text-sm md:text-base"><strong>Room:</strong> <span className="truncate">{cls.roomNumber}</span></p>
+                            <p className="text-black text-xs sm:text-sm md:text-base">
                               <strong>Time:</strong> <span className="truncate">{
                                 soonestSched
                                   ? soonestSched.dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ` | ${soonestSched.dt.toLocaleString('en-US', { weekday: 'long' })}`
@@ -459,15 +455,15 @@ const StudentDashboard = () => {
 
             {/* Announcements Section - Always appears second on mobile */}
             <section className="min-w-0 w-full order-2">
-              <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-100">Announcements</h2>
+              <h2 className="text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">Announcements</h2>
               {loadingAnnouncements && <LoadingSpinner />}
               {!loadingAnnouncements && announcements.length === 0 && <p className="text-white">No announcements available.</p>}
               {!loadingAnnouncements && announcements.length > 0 && (
-                <ul className="space-y-2 sm:space-y-3 pb-8">
+                <ul className="space-y-1.5 sm:space-y-2 md:space-y-3 pb-4 sm:pb-8">
                   {announcements.map((ann) => (
-                    <li key={ann._id} className="bg-green-100/80 p-2 sm:p-3 rounded shadow text-green-900 min-w-0">
-                      <p className="font-semibold text-sm sm:text-base truncate">{ann.title}</p>
-                      <p className="text-xs sm:text-sm italic">
+                    <li key={ann._id} className="bg-green-100/80 p-1.5 sm:p-2 md:p-3 rounded shadow text-green-900 min-w-0">
+                      <p className="font-semibold text-xs sm:text-sm md:text-base truncate">{ann.title}</p>
+                      <p className="text-[10px] sm:text-xs md:text-sm italic">
                         {(() => {
                           // Try different date fields in order of preference
                           const dateToUse = ann.createdAt || ann.date || ann.announcementDate || new Date().toISOString();

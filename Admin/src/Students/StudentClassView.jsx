@@ -293,28 +293,28 @@ const StudentClassView = () => {
       </div>
 
       {/* Recent Components Row */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-4 sm:mb-6">
+      <div className="grid grid-cols-2 gap-1 sm:gap-3 md:gap-4 lg:gap-6 mb-2 sm:mb-6">
         {/* Recent Activity - Dynamic */}
         {lastOpenedComponent ? (
           <NavLink
             to={lastOpenedComponent.path}
-            className="group flex flex-col items-center justify-center h-[100px] sm:h-[120px] md:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-emerald-600/60 cursor-pointer bg-gradient-to-br from-emerald-700 via-teal-800 to-cyan-800 text-white hover:bg-emerald-700/80 hover:scale-105 relative overflow-hidden"
+            className="group flex flex-col items-center justify-center h-[60px] sm:h-[120px] md:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-emerald-600/60 cursor-pointer bg-gradient-to-br from-emerald-700 via-teal-800 to-cyan-800 text-white hover:bg-emerald-700/80 hover:scale-105 relative overflow-hidden"
           >
-            <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-emerald-400 rounded-l-xl sm:rounded-l-2xl"></div>
-            <span className="bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-400 p-1.5 sm:p-2 md:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-emerald-200/40 mb-1 sm:mb-1 md:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <lastOpenedComponent.icon className="text-white text-sm sm:text-lg md:text-2xl group-hover:animate-bounce" />
+            <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-emerald-400 rounded-l-lg sm:rounded-l-2xl"></div>
+            <span className="bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-400 p-1 sm:p-2 md:p-3 rounded-full shadow-lg ring-0 sm:ring-2 ring-emerald-200/40 mb-0.5 sm:mb-1 md:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <lastOpenedComponent.icon className="text-white text-xs sm:text-lg md:text-2xl group-hover:animate-bounce" />
             </span>
-            <span className="font-bold text-xs sm:text-sm md:text-lg tracking-wide text-center px-1">{lastOpenedComponent.name}</span>
-            <span className="text-[10px] sm:text-xs text-gray-200">Recent open</span>
+            <span className="font-bold text-[8px] sm:text-sm md:text-lg tracking-wide text-center px-0.5">{lastOpenedComponent.name}</span>
+            <span className="text-[6px] sm:text-xs text-gray-200">Recent</span>
           </NavLink>
         ) : (
-          <div className="group flex flex-col items-center justify-center h-[100px] sm:h-[120px] md:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-gray-600/60 cursor-not-allowed bg-gradient-to-br from-gray-700 via-gray-800 to-slate-800 text-white relative overflow-hidden">
-            <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-gray-400 rounded-l-xl sm:rounded-l-2xl"></div>
-            <span className="bg-gradient-to-tr from-gray-400 via-slate-400 to-gray-500 p-1.5 sm:p-2 md:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-gray-200/40 mb-1 sm:mb-1 md:mb-2 flex items-center justify-center">
-              <FaClock className="text-white text-sm sm:text-lg md:text-2xl" />
+          <div className="group flex flex-col items-center justify-center h-[60px] sm:h-[120px] md:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-gray-600/60 cursor-not-allowed bg-gradient-to-br from-gray-700 via-gray-800 to-slate-800 text-white relative overflow-hidden">
+            <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-gray-400 rounded-l-lg sm:rounded-l-2xl"></div>
+            <span className="bg-gradient-to-tr from-gray-400 via-slate-400 to-gray-500 p-1 sm:p-2 md:p-3 rounded-full shadow-lg ring-0 sm:ring-2 ring-gray-200/40 mb-0.5 sm:mb-1 md:mb-2 flex items-center justify-center">
+              <FaClock className="text-white text-xs sm:text-lg md:text-2xl" />
             </span>
-            <span className="font-bold text-xs sm:text-sm md:text-lg tracking-wide text-center px-1">Recent Activity</span>
-            <span className="text-[10px] sm:text-xs text-gray-300">No recent activity</span>
+            <span className="font-bold text-[8px] sm:text-sm md:text-lg tracking-wide text-center px-0.5">Recent</span>
+            <span className="text-[6px] sm:text-xs text-gray-300">None</span>
           </div>
         )}
 
@@ -322,111 +322,111 @@ const StudentClassView = () => {
         {secondLastComponent ? (
           <NavLink
             to={secondLastComponent.path}
-            className="group flex flex-col items-center justify-center h-[100px] sm:h-[120px] md:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-cyan-600/60 cursor-pointer bg-gradient-to-br from-cyan-700 via-teal-800 to-blue-800 text-white hover:bg-cyan-700/80 hover:scale-105 relative overflow-hidden"
+            className="group flex flex-col items-center justify-center h-[60px] sm:h-[120px] md:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-cyan-600/60 cursor-pointer bg-gradient-to-br from-cyan-700 via-teal-800 to-blue-800 text-white hover:bg-cyan-700/80 hover:scale-105 relative overflow-hidden"
           >
-            <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-cyan-400 rounded-l-xl sm:rounded-l-2xl"></div>
-            <span className="bg-gradient-to-tr from-cyan-400 via-teal-400 to-blue-400 p-1.5 sm:p-2 md:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-cyan-200/40 mb-1 sm:mb-1 md:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <secondLastComponent.icon className="text-white text-sm sm:text-lg md:text-2xl group-hover:animate-bounce" />
+            <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-cyan-400 rounded-l-lg sm:rounded-l-2xl"></div>
+            <span className="bg-gradient-to-tr from-cyan-400 via-teal-400 to-blue-400 p-1 sm:p-2 md:p-3 rounded-full shadow-lg ring-0 sm:ring-2 ring-cyan-200/40 mb-0.5 sm:mb-1 md:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <secondLastComponent.icon className="text-white text-xs sm:text-lg md:text-2xl group-hover:animate-bounce" />
             </span>
-            <span className="font-bold text-xs sm:text-sm md:text-lg tracking-wide text-center px-1">{secondLastComponent.name}</span>
-            <span className="text-[10px] sm:text-xs text-gray-200">Quick access</span>
+            <span className="font-bold text-[8px] sm:text-sm md:text-lg tracking-wide text-center px-0.5">{secondLastComponent.name}</span>
+            <span className="text-[6px] sm:text-xs text-gray-200">Quick</span>
           </NavLink>
         ) : (
-          <div className="group flex flex-col items-center justify-center h-[100px] sm:h-[120px] md:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-gray-600/60 cursor-not-allowed bg-gradient-to-br from-gray-700 via-gray-800 to-slate-800 text-white relative overflow-hidden">
-            <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-gray-400 rounded-l-xl sm:rounded-l-2xl"></div>
-            <span className="bg-gradient-to-tr from-gray-400 via-slate-400 to-gray-500 p-1.5 sm:p-2 md:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-gray-200/40 mb-1 sm:mb-1 md:mb-2 flex items-center justify-center">
-              <FaRocket className="text-white text-sm sm:text-lg md:text-2xl" />
+          <div className="group flex flex-col items-center justify-center h-[60px] sm:h-[120px] md:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-gray-600/60 cursor-not-allowed bg-gradient-to-br from-gray-700 via-gray-800 to-slate-800 text-white relative overflow-hidden">
+            <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-gray-400 rounded-l-lg sm:rounded-l-2xl"></div>
+            <span className="bg-gradient-to-tr from-gray-400 via-slate-400 to-gray-500 p-1 sm:p-2 md:p-3 rounded-full shadow-lg ring-0 sm:ring-2 ring-gray-200/40 mb-0.5 sm:mb-1 md:mb-2 flex items-center justify-center">
+              <FaRocket className="text-white text-xs sm:text-lg md:text-2xl" />
             </span>
-            <span className="font-bold text-xs sm:text-sm md:text-lg tracking-wide text-center px-1">Quick Access</span>
-            <span className="text-[10px] sm:text-xs text-gray-300">No quick access</span>
+            <span className="font-bold text-[8px] sm:text-sm md:text-lg tracking-wide text-center px-0.5">Quick</span>
+            <span className="text-[6px] sm:text-xs text-gray-300">None</span>
           </div>
         )}
       </div>
 
       {/* Main Navigation Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-1 sm:gap-4 md:gap-6">
         {/* Attendance */}
         <NavLink
           to={`attendance`}
-          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.15s', animationDuration: '3s' }}
         >
-          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-purple-400 rounded-l-xl sm:rounded-l-2xl"></div>
-          <span className="bg-gradient-to-tr from-purple-400 via-indigo-400 to-pink-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-purple-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaCalendarCheck className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-purple-400 rounded-l-lg sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-purple-400 via-indigo-400 to-pink-400 p-1 sm:p-3 rounded-full shadow-lg ring-0 sm:ring-2 ring-purple-200/40 mb-0.5 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaCalendarCheck className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Attendance</span>
-          <span className="text-xs text-gray-300">Track your presence</span>
+          <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">Attendance</span>
+          <span className="text-[6px] sm:text-xs text-gray-300">Track presence</span>
         </NavLink>
 
         {/* Announcements */}
         <NavLink
           to={`announcements`}
-          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.2s', animationDuration: '3s' }}
         >
-          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-yellow-400 rounded-l-xl sm:rounded-l-2xl"></div>
-          <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-yellow-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaBullhorn className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-yellow-400 rounded-l-lg sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-1 sm:p-3 rounded-full shadow-lg ring-0 sm:ring-2 ring-yellow-200/40 mb-0.5 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaBullhorn className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Announcements</span>
-          <span className="text-xs text-gray-300">Latest updates</span>
+          <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">News</span>
+          <span className="text-[6px] sm:text-xs text-gray-300">Updates</span>
         </NavLink>
 
         {/* Activities */}
         <NavLink
           to={`activities`}
-          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.3s', animationDuration: '3s' }}
         >
-          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-blue-400 rounded-l-xl sm:rounded-l-2xl"></div>
-          <span className="bg-gradient-to-tr from-blue-400 via-cyan-400 to-indigo-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-blue-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaTasks className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-blue-400 rounded-l-lg sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-blue-400 via-cyan-400 to-indigo-400 p-1 sm:p-3 rounded-full shadow-lg ring-0 sm:ring-2 ring-blue-200/40 mb-0.5 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaTasks className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Activities</span>
-          <span className="text-xs text-gray-300">Submit work</span>
+          <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">Activities</span>
+          <span className="text-[6px] sm:text-xs text-gray-300">Submit work</span>
         </NavLink>
 
         {/* Modules - Learning Materials */}
         <NavLink
           to={`modules`}
-          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.35s', animationDuration: '3s' }}
         >
-          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-teal-400 rounded-l-xl sm:rounded-l-2xl"></div>
-          <span className="bg-gradient-to-tr from-teal-400 via-cyan-400 to-blue-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-teal-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaBook className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-teal-400 rounded-l-lg sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-teal-400 via-cyan-400 to-blue-400 p-1 sm:p-3 rounded-full shadow-lg ring-0 sm:ring-2 ring-teal-200/40 mb-0.5 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaBook className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Modules</span>
-          <span className="text-xs text-gray-300">Learning materials</span>
+          <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">Modules</span>
+          <span className="text-[6px] sm:text-xs text-gray-300">Materials</span>
         </NavLink>
 
         {/* Quiz Hub */}
         <NavLink
           to={`quiz`}
-          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.4s', animationDuration: '3s' }}
         >
-          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-pink-400 rounded-l-xl sm:rounded-l-2xl"></div>
-          <span className="bg-gradient-to-tr from-pink-400 via-fuchsia-400 to-yellow-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-pink-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaQuestionCircle className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-pink-400 rounded-l-lg sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-pink-400 via-fuchsia-400 to-yellow-400 p-1 sm:p-3 rounded-full shadow-lg ring-0 sm:ring-2 ring-pink-200/40 mb-0.5 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaQuestionCircle className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Quiz Hub</span>
-          <span className="text-xs text-gray-300">Take quizzes</span>
+          <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">Quiz Hub</span>
+          <span className="text-[6px] sm:text-xs text-gray-300">Take quiz</span>
         </NavLink>
 
         {/* Class List */}
         <NavLink
           to={`classlist`}
-          className="group flex flex-col items-center justify-center h-[120px] sm:h-[140px] rounded-xl sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-2 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
           style={{ textDecoration: 'none', animationDelay: '0.45s', animationDuration: '3s' }}
         >
-          <div className="absolute left-0 top-0 h-full w-1 sm:w-1.5 bg-green-400 rounded-l-xl sm:rounded-l-2xl"></div>
-          <span className="bg-gradient-to-tr from-green-400 via-emerald-400 to-yellow-400 p-2 sm:p-3 rounded-full shadow-lg ring-1 sm:ring-2 ring-green-200/40 mb-1 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <FaUsers className="text-white text-lg sm:text-2xl group-hover:animate-bounce" />
+          <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-green-400 rounded-l-lg sm:rounded-l-2xl"></div>
+          <span className="bg-gradient-to-tr from-green-400 via-emerald-400 to-yellow-400 p-1 sm:p-3 rounded-full shadow-lg ring-0 sm:ring-2 ring-green-200/40 mb-0.5 sm:mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <FaUsers className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
-          <span className="font-bold text-sm sm:text-lg tracking-wide text-center px-1">Class List</span>
-          <span className="text-xs text-gray-300">View classmates</span>
+          <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">Class List</span>
+          <span className="text-[6px] sm:text-xs text-gray-300">Classmates</span>
         </NavLink>
       </div>
     </div>

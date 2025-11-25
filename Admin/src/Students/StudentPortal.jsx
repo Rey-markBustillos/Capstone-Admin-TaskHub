@@ -118,24 +118,24 @@ const StudentPortal = () => {
       <div className="absolute inset-0 pointer-events-none z-0">
         <FallingBooksAnimation />
       </div>
-  <main className={`flex-grow flex flex-col py-4 sm:py-8 relative z-10 transition-all duration-300 ${isSidebarOpen ? 'ml-12 sm:ml-16 w-[calc(100%-48px)] sm:w-[calc(100%-64px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+  <main className={`flex-grow flex flex-col py-2 sm:py-4 md:py-8 relative z-10 transition-all duration-300 ${isSidebarOpen ? 'ml-0' : 'ml-0'} w-full`}>
         {/* Header */}
         <div className="flex-shrink-0">
-          <div className="mb-4 sm:mb-8 pt-3 sm:pt-6 flex items-center gap-2 sm:gap-3">
-            <MdClass className="text-indigo-300" size={28} />
-            <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-slate-100">My Enrolled Classes</h1>
+          <div className="mb-2 sm:mb-4 md:mb-8 pt-2 sm:pt-3 md:pt-6 flex items-center gap-1 sm:gap-2 md:gap-3 pl-2">
+            <MdClass className="text-indigo-300" size={16} />
+            <h1 className="text-base sm:text-lg md:text-2xl lg:text-4xl font-bold text-slate-100">My Enrolled Classes</h1>
           </div>
-          <hr className="mb-4 sm:mb-6 border-t-2 border-indigo-700" />
+          <hr className="mb-2 sm:mb-4 md:mb-6 border-t-2 border-indigo-700" />
 
           {/* Search Bar */}
-          <div className="mb-4 sm:mb-8 flex items-center gap-2">
+          <div className="mb-3 sm:mb-4 md:mb-8 flex items-center gap-2 pl-2">
             <div className="relative w-full">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400">
-                <FaSearch size={16} />
+              <span className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-indigo-400">
+                <FaSearch size={14} />
               </span>
               <input
                 type="text"
-                className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base border border-slate-600 rounded-xl bg-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 shadow-sm transition"
+                className="w-full pl-7 sm:pl-9 md:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 md:py-3 text-xs sm:text-sm md:text-base border border-slate-600 rounded-lg sm:rounded-xl bg-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 shadow-sm transition"
                 placeholder="Search classes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -161,7 +161,7 @@ const StudentPortal = () => {
             </div>
           </div>
           {filteredClasses.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 relative z-10 pl-2">
               {filteredClasses.map((cls) => (
                 <div
                   key={cls._id}
@@ -178,38 +178,38 @@ const StudentPortal = () => {
                   <svg className="absolute -top-8 -right-8 w-32 h-32 opacity-20 animate-pulse-slow pointer-events-none" viewBox="0 0 100 100" fill="none"><ellipse cx="50" cy="50" rx="48" ry="32" fill="#6366f1" /></svg>
                   {/* Accent bar */}
                   <div className="absolute left-0 top-0 h-full w-2 bg-gradient-to-b from-indigo-400 via-indigo-600 to-blue-500 rounded-l-2xl shadow-md"></div>
-                  <div className="p-7 flex-grow relative z-10">
-                    <div className="flex items-center gap-3 mb-2">
-                      <FaChalkboardTeacher className="text-indigo-300" size={26} />
-                      <h2 className="text-2xl font-bold text-indigo-100 truncate" title={cls.className}>
+                  <div className="p-3 sm:p-5 md:p-7 flex-grow relative z-10">
+                    <div className="flex items-center gap-1 sm:gap-2 md:gap-3 mb-1 sm:mb-2">
+                      <FaChalkboardTeacher className="text-indigo-300" size={14} />
+                      <h2 className="text-xs sm:text-sm md:text-lg lg:text-2xl font-bold text-indigo-100 truncate" title={cls.className}>
                         {cls.className}
                       </h2>
                     </div>
-                    <div className="space-y-3 text-base mt-4">
+                    <div className="space-y-1 sm:space-y-2 md:space-y-3 text-[10px] sm:text-xs md:text-sm lg:text-base mt-1 sm:mt-2 md:mt-4">
                       <p className="text-indigo-100 flex items-center">
-                        <FaUserTie size={18} className="mr-3 text-indigo-400" />
+                        <FaUserTie size={12} className="mr-1 sm:mr-2 md:mr-3 text-indigo-400" />
                         <strong>Teacher:</strong>&nbsp;
                         {cls.teacher?.name || cls.teacherName || 'N/A'}
                       </p>
                       <p className="text-indigo-100 flex items-center">
-                        <FaCalendarDay size={18} className="mr-3 text-indigo-400" />
+                        <FaCalendarDay size={12} className="mr-1 sm:mr-2 md:mr-3 text-indigo-400" />
                         <strong>Day:</strong>&nbsp;
                         {cls.day || 'TBA'}
                       </p>
                       <p className="text-indigo-100 flex items-center">
-                        <FaClock size={18} className="mr-3 text-indigo-400" />
+                        <FaClock size={12} className="mr-1 sm:mr-2 md:mr-3 text-indigo-400" />
                         <strong>Time:</strong>&nbsp;
                         {formatTimePH(cls.time, cls.endTime)}
                       </p>
                       <p className="text-indigo-100 flex items-center">
-                        <FaMapMarkerAlt size={18} className="mr-3 text-indigo-400" />
+                        <FaMapMarkerAlt size={12} className="mr-1 sm:mr-2 md:mr-3 text-indigo-400" />
                         <strong>Room:</strong>&nbsp;{cls.roomNumber || 'N/A'}
                       </p>
                     </div>
                   </div>
-                  <div className="bg-gradient-to-r from-indigo-900/80 via-slate-900/80 to-blue-900/80 px-7 py-4 border-t border-indigo-700 flex items-center justify-center gap-2 relative z-10">
-                    <FaDoorOpen className="text-indigo-300" size={18} />
-                    <p className="text-sm text-indigo-200 font-semibold text-center">
+                  <div className="bg-gradient-to-r from-indigo-900/80 via-slate-900/80 to-blue-900/80 px-2 sm:px-3 md:px-5 lg:px-7 py-1.5 sm:py-2 md:py-3 lg:py-4 border-t border-indigo-700 flex items-center justify-center gap-1 sm:gap-2 relative z-10">
+                    <FaDoorOpen className="text-indigo-300" size={10} />
+                    <p className="text-[10px] sm:text-xs md:text-sm text-indigo-200 font-semibold text-center">
                       View Class &rarr;
                     </p>
                   </div>

@@ -511,11 +511,52 @@ exports.downloadSubmissionFile = async (req, res) => {
       return res.status(404).json({ message: 'Submission file not found.' });
     }
 
-    const filePath = path.join(__dirname, '..', submission.filePath);
-    if (fs.existsSync(filePath)) {
-      res.download(filePath, submission.fileName);
+    // Handle different possible path formats
+    let filePath;
+    if (submission.filePath.startsWith('uploads/')) {
+      // Path already includes uploads folder
+      filePath = path.join(__dirname, '..', submission.filePath);
+    } else if (submission.filePath.startsWith('./uploads/')) {
+      // Path starts with ./uploads/
+      filePath = path.join(__dirname, '..', submission.filePath.substring(2));
     } else {
-      res.status(404).json({ message: 'File not found on server.' });
+      // Assume it's just the filename or relative path
+      filePath = path.join(__dirname, '..', 'uploads', 'submissions', submission.filePath);
+    }
+
+    console.log('Attempting to serve file:', filePath);
+    console.log('File exists:', fs.existsSync(filePath));
+    
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, submission.fileName || path.basename(filePath));
+    } else {
+      // Try alternative paths if the main path doesn't work
+      const alternativePaths = [
+        path.join(__dirname, '..', 'uploads', 'submissions', path.basename(submission.filePath)),
+        path.join(__dirname, '..', submission.filePath.replace(/\\/g, '/')),
+        path.join(__dirname, '..', 'uploads', path.basename(submission.filePath))
+      ];
+      
+      let foundPath = null;
+      for (const altPath of alternativePaths) {
+        if (fs.existsSync(altPath)) {
+          foundPath = altPath;
+          break;
+        }
+      }
+      
+      if (foundPath) {
+        console.log('Found file at alternative path:', foundPath);
+        res.download(foundPath, submission.fileName || path.basename(foundPath));
+      } else {
+        console.error('File not found at any path. Submission filePath:', submission.filePath);
+        res.status(404).json({ 
+          message: 'File not found on server.',
+          submissionId: id,
+          filePath: submission.filePath,
+          attempted: [filePath, ...alternativePaths]
+        });
+      }
     }
   } catch (error) {
     console.error('Error downloading submission file:', error);

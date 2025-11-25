@@ -19,7 +19,7 @@ const menuItemsByRole = {
     { name: 'Class Management', path: '/classmanagement', icon: <Calendar size={20} />, badge: '20+' },
   ],
   student: [
-    { name: 'Dashboard', path: '/studentdashboard', icon: <LayoutDashboard size={20} />, badge: 3 },
+    { name: 'Dashboard', path: '/studentdashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Classes', path: '/studentportal', icon: <ClipboardList size={20} /> },
   ],
   teacher: [
@@ -115,7 +115,7 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
   return (
     <div
       className={`h-screen flex flex-col justify-between fixed top-0 left-0 transition-all duration-300 ${isOverlay ? 'z-50' : 'z-30'}
-        ${isOpen ? (role === 'student' ? 'w-36 sm:w-44' : 'w-44 sm:w-56') : (role === 'student' ? 'w-10 sm:w-12' : 'w-12 sm:w-16')} ${sidebarBg} ${sidebarShadow} ${borderClass} border-r cursor-pointer`}
+        ${isOpen ? (role === 'student' ? 'w-28 sm:w-36 md:w-44' : 'w-44 sm:w-56') : (role === 'student' ? 'w-8 sm:w-10 md:w-12' : 'w-12 sm:w-16')} ${sidebarBg} ${sidebarShadow} ${borderClass} border-r cursor-pointer`}
       style={role === 'admin' ? { boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)' } : {}}
       onClick={() => {
         if (typeof setIsOpenProp === 'function') setIsOpenProp(!isOpen);
@@ -168,7 +168,7 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
                       React.cloneElement(icon, { size: isOpen ? (window.innerWidth < 640 ? 20 : 28) : 20 })
                     }</span>
                     {isOpen && <span className="flex-1 truncate text-xs sm:text-base font-semibold tracking-wide">{name}</span>}
-                    {isOpen && badge && (
+                    {isOpen && badge && role !== 'student' && (
                       <span className={`text-[10px] sm:text-xs font-bold bg-gradient-to-r from-violet-400 to-blue-400 text-white px-1 sm:px-2 py-0.5 rounded-full shadow`}>{badge}</span>
                     )}
                   </>

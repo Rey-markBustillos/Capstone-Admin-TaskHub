@@ -306,27 +306,30 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
   };
 
   return (
-  <div className="w-full max-w-lg mx-auto m-0 p-0 flex flex-col items-center justify-center">
-      <div className="flex flex-col items-center gap-2 w-full p-0 m-0">
+  <div className="w-full max-w-sm sm:max-w-lg mx-auto m-0 p-0 flex flex-col items-center justify-center">
+      <div className="flex flex-col items-center gap-1 sm:gap-2 w-full p-0 m-0">
         <button
           onClick={startListening}
           disabled={listening || generating}
-          className={`flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition text-white font-semibold shadow-md w-full sm:w-auto justify-center m-0 p-0`}
+          className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition text-white font-semibold shadow-md w-full sm:w-auto justify-center m-0 p-0 text-xs sm:text-base`}
         >
           {listening ? (
             <>
-              <Mic className="animate-pulse" size={20} />
-              Listening...
+              <Mic className="animate-pulse" size={16} />
+              <span className="hidden sm:inline">Listening...</span>
+              <span className="sm:hidden">Listening</span>
             </>
           ) : generating ? (
             <>
-              <Loader2 className="animate-spin" size={20} />
-              Generating...
+              <Loader2 className="animate-spin" size={16} />
+              <span className="hidden sm:inline">Generating...</span>
+              <span className="sm:hidden">Generating</span>
             </>
           ) : (
             <>
-              <Mic size={20} />
-              Ask AI (Voice)
+              <Mic size={16} />
+              <span className="hidden sm:inline">Ask AI (Voice)</span>
+              <span className="sm:hidden">Ask AI</span>
             </>
           )}
         </button>
@@ -334,24 +337,24 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
       {/* Show Q&A only when generating or after a question */}
       {showQA && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className="bg-indigo-900/95 rounded-xl p-6 shadow-2xl w-full max-w-md flex flex-col gap-4 relative animate-fade-in-up pointer-events-auto">
+          <div className="bg-indigo-900/95 rounded-xl p-3 sm:p-4 md:p-6 shadow-2xl w-full max-w-xs sm:max-w-md flex flex-col gap-2 sm:gap-4 relative animate-fade-in-up pointer-events-auto">
             <button
-              className="absolute top-2 right-2 text-indigo-200 hover:text-white text-xl font-bold px-2 py-1 rounded focus:outline-none"
+              className="absolute top-1 right-1 sm:top-2 sm:right-2 text-indigo-200 hover:text-white text-lg sm:text-xl font-bold px-1 sm:px-2 py-0.5 sm:py-1 rounded focus:outline-none"
               onClick={() => setShowQA(false)}
               aria-label="Close"
             >
               ×
             </button>
-            <div className="flex items-start gap-2">
-              <span className="font-bold text-indigo-200">Question:</span>
-              <span className="text-white ml-2 break-words">{question || <span className="italic text-indigo-200">None</span>}</span>
+            <div className="flex items-start gap-1 sm:gap-2">
+              <span className="font-bold text-indigo-200 text-xs sm:text-base">Q:</span>
+              <span className="text-white ml-1 sm:ml-2 break-words text-xs sm:text-base">{question || <span className="italic text-indigo-200">None</span>}</span>
             </div>
-            <div className="flex items-start gap-2">
-              <span className="font-bold text-indigo-200">Answer:</span>
-              <span className="text-white ml-2 break-words">
+            <div className="flex items-start gap-1 sm:gap-2">
+              <span className="font-bold text-indigo-200 text-xs sm:text-base">A:</span>
+              <span className="text-white ml-1 sm:ml-2 break-words text-xs sm:text-base">
                 {generating ? (
                   <span className="flex items-center gap-1">
-                    <Loader2 className="animate-spin" size={16} /> Generating...
+                    <Loader2 className="animate-spin" size={12} /> <span className="hidden sm:inline">Generating...</span><span className="sm:hidden">Generating</span>
                   </span>
                 ) : answer ? answer : <span className="italic text-indigo-200">None</span>}
               </span>

@@ -185,11 +185,11 @@ export default function StudentAnnouncements() {
                     data-ann-id={ann._id}
                     className="bg-white dark:bg-gray-800 shadow-lg rounded-xl border border-indigo-100 dark:border-indigo-900 overflow-hidden"
                   >
-                    <div className="p-4 sm:p-6">
-                      <h2 className="text-lg sm:text-xl font-semibold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-2">
-                        <FaBullhorn className="mr-2" /> {ann.title}
+                    <div className="p-2 sm:p-3 md:p-4 lg:p-6">
+                      <h2 className="text-sm sm:text-lg md:text-xl font-semibold text-indigo-600 dark:text-indigo-400 mb-1 sm:mb-2 flex items-center gap-1 sm:gap-2">
+                        <FaBullhorn className="mr-1 sm:mr-2 text-xs sm:text-base" /> {ann.title}
                       </h2>
-                      <p className="text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line leading-relaxed text-sm sm:text-base">{ann.content}</p>
+                      <p className="text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 whitespace-pre-line leading-relaxed text-xs sm:text-sm md:text-base">{ann.content}</p>
                       
                       {/* Display attachments if any */}
                       {ann.attachments && ann.attachments.length > 0 && (
@@ -232,8 +232,10 @@ export default function StudentAnnouncements() {
                                       <img 
                                         src={fileUrl} 
                                         alt={attachment.originalName}
-                                        className="max-w-full h-auto rounded-lg shadow-md max-h-96 object-contain"
+                                        className="max-w-full h-auto rounded-lg shadow-md max-h-32 sm:max-h-48 md:max-h-64 lg:max-h-96 object-contain cursor-pointer hover:opacity-90 transition-opacity"
                                         loading="lazy"
+                                        onClick={() => window.open(fileUrl, '_blank')}
+                                        title="Click to view full size"
                                       />
                                     </div>
                                   )}
@@ -445,19 +447,19 @@ export default function StudentAnnouncements() {
               className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-lg shadow-xl w-full max-w-md relative transition-transform duration-300 ease-out transform translate-y-full animate-slide-up"
               onClick={e => e.stopPropagation()}
             >
-              <div className="p-4 sm:p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <div className="p-2 sm:p-3 md:p-4 lg:p-6">
+                <div className="flex justify-between items-center mb-2 sm:mb-4">
+                  <h3 className="text-sm sm:text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                     <FaEye className="text-indigo-400" /> Viewed By
                   </h3>
                   <button
                     onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}
                     className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                   >
-                    <FaTimes size={20} />
+                    <FaTimes size={16} className="sm:w-5 sm:h-5" />
                   </button>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 truncate">For: "{viewersInfo.title}"</p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-2 sm:mb-4 truncate">For: "{viewersInfo.title}"</p>
                 <ul className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                   {viewersInfo.viewers.length > 0 ? viewersInfo.viewers.map(viewer => (
                     <li key={viewer._id} className="flex items-center gap-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700/50 p-3 rounded-md">
