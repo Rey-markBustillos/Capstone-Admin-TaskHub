@@ -17,19 +17,34 @@ const statusIcons = {
   'Locked': <FaLock className="text-gray-500 mr-1" />,
 };
 
-// Sample function to submit activity (use this in your submission page/component)
+// Fixed submit function with better error handling
 const submitActivity = async ({ activityId, studentId, content }) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/activities/submit`, {
-      activityId,
-      studentId,
-      content,
-      submittedAt: new Date()
-    });
+    const response = await axios.post(
+      `${API_BASE_URL}/activities/submit`,
+      {
+        activityId,
+        studentId,
+        content,
+        submittedAt: new Date()
+      },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
     alert(response.data.message || 'Submission successful!');
-    // Optionally refresh activities/submissions here
   } catch (error) {
-    alert(error.response?.data?.message || 'Submission failed!');
+    if (error.response) {
+      if (error.response.status === 409) {
+        alert(error.response.data.message || 'You have already submitted this activity.');
+      } else if (error.response.status === 403) {
+        alert(error.response.data.message || 'This activity is locked.');
+      } else if (error.response.status === 404) {
+        alert(error.response.data.message || 'Activity not found.');
+      } else {
+        alert(error.response.data.message || 'Submission failed!');
+      }
+    } else {
+      alert('Submission failed! Network error.');
+    }
     console.error('Submission Error:', error);
   }
 };
@@ -93,7 +108,6 @@ const StudentActivities = () => {
     checkEnrollmentAndFetch();
   }, [classId, studentId]);
 
-  // Always compare as string to avoid objectId vs string mismatch
   const getSubmissionForActivity = (activityId) => {
     return submissions.find(sub => {
       const subActId = typeof sub.activityId === 'object' && sub.activityId !== null
@@ -103,7 +117,6 @@ const StudentActivities = () => {
     });
   };
 
-  // Show "Graded" if scored, "Late Graded" if late but scored, "Late" if late and not graded, "Submitted" if on time and not graded, "Missing" if overdue and no submission, "Pending" if not yet due, "Locked" if activity is locked
   const getStatus = (activity, submission) => {
     if (activity.isLocked) {
       return { text: 'Locked', style: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' };
@@ -271,7 +284,6 @@ const StudentActivities = () => {
                             <div className="flex items-center gap-1 text-[10px] sm:text-xs md:text-sm font-medium text-indigo-600 dark:text-indigo-400">
                               <FaUpload className="text-[10px] sm:text-xs" />
                               <span>{submission ? 'Resubmit' : 'Submit'}</span>
-                              {/* Example quick submit button for demo/testing */}
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
