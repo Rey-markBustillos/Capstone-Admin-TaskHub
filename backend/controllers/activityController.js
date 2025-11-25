@@ -292,6 +292,7 @@ exports.updateActivityScore = async (req, res) => {
 // ============================
 exports.submitActivity = async (req, res) => {
   try {
+    console.log('submitActivity req.body:', req.body); // Debug log
     const { activityId, studentId, content, submittedAt } = req.body;
 
     if (!activityId || !studentId || !content) {
@@ -303,12 +304,10 @@ exports.submitActivity = async (req, res) => {
       return res.status(404).json({ message: 'Activity not found.' });
     }
 
-    // Check if activity is locked
     if (activity.isLocked) {
       return res.status(403).json({ message: 'This activity is locked and no longer accepts submissions.' });
     }
 
-    // Check for existing submission
     const existingSubmission = await Submission.findOne({ activityId, studentId });
     if (existingSubmission) {
       return res.status(409).json({ message: 'You have already submitted this activity. Please use the resubmit option.' });

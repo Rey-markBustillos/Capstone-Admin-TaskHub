@@ -17,7 +17,6 @@ const statusIcons = {
   'Locked': <FaLock className="text-gray-500 mr-1" />,
 };
 
-// Fixed submit function with better error handling
 const submitActivity = async ({ activityId, studentId, content }) => {
   try {
     const response = await axios.post(
