@@ -43,23 +43,30 @@ connectDB().then((connected) => {
   console.log('Continuing in fallback mode...');
 });
 
+// ...existing code...
 const app = express();
 
-// Middleware
+// Move/ensure body parsers are registered BEFORE any middleware that may read req.body
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// CORS - add deployed frontend origins (add more if needed) or use '*' for testing
 app.use(
   cors({
     origin: [
-      'https://taskhub-for-als.netlify.app', // Netlify frontend
-      'http://localhost:5173', // allow local dev too
-      'http://localhost:5174', // Vite alternate port
-      'http://localhost:5175', // Vite alternate port 2
+      'https://taskhub-for-als.netlify.app',
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      'https://capstone-admin-taskhub-2.onrender.com', // add your deployed frontend origin
+      'https://capstone-admin-task-hub-jske.vercel.app' // any other frontends used
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true
   })
 );
 
-// Add request logging middleware
+// Add request logging middleware (now safe to log req.body after body-parsers)
 app.use((req, res, next) => {
   console.log(`🌐 ${req.method} ${req.url} - ${new Date().toISOString()}`);
   if (req.url.includes('/quizzes/generate')) {

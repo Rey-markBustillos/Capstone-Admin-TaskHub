@@ -290,10 +290,19 @@ exports.updateActivityScore = async (req, res) => {
 // ============================
 // Submit Activity (MongoDB only, no file upload)
 // ============================
+// ...existing code...
 exports.submitActivity = async (req, res) => {
   try {
-    console.log('submitActivity req.body:', req.body); // Debug log
-    const { activityId, studentId, content, submittedAt } = req.body;
+    // Defensive logging to debug why req.body may be undefined on deployed env
+    console.log('🔔 submitActivity headers:', {
+      origin: req.headers.origin,
+      'content-type': req.headers['content-type']
+    });
+    console.log('🔔 submitActivity raw body:', req.body);
+
+    // Avoid destructuring from undefined
+    const body = req.body || {};
+    const { activityId, studentId, content, submittedAt } = body;
 
     if (!activityId || !studentId || !content) {
       return res.status(400).json({ message: 'Activity ID, Student ID, and content are required.' });
