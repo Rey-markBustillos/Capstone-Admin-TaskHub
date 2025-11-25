@@ -320,8 +320,14 @@ exports.submitActivity = async (req, res) => {
       activityId,
       studentId,
       submissionDate: new Date(),
-      filePath: req.file.path.replace(/\\/g, '/').replace(/^.*uploads\//, 'uploads/'),
+      // Legacy fields for backward compatibility
+      filePath: req.file.path || req.file.filename,
       fileName: req.file.originalname,
+      // Cloudinary-specific fields
+      cloudinaryUrl: req.file.path, // Cloudinary provides the full URL in path
+      cloudinaryPublicId: req.file.public_id,
+      fileType: req.file.mimetype,
+      fileSize: req.file.size,
       score: null
     });
 
@@ -366,8 +372,14 @@ exports.resubmitActivity = async (req, res) => {
     const updatedSubmission = await Submission.findByIdAndUpdate(
       id,
       {
-        filePath: req.file.path.replace(/\\/g, '/').replace(/^.*uploads\//, 'uploads/'),
+        // Legacy fields for backward compatibility
+        filePath: req.file.path || req.file.filename,
         fileName: req.file.originalname,
+        // Cloudinary-specific fields
+        cloudinaryUrl: req.file.path, // Cloudinary provides the full URL in path
+        cloudinaryPublicId: req.file.public_id,
+        fileType: req.file.mimetype,
+        fileSize: req.file.size,
         submissionDate: new Date(),
         status: 'Resubmitted',
         score: null,
@@ -507,56 +519,44 @@ exports.downloadSubmissionFile = async (req, res) => {
     }
 
     const submission = await Submission.findById(id);
-    if (!submission || !submission.filePath) {
-      return res.status(404).json({ message: 'Submission file not found.' });
+    if (!submission) {
+      return res.status(404).json({ message: 'Submission not found.' });
     }
 
-    // Handle different possible path formats
+    // Check if submission has Cloudinary URL (new system)
+    if (submission.cloudinaryUrl) {
+      // For Cloudinary files, redirect to the direct URL
+      return res.redirect(submission.cloudinaryUrl);
+    }
+    
+    // Fallback to local file system (for backward compatibility)
+    if (!submission.filePath) {
+      return res.status(404).json({ message: 'No file associated with this submission.' });
+    }
+
+    // Handle different possible path formats for local files
     let filePath;
     if (submission.filePath.startsWith('uploads/')) {
-      // Path already includes uploads folder
       filePath = path.join(__dirname, '..', submission.filePath);
     } else if (submission.filePath.startsWith('./uploads/')) {
-      // Path starts with ./uploads/
       filePath = path.join(__dirname, '..', submission.filePath.substring(2));
     } else {
-      // Assume it's just the filename or relative path
       filePath = path.join(__dirname, '..', 'uploads', 'submissions', submission.filePath);
     }
 
-    console.log('Attempting to serve file:', filePath);
+    console.log('Attempting to serve local file:', filePath);
     console.log('File exists:', fs.existsSync(filePath));
     
     if (fs.existsSync(filePath)) {
       res.download(filePath, submission.fileName || path.basename(filePath));
     } else {
-      // Try alternative paths if the main path doesn't work
-      const alternativePaths = [
-        path.join(__dirname, '..', 'uploads', 'submissions', path.basename(submission.filePath)),
-        path.join(__dirname, '..', submission.filePath.replace(/\\/g, '/')),
-        path.join(__dirname, '..', 'uploads', path.basename(submission.filePath))
-      ];
-      
-      let foundPath = null;
-      for (const altPath of alternativePaths) {
-        if (fs.existsSync(altPath)) {
-          foundPath = altPath;
-          break;
-        }
-      }
-      
-      if (foundPath) {
-        console.log('Found file at alternative path:', foundPath);
-        res.download(foundPath, submission.fileName || path.basename(foundPath));
-      } else {
-        console.error('File not found at any path. Submission filePath:', submission.filePath);
-        res.status(404).json({ 
-          message: 'File not found on server.',
-          submissionId: id,
-          filePath: submission.filePath,
-          attempted: [filePath, ...alternativePaths]
-        });
-      }
+      console.error('Local file not found. Submission filePath:', submission.filePath);
+      res.status(404).json({ 
+        message: 'File not found on server.',
+        submissionId: id,
+        filePath: submission.filePath,
+        cloudinaryUrl: submission.cloudinaryUrl || null
+      });
     }
   } catch (error) {
     console.error('Error downloading submission file:', error);

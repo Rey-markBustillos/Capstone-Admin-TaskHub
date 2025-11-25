@@ -5,35 +5,34 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// --- Multer Configuration ---
+// Cloudinary Configuration
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const ensureDir = (dirPath) => {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-  }
-};
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const activityStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = './uploads/activities';
-    ensureDir(dir);
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, `activity-${Date.now()}${ext}`);
+// --- Cloudinary Storage Configuration ---
+
+const activityCloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'taskhub/activities',
+    public_id: (req, file) => `activity-${Date.now()}`,
+    resource_type: 'auto', // Automatically detect file type
   },
 });
 
-const submissionStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const dir = './uploads/submissions';
-    ensureDir(dir);
-    cb(null, dir);
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, `submission-${Date.now()}${ext}`);
+const submissionCloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'taskhub/submissions',
+    public_id: (req, file) => `submission-${Date.now()}`,
+    resource_type: 'auto', // Automatically detect file type
   },
 });
 
@@ -42,16 +41,19 @@ const fileFilter = (req, file, cb) => {
 };
 
 const uploadActivity = multer({
-  storage: activityStorage,
+  storage: activityCloudinaryStorage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter,
 });
 
 const uploadSubmission = multer({
-  storage: submissionStorage,
+  storage: submissionCloudinaryStorage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter,
 });
+
+// Export cloudinary for use in controllers
+router.cloudinary = cloudinary;
 
 // --- Routes ---
 

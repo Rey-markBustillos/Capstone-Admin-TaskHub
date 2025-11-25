@@ -341,73 +341,18 @@ export default function ActivityMonitoring() {
                   .filter(sub => sub.studentId?.name.toLowerCase().includes(submissionSearchTerm.toLowerCase()))
                   .map((sub, index) => {
                     const fileTypeIcon = getFileIcon(sub.fileName);
-                    // Create comprehensive download strategies
-                    const downloadStrategies = [];
                     
-                    // Strategy 1: Download endpoint (most reliable)
-                    if (sub._id) {
-                      downloadStrategies.push({
-                        url: `${API_BASE_URL}/activities/submission/${sub._id}/download`,
-                        method: 'download-endpoint'
-                      });
+                    // Simplified download strategy - prioritize Cloudinary URLs
+                    let fileUrl = null;
+                    
+                    // Check if submission has cloudinaryUrl (new system)
+                    if (sub.cloudinaryUrl) {
+                      fileUrl = sub.cloudinaryUrl;
+                    } 
+                    // Fallback to backend download endpoint
+                    else if (sub._id) {
+                      fileUrl = `${API_BASE_URL}/activities/submission/${sub._id}/download`;
                     }
-                    
-                    // Strategy 2: File serving endpoint (alternative)
-                    if (sub._id) {
-                      downloadStrategies.push({
-                        url: `${API_BASE_URL}/activities/submission/${sub._id}/file`,
-                        method: 'file-serving-endpoint'
-                      });
-                    }
-                    
-                    // Strategy 3: Static file serving with original path
-                    if (sub.filePath) {
-                      const cleanPath = sub.filePath.replace(/\\/g, "/").replace(/^\.\//, "").replace(/^\/+/, "");
-                      const baseUrl = API_BASE_URL.replace('/api', '');
-                      downloadStrategies.push({
-                        url: `${baseUrl}/${cleanPath}`,
-                        method: 'static-original-path'
-                      });
-                    }
-                    
-                    // Strategy 4: Direct uploads/submissions path
-                    if (sub.fileName) {
-                      const baseUrl = API_BASE_URL.replace('/api', '');
-                      downloadStrategies.push({
-                        url: `${baseUrl}/uploads/submissions/${sub.fileName}`,
-                        method: 'direct-uploads-submissions'
-                      });
-                    }
-                    
-                    // Strategy 5: Alternative uploads path structure
-                    if (sub.fileName) {
-                      const baseUrl = API_BASE_URL.replace('/api', '');
-                      downloadStrategies.push({
-                        url: `${baseUrl}/uploads/${sub.fileName}`,
-                        method: 'direct-uploads-root'
-                      });
-                    }
-                    
-                    // Strategy 6: If filePath contains the full name, try extracting just the filename
-                    if (sub.filePath && sub.filePath.includes('/')) {
-                      const fileName = sub.filePath.split('/').pop();
-                      const baseUrl = API_BASE_URL.replace('/api', '');
-                      downloadStrategies.push({
-                        url: `${baseUrl}/uploads/submissions/${fileName}`,
-                        method: 'extracted-filename'
-                      });
-                    }
-                    
-                    // Strategy 7: Try with original filename from database (backup)
-                    if (sub.fileName && sub.fileName !== (sub.filePath?.split('/').pop())) {
-                      const baseUrl = API_BASE_URL.replace('/api', '');
-                      downloadStrategies.push({
-                        url: `${baseUrl}/uploads/submissions/${sub.fileName}`,
-                        method: 'original-filename-backup'
-                      });
-                    }
-                    
-                    const fileUrl = downloadStrategies[0]?.url || null;
                     
 
                     const dueDate = selectedActivity.date ? new Date(selectedActivity.date) : null;
@@ -473,44 +418,27 @@ export default function ActivityMonitoring() {
                                   onClick={async (e) => {
                                     e.preventDefault();
                                     
-                                    if (downloadStrategies.length === 0) {
-                                      alert('No download options available for this file.');
+                                    if (!fileUrl) {
+                                      alert('No file available for download.');
                                       return;
                                     }
                                     
-
-                                    
-                                    // Try each download strategy until one works
-                                    for (let i = 0; i < downloadStrategies.length; i++) {
-                                      const strategy = downloadStrategies[i];
-
-                                      
-                                      try {
-                                        // For download endpoints, try them directly first
-                                        if (strategy.method === 'download-endpoint' || strategy.method === 'file-serving-endpoint') {
-                                          // Create a test link to see if it works
-                                          const testResponse = await fetch(strategy.url, { method: 'HEAD' });
-                                          if (testResponse.ok) {
-                                            window.open(strategy.url, '_blank');
-                                            console.log('✅ Download successful with strategy:', strategy.method);
-                                            return;
-                                          }
+                                    try {
+                                      // If it's a Cloudinary URL, open directly
+                                      if (sub.cloudinaryUrl) {
+                                        window.open(fileUrl, '_blank');
+                                      } else {
+                                        // For backend endpoints, test first
+                                        const testResponse = await fetch(fileUrl, { method: 'HEAD' });
+                                        if (testResponse.ok) {
+                                          window.open(fileUrl, '_blank');
                                         } else {
-                                          // For static files, check if they exist first
-                                          const response = await fetch(strategy.url, { method: 'HEAD' });
-                                          if (response.ok) {
-                                            window.open(strategy.url, '_blank');
-                                            return;
-                                          }
+                                          throw new Error('File not accessible');
                                         }
-                                      } catch {
-                                        // Error handled by continuing to next strategy
                                       }
+                                    } catch {
+                                      alert(`File could not be accessed.\n\nFile: ${sub.fileName || 'Unknown'}\n\nThis may be due to server storage limitations.`);
                                     }
-                                    
-                                    // If all strategies failed, show error message
-                                    const errorMessage = `File could not be accessed.\n\nFile: ${sub.fileName || 'Unknown'}\n\nThis may be due to server storage limitations.`;
-                                    alert(errorMessage);
                                   }}
                                 >
                                   <span className="text-lg">{fileTypeIcon}</span>

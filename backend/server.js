@@ -1,11 +1,20 @@
-const express = require('express');
+// Load environment variables FIRST before any other imports
 const dotenv = require('dotenv');
+dotenv.config();
+
+// Debug environment variables
+console.log('Environment variables loaded:');
+console.log('- PORT:', process.env.PORT || 'undefined');
+console.log('- MONGO_URI exists:', !!process.env.MONGO_URI);
+if (process.env.MONGO_URI) {
+  console.log('- MONGO_URI preview:', process.env.MONGO_URI.substring(0, 30) + '...');
+}
+
+const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const connectDB = require('./config/db');
-
-
 
 // Routes
 const userRoutes = require('./routes/userRoutes');
@@ -21,9 +30,6 @@ const moduleRoutes = require('./routes/moduleRoutes');
 // ADD: Import submission routes
 const submissionRoutes = require('./routes/submissionRoutes');
 const visitRoutes = require('./routes/visitRoutes');
-
-
-dotenv.config();
 
 // Connect to MongoDB
 connectDB().then((connected) => {
