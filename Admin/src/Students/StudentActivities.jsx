@@ -6,8 +6,6 @@ import SidebarContext from '../contexts/SidebarContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
-// Use API_BASE for all API calls for consistency
-
 const statusIcons = {
   'Graded': <FaCheckCircle className="text-blue-500 mr-1" />,
   'Graded (Late)': <FaCheckCircle className="text-blue-400 mr-1" />,
@@ -17,6 +15,23 @@ const statusIcons = {
   'Pending': <FaHourglassHalf className="text-yellow-500 mr-1" />,
   'Needs Resubmission': <FaRedoAlt className="text-purple-500 mr-1" />,
   'Locked': <FaLock className="text-gray-500 mr-1" />,
+};
+
+// Sample function to submit activity (use this in your submission page/component)
+const submitActivity = async ({ activityId, studentId, content }) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/activities/submit`, {
+      activityId,
+      studentId,
+      content,
+      submittedAt: new Date()
+    });
+    alert(response.data.message || 'Submission successful!');
+    // Optionally refresh activities/submissions here
+  } catch (error) {
+    alert(error.response?.data?.message || 'Submission failed!');
+    console.error('Submission Error:', error);
+  }
 };
 
 const StudentActivities = () => {
@@ -90,11 +105,9 @@ const StudentActivities = () => {
 
   // Show "Graded" if scored, "Late Graded" if late but scored, "Late" if late and not graded, "Submitted" if on time and not graded, "Missing" if overdue and no submission, "Pending" if not yet due, "Locked" if activity is locked
   const getStatus = (activity, submission) => {
-    // Check if activity is locked first
     if (activity.isLocked) {
       return { text: 'Locked', style: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' };
     }
-    
     const dueDate = new Date(activity.date);
     if (submission) {
       const submissionDate = new Date(submission.submissionDate);
@@ -119,10 +132,8 @@ const StudentActivities = () => {
   };
 
   const handleSubmission = (activityId) => {
-    // Find the activity to check if it's locked
     const activity = activities.find(act => act._id === activityId);
     if (activity && activity.isLocked) {
-      // Don't navigate if activity is locked
       return;
     }
     navigate(`/student/class/${classId}/activity/${activityId}/submit`);
@@ -260,6 +271,20 @@ const StudentActivities = () => {
                             <div className="flex items-center gap-1 text-[10px] sm:text-xs md:text-sm font-medium text-indigo-600 dark:text-indigo-400">
                               <FaUpload className="text-[10px] sm:text-xs" />
                               <span>{submission ? 'Resubmit' : 'Submit'}</span>
+                              {/* Example quick submit button for demo/testing */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  submitActivity({
+                                    activityId: activity._id,
+                                    studentId,
+                                    content: 'My answer here'
+                                  });
+                                }}
+                                className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2"
+                              >
+                                Quick Submit
+                              </button>
                             </div>
                           ) : (
                             <span className="text-gray-400 dark:text-gray-500 text-[10px] sm:text-xs md:text-sm">-</span>
