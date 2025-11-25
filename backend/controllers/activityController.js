@@ -288,17 +288,14 @@ exports.updateActivityScore = async (req, res) => {
 };
 
 // ============================
-// Submit Activity
+// Submit Activity (MongoDB only, no file upload)
 // ============================
 exports.submitActivity = async (req, res) => {
   try {
-    const { activityId, studentId } = req.body;
+    const { activityId, studentId, content, submittedAt } = req.body;
 
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file was uploaded.' });
-    }
-    if (!activityId || !studentId) {
-      return res.status(400).json({ message: 'Activity ID and Student ID are required.' });
+    if (!activityId || !studentId || !content) {
+      return res.status(400).json({ message: 'Activity ID, Student ID, and content are required.' });
     }
 
     const activity = await Activity.findById(activityId);
@@ -311,6 +308,7 @@ exports.submitActivity = async (req, res) => {
       return res.status(403).json({ message: 'This activity is locked and no longer accepts submissions.' });
     }
 
+    // Check for existing submission
     const existingSubmission = await Submission.findOne({ activityId, studentId });
     if (existingSubmission) {
       return res.status(409).json({ message: 'You have already submitted this activity. Please use the resubmit option.' });
@@ -319,20 +317,14 @@ exports.submitActivity = async (req, res) => {
     const submission = new Submission({
       activityId,
       studentId,
-      submissionDate: new Date(),
-      // Legacy fields for backward compatibility
-      filePath: req.file.path || req.file.filename,
-      fileName: req.file.originalname,
-      // Cloudinary-specific fields
-      cloudinaryUrl: req.file.path, // Cloudinary provides the full URL in path
-      cloudinaryPublicId: req.file.public_id,
-      fileType: req.file.mimetype,
-      fileSize: req.file.size,
+      content,
+      submissionDate: submittedAt || new Date(),
+      status: 'Submitted',
       score: null
     });
 
     const savedSubmission = await submission.save();
-    res.status(201).json(savedSubmission);
+    res.status(201).json({ message: 'Submission saved!', submission: savedSubmission });
   } catch (error) {
     console.error('Error submitting activity:', error);
     res.status(500).json({ message: 'Error submitting activity', error: error.message });
