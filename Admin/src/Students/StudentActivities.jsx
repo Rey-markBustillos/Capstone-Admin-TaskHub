@@ -17,6 +17,7 @@ const statusIcons = {
   'Locked': <FaLock className="text-gray-500 mr-1" />,
 };
 
+// ...existing code...
 const submitActivity = async ({ activityId, studentId, content }) => {
   try {
     // normalize base URL (no trailing slash)
@@ -48,8 +49,11 @@ const submitActivity = async ({ activityId, studentId, content }) => {
     alert(response.data.message || 'Submission successful!');
     return response.data;
   } catch (error) {
+    // Improved debug logs to inspect what the server actually received
     console.error('Submission Error:', error);
     if (error.response) {
+      console.error('Server response data:', error.response.data);
+      console.error('Server received body (debug):', error.response.data?.received);
       const status = error.response.status;
       const msg = error.response.data?.message || 'Submission failed!';
       if (status === 409) alert(msg || 'You have already submitted this activity.');
