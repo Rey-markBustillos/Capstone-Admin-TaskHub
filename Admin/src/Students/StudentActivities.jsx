@@ -305,6 +305,7 @@ const StudentActivities = () => {
                                   if (answer === null) return;
                                   submitActivity({
                                     activityId: activity._id,
+                                    studentId,
                                     content: answer
                                   }).catch(() => {});
                                 }}
