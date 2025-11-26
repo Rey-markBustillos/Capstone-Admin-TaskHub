@@ -30,45 +30,36 @@ const uploadActivity = multer({
 });
 
 // --- Routes ---
-
 // GET all activities for a class
 router.get('/', activityController.getActivities);
 
 // POST create a new activity (with attachment upload)
 router.post('/', uploadActivity.single('attachment'), activityController.createActivity);
 
+/*
+  >>> Put specific submission-related routes BEFORE the generic /:id route
+  This prevents '/submission' being treated as ':id' (causes 404).
+*/
+
 // GET a single submission for a student and activity
 router.get('/submission', activityController.getSubmissionForActivity);
-
-// GET to download a submission file (legacy)
-router.get('/submission/:id/download', activityController.downloadSubmissionFile);
-
-// GET to serve submission file directly (legacy)
-router.get('/submission/:id/file', async (req, res) => {
-  // ...existing code if needed...
-});
-
-// DEBUG: List files in uploads directory (legacy)
-router.get('/debug/uploads', (req, res) => {
-  // ...existing code if needed...
-});
-
-// DEBUG: Get submission file info (legacy)
-router.get('/submission/:id/info', async (req, res) => {
-  // ...existing code if needed...
-});
-
-// Get all students' scores for a class
-router.get('/export-scores', activityController.exportScores);
-
-// DELETE a submission by its ID (for students)
-router.delete('/submission/:id', activityController.deleteSubmission);
 
 // GET all submissions for a student in a class
 router.get('/submissions', activityController.getSubmissionsForStudentInClass);
 
 // GET submissions for a teacher to monitor
 router.get('/submissions/teacher/:teacherId', activityController.getActivitySubmissionsByTeacher);
+
+// GET to download a submission file (legacy)
+router.get('/submission/:id/download', activityController.downloadSubmissionFile);
+
+// DEBUG: Get submission file info (legacy)
+router.get('/submission/:id/info', async (req, res) => {
+  // ...existing code if needed...
+});
+
+// DELETE a submission by its ID (for students)
+router.delete('/submission/:id', activityController.deleteSubmission);
 
 // PUT to update a submission's score
 router.put('/submissions/score/:submissionId', activityController.updateActivityScore);
@@ -94,7 +85,7 @@ router.patch('/:id/lock', activityController.toggleActivityLock);
 // GET to download an activity attachment
 router.get('/:id/download', activityController.downloadActivityAttachment);
 
-// GET a single activity by its ID
+// GET a single activity by its ID (generic — keep it last)
 router.get('/:id', activityController.getActivityById);
 
 // PUT to update an activity

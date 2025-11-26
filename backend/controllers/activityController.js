@@ -287,40 +287,65 @@ exports.updateActivityScore = async (req, res) => {
   }
 };
 
-// ============================
-// Submit Activity (MongoDB only, no file upload)
-// ============================
+// ===========================
+//   SUBMIT ACTIVITY CONTROLLER
+// ===========================
 exports.submitActivity = async (req, res) => {
   try {
-    // Defensive logging to debug why req.body may be undefined on deployed env
-    console.log('🔔 submitActivity headers:', {
+    // ----------------------------------------------------
+    // DEBUG LOGGING (helps diagnose Render/Vercel issues)
+    // ----------------------------------------------------
+    console.log('🔔 [submitActivity] Incoming Request');
+    console.log('🔹 Headers:', {
       origin: req.headers.origin,
-      'content-type': req.headers['content-type']
+      contentType: req.headers['content-type'],
     });
-    console.log('🔔 submitActivity raw body:', req.body);
 
-    // Avoid destructuring from undefined
+    console.log('🔹 Raw Body:', req.body);
+
+    // ----------------------------------------------------
+    // BODY VALIDATION (avoid destructuring from undefined)
+    // ----------------------------------------------------
     const body = req.body || {};
     const { activityId, studentId, content, submittedAt } = body;
 
     if (!activityId || !studentId || !content) {
-      return res.status(400).json({ message: 'Activity ID, Student ID, and content are required.' });
+      return res.status(400).json({
+        message: 'Activity ID, Student ID, and content are required.',
+        received: body
+      });
     }
 
+    // ----------------------------------------------------
+    // CHECK IF ACTIVITY EXISTS
+    // ----------------------------------------------------
     const activity = await Activity.findById(activityId);
     if (!activity) {
       return res.status(404).json({ message: 'Activity not found.' });
     }
 
+    // ----------------------------------------------------
+    // LOCKED ACTIVITY CHECK
+    // ----------------------------------------------------
     if (activity.isLocked) {
-      return res.status(403).json({ message: 'This activity is locked and no longer accepts submissions.' });
+      return res.status(403).json({
+        message: 'This activity is locked and no longer accepts submissions.'
+      });
     }
 
+    // ----------------------------------------------------
+    // CHECK IF STUDENT ALREADY SUBMITTED
+    // ----------------------------------------------------
     const existingSubmission = await Submission.findOne({ activityId, studentId });
     if (existingSubmission) {
-      return res.status(409).json({ message: 'You have already submitted this activity. Please use the resubmit option.' });
+      return res.status(409).json({
+        message: 'You have already submitted this activity. Please use the resubmit option.'
+      });
     }
 
+    // ----------------------------------------------------
+    // CREATE AND SAVE SUBMISSION
+    // ----------------------------------------------------
     const submission = new Submission({
       activityId,
       studentId,
@@ -331,12 +356,28 @@ exports.submitActivity = async (req, res) => {
     });
 
     const savedSubmission = await submission.save();
-    res.status(201).json({ message: 'Submission saved!', submission: savedSubmission });
+
+    // ----------------------------------------------------
+    // SUCCESS RESPONSE
+    // ----------------------------------------------------
+    return res.status(201).json({
+      message: 'Submission saved!',
+      submission: savedSubmission
+    });
+
   } catch (error) {
-    console.error('Error submitting activity:', error);
-    res.status(500).json({ message: 'Error submitting activity', error: error.message });
+    // ----------------------------------------------------
+    // SERVER ERROR
+    // ----------------------------------------------------
+    console.error('❌ Error submitting activity:', error);
+
+    return res.status(500).json({
+      message: 'Error submitting activity',
+      error: error.message
+    });
   }
 };
+
 
 // ============================
 // Resubmit Activity
