@@ -16,7 +16,7 @@ const WelcomeScreen = ({ onContinue }) => {
               <FaEye className="text-indigo-300" /> Vision
             </h3>
             <p className="text-slate-300 mt-2">
-              By 2022, we will have nation-loving and competent lifelong learners who are able to respond to challenges and opportunities through quality, accessible, relevant, and liberating K to 12 Program delivered by a modern, professional, pro-active, nimble, trusted and nurturing DepEd.
+              We will have nation-loving and competent lifelong learners who are able to respond to challenges and opportunities through quality, accessible, relevant, and liberating K to 12 Program delivered by a modern, professional, pro-active, nimble, trusted and nurturing DepEd.
             </p>
           </div>
         );
