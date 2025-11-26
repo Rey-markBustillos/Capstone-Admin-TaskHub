@@ -302,11 +302,16 @@ const StudentActivities = () => {
                             <div className="flex items-center gap-1 text-[10px] sm:text-xs md:text-sm font-medium text-indigo-600 dark:text-indigo-400">
                               <FaUpload className="text-[10px] sm:text-xs" />
                               <span>{submission ? 'Resubmit' : 'Submit'}</span>
+                             // ...existing code...
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   const answer = window.prompt('Enter your answer (quick submit):', '');
                                   if (answer === null) return;
+
+                                  // DEBUG: log values before sending
+                                  console.log('QuickSubmit -> activityId:', activity._id, 'studentId:', studentId, 'content:', answer);
+
                                   submitActivity({
                                     activityId: activity._id,
                                     studentId,
