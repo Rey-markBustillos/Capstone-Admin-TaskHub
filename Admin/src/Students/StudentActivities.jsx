@@ -20,10 +20,10 @@ const statusIcons = {
 // ...existing code...
 const submitActivity = async ({ activityId, studentId, content }) => {
   try {
-    // normalize base URL (no trailing slash)
-    const base = API_BASE_URL.replace(/\/$/, '');
+    // normalize base URL
+    const base = (API_BASE_URL || "http://localhost:5000/api").replace(/\/$/, '');
 
-    // resolve studentId from localStorage if not provided
+    // resolve studentId from arg or localStorage
     let sid = studentId;
     if (!sid) {
       const stored = localStorage.getItem('user');
@@ -32,34 +32,39 @@ const submitActivity = async ({ activityId, studentId, content }) => {
       }
     }
 
+    // DEBUG: log resolved values to console
+    console.log('submitActivity -> resolved', { activityId, studentId: sid, content });
+
     if (!activityId || !sid || typeof content === 'undefined' || content === null || content === '') {
       console.error('submitActivity aborted — missing required fields', { activityId, studentId: sid, content });
       alert('Submission failed: missing activity, student, or content.');
       return;
     }
 
-    const payload = { activityId, studentId: sid, content, submittedAt: new Date() };
-    console.log('Submitting activity payload:', payload);
+    const payload = { activityId, studentId: sid, content, submittedAt: new Date().toISOString() };
+
+    // DEBUG: show payload that will be sent
+    console.log('submitActivity -> payload', payload);
 
     const response = await axios.post(
       `${base}/activities/submit`,
       payload,
-      { headers: { 'Content-Type': 'application/json' } }
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
     );
+
+    console.log('submitActivity -> server response', response.data);
     alert(response.data.message || 'Submission successful!');
     return response.data;
   } catch (error) {
-    // Improved debug logs to inspect what the server actually received
-    console.error('Submission Error:', error);
+    console.error('submitActivity -> Submission Error:', error);
     if (error.response) {
-      console.error('Server response data:', error.response.data);
-      console.error('Server received body (debug):', error.response.data?.received);
-      const status = error.response.status;
-      const msg = error.response.data?.message || 'Submission failed!';
-      if (status === 409) alert(msg || 'You have already submitted this activity.');
-      else if (status === 403) alert(msg || 'This activity is locked.');
-      else if (status === 404) alert(msg || 'Activity not found.');
-      else alert(msg);
+      console.error('submitActivity -> server response data:', error.response.data);
+      alert(error.response.data?.message || 'Submission failed!');
     } else {
       alert('Submission failed! Network error.');
     }
@@ -303,25 +308,34 @@ const StudentActivities = () => {
                               <FaUpload className="text-[10px] sm:text-xs" />
                               <span>{submission ? 'Resubmit' : 'Submit'}</span>
                              // ...existing code...
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const answer = window.prompt('Enter your answer (quick submit):', '');
-                                  if (answer === null) return;
+// ...existing code...
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    const answer = window.prompt('Enter your answer (quick submit):', '');
+    if (answer === null) return;
 
-                                  // DEBUG: log values before sending
-                                  console.log('QuickSubmit -> activityId:', activity._id, 'studentId:', studentId, 'content:', answer);
+    // Ensure studentId exists before sending
+    if (!studentId) {
+      console.error('QuickSubmit aborted - studentId is missing. localStorage user:', localStorage.getItem('user'));
+      alert('Unable to submit: student not logged in.');
+      return;
+    }
 
-                                  submitActivity({
-                                    activityId: activity._id,
-                                    studentId,
-                                    content: answer
-                                  }).catch(() => {});
-                                }}
-                                className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2"
-                              >
-                                Quick Submit
-                              </button>
+    // DEBUG: log values before sending
+    console.log('QuickSubmit -> activityId:', activity._id, 'studentId:', studentId, 'content:', answer);
+
+    submitActivity({
+      activityId: activity._id,
+      studentId,
+      content: answer
+    }).catch(() => {});
+  }}
+  className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2"
+>
+  Quick Submit
+</button>
+// ...existing code...
                             </div>
                           ) : (
                             <span className="text-gray-400 dark:text-gray-500 text-[10px] sm:text-xs md:text-sm">-</span>
