@@ -4,7 +4,7 @@ import { useParams, useNavigate, NavLink } from 'react-router-dom';
 import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf, FaLock } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 const statusIcons = {
   'Graded': <FaCheckCircle className="text-blue-500 mr-1" />,
@@ -19,32 +19,47 @@ const statusIcons = {
 
 const submitActivity = async ({ activityId, studentId, content }) => {
   try {
+    // normalize base URL (no trailing slash)
+    const base = API_BASE_URL.replace(/\/$/, '');
+
+    // resolve studentId from localStorage if not provided
+    let sid = studentId;
+    if (!sid) {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        try { sid = JSON.parse(stored)?._id; } catch { sid = null; }
+      }
+    }
+
+    if (!activityId || !sid || typeof content === 'undefined' || content === null || content === '') {
+      console.error('submitActivity aborted — missing required fields', { activityId, studentId: sid, content });
+      alert('Submission failed: missing activity, student, or content.');
+      return;
+    }
+
+    const payload = { activityId, studentId: sid, content, submittedAt: new Date() };
+    console.log('Submitting activity payload:', payload);
+
     const response = await axios.post(
-      `${API_BASE_URL}/activities/submit`,
-      {
-        activityId,
-        studentId,
-        content,
-        submittedAt: new Date()
-      },
+      `${base}/activities/submit`,
+      payload,
       { headers: { 'Content-Type': 'application/json' } }
     );
     alert(response.data.message || 'Submission successful!');
+    return response.data;
   } catch (error) {
+    console.error('Submission Error:', error);
     if (error.response) {
-      if (error.response.status === 409) {
-        alert(error.response.data.message || 'You have already submitted this activity.');
-      } else if (error.response.status === 403) {
-        alert(error.response.data.message || 'This activity is locked.');
-      } else if (error.response.status === 404) {
-        alert(error.response.data.message || 'Activity not found.');
-      } else {
-        alert(error.response.data.message || 'Submission failed!');
-      }
+      const status = error.response.status;
+      const msg = error.response.data?.message || 'Submission failed!';
+      if (status === 409) alert(msg || 'You have already submitted this activity.');
+      else if (status === 403) alert(msg || 'This activity is locked.');
+      else if (status === 404) alert(msg || 'Activity not found.');
+      else alert(msg);
     } else {
       alert('Submission failed! Network error.');
     }
-    console.error('Submission Error:', error);
+    throw error;
   }
 };
 
@@ -71,7 +86,7 @@ const StudentActivities = () => {
     const checkEnrollmentAndFetch = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API_BASE_URL}/class/my-classes/${studentId}`);
+        const res = await axios.get(`${API_BASE_URL.replace(/\/$/, '')}/class/my-classes/${studentId}`);
         const enrolledClasses = res.data || [];
         const isEnrolled = enrolledClasses.some(cls => String(cls._id) === String(classId));
 
@@ -83,8 +98,8 @@ const StudentActivities = () => {
           return;
         }
         const [activitiesRes, submissionsRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/activities?classId=${classId}`),
-          axios.get(`${API_BASE_URL}/activities/submissions?classId=${classId}&studentId=${studentId}`)
+          axios.get(`${API_BASE_URL.replace(/\/$/, '')}/activities?classId=${classId}`),
+          axios.get(`${API_BASE_URL.replace(/\/$/, '')}/activities/submissions?classId=${classId}&studentId=${studentId}`)
         ]);
         let subs = [];
         if (Array.isArray(submissionsRes.data)) {
@@ -92,8 +107,8 @@ const StudentActivities = () => {
         } else if (Array.isArray(submissionsRes.data.submissions)) {
           subs = submissionsRes.data.submissions;
         }
-        setActivities(activitiesRes.data);
-        setSubmissions(subs);
+        setActivities(activitiesRes.data || []);
+        setSubmissions(subs || []);
       } catch (err) {
         setError('Failed to load activities.');
         setActivities([]);
@@ -286,11 +301,12 @@ const StudentActivities = () => {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  const answer = window.prompt('Enter your answer (quick submit):', '');
+                                  if (answer === null) return;
                                   submitActivity({
                                     activityId: activity._id,
-                                    studentId,
-                                    content: 'My answer here'
-                                  });
+                                    content: answer
+                                  }).catch(() => {});
                                 }}
                                 className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2"
                               >

@@ -290,7 +290,6 @@ exports.updateActivityScore = async (req, res) => {
 // ============================
 // Submit Activity (MongoDB only, no file upload)
 // ============================
-// ...existing code...
 exports.submitActivity = async (req, res) => {
   try {
     // Defensive logging to debug why req.body may be undefined on deployed env
