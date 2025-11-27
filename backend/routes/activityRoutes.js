@@ -32,7 +32,7 @@ const uploadActivity = multer({
 // ------------------------------------------------------
 // 📌 SUBMISSIONS — MUST BE FIRST (prevents /:id conflicts)
 // ------------------------------------------------------
-router.post('/submit', activityController.submitActivity);
+router.post('/submit', uploadActivity.single('file'), activityController.submitActivity);
 router.get("/submission", activityController.getSubmissionForActivity);
 router.get("/submissions", activityController.getSubmissionsForStudentInClass);
 router.get("/submissions/teacher/:teacherId", activityController.getActivitySubmissionsByTeacher);
