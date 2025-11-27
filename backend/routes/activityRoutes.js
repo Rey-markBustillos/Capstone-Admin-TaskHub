@@ -13,7 +13,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Cloudinary storage for activity attachments
+// Cloudinary storage
 const activityCloudinaryStorage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -25,58 +25,46 @@ const activityCloudinaryStorage = new CloudinaryStorage({
 
 const uploadActivity = multer({
   storage: activityCloudinaryStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: 10 * 1024 * 1024 }, 
   fileFilter: (req, file, cb) => cb(null, true),
 });
 
 
 // ------------------------------------------------------
-// 🔥 ROUTES — ORDER MATTERS!
+// 📌 SUBMISSIONS — MUST BE FIRST (prevents /:id conflicts)
 // ------------------------------------------------------
+router.post('/submit', activityController.submitActivity);
+router.get("/submission", activityController.getSubmissionForActivity);
+router.get("/submissions", activityController.getSubmissionsForStudentInClass);
+router.get("/submissions/teacher/:teacherId", activityController.getActivitySubmissionsByTeacher);
+router.put("/submissions/score/:submissionId", activityController.updateActivityScore);
+router.delete("/submission/:id", activityController.deleteSubmission);
+
+// Legacy submission routes
+router.get("/submission/:id/download", activityController.downloadSubmissionFile);
+router.get("/submission/:id/info", activityController.getSubmissionInfo);
+
 
 // ------------------------------------------------------
-// 📌 Activity CRUD
+// 📌 ACTIVITY CRUD
 // ------------------------------------------------------
 router.get("/", activityController.getActivities);
 router.post("/", uploadActivity.single("attachment"), activityController.createActivity);
 router.put("/:id", uploadActivity.single("attachment"), activityController.updateActivity);
 router.delete("/:id", activityController.deleteActivity);
 
+
 // ------------------------------------------------------
-// 📌 Lock / Unlock activity
+// 📌 Lock / Unlock Activity
 // ------------------------------------------------------
 router.patch("/:id/lock", activityController.toggleActivityLock);
 
+
 // ------------------------------------------------------
-// 📌 Upload / View Activity Attachments
+// 📌 Download activity attachment
 // ------------------------------------------------------
 router.get("/:id/download", activityController.downloadActivityAttachment);
 
-// ------------------------------------------------------
-// 📌 SUBMISSIONS (Must come BEFORE /:id routes)
-// ------------------------------------------------------
-
-// Student submits activity
-router.post("/submit", activityController.submitActivity);
-
-// Get single submission (prevent conflict with /:id)
-router.get("/submission", activityController.getSubmissionForActivity);
-
-// Student fetches all submissions for their class
-router.get("/submissions", activityController.getSubmissionsForStudentInClass);
-
-// Teacher fetches submissions for monitoring
-router.get("/submissions/teacher/:teacherId", activityController.getActivitySubmissionsByTeacher);
-
-// Update score
-router.put("/submissions/score/:submissionId", activityController.updateActivityScore);
-
-// Delete submission
-router.delete("/submission/:id", activityController.deleteSubmission);
-
-// Legacy routes (download submission file)
-router.get("/submission/:id/download", activityController.downloadSubmissionFile);
-router.get("/submission/:id/info", activityController.getSubmissionInfo);
 
 // ------------------------------------------------------
 // 📌 Resubmission (Legacy Support)
@@ -91,8 +79,9 @@ router.options("/resubmit/:id", (req, res) => {
 
 router.put("/resubmit/:id", activityController.resubmitActivity);
 
+
 // ------------------------------------------------------
-// 📌 SINGLE ACTIVITY (must always be last)
+// 📌 FINAL — MUST BE LAST
 // ------------------------------------------------------
 router.get("/:id", activityController.getActivityById);
 

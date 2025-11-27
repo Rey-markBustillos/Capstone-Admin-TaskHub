@@ -308,34 +308,25 @@ const StudentActivities = () => {
                               <FaUpload className="text-[10px] sm:text-xs" />
                               <span>{submission ? 'Resubmit' : 'Submit'}</span>
                              // ...existing code...
-// ...existing code...
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    const answer = window.prompt('Enter your answer (quick submit):', '');
-    if (answer === null) return;
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const answer = window.prompt('Enter your answer (quick submit):', '');
+                                  if (answer === null) return;
 
-    // Ensure studentId exists before sending
-    if (!studentId) {
-      console.error('QuickSubmit aborted - studentId is missing. localStorage user:', localStorage.getItem('user'));
-      alert('Unable to submit: student not logged in.');
-      return;
-    }
+                                  // DEBUG: log values before sending
+                                  console.log('QuickSubmit -> activityId:', activity._id, 'studentId:', studentId, 'content:', answer);
 
-    // DEBUG: log values before sending
-    console.log('QuickSubmit -> activityId:', activity._id, 'studentId:', studentId, 'content:', answer);
-
-    submitActivity({
-      activityId: activity._id,
-      studentId,
-      content: answer
-    }).catch(() => {});
-  }}
-  className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2"
->
-  Quick Submit
-</button>
-// ...existing code...
+                                  submitActivity({
+                                    activityId: activity._id,
+                                    studentId,
+                                    content: answer
+                                  }).catch(() => {});
+                                }}
+                                className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2"
+                              >
+                                Quick Submit
+                              </button>
                             </div>
                           ) : (
                             <span className="text-gray-400 dark:text-gray-500 text-[10px] sm:text-xs md:text-sm">-</span>

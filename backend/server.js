@@ -55,7 +55,6 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5174',
   'http://localhost:5175',
-  'https://capstone-admin-task-hub-jske.vercel.app',
   'https://capstone-admin-taskhub-2.onrender.com',
   'https://taskhub-for-als.netlify.app'
 ];
