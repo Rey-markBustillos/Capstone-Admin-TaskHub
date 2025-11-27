@@ -284,7 +284,7 @@ exports.updateActivityScore = async (req, res) => {
 };
 
 // ===========================
-//   SUBMIT ACTIVITY CONTROLLER
+//   SUBMIT ACTIVITY CONTROLLER (UPDATED FOR FILE-ONLY SUBMISSION)
 // ===========================
 exports.submitActivity = async (req, res) => {
   try {
@@ -298,9 +298,10 @@ exports.submitActivity = async (req, res) => {
     const body = req.body || {};
     const { activityId, studentId, content, submittedAt } = body;
 
-    if (!activityId || !studentId || !content) {
+    // Accept if file is present OR content is present
+    if (!activityId || !studentId || (!content && !req.file)) {
       return res.status(400).json({
-        message: 'Activity ID, Student ID, and content are required.',
+        message: 'Activity ID, Student ID, and either content or file are required.',
         received: body
       });
     }
@@ -323,15 +324,31 @@ exports.submitActivity = async (req, res) => {
       });
     }
 
-    const submission = new Submission({
+    // Prepare submission data
+    const submissionData = {
       activityId,
       studentId,
-      content,
       submissionDate: submittedAt || new Date(),
       status: 'Submitted',
       score: null
-    });
+    };
 
+    // If file is present, add file info
+    if (req.file) {
+      submissionData.filePath = req.file.path || req.file.filename;
+      submissionData.fileName = req.file.originalname;
+      submissionData.cloudinaryUrl = req.file.path;
+      submissionData.cloudinaryPublicId = req.file.public_id;
+      submissionData.fileType = req.file.mimetype;
+      submissionData.fileSize = req.file.size;
+    }
+
+    // If content is present, add content
+    if (content) {
+      submissionData.content = content;
+    }
+
+    const submission = new Submission(submissionData);
     const savedSubmission = await submission.save();
 
     return res.status(201).json({
@@ -348,7 +365,6 @@ exports.submitActivity = async (req, res) => {
     });
   }
 };
-
 // ============================
 // Resubmit Activity
 // ============================
