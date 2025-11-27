@@ -3,20 +3,19 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaFileUpload, FaArrowLeft, FaPaperclip, FaCalendarAlt, FaStar, FaFileAlt, FaTimesCircle, FaTrash, FaDownload } from 'react-icons/fa';
 
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 const SubmitActivity = () => {
   const { classId, activityId } = useParams();
-  
   const [activity, setActivity] = useState(null);
   const [previousSubmission, setPreviousSubmission] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [answer, setAnswer] = useState(''); // <-- ADD THIS LINE
   // Get studentId from localStorage
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const studentId = user?._id;
-  
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -26,6 +25,7 @@ const SubmitActivity = () => {
   const [cameraError, setCameraError] = useState('');
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+
   // Fetch activity and previous submission
   const fetchDetails = async () => {
     setLoading(true);
@@ -129,6 +129,10 @@ const SubmitActivity = () => {
       setError('User not identified. Please log in again.');
       return;
     }
+    if (!answer.trim()) { // <-- ADD THIS VALIDATION
+      setError('Please enter your answer.');
+      return;
+    }
 
     setSubmitting(true);
     setError('');
@@ -139,6 +143,7 @@ const SubmitActivity = () => {
     formData.append('studentId', studentId);
     formData.append('classId', classId);
     formData.append('activityId', activityId);
+    formData.append('content', answer.trim()); // <-- ADD THIS LINE
 
     try {
       const isResubmitting = !!previousSubmission;
@@ -156,6 +161,7 @@ const SubmitActivity = () => {
       setTimeout(() => {
         fetchDetails();
         setSelectedFile(null);
+        setAnswer(''); // <-- RESET ANSWER
       }, 2000);
 
     } catch (err) {
@@ -179,11 +185,10 @@ const SubmitActivity = () => {
 
     try {
       await axios.delete(`${API_BASE_URL}/activities/submission/${previousSubmission._id}`);
-      
       setSuccess('Submission deleted successfully.');
       setPreviousSubmission(null);
       setSelectedFile(null);
-
+      setAnswer('');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete submission.');
       console.error('Delete Error:', err.response || err);
@@ -196,7 +201,7 @@ const SubmitActivity = () => {
     if (!filePath) return '#';
     const normalizedPath = filePath.replace(/\\/g, '/');
     const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
-  return `${API_BASE_URL}/${cleanPath}`;
+    return `${API_BASE_URL}/${cleanPath}`;
   };
 
   if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -268,6 +273,22 @@ const SubmitActivity = () => {
                   </div>
                 </div>
               )}
+
+              {/* Answer input field */}
+              <div className="mb-4">
+                <label htmlFor="answer" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Your Answer
+                </label>
+                <input
+                  id="answer"
+                  type="text"
+                  value={answer}
+                  onChange={e => setAnswer(e.target.value)}
+                  placeholder="Type your answer here"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-indigo-500"
+                  required
+                />
+              </div>
 
               <div>
                 <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
