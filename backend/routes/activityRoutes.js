@@ -29,7 +29,6 @@ const uploadActivity = multer({
   fileFilter: (req, file, cb) => cb(null, true),
 });
 
-
 // ------------------------------------------------------
 // 📌 SUBMISSIONS — MUST BE FIRST (prevents /:id conflicts)
 // ------------------------------------------------------
@@ -44,7 +43,6 @@ router.delete("/submission/:id", activityController.deleteSubmission);
 router.get("/submission/:id/download", activityController.downloadSubmissionFile);
 router.get("/submission/:id/info", activityController.getSubmissionInfo);
 
-
 // ------------------------------------------------------
 // 📌 ACTIVITY CRUD
 // ------------------------------------------------------
@@ -58,12 +56,10 @@ router.delete("/:id", activityController.deleteActivity); // Delete activity
 // ------------------------------------------------------
 router.patch("/:id/lock", activityController.toggleActivityLock);
 
-
 // ------------------------------------------------------
 // 📌 Download activity attachment
 // ------------------------------------------------------
 router.get("/:id/download", activityController.downloadActivityAttachment);
-
 
 // ------------------------------------------------------
 // 📌 Resubmission (Legacy Support)
@@ -77,7 +73,6 @@ router.options("/resubmit/:id", (req, res) => {
 });
 
 router.put("/resubmit/:id", activityController.resubmitActivity);
-
 
 // ------------------------------------------------------
 // 📌 FINAL — MUST BE LAST

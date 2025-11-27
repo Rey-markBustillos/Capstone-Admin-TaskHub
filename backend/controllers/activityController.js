@@ -25,7 +25,7 @@ exports.createActivity = async (req, res) => {
       title,
       description,
       date,
-      score: totalPoints, // Map totalPoints to score field in the model
+      score: totalPoints,
       link,
       attachment: attachmentPath,
       createdBy,
@@ -187,7 +187,6 @@ exports.getActivitySubmissionsByTeacher = async (req, res) => {
       if (!mongoose.Types.ObjectId.isValid(classId)) {
         return res.status(400).json({ message: 'Invalid classId format' });
       }
-      // Check teacher owns the class
       const targetClass = await Class.findOne({ _id: classId, teacher: teacherId });
       if (!targetClass) {
         return res.status(403).json({ message: 'Access denied or class not found.' });
@@ -195,7 +194,6 @@ exports.getActivitySubmissionsByTeacher = async (req, res) => {
       const activitiesInClass = await Activity.find({ classId: classId }).select('_id');
       activityIds = activitiesInClass.map(activity => activity._id);
     } else {
-      // Get all classes for this teacher
       const teacherClasses = await Class.find({ teacher: teacherId }).select('_id');
       const classIds = teacherClasses.map(cls => cls._id);
       const activities = await Activity.find({ classId: { $in: classIds } }).select('_id');
@@ -207,7 +205,6 @@ exports.getActivitySubmissionsByTeacher = async (req, res) => {
       .populate('activityId', 'title date')
       .sort({ submissionDate: -1 });
 
-    // add fileUrl
     const host = `${req.protocol}://${req.get('host')}`;
     const submissionsWithUrl = submissions.map(s => ({
       ...s.toObject(),
@@ -235,7 +232,6 @@ exports.getSubmissionsForStudentInClass = async (req, res) => {
       return res.status(400).json({ message: 'Invalid classId or studentId.' });
     }
 
-    // FIX: Get all activities in the class, then get submissions for those activities
     const activities = await Activity.find({ classId });
     const activityIds = activities.map(a => a._id);
 
@@ -292,20 +288,13 @@ exports.updateActivityScore = async (req, res) => {
 // ===========================
 exports.submitActivity = async (req, res) => {
   try {
-    // ----------------------------------------------------
-    // DEBUG LOGGING (helps diagnose Render/Vercel issues)
-    // ----------------------------------------------------
     console.log('🔔 [submitActivity] Incoming Request');
     console.log('🔹 Headers:', {
       origin: req.headers.origin,
       contentType: req.headers['content-type'],
     });
-
     console.log('🔹 Raw Body:', req.body);
 
-    // ----------------------------------------------------
-    // BODY VALIDATION (avoid destructuring from undefined)
-    // ----------------------------------------------------
     const body = req.body || {};
     const { activityId, studentId, content, submittedAt } = body;
 
@@ -316,26 +305,17 @@ exports.submitActivity = async (req, res) => {
       });
     }
 
-    // ----------------------------------------------------
-    // CHECK IF ACTIVITY EXISTS
-    // ----------------------------------------------------
     const activity = await Activity.findById(activityId);
     if (!activity) {
       return res.status(404).json({ message: 'Activity not found.' });
     }
 
-    // ----------------------------------------------------
-    // LOCKED ACTIVITY CHECK
-    // ----------------------------------------------------
     if (activity.isLocked) {
       return res.status(403).json({
         message: 'This activity is locked and no longer accepts submissions.'
       });
     }
 
-    // ----------------------------------------------------
-    // CHECK IF STUDENT ALREADY SUBMITTED
-    // ----------------------------------------------------
     const existingSubmission = await Submission.findOne({ activityId, studentId });
     if (existingSubmission) {
       return res.status(409).json({
@@ -343,9 +323,6 @@ exports.submitActivity = async (req, res) => {
       });
     }
 
-    // ----------------------------------------------------
-    // CREATE AND SAVE SUBMISSION
-    // ----------------------------------------------------
     const submission = new Submission({
       activityId,
       studentId,
@@ -357,18 +334,12 @@ exports.submitActivity = async (req, res) => {
 
     const savedSubmission = await submission.save();
 
-    // ----------------------------------------------------
-    // SUCCESS RESPONSE
-    // ----------------------------------------------------
     return res.status(201).json({
       message: 'Submission saved!',
       submission: savedSubmission
     });
 
   } catch (error) {
-    // ----------------------------------------------------
-    // SERVER ERROR
-    // ----------------------------------------------------
     console.error('❌ Error submitting activity:', error);
 
     return res.status(500).json({
@@ -378,12 +349,10 @@ exports.submitActivity = async (req, res) => {
   }
 };
 
-
 // ============================
 // Resubmit Activity
 // ============================
 exports.resubmitActivity = async (req, res) => {
-  // Explicit CORS headers for Vercel frontend and local dev
   res.header('Access-Control-Allow-Origin', 'https://capstone-admin-task-hub-jske.vercel.app');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -398,7 +367,6 @@ exports.resubmitActivity = async (req, res) => {
       return res.status(400).json({ message: 'Invalid Submission ID.' });
     }
 
-    // Check if the activity is locked before allowing resubmission
     const submission = await Submission.findById(id);
     if (!submission) {
       return res.status(404).json({ message: 'Submission not found.' });
@@ -412,11 +380,9 @@ exports.resubmitActivity = async (req, res) => {
     const updatedSubmission = await Submission.findByIdAndUpdate(
       id,
       {
-        // Legacy fields for backward compatibility
         filePath: req.file.path || req.file.filename,
         fileName: req.file.originalname,
-        // Cloudinary-specific fields
-        cloudinaryUrl: req.file.path, // Cloudinary provides the full URL in path
+        cloudinaryUrl: req.file.path,
         cloudinaryPublicId: req.file.public_id,
         fileType: req.file.mimetype,
         fileSize: req.file.size,
@@ -563,18 +529,14 @@ exports.downloadSubmissionFile = async (req, res) => {
       return res.status(404).json({ message: 'Submission not found.' });
     }
 
-    // Check if submission has Cloudinary URL (new system)
     if (submission.cloudinaryUrl) {
-      // For Cloudinary files, redirect to the direct URL
       return res.redirect(submission.cloudinaryUrl);
     }
     
-    // Fallback to local file system (for backward compatibility)
     if (!submission.filePath) {
       return res.status(404).json({ message: 'No file associated with this submission.' });
     }
 
-    // Handle different possible path formats for local files
     let filePath;
     if (submission.filePath.startsWith('uploads/')) {
       filePath = path.join(__dirname, '..', submission.filePath);
@@ -637,5 +599,25 @@ exports.exportScores = async (req, res) => {
   } catch (error) {
     console.error('Error exporting scores:', error);
     res.status(500).json({ message: 'Error exporting scores', error: error.message });
+  }
+};
+
+// ============================
+// Submission Info (for route: /submission/:id/info)
+// ============================
+exports.getSubmissionInfo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid submission ID.' });
+    }
+    const submission = await Submission.findById(id);
+    if (!submission) {
+      return res.status(404).json({ message: 'Submission not found.' });
+    }
+    res.json(submission);
+  } catch (error) {
+    console.error('Error fetching submission info:', error);
+    res.status(500).json({ message: 'Error fetching submission info', error: error.message });
   }
 };
