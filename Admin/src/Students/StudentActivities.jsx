@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate, NavLink } from 'react-router-dom';
 import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf, FaLock } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
-import submitActivity from './SubmitActivity'
+import submitActivity from './submitActivity'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -174,12 +174,25 @@ const StudentActivities = () => {
                         {attachmentUrl ? <a href={attachmentUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center text-indigo-600 dark:text-indigo-400 text-xs"><FaPaperclip className="mr-1"/> View</a> : <span className="text-gray-400 text-xs">No File</span>}
 
                         {!activity.isLocked && ((statusInfo.text !== 'Missing' && new Date() < new Date(activity.date)) || statusInfo.text === 'Needs Resubmission') && (
-                          <button onClick={(e) => {
-                            e.stopPropagation();
-                            const answer = window.prompt('Enter your answer (quick submit):', '');
-                            if (!answer || answer.trim() === '') { alert("Answer is required!"); return; }
-                            submitActivity({ activityId: activity._id, studentId, content: answer.trim() });
-                          }} className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2">Quick Submit</button>
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    const answer = window.prompt('Enter your answer (quick submit):', '');
+    if (!answer || answer.trim() === '') { alert("Answer is required!"); return; }
+
+    // ⬇️ Place the debug log here
+    console.log('QuickSubmit payload:', {
+      activityId: activity._id,
+      studentId,
+      content: answer.trim()
+    });
+
+    submitActivity({ activityId: activity._id, studentId, content: answer.trim() });
+  }}
+  className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2"
+>
+  Quick Submit
+</button>
                         )}
                       </div>
                     </div>
