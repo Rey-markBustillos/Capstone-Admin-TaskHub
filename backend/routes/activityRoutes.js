@@ -48,11 +48,10 @@ router.get("/submission/:id/info", activityController.getSubmissionInfo);
 // ------------------------------------------------------
 // 📌 ACTIVITY CRUD
 // ------------------------------------------------------
-router.get("/", activityController.getActivities);
-router.post("/", uploadActivity.single("attachment"), activityController.createActivity);
-router.put("/:id", uploadActivity.single("attachment"), activityController.updateActivity);
-router.delete("/:id", activityController.deleteActivity);
-
+router.get("/", activityController.getActivities); // Get all activities
+router.post("/", uploadActivity.single("attachment"), activityController.createActivity); // Create new activity
+router.put("/:id", uploadActivity.single("attachment"), activityController.updateActivity); // Update activity
+router.delete("/:id", activityController.deleteActivity); // Delete activity
 
 // ------------------------------------------------------
 // 📌 Lock / Unlock Activity
