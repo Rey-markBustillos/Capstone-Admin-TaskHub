@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useParams, useNavigate, NavLink } from 'react-router-dom';
 import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf, FaLock } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
-import SubmitActivity, { submitActivity } from './submitActivity';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -16,6 +15,22 @@ const statusIcons = {
   'Pending': <FaHourglassHalf className="text-yellow-500 mr-1" />,
   'Needs Resubmission': <FaRedoAlt className="text-purple-500 mr-1" />,
   'Locked': <FaLock className="text-gray-500 mr-1" />,
+};
+
+const submitActivity = async ({ activityId, studentId, content }) => {
+  try {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+    const response = await axios.post(
+      `${API_BASE_URL.replace(/\/$/, '')}/activities/submit`,
+      { activityId, studentId, content, submittedAt: new Date() },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    alert(response.data.message || 'Submission successful!');
+    return response.data;
+  } catch (error) {
+    alert(error.response?.data?.message || 'Submission failed!');
+    throw error;
+  }
 };
 
 const StudentActivities = () => {
