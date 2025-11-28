@@ -6,9 +6,8 @@ import { FaPaperclip, FaListOl, FaPlusCircle, FaBook, FaTimes, FaTasks, FaEdit, 
 
 const getAttachmentUrl = (url) => {
   if (!url) return null;
-  // If it's an image, use as is
   if (/\.(jpg|jpeg|png|gif)$/i.test(url)) return url;
-  // For non-image, replace '/image/' with '/raw/' in the URL
+  if (/\.pdf$/i.test(url)) return url + '?inline=true';
   return url.replace('/image/', '/raw/');
 };
 
