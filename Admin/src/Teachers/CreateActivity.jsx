@@ -352,13 +352,14 @@ const CreateActivity = () => {
               </div>
               <div>
                 <label className="block text-gray-300 mb-2" htmlFor="edit-activity-attachment">New Attachment (optional)</label>
-                <input
-                  id="edit-activity-attachment"
-                  type="file"
-                  className="w-full text-gray-100"
-                  onChange={handleFileChange}
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx"
-                />
+<input
+  id="activity-attachment"
+  type="file"
+  name="attachment" // <-- idagdag ito!
+  className="w-full text-gray-100"
+  onChange={handleFileChange}
+  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx"
+/>
                 <p className="text-gray-400 text-xs mt-1">Leave empty to keep existing attachment</p>
               </div>
               <button
