@@ -189,7 +189,6 @@ const StudentActivities = () => {
                         {attachmentUrl ? <a href={attachmentUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center text-indigo-600 dark:text-indigo-400 text-xs"><FaPaperclip className="mr-1"/> View</a> : <span className="text-gray-400 text-xs">No File</span>}
 
                         {!activity.isLocked && ((statusInfo.text !== 'Missing' && new Date() < new Date(activity.date)) || statusInfo.text === 'Needs Resubmission') && (
-// ...existing code...
 <button
   onClick={(e) => {
     e.stopPropagation();
@@ -209,7 +208,7 @@ const StudentActivities = () => {
 >
   Quick Submit
 </button>
-// ...existing code...
+
                         )}
                       </div>
                     </div>

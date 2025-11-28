@@ -233,7 +233,7 @@ const CreateActivity = () => {
                 />
               </div>
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="activity-description">Description</label>
+                <label className="block text-gray-300 mb-2" htmlFor="activity-description">Instruction</label>
                 <textarea
                   id="activity-description"
                   className="w-full p-2 rounded bg-gray-900 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
