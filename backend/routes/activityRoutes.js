@@ -13,14 +13,15 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Cloudinary storage
+// Cloudinary storage (UPDATED for file type detection)
 const activityCloudinaryStorage = new CloudinaryStorage({
   cloudinary,
-  params: {
+  params: async (req, file) => ({
     folder: "taskhub/activities",
-    public_id: (req, file) => `activity-${Date.now()}`,
-    resource_type: "auto",
-  },
+    public_id: `activity-${Date.now()}`,
+    // Use "raw" for non-image files, "image" for images
+    resource_type: /\.(pdf|docx?|pptx?|xlsx?)$/i.test(file.originalname) ? "raw" : "image",
+  }),
 });
 
 const uploadActivity = multer({
