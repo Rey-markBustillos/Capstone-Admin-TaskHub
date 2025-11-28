@@ -62,8 +62,12 @@ router.patch("/:id/lock", activityController.toggleActivityLock);
 router.get("/:id/download", activityController.downloadActivityAttachment);
 
 // ------------------------------------------------------
-// 📌 Resubmission (Legacy Support)
+// 📌 Export Scores (ADD THIS BEFORE FINAL ROUTE)
 // ------------------------------------------------------
+router.get("/export-scores", activityController.exportScores);
+
+// ------------------------------------------------------
+// 📌 Resubmission (Legacy Support)
 router.options("/resubmit/:id", (req, res) => {
   res.header("Access-Control-Allow-Origin", "https://capstone-admin-task-hub-jske.vercel.app");
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
