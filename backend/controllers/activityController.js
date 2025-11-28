@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 
+// Debug function for file uploads
 function logFileDebug(req, context = "") {
   if (!req.file) {
     console.log(`[DEBUG][${context}] No file uploaded.`);
@@ -25,12 +26,12 @@ function logFileDebug(req, context = "") {
 // Create activity (UPDATED)
 // ============================
 exports.createActivity = async (req, res) => {
+  logFileDebug(req, "createActivity");
   try {
     const { title, description, date, totalPoints, link, createdBy, classId } = req.body;
     let attachmentPath = null;
 
     if (req.file) {
-      // Use Cloudinary secure_url if available, else fallback to url, path, filename
       attachmentPath = req.file.secure_url || req.file.url || req.file.path || req.file.filename || null;
     }
 
@@ -101,6 +102,7 @@ exports.getActivityById = async (req, res) => {
 // Update activity (UPDATED)
 // ============================
 exports.updateActivity = async (req, res) => {
+  logFileDebug(req, "updateActivity");
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -109,7 +111,6 @@ exports.updateActivity = async (req, res) => {
 
     let updateData = { ...req.body };
     if (req.file) {
-      // Use Cloudinary secure_url if available, else fallback to url, path, filename
       updateData.attachment = req.file.secure_url || req.file.url || req.file.path || req.file.filename || null;
     }
 
@@ -589,7 +590,6 @@ exports.downloadSubmissionFile = async (req, res) => {
 exports.exportScores = async (req, res) => {
   try {
     const { classId } = req.query;
-    // Validate classId format
     if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
       return res.status(400).json({ message: 'Invalid class ID' });
     }
