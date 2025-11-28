@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 // ============================
-// Create activity
+// Create activity (UPDATED)
 // ============================
 exports.createActivity = async (req, res) => {
   try {
@@ -14,7 +14,8 @@ exports.createActivity = async (req, res) => {
     let attachmentPath = null;
 
     if (req.file) {
-      attachmentPath = req.file.path.replace(/\\/g, '/').replace(/^.*uploads\//, 'uploads/');
+      // Use Cloudinary secure_url if available, else fallback
+      attachmentPath = req.file.secure_url || req.file.path || null;
     }
 
     if (!title || !date || !classId) {
@@ -81,7 +82,7 @@ exports.getActivityById = async (req, res) => {
 };
 
 // ============================
-// Update activity
+// Update activity (UPDATED)
 // ============================
 exports.updateActivity = async (req, res) => {
   try {
@@ -92,7 +93,8 @@ exports.updateActivity = async (req, res) => {
 
     let updateData = { ...req.body };
     if (req.file) {
-      updateData.attachment = req.file.path.replace(/\\/g, '/').replace(/^.*uploads\//, 'uploads/');
+      // Use Cloudinary secure_url if available, else fallback
+      updateData.attachment = req.file.secure_url || req.file.path || null;
     }
 
     const updated = await Activity.findByIdAndUpdate(id, updateData, {
@@ -335,9 +337,9 @@ exports.submitActivity = async (req, res) => {
 
     // If file is present, add file info
     if (req.file) {
-      submissionData.filePath = req.file.path || req.file.filename;
+      submissionData.filePath = req.file.secure_url || req.file.path || req.file.filename;
       submissionData.fileName = req.file.originalname;
-      submissionData.cloudinaryUrl = req.file.path;
+      submissionData.cloudinaryUrl = req.file.secure_url || req.file.path;
       submissionData.cloudinaryPublicId = req.file.public_id;
       submissionData.fileType = req.file.mimetype;
       submissionData.fileSize = req.file.size;
@@ -396,9 +398,9 @@ exports.resubmitActivity = async (req, res) => {
     const updatedSubmission = await Submission.findByIdAndUpdate(
       id,
       {
-        filePath: req.file.path || req.file.filename,
+        filePath: req.file.secure_url || req.file.path || req.file.filename,
         fileName: req.file.originalname,
-        cloudinaryUrl: req.file.path,
+        cloudinaryUrl: req.file.secure_url || req.file.path,
         cloudinaryPublicId: req.file.public_id,
         fileType: req.file.mimetype,
         fileSize: req.file.size,
