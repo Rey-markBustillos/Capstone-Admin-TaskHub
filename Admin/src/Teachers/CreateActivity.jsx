@@ -4,6 +4,14 @@ import moment from 'moment-timezone';
 import { useParams } from 'react-router-dom';
 import { FaPaperclip, FaListOl, FaPlusCircle, FaBook, FaTimes, FaTasks, FaEdit, FaTrashAlt, FaLock, FaUnlock } from 'react-icons/fa';
 
+const getAttachmentUrl = (url) => {
+  if (!url) return null;
+  // If it's an image, use as is
+  if (/\.(jpg|jpeg|png|gif)$/i.test(url)) return url;
+  // For non-image, replace '/image/' with '/raw/' in the URL
+  return url.replace('/image/', '/raw/');
+};
+
 const CreateActivity = () => {
   const { classId } = useParams();
   const [activityData, setActivityData] = useState({ title: '', description: '', date: '', score: '', attachment: null });
@@ -398,7 +406,7 @@ const CreateActivity = () => {
                     </div>
                     {activity.attachment && (
                       <a
-                        href={activity.attachment}
+                        href={getAttachmentUrl(activity.attachment)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center text-indigo-400 hover:underline mt-2 text-xs"
