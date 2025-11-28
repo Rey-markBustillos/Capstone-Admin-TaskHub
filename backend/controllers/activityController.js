@@ -5,6 +5,22 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 
+function logFileDebug(req, context = "") {
+  if (!req.file) {
+    console.log(`[DEBUG][${context}] No file uploaded.`);
+    return;
+  }
+  console.log(`[DEBUG][${context}] File upload info:`);
+  console.log("  originalname:", req.file.originalname);
+  console.log("  mimetype:", req.file.mimetype);
+  console.log("  path:", req.file.path);
+  console.log("  filename:", req.file.filename);
+  console.log("  url:", req.file.url);
+  console.log("  secure_url:", req.file.secure_url);
+  console.log("  public_id:", req.file.public_id);
+  console.log("  resource_type (should be raw for non-image):", /\.(pdf|docx?|pptx?|xlsx?)$/i.test(req.file.originalname) ? "raw" : "image");
+}
+
 // ============================
 // Create activity (UPDATED)
 // ============================
