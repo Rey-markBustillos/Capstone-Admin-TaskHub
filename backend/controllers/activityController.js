@@ -582,13 +582,13 @@ exports.downloadSubmissionFile = async (req, res) => {
   }
 };
 
-// ============================
-// Export Scores
-// ============================
 exports.exportScores = async (req, res) => {
   try {
     const { classId } = req.query;
-    if (!classId) return res.status(400).json({ message: 'classId is required' });
+    // Validate classId format
+    if (!classId || !mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ message: 'Invalid class ID' });
+    }
 
     const activities = await Activity.find({ classId }).sort({ date: 1 });
     const targetClass = await Class.findById(classId).populate('students', 'name email');
