@@ -14,8 +14,8 @@ exports.createActivity = async (req, res) => {
     let attachmentPath = null;
 
     if (req.file) {
-      // Use Cloudinary secure_url if available, else fallback
-      attachmentPath = req.file.secure_url || req.file.path || null;
+      // Use Cloudinary secure_url if available, else fallback to url, path, filename
+      attachmentPath = req.file.secure_url || req.file.url || req.file.path || req.file.filename || null;
     }
 
     if (!title || !date || !classId) {
@@ -93,8 +93,8 @@ exports.updateActivity = async (req, res) => {
 
     let updateData = { ...req.body };
     if (req.file) {
-      // Use Cloudinary secure_url if available, else fallback
-      updateData.attachment = req.file.secure_url || req.file.path || null;
+      // Use Cloudinary secure_url if available, else fallback to url, path, filename
+      updateData.attachment = req.file.secure_url || req.file.url || req.file.path || req.file.filename || null;
     }
 
     const updated = await Activity.findByIdAndUpdate(id, updateData, {
@@ -290,13 +290,6 @@ exports.updateActivityScore = async (req, res) => {
 // ===========================
 exports.submitActivity = async (req, res) => {
   try {
-    console.log('🔔 [submitActivity] Incoming Request');
-    console.log('🔹 Headers:', {
-      origin: req.headers.origin,
-      contentType: req.headers['content-type'],
-    });
-    console.log('🔹 Raw Body:', req.body);
-
     const body = req.body || {};
     const { activityId, studentId, content, submittedAt } = body;
 
@@ -337,9 +330,9 @@ exports.submitActivity = async (req, res) => {
 
     // If file is present, add file info
     if (req.file) {
-      submissionData.filePath = req.file.secure_url || req.file.path || req.file.filename;
+      submissionData.filePath = req.file.secure_url || req.file.url || req.file.path || req.file.filename;
       submissionData.fileName = req.file.originalname;
-      submissionData.cloudinaryUrl = req.file.secure_url || req.file.path;
+      submissionData.cloudinaryUrl = req.file.secure_url || req.file.url || req.file.path || req.file.filename;
       submissionData.cloudinaryPublicId = req.file.public_id;
       submissionData.fileType = req.file.mimetype;
       submissionData.fileSize = req.file.size;
@@ -398,9 +391,9 @@ exports.resubmitActivity = async (req, res) => {
     const updatedSubmission = await Submission.findByIdAndUpdate(
       id,
       {
-        filePath: req.file.secure_url || req.file.path || req.file.filename,
+        filePath: req.file.secure_url || req.file.url || req.file.path || req.file.filename,
         fileName: req.file.originalname,
-        cloudinaryUrl: req.file.secure_url || req.file.path,
+        cloudinaryUrl: req.file.secure_url || req.file.url || req.file.path || req.file.filename,
         cloudinaryPublicId: req.file.public_id,
         fileType: req.file.mimetype,
         fileSize: req.file.size,
@@ -483,13 +476,10 @@ exports.getSubmissionForActivity = async (req, res) => {
 exports.getStudentSubmissions = async (req, res) => {
   try {
     const { studentId } = req.params;
-    console.log('🔍 [getStudentSubmissions] Request received for studentId:', studentId);
 
     const submissions = await Submission.find({ studentId })
       .populate("activityId", "title description dueDate")
       .sort({ submissionDate: -1 });
-
-    console.log('✅ [getStudentSubmissions] Found submissions:', submissions.length);
 
     const formatted = submissions.map((s) => ({
       ...s.toObject(),
@@ -564,13 +554,9 @@ exports.downloadSubmissionFile = async (req, res) => {
       filePath = path.join(__dirname, '..', 'uploads', 'submissions', submission.filePath);
     }
 
-    console.log('Attempting to serve local file:', filePath);
-    console.log('File exists:', fs.existsSync(filePath));
-    
     if (fs.existsSync(filePath)) {
       res.download(filePath, submission.fileName || path.basename(filePath));
     } else {
-      console.error('Local file not found. Submission filePath:', submission.filePath);
       res.status(404).json({ 
         message: 'File not found on server.',
         submissionId: id,

@@ -13,13 +13,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Cloudinary storage (UPDATED for file type detection)
+// filepath: c:\xampp\htdocs\Capstone-Admin-TaskHub\backend\routes\activityRoutes.js
 const activityCloudinaryStorage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => ({
     folder: "taskhub/activities",
     public_id: `activity-${Date.now()}`,
-    // Use "raw" for non-image files, "image" for images
     resource_type: /\.(pdf|docx?|pptx?|xlsx?)$/i.test(file.originalname) ? "raw" : "image",
   }),
 });
