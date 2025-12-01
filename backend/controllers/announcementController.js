@@ -25,16 +25,30 @@ exports.createAnnouncement = async (req, res) => {
       return res.status(400).json({ message: 'Invalid user ID or class ID' });
     }
 
-    // Handle file attachments if present
+    // Handle file attachments if present (now using Cloudinary URLs)
     let attachments = [];
     if (req.files && req.files.length > 0) {
-      attachments = req.files.map(file => ({
-        filename: file.filename,
-        originalName: file.originalname,
-        fileSize: file.size,
-        mimeType: file.mimetype,
-        uploadedAt: new Date()
-      }));
+      console.log('📎 Processing announcement attachments:', req.files.length);
+      attachments = req.files.map(file => {
+        console.log('📎 File details:', {
+          originalname: file.originalname,
+          filename: file.filename,
+          secure_url: file.secure_url,
+          public_id: file.public_id,
+          resource_type: file.resource_type
+        });
+        
+        return {
+          filename: file.filename || file.public_id, // Use public_id as fallback
+          originalName: file.originalname,
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          uploadedAt: new Date(),
+          cloudinaryUrl: file.secure_url, // Store Cloudinary URL
+          publicId: file.public_id, // Store public ID for deletion if needed
+          resourceType: file.resource_type
+        };
+      });
     }
 
     const newAnnouncement = new Announcement({ 
@@ -46,8 +60,11 @@ exports.createAnnouncement = async (req, res) => {
     });
     await newAnnouncement.save();
     const populatedAnnouncement = await populateFields(Announcement.findById(newAnnouncement._id));
+    
+    console.log('✅ Announcement created with attachments:', attachments.length);
     res.status(201).json(populatedAnnouncement);
   } catch (error) {
+    console.error('❌ Error creating announcement:', error);
     res.status(500).json({ message: 'Failed to create announcement', error: error.message });
   }
 };

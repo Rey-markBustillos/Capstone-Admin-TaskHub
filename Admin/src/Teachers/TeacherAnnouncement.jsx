@@ -243,8 +243,8 @@ export default function TeacherAnnouncement() {
                         </p>
                         <div className="space-y-3">
                           {ann.attachments.map((attachment, index) => {
-                            // Use the API_BASE_URL to work in both development and production
-                            const fileUrl = `${API_BASE_URL}/announcements/files/${attachment.filename}?v=${Date.now()}`;
+                            // Use Cloudinary URL if available, fallback to local file URL for legacy files
+                            const fileUrl = attachment.cloudinaryUrl || `${API_BASE_URL}/announcements/files/${attachment.filename}?v=${Date.now()}`;
                             const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName);
                             const isPdf = /\.pdf$/i.test(attachment.originalName);
                             const isVideo = /\.(mp4|webm|ogg|avi|mov)$/i.test(attachment.originalName);
@@ -263,7 +263,20 @@ export default function TeacherAnnouncement() {
                                       {(attachment.fileSize / 1024 / 1024).toFixed(1)}MB
                                     </span>
                                     <button
-                                      onClick={() => downloadFile(attachment.filename, attachment.originalName)}
+                                      onClick={() => {
+                                        // Use Cloudinary URL for direct download, or legacy download endpoint
+                                        if (attachment.cloudinaryUrl) {
+                                          const link = document.createElement('a');
+                                          link.href = attachment.cloudinaryUrl;
+                                          link.download = attachment.originalName;
+                                          link.target = '_blank';
+                                          document.body.appendChild(link);
+                                          link.click();
+                                          document.body.removeChild(link);
+                                        } else {
+                                          downloadFile(attachment.filename, attachment.originalName);
+                                        }
+                                      }}
                                       className="text-blue-500 hover:text-blue-400 p-1"
                                       title="Download file"
                                     >
@@ -285,21 +298,8 @@ export default function TeacherAnnouncement() {
                                         display: 'block'
                                       }}
                                       onError={(e) => {
-
-                                        
-                                        // Try alternative URL patterns - using API_BASE_URL
-                                        const retryUrls = [
-                                          `${API_BASE_URL}/announcements/files/${attachment.filename}?v=${Date.now()}`,
-                                          `${API_BASE_URL}/announcements/files/${attachment.filename}`
-                                        ];
-                                        
-                                        const currentUrl = e.target.src;
-                                        const nextUrl = retryUrls.find(url => url !== currentUrl);
-                                        
-                                        if (nextUrl) {
-                                          e.target.src = nextUrl;
-                                        } else {
-                                          // Show placeholder
+                                        // If using Cloudinary URL, just show placeholder on error
+                                        if (attachment.cloudinaryUrl) {
                                           e.target.style.display = 'none';
                                           const placeholder = document.createElement('div');
                                           placeholder.className = 'bg-gray-200 dark:bg-gray-600 p-8 rounded-lg text-center';
@@ -309,6 +309,30 @@ export default function TeacherAnnouncement() {
                                             <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">${attachment.originalName}</p>
                                           `;
                                           e.target.parentNode.appendChild(placeholder);
+                                        } else {
+                                          // Try alternative URL patterns for legacy files
+                                          const retryUrls = [
+                                            `${API_BASE_URL}/announcements/files/${attachment.filename}?v=${Date.now()}`,
+                                            `${API_BASE_URL}/announcements/files/${attachment.filename}`
+                                          ];
+                                          
+                                          const currentUrl = e.target.src;
+                                          const nextUrl = retryUrls.find(url => url !== currentUrl);
+                                          
+                                          if (nextUrl) {
+                                            e.target.src = nextUrl;
+                                          } else {
+                                            // Show placeholder
+                                            e.target.style.display = 'none';
+                                            const placeholder = document.createElement('div');
+                                            placeholder.className = 'bg-gray-200 dark:bg-gray-600 p-8 rounded-lg text-center';
+                                            placeholder.innerHTML = `
+                                              <div class="text-gray-400 text-4xl mb-2">🖼️</div>
+                                              <p class="text-gray-600 dark:text-gray-400 text-sm">Image not available</p>
+                                              <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">${attachment.originalName}</p>
+                                            `;
+                                            e.target.parentNode.appendChild(placeholder);
+                                          }
                                         }
                                       }}
                                       onLoad={() => {

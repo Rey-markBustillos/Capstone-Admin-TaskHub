@@ -200,7 +200,8 @@ export default function StudentAnnouncements() {
                           </p>
                           <div className="space-y-3">
                             {ann.attachments.map((attachment, index) => {
-                              const fileUrl = `${API_BASE_URL}/announcements/attachment/${attachment.filename}`;
+                              // Use Cloudinary URL if available, fallback to local file URL for legacy files
+                              const fileUrl = attachment.cloudinaryUrl || `${API_BASE_URL}/announcements/attachment/${attachment.filename}`;
                               const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment.originalName);
                               const isPdf = /\.pdf$/i.test(attachment.originalName);
                               const isVideo = /\.(mp4|webm|ogg)$/i.test(attachment.originalName);
@@ -217,7 +218,20 @@ export default function StudentAnnouncements() {
                                         {(attachment.fileSize / 1024 / 1024).toFixed(1)}MB
                                       </span>
                                       <button
-                                        onClick={() => downloadFile(attachment.filename, attachment.originalName)}
+                                        onClick={() => {
+                                          // Use Cloudinary URL for direct download, or legacy download endpoint
+                                          if (attachment.cloudinaryUrl) {
+                                            const link = document.createElement('a');
+                                            link.href = attachment.cloudinaryUrl;
+                                            link.download = attachment.originalName;
+                                            link.target = '_blank';
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                          } else {
+                                            downloadFile(attachment.filename, attachment.originalName);
+                                          }
+                                        }}
                                         className="text-blue-500 hover:text-blue-400 p-1"
                                         title="Download file"
                                       >

@@ -14,25 +14,29 @@ const {
   markAsViewed // AYOS: I-import ang bagong function
 } = require('../controllers/announcementController');
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../uploads/announcements');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// --- Multer / Cloudinary Setup for Announcements ---
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `announcement-${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
+// Configure cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cloudinary storage configuration for announcements
+const announcementCloudinaryStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => ({
+    folder: "taskhub/announcements",
+    public_id: `announcement-${Date.now()}`,
+    resource_type: /\.(pdf|docx?|pptx?|xlsx?|txt|mp4|mp3|zip|rar)$/i.test(file.originalname) ? "raw" : "image",
+  }),
 });
 
 const upload = multer({
-  storage: storage,
+  storage: announcementCloudinaryStorage,
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit
   },
@@ -49,6 +53,12 @@ const upload = multer({
     }
   }
 });
+
+// Keep legacy uploads directory for backward compatibility (if needed)
+const uploadsDir = path.join(__dirname, '../uploads/announcements');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Routes for creating and getting all announcements
 router.route('/')
@@ -67,20 +77,20 @@ router.route('/:id/comments').post(addComment);
 // Route for toggling a reaction
 router.route('/:id/reactions').post(toggleReaction);
 
-// Route for downloading announcement attachments
+// Legacy route for downloading announcement attachments (for backward compatibility)
 router.get('/attachment/:filename', (req, res) => {
   try {
     const filename = req.params.filename;
     const filePath = path.join(uploadsDir, filename);
     
-    console.log('File request:', filename);
+    console.log('Legacy file request:', filename);
     console.log('File path:', filePath);
     console.log('File exists:', fs.existsSync(filePath));
     
-    // Check if file exists
+    // Check if file exists locally (for legacy files)
     if (!fs.existsSync(filePath)) {
-      console.log('File not found:', filename);
-      return res.status(404).json({ message: 'File not found' });
+      console.log('Legacy file not found:', filename);
+      return res.status(404).json({ message: 'File not found - files are now stored in cloud storage' });
     }
     
     // Check if it's a download request or view request
@@ -104,25 +114,25 @@ router.get('/attachment/:filename', (req, res) => {
         contentType = `audio/${ext.slice(1)}`;
       }
       
-      console.log('Serving file with content type:', contentType);
+      console.log('Serving legacy file with content type:', contentType);
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Disposition', 'inline');
       res.setHeader('Cache-Control', 'public, max-age=31536000');
       res.sendFile(filePath);
     }
   } catch (error) {
-    console.error('Error serving file:', error);
+    console.error('Error serving legacy file:', error);
     res.status(500).json({ message: 'Error accessing file', error: error.message });
   }
 });
 
-// Simple file serving route for direct access
+// Legacy file serving route (for backward compatibility with old local files)
 router.get('/files/:filename', (req, res) => {
   try {
     const filename = req.params.filename;
     const filePath = path.join(uploadsDir, filename);
     
-    console.log('🌐 FILES REQUEST:', filename);
+    console.log('🌐 LEGACY FILES REQUEST:', filename);
     console.log('📁 File path:', filePath);
     console.log('✅ File exists:', fs.existsSync(filePath));
     
@@ -135,11 +145,11 @@ router.get('/files/:filename', (req, res) => {
       res.setHeader('Cache-Control', 'public, max-age=3600');
       res.sendFile(filePath);
     } else {
-      console.log('❌ File not found:', filename);
-      res.status(404).send('File not found');
+      console.log('❌ Legacy file not found:', filename);
+      res.status(404).send('File not found - files are now stored in cloud storage');
     }
   } catch (error) {
-    console.error('❌ Error in /files/ route:', error);
+    console.error('❌ Error in legacy /files/ route:', error);
     res.status(500).send('Server error');
   }
 });
