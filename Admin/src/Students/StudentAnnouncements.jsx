@@ -217,16 +217,45 @@ export default function StudentAnnouncements() {
                                       </span>
                                       <button
                                         onClick={() => {
+                                          console.log('🔽 Download clicked for:', attachment.originalName);
+                                          console.log('🔽 Cloudinary URL:', attachment.cloudinaryUrl);
+                                          console.log('🔽 Filename:', attachment.filename);
+                                          
                                           // Use Cloudinary URL for direct download, or legacy download endpoint
                                           if (attachment.cloudinaryUrl) {
-                                            const link = document.createElement('a');
-                                            link.href = attachment.cloudinaryUrl;
-                                            link.download = attachment.originalName;
-                                            link.target = '_blank';
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
+                                            try {
+                                              // Method 1: Try direct Cloudinary download
+                                              const downloadUrl = attachment.cloudinaryUrl.replace('/upload/', '/upload/fl_attachment/');
+                                              console.log('🔽 Using Cloudinary download URL:', downloadUrl);
+                                              
+                                              const link = document.createElement('a');
+                                              link.href = downloadUrl;
+                                              link.download = attachment.originalName;
+                                              link.target = '_blank';
+                                              link.rel = 'noopener noreferrer';
+                                              document.body.appendChild(link);
+                                              link.click();
+                                              document.body.removeChild(link);
+                                              
+                                              // Fallback method: Use backend download route
+                                              setTimeout(() => {
+                                                // Try backend route as fallback
+                                                const backendDownloadUrl = `${API_BASE_URL}/announcements/download/${ann._id}/${index}`;
+                                                console.log('🔄 Fallback: Using backend download route:', backendDownloadUrl);
+                                                
+                                                const fallbackLink = document.createElement('a');
+                                                fallbackLink.href = backendDownloadUrl;
+                                                fallbackLink.download = attachment.originalName;
+                                                fallbackLink.target = '_blank';
+                                                fallbackLink.rel = 'noopener noreferrer';
+                                              }, 1000);
+                                            } catch (error) {
+                                              console.error('❌ Cloudinary download error:', error);
+                                              // Final fallback: open in new tab
+                                              window.open(attachment.cloudinaryUrl, '_blank', 'noopener,noreferrer');
+                                            }
                                           } else {
+                                            console.log('🔽 Using legacy download method');
                                             downloadFile(attachment.filename, attachment.originalName);
                                           }
                                         }}

@@ -159,6 +159,54 @@ router.get('/files/:filename', (req, res) => {
   }
 });
 
+// Route for downloading Cloudinary files with proper headers
+router.get('/download/:announcementId/:attachmentIndex', async (req, res) => {
+  try {
+    const { announcementId, attachmentIndex } = req.params;
+    
+    console.log('🔽 Download request for announcement:', announcementId, 'attachment:', attachmentIndex);
+    
+    // Find the announcement
+    const announcement = await require('../controllers/announcementController').getAnnouncementByIdHelper(announcementId);
+    if (!announcement) {
+      return res.status(404).json({ message: 'Announcement not found' });
+    }
+    
+    // Get the specific attachment
+    const attachment = announcement.attachments[parseInt(attachmentIndex)];
+    if (!attachment) {
+      return res.status(404).json({ message: 'Attachment not found' });
+    }
+    
+    console.log('🔽 Found attachment:', attachment.originalName, 'Cloudinary URL:', attachment.cloudinaryUrl);
+    
+    // If it's a Cloudinary file, redirect to the download URL
+    if (attachment.cloudinaryUrl) {
+      // Create download URL with proper Cloudinary transformation
+      const downloadUrl = attachment.cloudinaryUrl.replace('/upload/', '/upload/fl_attachment/');
+      console.log('🔽 Redirecting to Cloudinary download URL:', downloadUrl);
+      
+      // Add CORS headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      
+      return res.redirect(downloadUrl);
+    }
+    
+    // For legacy files, use the existing logic
+    const filePath = path.join(__dirname, '../uploads/announcements', attachment.filename);
+    if (fs.existsSync(filePath)) {
+      res.download(filePath, attachment.originalName);
+    } else {
+      res.status(404).json({ message: 'File not found' });
+    }
+  } catch (error) {
+    console.error('❌ Error in download route:', error);
+    res.status(500).json({ message: 'Download failed', error: error.message });
+  }
+});
+
 // AYOS: Bagong route para sa pag-view
 router.route('/:id/view').post(markAsViewed);
 

@@ -238,3 +238,17 @@ exports.markAsViewed = async (req, res) => {
     res.status(500).json({ message: 'Failed to mark as viewed.', error: error.message });
   }
 };
+
+// Helper function for getting announcement by ID (used by download route)
+exports.getAnnouncementByIdHelper = async (id) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return null;
+    }
+    const announcement = await populateFields(Announcement.findById(id));
+    return announcement;
+  } catch (error) {
+    console.error('❌ Error getting announcement by ID:', error);
+    return null;
+  }
+};
