@@ -247,6 +247,18 @@ export default function TeacherAnnouncement() {
                             const fileUrl = attachment.cloudinaryUrl || `${API_BASE_URL}/announcements/files/${attachment.filename}`;
                             const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName);
                             
+                            // Debug logging
+                            console.log('📎 Attachment debug:', {
+                              originalName: attachment.originalName,
+                              cloudinaryUrl: attachment.cloudinaryUrl,
+                              filename: attachment.filename,
+                              finalUrl: fileUrl,
+                              isImage: isImage
+                            });
+                            
+                            // Check if this is a legacy file without Cloudinary URL
+                            const isLegacyFile = !attachment.cloudinaryUrl && attachment.filename;
+                            
 
                             
                             return (
@@ -283,7 +295,7 @@ export default function TeacherAnnouncement() {
                                 </div>
                                 
                                 {/* Display image preview directly */}
-                                {isImage && (
+                                {isImage && !isLegacyFile && (
                                   <div className="mt-2">
                                     <img 
                                       src={fileUrl} 
@@ -295,15 +307,20 @@ export default function TeacherAnnouncement() {
                                         display: 'block'
                                       }}
                                       onError={(e) => {
+                                        console.log('🖼️ Image load error:', attachment.originalName, 'URL:', e.target.src);
+                                        console.log('🔍 Has Cloudinary URL:', !!attachment.cloudinaryUrl);
+                                        
                                         // Prevent infinite retry loops
                                         if (e.target.getAttribute('data-retry-attempted') === 'true') {
-                                          return; // Already tried, don't retry again
+                                          console.log('⚠️ Already retried, showing placeholder');
+                                          return;
                                         }
                                         
                                         e.target.setAttribute('data-retry-attempted', 'true');
                                         
-                                        // If using Cloudinary URL, just show placeholder on error
-                                        if (attachment.cloudinaryUrl) {
+                                        // If we have a Cloudinary URL and it failed, show error immediately
+                                        if (attachment.cloudinaryUrl && fileUrl === attachment.cloudinaryUrl) {
+                                          console.log('❌ Cloudinary URL failed, showing placeholder');
                                           e.target.style.display = 'none';
                                           if (!e.target.parentNode.querySelector('.error-placeholder')) {
                                             const placeholder = document.createElement('div');
@@ -315,29 +332,28 @@ export default function TeacherAnnouncement() {
                                             `;
                                             e.target.parentNode.appendChild(placeholder);
                                           }
+                                        } else if (!attachment.cloudinaryUrl) {
+                                          // For legacy files, try alternative URL pattern
+                                          const fallbackUrl = `${API_BASE_URL}/announcements/attachment/${attachment.filename}`;
+                                          console.log('🔄 Trying fallback URL:', fallbackUrl);
+                                          e.target.src = fallbackUrl;
                                         } else {
-                                          // For legacy files, try one alternative URL only
-                                          const fallbackUrl = `${API_BASE_URL}/announcements/files/${attachment.filename}`;
-                                          if (e.target.src !== fallbackUrl && !e.target.src.includes('?v=')) {
-                                            e.target.src = fallbackUrl;
-                                          } else {
-                                            // Show placeholder after single retry
-                                            e.target.style.display = 'none';
-                                            if (!e.target.parentNode.querySelector('.error-placeholder')) {
-                                              const placeholder = document.createElement('div');
-                                              placeholder.className = 'error-placeholder bg-gray-200 dark:bg-gray-600 p-8 rounded-lg text-center';
-                                              placeholder.innerHTML = `
-                                                <div class="text-gray-400 text-4xl mb-2">🖼️</div>
-                                                <p class="text-gray-600 dark:text-gray-400 text-sm">Image not available</p>
-                                                <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">${attachment.originalName}</p>
-                                              `;
-                                              e.target.parentNode.appendChild(placeholder);
-                                            }
+                                          // Show error placeholder
+                                          e.target.style.display = 'none';
+                                          if (!e.target.parentNode.querySelector('.error-placeholder')) {
+                                            const placeholder = document.createElement('div');
+                                            placeholder.className = 'error-placeholder bg-gray-200 dark:bg-gray-600 p-8 rounded-lg text-center';
+                                            placeholder.innerHTML = `
+                                              <div class="text-gray-400 text-4xl mb-2">🖼️</div>
+                                              <p class="text-gray-600 dark:text-gray-400 text-sm">Image not available</p>
+                                              <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">${attachment.originalName}</p>
+                                            `;
+                                            e.target.parentNode.appendChild(placeholder);
                                           }
                                         }
                                       }}
                                       onLoad={() => {
-                                        // Image loaded successfully
+                                        console.log('✅ Image loaded successfully:', attachment.originalName);
                                       }}
                                       onClick={() => {
                                         // Open full size in new tab
@@ -348,6 +364,22 @@ export default function TeacherAnnouncement() {
                                   </div>
                                 )}
                                 
+                                {/* Legacy files - show notice that they need to be re-uploaded */}
+                                {isLegacyFile && isImage && (
+                                  <div className="mt-2 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="text-yellow-600 dark:text-yellow-400 text-2xl">⚠️</span>
+                                      <span className="text-yellow-800 dark:text-yellow-200 font-medium">Legacy File</span>
+                                    </div>
+                                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                                      This file was uploaded before our cloud storage upgrade and may not be available after server restarts.
+                                    </p>
+                                    <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                                      <strong>To fix:</strong> Delete this announcement and create a new one with the same file for permanent storage.
+                                    </p>
+                                  </div>
+                                )}
+
                                 {/* PDF and other documents - download only */}
                                 
                                 {/* Video files - download only */}
