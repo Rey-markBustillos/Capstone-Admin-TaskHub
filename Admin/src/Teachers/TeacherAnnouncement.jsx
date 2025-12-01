@@ -244,7 +244,7 @@ export default function TeacherAnnouncement() {
                         <div className="space-y-3">
                           {ann.attachments.map((attachment, index) => {
                             // Use Cloudinary URL if available, fallback to local file URL for legacy files
-                            const fileUrl = attachment.cloudinaryUrl || `${API_BASE_URL}/announcements/files/${attachment.filename}?v=${Date.now()}`;
+                            const fileUrl = attachment.cloudinaryUrl || `${API_BASE_URL}/announcements/files/${attachment.filename}`;
                             const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName);
                             
 
@@ -295,40 +295,44 @@ export default function TeacherAnnouncement() {
                                         display: 'block'
                                       }}
                                       onError={(e) => {
+                                        // Prevent infinite retry loops
+                                        if (e.target.getAttribute('data-retry-attempted') === 'true') {
+                                          return; // Already tried, don't retry again
+                                        }
+                                        
+                                        e.target.setAttribute('data-retry-attempted', 'true');
+                                        
                                         // If using Cloudinary URL, just show placeholder on error
                                         if (attachment.cloudinaryUrl) {
                                           e.target.style.display = 'none';
-                                          const placeholder = document.createElement('div');
-                                          placeholder.className = 'bg-gray-200 dark:bg-gray-600 p-8 rounded-lg text-center';
-                                          placeholder.innerHTML = `
-                                            <div class="text-gray-400 text-4xl mb-2">🖼️</div>
-                                            <p class="text-gray-600 dark:text-gray-400 text-sm">Image not available</p>
-                                            <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">${attachment.originalName}</p>
-                                          `;
-                                          e.target.parentNode.appendChild(placeholder);
-                                        } else {
-                                          // Try alternative URL patterns for legacy files
-                                          const retryUrls = [
-                                            `${API_BASE_URL}/announcements/files/${attachment.filename}?v=${Date.now()}`,
-                                            `${API_BASE_URL}/announcements/files/${attachment.filename}`
-                                          ];
-                                          
-                                          const currentUrl = e.target.src;
-                                          const nextUrl = retryUrls.find(url => url !== currentUrl);
-                                          
-                                          if (nextUrl) {
-                                            e.target.src = nextUrl;
-                                          } else {
-                                            // Show placeholder
-                                            e.target.style.display = 'none';
+                                          if (!e.target.parentNode.querySelector('.error-placeholder')) {
                                             const placeholder = document.createElement('div');
-                                            placeholder.className = 'bg-gray-200 dark:bg-gray-600 p-8 rounded-lg text-center';
+                                            placeholder.className = 'error-placeholder bg-gray-200 dark:bg-gray-600 p-8 rounded-lg text-center';
                                             placeholder.innerHTML = `
                                               <div class="text-gray-400 text-4xl mb-2">🖼️</div>
                                               <p class="text-gray-600 dark:text-gray-400 text-sm">Image not available</p>
                                               <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">${attachment.originalName}</p>
                                             `;
                                             e.target.parentNode.appendChild(placeholder);
+                                          }
+                                        } else {
+                                          // For legacy files, try one alternative URL only
+                                          const fallbackUrl = `${API_BASE_URL}/announcements/files/${attachment.filename}`;
+                                          if (e.target.src !== fallbackUrl && !e.target.src.includes('?v=')) {
+                                            e.target.src = fallbackUrl;
+                                          } else {
+                                            // Show placeholder after single retry
+                                            e.target.style.display = 'none';
+                                            if (!e.target.parentNode.querySelector('.error-placeholder')) {
+                                              const placeholder = document.createElement('div');
+                                              placeholder.className = 'error-placeholder bg-gray-200 dark:bg-gray-600 p-8 rounded-lg text-center';
+                                              placeholder.innerHTML = `
+                                                <div class="text-gray-400 text-4xl mb-2">🖼️</div>
+                                                <p class="text-gray-600 dark:text-gray-400 text-sm">Image not available</p>
+                                                <p class="text-gray-500 dark:text-gray-500 text-xs mt-1">${attachment.originalName}</p>
+                                              `;
+                                              e.target.parentNode.appendChild(placeholder);
+                                            }
                                           }
                                         }
                                       }}

@@ -136,6 +136,11 @@ router.get('/files/:filename', (req, res) => {
     console.log('📁 File path:', filePath);
     console.log('✅ File exists:', fs.existsSync(filePath));
     
+    // Add CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    
     if (fs.existsSync(filePath)) {
       // Set proper headers for images
       const ext = path.extname(filename).toLowerCase();
@@ -146,11 +151,11 @@ router.get('/files/:filename', (req, res) => {
       res.sendFile(filePath);
     } else {
       console.log('❌ Legacy file not found:', filename);
-      res.status(404).send('File not found - files are now stored in cloud storage');
+      res.status(404).json({ message: 'File not found - files are now stored in cloud storage' });
     }
   } catch (error) {
     console.error('❌ Error in legacy /files/ route:', error);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
