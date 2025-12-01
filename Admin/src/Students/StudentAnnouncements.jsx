@@ -207,10 +207,19 @@ export default function StudentAnnouncements() {
                               // If no cloudinaryUrl but filename looks like Cloudinary public_id, construct URL
                               if (!cloudinaryUrl && attachment.filename && attachment.filename.includes('taskhub/')) {
                                 // This is a Cloudinary file without saved URL - construct it
-                                const cloudName = 'drvtezcke'; // Your Cloudinary cloud name
-                                const resourceType = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName) ? 'image' : 'raw';
+                                const cloudName = 'dptg3ct9i'; // Correct Cloudinary cloud name
+                                
+                                // Try to determine resource type, but have fallback options
+                                let resourceType = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName) ? 'image' : 'raw';
                                 cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/${attachment.filename}`;
+                                
+                                // Store both possible URLs for fallback
+                                attachment._fallbackUrl = resourceType === 'image' 
+                                  ? `https://res.cloudinary.com/${cloudName}/raw/upload/${attachment.filename}`
+                                  : `https://res.cloudinary.com/${cloudName}/image/upload/${attachment.filename}`;
+                                
                                 console.log('🔧 Constructed Cloudinary URL:', cloudinaryUrl);
+                                console.log('🔧 Fallback URL:', attachment._fallbackUrl);
                               }
                               
                               // Use Cloudinary URL if available, fallback to local file URL for legacy files
@@ -291,6 +300,29 @@ export default function StudentAnnouncements() {
                                         loading="lazy"
                                         onClick={() => window.open(fileUrl, '_blank')}
                                         title="Click to view full size"
+                                        onError={(e) => {
+                                          console.log('🖼️ Image load error in StudentAnnouncements:', attachment.originalName);
+                                          
+                                          // Prevent infinite retry loops
+                                          if (e.target.getAttribute('data-retry-attempted') === 'true') {
+                                            console.log('⚠️ Already retried, showing placeholder');
+                                            e.target.style.display = 'none';
+                                            return;
+                                          }
+                                          
+                                          e.target.setAttribute('data-retry-attempted', 'true');
+                                          
+                                          // Try fallback URL if available
+                                          if (attachment._fallbackUrl && !e.target.getAttribute('data-fallback-tried')) {
+                                            console.log('🔄 Trying fallback Cloudinary URL:', attachment._fallbackUrl);
+                                            e.target.setAttribute('data-fallback-tried', 'true');
+                                            e.target.src = attachment._fallbackUrl;
+                                            return;
+                                          }
+                                          
+                                          // Hide image and show placeholder
+                                          e.target.style.display = 'none';
+                                        }}
                                       />
                                     </div>
                                   )}

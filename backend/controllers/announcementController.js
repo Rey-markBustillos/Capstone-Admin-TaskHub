@@ -43,7 +43,7 @@ exports.createAnnouncement = async (req, res) => {
         // Construct Cloudinary URL if secure_url is missing but we have public_id
         let cloudinaryUrl = file.secure_url || file.url;
         if (!cloudinaryUrl && file.public_id) {
-          const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'drvtezcke';
+          const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dptg3ct9i';
           const resourceType = file.resource_type || 'image';
           cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/${file.public_id}`;
           console.log('🔧 Constructed Cloudinary URL from public_id:', cloudinaryUrl);

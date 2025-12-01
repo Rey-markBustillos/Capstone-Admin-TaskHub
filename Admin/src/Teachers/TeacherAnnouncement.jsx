@@ -250,10 +250,19 @@ export default function TeacherAnnouncement() {
                             // If no cloudinaryUrl but filename looks like Cloudinary public_id, construct URL
                             if (!cloudinaryUrl && attachment.filename && attachment.filename.includes('taskhub/')) {
                               // This is a Cloudinary file without saved URL - construct it
-                              const cloudName = 'drvtezcke'; // Your Cloudinary cloud name
-                              const resourceType = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName) ? 'image' : 'raw';
+                              const cloudName = 'dptg3ct9i'; // Correct Cloudinary cloud name
+                              
+                              // Try to determine resource type, but have fallback options
+                              let resourceType = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName) ? 'image' : 'raw';
                               cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/${attachment.filename}`;
+                              
+                              // Store both possible URLs for fallback
+                              attachment._fallbackUrl = resourceType === 'image' 
+                                ? `https://res.cloudinary.com/${cloudName}/raw/upload/${attachment.filename}`
+                                : `https://res.cloudinary.com/${cloudName}/image/upload/${attachment.filename}`;
+                              
                               console.log('🔧 Constructed Cloudinary URL:', cloudinaryUrl);
+                              console.log('🔧 Fallback URL:', attachment._fallbackUrl);
                             }
                             
                             // Use Cloudinary URL if available, fallback to local file URL for legacy files
@@ -361,8 +370,15 @@ export default function TeacherAnnouncement() {
                                         
                                         e.target.setAttribute('data-retry-attempted', 'true');
                                         
-                                        // If we have a Cloudinary URL and it failed, show error immediately
-                                        if (attachment.cloudinaryUrl && fileUrl === attachment.cloudinaryUrl) {
+                                        // If we have a Cloudinary URL and it failed, try fallback URL
+                                        if (cloudinaryUrl && fileUrl === cloudinaryUrl) {
+                                          if (attachment._fallbackUrl && !e.target.getAttribute('data-fallback-tried')) {
+                                            console.log('🔄 Trying fallback Cloudinary URL:', attachment._fallbackUrl);
+                                            e.target.setAttribute('data-fallback-tried', 'true');
+                                            e.target.src = attachment._fallbackUrl;
+                                            return;
+                                          }
+                                          
                                           console.log('❌ Cloudinary URL failed, showing placeholder');
                                           e.target.style.display = 'none';
                                           if (!e.target.parentNode.querySelector('.error-placeholder')) {
@@ -375,7 +391,7 @@ export default function TeacherAnnouncement() {
                                             `;
                                             e.target.parentNode.appendChild(placeholder);
                                           }
-                                        } else if (!attachment.cloudinaryUrl) {
+                                        } else if (!cloudinaryUrl) {
                                           // For legacy files, try alternative URL pattern
                                           const fallbackUrl = `${API_BASE_URL}/announcements/attachment/${attachment.filename}`;
                                           console.log('🔄 Trying fallback URL:', fallbackUrl);
