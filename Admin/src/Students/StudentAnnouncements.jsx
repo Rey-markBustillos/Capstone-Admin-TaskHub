@@ -200,8 +200,21 @@ export default function StudentAnnouncements() {
                           </p>
                           <div className="space-y-3">
                             {ann.attachments.map((attachment, index) => {
+                              // Handle different file URL scenarios
+                              let fileUrl;
+                              let cloudinaryUrl = attachment.cloudinaryUrl;
+                              
+                              // If no cloudinaryUrl but filename looks like Cloudinary public_id, construct URL
+                              if (!cloudinaryUrl && attachment.filename && attachment.filename.includes('taskhub/')) {
+                                // This is a Cloudinary file without saved URL - construct it
+                                const cloudName = 'drvtezcke'; // Your Cloudinary cloud name
+                                const resourceType = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName) ? 'image' : 'raw';
+                                cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/${attachment.filename}`;
+                                console.log('🔧 Constructed Cloudinary URL:', cloudinaryUrl);
+                              }
+                              
                               // Use Cloudinary URL if available, fallback to local file URL for legacy files
-                              const fileUrl = attachment.cloudinaryUrl || `${API_BASE_URL}/announcements/attachment/${attachment.filename}`;
+                              fileUrl = cloudinaryUrl || `${API_BASE_URL}/announcements/files/${attachment.filename}`;
                               const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName);
                               // Only images will have preview, other files are download-only
                               
@@ -218,14 +231,15 @@ export default function StudentAnnouncements() {
                                       <button
                                         onClick={() => {
                                           console.log('🔽 Download clicked for:', attachment.originalName);
-                                          console.log('🔽 Cloudinary URL:', attachment.cloudinaryUrl);
+                                          console.log('🔽 Cloudinary URL:', cloudinaryUrl);
+                                          console.log('🔽 Original Cloudinary URL:', attachment.cloudinaryUrl);
                                           console.log('🔽 Filename:', attachment.filename);
                                           
                                           // Use Cloudinary URL for direct download, or legacy download endpoint
-                                          if (attachment.cloudinaryUrl) {
+                                          if (cloudinaryUrl) {
                                             try {
                                               // Method 1: Try direct Cloudinary download
-                                              const downloadUrl = attachment.cloudinaryUrl.replace('/upload/', '/upload/fl_attachment/');
+                                              const downloadUrl = cloudinaryUrl.replace('/upload/', '/upload/fl_attachment/');
                                               console.log('🔽 Using Cloudinary download URL:', downloadUrl);
                                               
                                               const link = document.createElement('a');
@@ -252,7 +266,7 @@ export default function StudentAnnouncements() {
                                             } catch (error) {
                                               console.error('❌ Cloudinary download error:', error);
                                               // Final fallback: open in new tab
-                                              window.open(attachment.cloudinaryUrl, '_blank', 'noopener,noreferrer');
+                                              window.open(cloudinaryUrl, '_blank', 'noopener,noreferrer');
                                             }
                                           } else {
                                             console.log('🔽 Using legacy download method');

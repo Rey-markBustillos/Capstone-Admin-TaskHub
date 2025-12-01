@@ -35,8 +35,19 @@ exports.createAnnouncement = async (req, res) => {
           filename: file.filename,
           secure_url: file.secure_url,
           public_id: file.public_id,
-          resource_type: file.resource_type
+          resource_type: file.resource_type,
+          path: file.path,
+          url: file.url
         });
+        
+        // Construct Cloudinary URL if secure_url is missing but we have public_id
+        let cloudinaryUrl = file.secure_url || file.url;
+        if (!cloudinaryUrl && file.public_id) {
+          const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'drvtezcke';
+          const resourceType = file.resource_type || 'image';
+          cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/${file.public_id}`;
+          console.log('🔧 Constructed Cloudinary URL from public_id:', cloudinaryUrl);
+        }
         
         return {
           filename: file.filename || file.public_id, // Use public_id as fallback
@@ -44,7 +55,7 @@ exports.createAnnouncement = async (req, res) => {
           fileSize: file.size,
           mimeType: file.mimetype,
           uploadedAt: new Date(),
-          cloudinaryUrl: file.secure_url, // Store Cloudinary URL
+          cloudinaryUrl: cloudinaryUrl, // Store Cloudinary URL (constructed if needed)
           publicId: file.public_id, // Store public ID for deletion if needed
           resourceType: file.resource_type
         };
