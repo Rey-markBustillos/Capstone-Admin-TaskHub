@@ -22,6 +22,7 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   /* Or your preferred font */
   overflow: auto;
+  background-color: #BDDDFC;
 }
 @keyframes slideInRight {
   from { transform: translateX(100px); opacity: 0; }
