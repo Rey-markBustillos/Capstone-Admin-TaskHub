@@ -55,7 +55,7 @@ const WelcomeScreen = ({ onContinue }) => {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden" style={{backgroundColor: '#BDDDFC'}}>
+    <div className="relative min-h-screen bg-white flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
       {/* Decorative background blobs (same as login) */}
       <div
         aria-hidden="true"

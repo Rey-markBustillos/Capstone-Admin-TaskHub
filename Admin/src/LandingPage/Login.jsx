@@ -60,7 +60,7 @@ export default function Login({ onBack, onLoginSuccess }) {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden" style={{backgroundColor: '#BDDDFC'}}>
+    <div className="relative min-h-screen bg-white flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
       {/* Decorative background blobs */}
       <div
         aria-hidden="true"
