@@ -202,10 +202,8 @@ export default function StudentAnnouncements() {
                             {ann.attachments.map((attachment, index) => {
                               // Use Cloudinary URL if available, fallback to local file URL for legacy files
                               const fileUrl = attachment.cloudinaryUrl || `${API_BASE_URL}/announcements/attachment/${attachment.filename}`;
-                              const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachment.originalName);
-                              const isPdf = /\.pdf$/i.test(attachment.originalName);
-                              const isVideo = /\.(mp4|webm|ogg)$/i.test(attachment.originalName);
-                              const isAudio = /\.(mp3|wav|ogg)$/i.test(attachment.originalName);
+                              const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName);
+                              // Only images will have preview, other files are download-only
                               
                               return (
                                 <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
@@ -254,43 +252,8 @@ export default function StudentAnnouncements() {
                                     </div>
                                   )}
                                   
-                                  {isPdf && (
-                                    <div className="mt-2">
-                                      <iframe
-                                        src={`${fileUrl}#toolbar=0`}
-                                        className="w-full h-96 rounded-lg border border-gray-300 dark:border-gray-600"
-                                        title={attachment.originalName}
-                                      />
-                                    </div>
-                                  )}
-                                  
-                                  {isVideo && (
-                                    <div className="mt-2">
-                                      <video 
-                                        controls 
-                                        className="w-full max-h-96 rounded-lg"
-                                        preload="metadata"
-                                      >
-                                        <source src={fileUrl} type={attachment.mimeType} />
-                                        Your browser does not support the video tag.
-                                      </video>
-                                    </div>
-                                  )}
-                                  
-                                  {isAudio && (
-                                    <div className="mt-2">
-                                      <audio 
-                                        controls 
-                                        className="w-full"
-                                        preload="metadata"
-                                      >
-                                        <source src={fileUrl} type={attachment.mimeType} />
-                                        Your browser does not support the audio tag.
-                                      </audio>
-                                    </div>
-                                  )}
-                                  
-                                  {!isImage && !isPdf && !isVideo && !isAudio && (
+                                  {/* Only images have preview, other files are download-only */}
+                                  {!isImage && (
                                     <div className="mt-2 p-3 bg-white dark:bg-gray-600 rounded border text-center">
                                       <p className="text-sm text-gray-600 dark:text-gray-400">
                                         Click download to view this file

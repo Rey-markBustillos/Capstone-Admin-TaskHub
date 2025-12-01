@@ -347,43 +347,13 @@ export default function TeacherAnnouncement() {
                                   </div>
                                 )}
                                 
-                                {isPdf && (
-                                  <div className="mt-2">
-                                    <iframe
-                                      src={`${fileUrl}#toolbar=0`}
-                                      className="w-full h-96 rounded-lg border border-gray-300 dark:border-gray-600"
-                                      title={attachment.originalName}
-                                    />
-                                  </div>
-                                )}
+                                {/* PDF and other documents - download only */}
                                 
-                                {isVideo && (
-                                  <div className="mt-2">
-                                    <video 
-                                      controls 
-                                      className="w-full max-h-96 rounded-lg"
-                                      preload="metadata"
-                                    >
-                                      <source src={fileUrl} type={attachment.mimeType} />
-                                      Your browser does not support the video tag.
-                                    </video>
-                                  </div>
-                                )}
+                                {/* Video files - download only */}
                                 
-                                {isAudio && (
-                                  <div className="mt-2">
-                                    <audio 
-                                      controls 
-                                      className="w-full"
-                                      preload="metadata"
-                                    >
-                                      <source src={fileUrl} type={attachment.mimeType} />
-                                      Your browser does not support the audio tag.
-                                    </audio>
-                                  </div>
-                                )}
+                                {/* Audio files - download only */}
                                 
-                                {!isImage && !isPdf && !isVideo && !isAudio && (
+                                {!isImage && (
                                   <div className="mt-2 p-3 bg-white dark:bg-gray-600 rounded border text-center">
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
                                       Click download to view this file
@@ -496,9 +466,9 @@ export default function TeacherAnnouncement() {
                     multiple
                     onChange={handleFileSelect}
                     className="w-full border border-gray-600 rounded-lg p-2.5 bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.mp4,.mp3,.zip,.rar"
+                    accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.ppt,.pptx,.txt,.mp4,.mp3,.zip,.rar"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Max 10MB per file. Allowed: images, documents, videos, audio, archives</p>
+                  <p className="text-xs text-gray-400 mt-1">Max 10MB per file. Allowed: images (JPG, PNG, GIF), documents (PDF, Word, PowerPoint), videos, audio, archives</p>
                 </div>
               )}
 
