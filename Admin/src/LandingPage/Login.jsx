@@ -61,7 +61,7 @@ export default function Login({ onBack, onLoginSuccess }) {
 
   return (
     <div className="relative min-h-screen bg-white flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
-      <div className="relative bg-white backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/10">
+      <div className="relative backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/10" style={{backgroundColor: '#0047AB'}}>
         <div className="flex flex-col items-center mb-8">
           <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white shadow-lg border-4 border-white mb-2 animate-bounce-slow overflow-hidden">
             <img
