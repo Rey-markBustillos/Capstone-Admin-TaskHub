@@ -53,16 +53,22 @@ const AdminDashboard = () => {
   const fetchDailyActiveUsers = useCallback(async () => {
     console.log('🔄 Fetching daily active users...');
     try {
-      const response = await axios.get(`${API_BASE_URL}/users/daily-active-users`);
+      const response = await axios.get(`${API_BASE_URL}/users/daily-active-users`, {
+        timeout: 10000, // 10 second timeout
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       console.log('✅ Daily active users data received:', response.data);
       setChartData(response.data.chartData);
     } catch (error) {
       console.error('❌ Error fetching daily active users:', error);
       
-      // Generate realistic fallback data based on actual user statistics
-      const totalStudents = statistics.totalStudents || 10;
-      const totalTeachers = statistics.totalTeachers || 3;
-      const totalAdmins = statistics.totalAdmins || 1;
+      // Generate realistic fallback data using current users state
+      const currentUsers = users;
+      const totalStudents = currentUsers.filter(u => u.role === 'student').length || 10;
+      const totalTeachers = currentUsers.filter(u => u.role === 'teacher').length || 3;
+      const totalAdmins = currentUsers.filter(u => u.role === 'admin').length || 1;
       
       // Generate last 7 days
       const last7Days = [];
@@ -97,7 +103,7 @@ const AdminDashboard = () => {
       console.log('📊 Using fallback data:', fallbackData);
       setChartData(fallbackData);
     }
-  }, [statistics]);
+  }, [users]); // Include users dependency but control when it's called
   
   // Calculate statistics when users or classes data changes
   useEffect(() => {
@@ -108,12 +114,29 @@ const AdminDashboard = () => {
       totalClasses: classes.length
     };
     setStatistics(stats);
+  }, [users, classes]);
+  
+  // Separate useEffect with throttling for chart data - only runs once after initial data load
+  useEffect(() => {
+    let timeoutId;
     
-    // Fetch daily active users after statistics are calculated
-    if (users.length > 0) {
-      fetchDailyActiveUsers();
+    const hasUsers = users.length > 0;
+    const hasNoChartData = chartData.labels.length === 0;
+    const shouldFetchChart = hasUsers && hasNoChartData;
+    
+    // Only fetch chart data once when users are loaded, not on every change
+    if (shouldFetchChart) {
+      timeoutId = setTimeout(() => {
+        fetchDailyActiveUsers();
+      }, 1000); // 1 second delay after users load
     }
-  }, [users, classes, fetchDailyActiveUsers]);
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [users.length, chartData.labels.length, fetchDailyActiveUsers]); // Proper dependencies
   
 
   
