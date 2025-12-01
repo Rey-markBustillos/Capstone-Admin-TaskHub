@@ -60,7 +60,7 @@ export default function Login({ onBack, onLoginSuccess }) {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
+    <div className="relative min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden" style={{backgroundColor: '#BDDDFC'}}>
       {/* Decorative background blobs */}
       <div
         aria-hidden="true"
