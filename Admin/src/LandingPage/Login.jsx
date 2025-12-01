@@ -61,23 +61,9 @@ export default function Login({ onBack, onLoginSuccess }) {
 
   return (
     <div className="relative min-h-screen bg-white flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
-      {/* Decorative background blobs */}
-      <div
-        aria-hidden="true"
-        className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3"
-      >
-        <div className="w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-30 blur-3xl"></div>
-      </div>
-      <div
-        aria-hidden="true"
-        className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3"
-      >
-        <div className="w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 opacity-30 blur-3xl"></div>
-      </div>
-
-      <div className="relative bg-gradient-to-br from-indigo-900/80 via-slate-900/80 to-blue-900/80 backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/40">
+      <div className="relative bg-white backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/10">
         <div className="flex flex-col items-center mb-8">
-          <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500 via-violet-500 to-blue-500 shadow-lg border-4 border-white mb-2 animate-bounce-slow overflow-hidden">
+          <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white shadow-lg border-4 border-white mb-2 animate-bounce-slow overflow-hidden">
             <img
               src="/taskhublogos.png"
               alt="TaskHub Logo"
