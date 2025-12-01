@@ -246,9 +246,6 @@ export default function TeacherAnnouncement() {
                             // Use Cloudinary URL if available, fallback to local file URL for legacy files
                             const fileUrl = attachment.cloudinaryUrl || `${API_BASE_URL}/announcements/files/${attachment.filename}?v=${Date.now()}`;
                             const isImage = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(attachment.originalName);
-                            const isPdf = /\.pdf$/i.test(attachment.originalName);
-                            const isVideo = /\.(mp4|webm|ogg|avi|mov)$/i.test(attachment.originalName);
-                            const isAudio = /\.(mp3|wav|ogg|m4a|flac)$/i.test(attachment.originalName);
                             
 
                             
