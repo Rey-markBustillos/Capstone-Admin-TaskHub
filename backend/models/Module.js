@@ -28,6 +28,16 @@ const moduleSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  // Cloudinary fields for cloud storage
+  cloudinaryUrl: {
+    type: String
+  },
+  publicId: {
+    type: String
+  },
+  resourceType: {
+    type: String
+  },
   classId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Class',

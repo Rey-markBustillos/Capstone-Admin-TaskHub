@@ -6,8 +6,29 @@ const fs = require('fs');
 const mongoose = require('mongoose');
 const Module = require('../models/Module');
 
-// Configure multer for module uploads
-const storage = multer.diskStorage({
+// --- Cloudinary Setup for Modules ---
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+// Configure cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cloudinary storage configuration for modules
+const moduleCloudinaryStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => ({
+    folder: "taskhub/modules",
+    public_id: `module-${Date.now()}`,
+    resource_type: "raw", // All module files are stored as raw since they're documents
+  }),
+});
+
+// Keep legacy local storage for backward compatibility
+const legacyStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = path.join(__dirname, '..', 'uploads', 'modules');
     
@@ -26,7 +47,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ 
-  storage: storage,
+  storage: moduleCloudinaryStorage,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
@@ -83,21 +104,40 @@ router.post('/upload', upload.single('module'), async (req, res) => {
     const { title, description, classId, uploadedBy } = req.body;
     
     if (!title || !classId || !uploadedBy) {
-      // Delete uploaded file if validation fails
-      fs.unlinkSync(req.file.path);
       return res.status(400).json({ message: 'Title, Class ID, and Uploaded By are required' });
+    }
+    
+    console.log('📎 Processing module upload:', {
+      originalname: req.file.originalname,
+      filename: req.file.filename,
+      secure_url: req.file.secure_url,
+      public_id: req.file.public_id,
+      resource_type: req.file.resource_type
+    });
+    
+    // Construct Cloudinary URL if secure_url is missing but we have public_id
+    let cloudinaryUrl = req.file.secure_url || req.file.url;
+    if (!cloudinaryUrl && req.file.public_id) {
+      const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dptg3ct9i';
+      const resourceType = req.file.resource_type || 'raw';
+      cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/${req.file.public_id}`;
+      console.log('🔧 Constructed Cloudinary URL for module:', cloudinaryUrl);
     }
     
     const module = new Module({
       title: title.trim(),
       description: description ? description.trim() : '',
       fileName: req.file.originalname,
-      filePath: req.file.filename, // Store only the filename
+      filePath: req.file.filename || req.file.public_id, // Store filename or public_id
       fileSize: req.file.size,
       mimeType: req.file.mimetype,
       classId,
       uploadedBy,
-      uploadDate: new Date()
+      uploadDate: new Date(),
+      // Cloudinary fields
+      cloudinaryUrl: cloudinaryUrl,
+      publicId: req.file.public_id,
+      resourceType: req.file.resource_type
     });
     
     await module.save();
@@ -105,18 +145,13 @@ router.post('/upload', upload.single('module'), async (req, res) => {
     // Populate the uploadedBy field before sending response
     await module.populate('uploadedBy', 'name email');
     
+    console.log('✅ Module uploaded successfully with Cloudinary URL:', cloudinaryUrl);
     res.status(201).json({
       message: 'Module uploaded successfully',
       module
     });
   } catch (error) {
-    console.error('Error uploading module:', error);
-    
-    // Delete uploaded file if there's an error
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
-    }
-    
+    console.error('❌ Error uploading module:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -125,7 +160,7 @@ router.post('/upload', upload.single('module'), async (req, res) => {
 router.get('/download/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('Download request for module ID:', id);
+    console.log('📋 Download request for module ID:', id);
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
       console.log('Invalid ObjectId format:', id);
@@ -135,11 +170,36 @@ router.get('/download/:id', async (req, res) => {
     const module = await Module.findById(id);
     
     if (!module) {
-      console.log('Module not found with ID:', req.params.id);
+      console.log('Module not found with ID:', id);
       return res.status(404).json({ message: 'Module not found' });
     }
     
-    // Handle both old absolute paths and new relative paths
+    console.log('📋 Module found for download:', module.title);
+    console.log('📋 Cloudinary URL:', module.cloudinaryUrl);
+    console.log('📋 File path:', module.filePath);
+    
+    // Increment download count
+    try {
+      await module.incrementDownloadCount();
+    } catch (err) {
+      console.warn('Could not increment download count:', err.message);
+    }
+    
+    // If it's a Cloudinary file, redirect to Cloudinary download URL
+    if (module.cloudinaryUrl) {
+      console.log('🔽 Redirecting to Cloudinary download URL');
+      // Create download URL with proper Cloudinary transformation for attachment
+      const downloadUrl = module.cloudinaryUrl.replace('/upload/', '/upload/fl_attachment/');
+      
+      // Add CORS headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      
+      return res.redirect(downloadUrl);
+    }
+    
+    // Legacy file handling - local files
     let filePath;
     if (path.isAbsolute(module.filePath)) {
       // Old format: absolute path
@@ -149,14 +209,12 @@ router.get('/download/:id', async (req, res) => {
       filePath = path.join(__dirname, '..', 'uploads', 'modules', module.filePath);
     }
     
-    console.log('Module found for download:', module.title);
-    console.log('Stored file path:', module.filePath);
-    console.log('Constructed file path:', filePath);
-    console.log('File exists:', fs.existsSync(filePath));
+    console.log('📋 Constructed local file path:', filePath);
+    console.log('📋 File exists:', fs.existsSync(filePath));
     
     if (!fs.existsSync(filePath)) {
-      console.log('File not found at path:', filePath);
-      return res.status(404).json({ message: 'File not found on server' });
+      console.log('❌ File not found at path:', filePath);
+      return res.status(404).json({ message: 'File not found on server - files are now stored in cloud storage' });
     }
     
     res.setHeader('Content-Disposition', `attachment; filename="${module.fileName}"`);
@@ -165,7 +223,7 @@ router.get('/download/:id', async (req, res) => {
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
   } catch (error) {
-    console.error('Error downloading module:', error);
+    console.error('❌ Error downloading module:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -174,7 +232,7 @@ router.get('/download/:id', async (req, res) => {
 router.get('/view/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('View request for module ID:', id);
+    console.log('👀 View request for module ID:', id);
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
       console.log('Invalid ObjectId format:', id);
@@ -184,11 +242,27 @@ router.get('/view/:id', async (req, res) => {
     const module = await Module.findById(id);
     
     if (!module) {
-      console.log('Module not found with ID:', req.params.id);
+      console.log('Module not found with ID:', id);
       return res.status(404).json({ message: 'Module not found' });
     }
     
-    // Handle both old absolute paths and new relative paths
+    console.log('👀 Module found for viewing:', module.title);
+    console.log('👀 Cloudinary URL:', module.cloudinaryUrl);
+    console.log('👀 File path:', module.filePath);
+    
+    // If it's a Cloudinary file, redirect to Cloudinary URL for inline viewing
+    if (module.cloudinaryUrl) {
+      console.log('👀 Redirecting to Cloudinary view URL');
+      
+      // Add CORS headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      
+      return res.redirect(module.cloudinaryUrl);
+    }
+    
+    // Legacy file handling - local files
     let filePath;
     if (path.isAbsolute(module.filePath)) {
       // Old format: absolute path
@@ -198,14 +272,12 @@ router.get('/view/:id', async (req, res) => {
       filePath = path.join(__dirname, '..', 'uploads', 'modules', module.filePath);
     }
     
-    console.log('Module found:', module.title);
-    console.log('Stored file path:', module.filePath);
-    console.log('Constructed file path:', filePath);
-    console.log('File exists:', fs.existsSync(filePath));
+    console.log('👀 Constructed local file path:', filePath);
+    console.log('👀 File exists:', fs.existsSync(filePath));
     
     if (!fs.existsSync(filePath)) {
-      console.log('File not found at path:', filePath);
-      return res.status(404).json({ message: 'File not found on server' });
+      console.log('❌ File not found at path:', filePath);
+      return res.status(404).json({ message: 'File not found on server - files are now stored in cloud storage' });
     }
     
     res.setHeader('Content-Type', module.mimeType);
@@ -214,7 +286,7 @@ router.get('/view/:id', async (req, res) => {
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
   } catch (error) {
-    console.error('Error viewing module:', error);
+    console.error('❌ Error viewing module:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -228,17 +300,46 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Module not found' });
     }
     
-    // Delete the file from filesystem
-    if (fs.existsSync(module.filePath)) {
-      fs.unlinkSync(module.filePath);
+    console.log('🗑️ Deleting module:', module.title);
+    
+    // Delete from Cloudinary if it's a cloud file
+    if (module.publicId && module.cloudinaryUrl) {
+      try {
+        console.log('🗑️ Deleting from Cloudinary:', module.publicId);
+        await cloudinary.uploader.destroy(module.publicId, { resource_type: module.resourceType || 'raw' });
+        console.log('✅ File deleted from Cloudinary successfully');
+      } catch (cloudinaryError) {
+        console.warn('⚠️ Could not delete file from Cloudinary:', cloudinaryError.message);
+        // Continue with database deletion even if Cloudinary deletion fails
+      }
+    }
+    
+    // Delete legacy local file if it exists
+    if (module.filePath && !module.cloudinaryUrl) {
+      let filePath;
+      if (path.isAbsolute(module.filePath)) {
+        filePath = module.filePath;
+      } else {
+        filePath = path.join(__dirname, '..', 'uploads', 'modules', module.filePath);
+      }
+      
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+          console.log('✅ Legacy file deleted from filesystem');
+        } catch (fsError) {
+          console.warn('⚠️ Could not delete legacy file:', fsError.message);
+        }
+      }
     }
     
     // Delete from database
     await Module.findByIdAndDelete(req.params.id);
     
+    console.log('✅ Module deleted successfully from database');
     res.json({ message: 'Module deleted successfully' });
   } catch (error) {
-    console.error('Error deleting module:', error);
+    console.error('❌ Error deleting module:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

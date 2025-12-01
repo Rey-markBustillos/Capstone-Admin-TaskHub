@@ -331,29 +331,62 @@ const UploadModule = () => {
                       <span className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded">
                         {new Date(module.uploadDate).toLocaleDateString()}
                       </span>
+                      {module.cloudinaryUrl ? (
+                        <span className="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-1 rounded" title="Stored in cloud">
+                          ☁️ Cloud
+                        </span>
+                      ) : (
+                        <span className="bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded" title="Legacy local file">
+                          📁 Local
+                        </span>
+                      )}
+                      {module.downloadCount > 0 && (
+                        <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded" title="Download count">
+                          📥 {module.downloadCount}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1 ml-4 flex-shrink-0">
-                  <a
-                    href={`${API_BASE_URL}/modules/download/${module._id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => {
+                      console.log('📋 Download module:', module.title, module._id);
+                      
+                      // Create download link
+                      const downloadUrl = `${API_BASE_URL}/modules/download/${module._id}`;
+                      const link = document.createElement('a');
+                      link.href = downloadUrl;
+                      link.download = module.fileName;
+                      link.target = '_blank';
+                      link.rel = 'noopener noreferrer';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
                     className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-md transition-colors"
                     title="Download"
                   >
                     <FaDownload size={14} />
-                  </a>
-                  <a
-                    href={`${API_BASE_URL}/modules/view/${module._id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log('👀 View module:', module.title, module._id);
+                      
+                      // Check if module has Cloudinary URL
+                      if (module.cloudinaryUrl) {
+                        window.open(module.cloudinaryUrl, '_blank', 'noopener,noreferrer');
+                      } else {
+                        // Use backend view route for legacy files
+                        window.open(`${API_BASE_URL}/modules/view/${module._id}`, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
                     className="p-2 text-green-600 hover:text-green-800 hover:bg-green-100 dark:hover:bg-green-900 rounded-md transition-colors"
                     title="View"
                   >
                     <FaEye size={14} />
-                  </a>
+                  </button>
                   <button
                     onClick={() => handleDelete(module._id)}
                     className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 dark:hover:bg-red-900 rounded-md transition-colors"
