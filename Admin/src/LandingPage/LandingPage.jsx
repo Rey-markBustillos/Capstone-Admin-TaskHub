@@ -55,7 +55,7 @@ const WelcomeScreen = ({ onContinue }) => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
+    <div>
       {/* Decorative background blobs (same as login) */}
       <div
         aria-hidden="true"
