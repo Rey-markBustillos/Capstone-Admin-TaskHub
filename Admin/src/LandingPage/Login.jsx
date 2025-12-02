@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { FaUserCircle, FaLock, FaSignInAlt, FaArrowLeft } from "react-icons/fa";
 import { recordApplicationVisit, recordPageVisit, recordUserLogin } from '../utils/visitTracker';
 
@@ -137,31 +138,6 @@ export default function Login({ onBack, onLoginSuccess }) {
           <p className="text-slate-300 mt-2 text-lg font-medium">Sign in to continue</p>
         </div>
 
-      <div aria-hidden="true" className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-        <div className="w-72 h-72 rounded-full bg-blue-700 opacity-20"></div>
-      </div>
-      
-      {/* Additional 6 solid blue circles for background */}
-      <div aria-hidden="true" className="absolute top-40 left-1/2 -translate-x-1/2 pointer-events-none select-none">
-        <div className="w-10 h-10 rounded-full bg-blue-50 opacity-60"></div>
-      </div>
-      <div aria-hidden="true" className="absolute top-1/4 right-24 pointer-events-none select-none">
-        <div className="w-16 h-16 rounded-full bg-blue-200 opacity-50"></div>
-      </div>
-      <div aria-hidden="true" className="absolute bottom-1/3 left-1/3 pointer-events-none select-none">
-        <div className="w-24 h-24 rounded-full bg-blue-300 opacity-40"></div>
-      </div>
-      <div aria-hidden="true" className="absolute bottom-32 left-1/4 pointer-events-none select-none">
-        <div className="w-36 h-36 rounded-full bg-blue-400 opacity-30"></div>
-      </div>
-      <div aria-hidden="true" className="absolute top-3/4 right-1/4 pointer-events-none select-none">
-        <div className="w-48 h-48 rounded-full bg-blue-500 opacity-25"></div>
-      </div>
-      <div aria-hidden="true" className="absolute bottom-1/4 right-1/2 translate-x-1/2 pointer-events-none select-none">
-        <div className="w-64 h-64 rounded-full bg-blue-800 opacity-20"></div>
-      </div>
-      
-      <div className="relative backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/10" style={{backgroundColor: '#0047AB'}}>
         <form onSubmit={handleSubmit} noValidate className="space-y-6">
           <div>
             <label
@@ -254,6 +230,10 @@ export default function Login({ onBack, onLoginSuccess }) {
         </div>
       </div>
     </div>
-    </div>
   );
 }
+
+Login.propTypes = {
+  onBack: PropTypes.func.isRequired,
+  onLoginSuccess: PropTypes.func.isRequired,
+};
