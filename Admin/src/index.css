@@ -48,6 +48,26 @@ body {
   animation: bounceOnce 0.7s cubic-bezier(0.4,0,0.2,1);
 }
 
+/* Floating animation for 3D bubble */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-10px) rotate(-1deg);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
 /* Hidden scrollbar for dashboard and other components */
 .scrollbar-hidden {
   /* For Webkit browsers (Chrome, Safari, Edge) */
