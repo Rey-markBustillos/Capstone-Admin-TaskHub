@@ -61,15 +61,24 @@ export default function Login({ onBack, onLoginSuccess }) {
 
   return (
     <div className="relative min-h-screen bg-white flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
-      {/* Decorative blue gradient blobs for background */}
-      <div aria-hidden="true" className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 pointer-events-none select-none">
-        <div className="w-[22rem] h-[22rem] sm:w-[36rem] sm:h-[36rem] rounded-full bg-gradient-to-br from-blue-200 via-blue-300 to-blue-400 opacity-40 blur-3xl"></div>
+      {/* Decorative solid blue circles for background */}
+      <div aria-hidden="true" className="absolute top-8 left-8 pointer-events-none select-none">
+        <div className="w-12 h-12 rounded-full bg-blue-100 opacity-60"></div>
       </div>
-      <div aria-hidden="true" className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 pointer-events-none select-none">
-        <div className="w-[20rem] h-[20rem] sm:w-[32rem] sm:h-[32rem] rounded-full bg-gradient-to-tr from-blue-400 via-blue-600 to-blue-900 opacity-30 blur-3xl"></div>
+      <div aria-hidden="true" className="absolute top-24 left-32 pointer-events-none select-none">
+        <div className="w-20 h-20 rounded-full bg-blue-200 opacity-50"></div>
       </div>
-      <div aria-hidden="true" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-        <div className="w-[12rem] h-[12rem] sm:w-[20rem] sm:h-[20rem] rounded-full bg-gradient-to-br from-blue-100 via-blue-300 to-blue-500 opacity-20 blur-2xl"></div>
+      <div aria-hidden="true" className="absolute top-1/2 left-16 -translate-y-1/2 pointer-events-none select-none">
+        <div className="w-32 h-32 rounded-full bg-blue-300 opacity-40"></div>
+      </div>
+      <div aria-hidden="true" className="absolute bottom-24 right-32 pointer-events-none select-none">
+        <div className="w-40 h-40 rounded-full bg-blue-400 opacity-30"></div>
+      </div>
+      <div aria-hidden="true" className="absolute bottom-8 right-8 pointer-events-none select-none">
+        <div className="w-56 h-56 rounded-full bg-blue-500 opacity-25"></div>
+      </div>
+      <div aria-hidden="true" className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
+        <div className="w-72 h-72 rounded-full bg-blue-700 opacity-20"></div>
       </div>
       <div className="relative backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/10" style={{backgroundColor: '#0047AB'}}>
         <div className="flex flex-col items-center mb-8">
