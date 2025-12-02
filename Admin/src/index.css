@@ -68,20 +68,6 @@ body {
   animation: float 4s ease-in-out infinite;
 }
 
-/* Up and down floating animation */
-@keyframes floatUpDown {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-30px);
-  }
-}
-
-.animate-floatUpDown {
-  animation: floatUpDown 3s ease-in-out infinite;
-}
-
 /* Hidden scrollbar for dashboard and other components */
 .scrollbar-hidden {
   /* For Webkit browsers (Chrome, Safari, Edge) */
