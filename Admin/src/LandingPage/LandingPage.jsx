@@ -56,6 +56,16 @@ const WelcomeScreen = ({ onContinue }) => {
 
   return (
     <div className="relative min-h-screen bg-white flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
+      {/* Decorative blue gradient blobs for background */}
+      <div aria-hidden="true" className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 pointer-events-none select-none">
+        <div className="w-[22rem] h-[22rem] sm:w-[36rem] sm:h-[36rem] rounded-full bg-gradient-to-br from-blue-200 via-blue-300 to-blue-400 opacity-40 blur-3xl"></div>
+      </div>
+      <div aria-hidden="true" className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 pointer-events-none select-none">
+        <div className="w-[20rem] h-[20rem] sm:w-[32rem] sm:h-[32rem] rounded-full bg-gradient-to-tr from-blue-400 via-blue-600 to-blue-900 opacity-30 blur-3xl"></div>
+      </div>
+      <div aria-hidden="true" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
+        <div className="w-[12rem] h-[12rem] sm:w-[20rem] sm:h-[20rem] rounded-full bg-gradient-to-br from-blue-100 via-blue-300 to-blue-500 opacity-20 blur-2xl"></div>
+      </div>
       <div className="relative backdrop-blur-2xl p-6 sm:p-10 md:p-14 rounded-2xl shadow-2xl shadow-black/30 max-w-3xl w-full text-center border-2 border-indigo-700/10" style={{backgroundColor: '#0047AB'}}>
         {/* TaskHub Logo and ALS Title */}
         <div className="flex flex-col items-center mb-8">

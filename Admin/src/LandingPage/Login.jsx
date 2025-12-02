@@ -61,6 +61,16 @@ export default function Login({ onBack, onLoginSuccess }) {
 
   return (
     <div className="relative min-h-screen bg-white flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
+      {/* Decorative blue gradient blobs for background */}
+      <div aria-hidden="true" className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/4 pointer-events-none select-none">
+        <div className="w-[22rem] h-[22rem] sm:w-[36rem] sm:h-[36rem] rounded-full bg-gradient-to-br from-blue-200 via-blue-300 to-blue-400 opacity-40 blur-3xl"></div>
+      </div>
+      <div aria-hidden="true" className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 pointer-events-none select-none">
+        <div className="w-[20rem] h-[20rem] sm:w-[32rem] sm:h-[32rem] rounded-full bg-gradient-to-tr from-blue-400 via-blue-600 to-blue-900 opacity-30 blur-3xl"></div>
+      </div>
+      <div aria-hidden="true" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
+        <div className="w-[12rem] h-[12rem] sm:w-[20rem] sm:h-[20rem] rounded-full bg-gradient-to-br from-blue-100 via-blue-300 to-blue-500 opacity-20 blur-2xl"></div>
+      </div>
       <div className="relative backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/10" style={{backgroundColor: '#0047AB'}}>
         <div className="flex flex-col items-center mb-8">
           <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white shadow-lg border-4 border-white mb-2 animate-bounce-slow overflow-hidden">
