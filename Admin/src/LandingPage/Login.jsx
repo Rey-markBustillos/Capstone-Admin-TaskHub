@@ -80,6 +80,27 @@ export default function Login({ onBack, onLoginSuccess }) {
       <div aria-hidden="true" className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
         <div className="w-72 h-72 rounded-full bg-blue-700 opacity-20"></div>
       </div>
+      {/* 3D Bubble with studying.png and up-down animation */}
+      <div aria-hidden="true" className="absolute top-1/4 left-20 pointer-events-none select-none z-10">
+        <div className="relative w-40 h-40 animate-float">
+          {/* Outer bubble with 3D effect */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-200/30 via-blue-300/20 to-blue-500/10 backdrop-blur-sm border border-blue-300/30 shadow-2xl">
+            {/* Inner glow */}
+            <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-white/20 to-transparent"></div>
+            {/* Highlight for 3D effect */}
+            <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-white/40 blur-sm"></div>
+          </div>
+          {/* studying.png inside the bubble */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img 
+              src="/studying.png" 
+              alt="Studying" 
+              className="w-24 h-24 object-contain drop-shadow-2xl"
+              style={{ imageRendering: 'crisp-edges' }}
+            />
+          </div>
+        </div>
+      </div>
       {/* Additional 6 solid blue circles for background - OUTSIDE the login box */}
       <div aria-hidden="true" className="absolute top-40 left-1/2 -translate-x-1/2 pointer-events-none select-none">
         <div className="w-10 h-10 rounded-full bg-blue-50 opacity-60"></div>
