@@ -6,7 +6,7 @@ import { recordApplicationVisit, recordPageVisit } from '../utils/visitTracker';
 // Welcome Screen component with improved responsiveness, icons, and design
 const WelcomeScreen = ({ onContinue }) => {
   const [activeTab, setActiveTab] = useState(null);
-
+  
   const renderContent = () => {
     switch (activeTab) {
       case 'vision':
