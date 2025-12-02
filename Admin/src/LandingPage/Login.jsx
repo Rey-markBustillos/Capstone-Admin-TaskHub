@@ -62,28 +62,28 @@ export default function Login({ onBack, onLoginSuccess }) {
 
   return (
     <div className="relative min-h-screen bg-white flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
-      {/* Decorative solid blue circles for background - OUTSIDE the login box */}
-      <div aria-hidden="true" className="absolute top-8 left-8 pointer-events-none select-none">
-        <div className="w-12 h-12 rounded-full bg-blue-100 opacity-60"></div>
+      {/* Large decorative circles for background - similar size to login box */}
+      <div aria-hidden="true" className="absolute top-8 right-8 pointer-events-none select-none">
+        <div className="w-80 h-80 rounded-full bg-blue-100 opacity-30"></div>
       </div>
-      <div aria-hidden="true" className="absolute top-24 left-32 pointer-events-none select-none">
-        <div className="w-20 h-20 rounded-full bg-blue-200 opacity-50"></div>
+      <div aria-hidden="true" className="absolute top-32 right-24 pointer-events-none select-none">
+        <div className="w-96 h-96 rounded-full bg-blue-200 opacity-25"></div>
       </div>
-      <div aria-hidden="true" className="absolute top-1/2 left-16 -translate-y-1/2 pointer-events-none select-none">
-        <div className="w-32 h-32 rounded-full bg-blue-300 opacity-40"></div>
+      <div aria-hidden="true" className="absolute top-1/2 right-16 -translate-y-1/2 pointer-events-none select-none">
+        <div className="w-80 h-80 rounded-full bg-blue-300 opacity-35"></div>
       </div>
       <div aria-hidden="true" className="absolute bottom-24 right-32 pointer-events-none select-none">
-        <div className="w-40 h-40 rounded-full bg-blue-400 opacity-30"></div>
+        <div className="w-72 h-72 rounded-full bg-blue-400 opacity-40"></div>
       </div>
       <div aria-hidden="true" className="absolute bottom-8 right-8 pointer-events-none select-none">
-        <div className="w-56 h-56 rounded-full bg-blue-500 opacity-25"></div>
+        <div className="w-88 h-88 rounded-full bg-blue-500 opacity-30"></div>
       </div>
-      <div aria-hidden="true" className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-        <div className="w-72 h-72 rounded-full bg-blue-700 opacity-20"></div>
+      <div aria-hidden="true" className="absolute top-1/2 right-1/4 -translate-y-1/2 pointer-events-none select-none">
+        <div className="w-96 h-96 rounded-full bg-blue-700 opacity-20"></div>
       </div>
       {/* 3D Bubble with studying.png and up-down animation */}
-      <div aria-hidden="true" className="absolute top-1/4 left-20 pointer-events-none select-none z-10">
-        <div className="relative w-40 h-40 animate-float">
+      <div aria-hidden="true" className="absolute top-1/4 right-40 pointer-events-none select-none z-10">
+        <div className="relative w-40 h-40" style={{animation: 'floatUpDown 3s ease-in-out infinite'}}>
           {/* Outer bubble with 3D effect */}
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-200/30 via-blue-300/20 to-blue-500/10 backdrop-blur-sm border border-blue-300/30 shadow-2xl">
             {/* Inner glow */}
@@ -102,27 +102,27 @@ export default function Login({ onBack, onLoginSuccess }) {
           </div>
         </div>
       </div>
-      {/* Additional 6 solid blue circles for background - OUTSIDE the login box */}
-      <div aria-hidden="true" className="absolute top-40 left-1/2 -translate-x-1/2 pointer-events-none select-none">
-        <div className="w-10 h-10 rounded-full bg-blue-50 opacity-60"></div>
+      {/* Additional large circles for background on the right side */}
+      <div aria-hidden="true" className="absolute top-40 right-1/3 pointer-events-none select-none">
+        <div className="w-64 h-64 rounded-full bg-blue-50 opacity-35"></div>
       </div>
-      <div aria-hidden="true" className="absolute top-1/4 right-24 pointer-events-none select-none">
-        <div className="w-16 h-16 rounded-full bg-blue-200 opacity-50"></div>
+      <div aria-hidden="true" className="absolute top-1/4 right-2/3 pointer-events-none select-none">
+        <div className="w-80 h-80 rounded-full bg-blue-200 opacity-30"></div>
       </div>
-      <div aria-hidden="true" className="absolute bottom-1/3 left-1/3 pointer-events-none select-none">
-        <div className="w-24 h-24 rounded-full bg-blue-300 opacity-40"></div>
+      <div aria-hidden="true" className="absolute bottom-1/3 right-1/2 pointer-events-none select-none">
+        <div className="w-72 h-72 rounded-full bg-blue-300 opacity-25"></div>
       </div>
-      <div aria-hidden="true" className="absolute bottom-32 left-1/4 pointer-events-none select-none">
-        <div className="w-36 h-36 rounded-full bg-blue-400 opacity-30"></div>
+      <div aria-hidden="true" className="absolute bottom-32 right-1/4 pointer-events-none select-none">
+        <div className="w-88 h-88 rounded-full bg-blue-400 opacity-30"></div>
       </div>
-      <div aria-hidden="true" className="absolute top-3/4 right-1/4 pointer-events-none select-none">
-        <div className="w-48 h-48 rounded-full bg-blue-500 opacity-25"></div>
+      <div aria-hidden="true" className="absolute top-3/4 right-1/6 pointer-events-none select-none">
+        <div className="w-96 h-96 rounded-full bg-blue-500 opacity-20"></div>
       </div>
-      <div aria-hidden="true" className="absolute bottom-1/4 right-1/2 translate-x-1/2 pointer-events-none select-none">
-        <div className="w-64 h-64 rounded-full bg-blue-800 opacity-20"></div>
+      <div aria-hidden="true" className="absolute bottom-1/4 right-1/3 pointer-events-none select-none">
+        <div className="w-80 h-80 rounded-full bg-blue-800 opacity-25"></div>
       </div>
-      {/* LOGIN BOX - should NOT contain any circles */}
-      <div className="relative backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/10" style={{backgroundColor: '#0047AB'}}>
+      {/* LOGIN BOX - positioned on the left side */}
+      <div className="relative backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full ml-8 border-2 border-indigo-700/10" style={{backgroundColor: '#0047AB'}}>
         <div className="flex flex-col items-center mb-8">
           <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white shadow-lg border-4 border-white mb-2 animate-bounce-slow overflow-hidden">
             <img
