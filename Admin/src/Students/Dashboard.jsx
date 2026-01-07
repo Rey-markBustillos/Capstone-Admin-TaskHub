@@ -519,7 +519,7 @@ const StudentDashboard = () => {
           onClick={closeActivityModal}
         >
           <div 
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden border border-gray-200 dark:border-gray-600"
+            className={`${isLightMode ? 'bg-white border-gray-200' : 'bg-gray-800 border-gray-600'} rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden border`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -542,7 +542,7 @@ const StudentDashboard = () => {
                     const classInfo = classes.find(cls => cls._id === (activity.classId?._id || activity.classId));
                     const submission = submissionMap[activity._id];
                     return (
-                      <div key={activity._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border">
+                      <div key={activity._id} className={`${isLightMode ? 'bg-gray-50' : 'bg-gray-700'} p-4 rounded-lg border`}>
                         <div className="flex justify-between items-start mb-2">
                           <h4 className="font-semibold text-gray-900 dark:text-white">{activity.title}</h4>
                           <span className={`px-2 py-1 rounded text-xs font-medium ${

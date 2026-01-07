@@ -163,14 +163,14 @@ const StudentModules = () => {
 
 
       {/* Modules List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+      <div className={`${isLightMode ? 'bg-white border-gray-200' : 'bg-gray-800 border-gray-700'} rounded-lg shadow-lg border`}>
         {loading ? (
           <div className="flex items-center justify-center py-8 sm:py-12">
             <FaSpinner className="animate-spin text-xl sm:text-3xl text-blue-500 mr-2 sm:mr-3" />
-            <span className="text-sm sm:text-lg text-gray-600 dark:text-gray-300">Loading modules...</span>
+            <span className={`text-sm sm:text-lg ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>Loading modules...</span>
           </div>
         ) : modules.length === 0 ? (
-          <div className="text-center py-8 sm:py-12 text-gray-500 dark:text-gray-400 px-2">
+          <div className={`text-center py-8 sm:py-12 ${isLightMode ? 'text-gray-500' : 'text-gray-400'} px-2`}>
             <FaBook className="text-4xl sm:text-6xl mb-3 sm:mb-4 mx-auto opacity-50" />
             <h3 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2">No Modules Available</h3>
             <p className="text-sm sm:text-base">Your teacher hasn't uploaded any learning modules yet.</p>
@@ -182,11 +182,11 @@ const StudentModules = () => {
             </div>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200 dark:divide-gray-600">
+          <div className={`divide-y ${isLightMode ? 'divide-gray-200' : 'divide-gray-600'}`}>
             {modules.map((module) => (
               <div
                 key={module._id}
-                className="p-2 sm:p-3 md:p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className={`p-2 sm:p-3 md:p-6 ${isLightMode ? 'hover:bg-gray-50' : 'hover:bg-gray-700'} transition-colors`}
               >
                 <div className="flex items-start gap-1 sm:gap-2 md:gap-4">
                   {/* File Icon */}
@@ -196,17 +196,17 @@ const StudentModules = () => {
 
                   {/* Module Info */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xs sm:text-sm md:text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-0.5 sm:mb-1 md:mb-2">
+                    <h3 className={`text-xs sm:text-sm md:text-lg lg:text-xl font-semibold ${isLightMode ? 'text-gray-900' : 'text-white'} mb-0.5 sm:mb-1 md:mb-2`}>
                       {module.title}
                     </h3>
                     
                     {module.description && (
-                      <p className="text-gray-600 dark:text-gray-300 mb-1 sm:mb-2 md:mb-3 line-clamp-2 text-[10px] sm:text-xs md:text-base">
+                      <p className={`${isLightMode ? 'text-gray-600' : 'text-gray-300'} mb-1 sm:mb-2 md:mb-3 line-clamp-2 text-[10px] sm:text-xs md:text-base`}>
                         {module.description}
                       </p>
                     )}
                     
-                    <div className="flex flex-wrap items-center gap-1 sm:gap-2 md:gap-4 text-[10px] sm:text-xs md:text-sm text-gray-500 dark:text-gray-400">
+                    <div className={`flex flex-wrap items-center gap-1 sm:gap-2 md:gap-4 text-[10px] sm:text-xs md:text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
                       <div className="flex items-center gap-0.5 sm:gap-1">
                         <FaFileAlt className="text-[8px] sm:text-xs" />
                         <span>{module.fileName}</span>
@@ -253,8 +253,8 @@ const StudentModules = () => {
 
       {/* Stats Footer */}
         {modules.length > 0 && (
-          <div className="bg-gray-50 dark:bg-gray-800 p-2 sm:p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+          <div className={`${isLightMode ? 'bg-gray-50 border-gray-200' : 'bg-gray-800 border-gray-700'} p-2 sm:p-4 rounded-lg border`}>
+            <div className={`flex items-center justify-between text-xs sm:text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
               <span>Total modules: {modules.length}</span>
               <span>Total size: {formatFileSize(modules.reduce((total, module) => total + module.fileSize, 0))}</span>
             </div>

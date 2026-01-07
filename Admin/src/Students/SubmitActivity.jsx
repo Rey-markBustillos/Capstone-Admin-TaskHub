@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaFileUpload, FaArrowLeft, FaPaperclip, FaCalendarAlt, FaStar, FaFileAlt, FaTimesCircle, FaTrash, FaDownload } from 'react-icons/fa';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 const SubmitActivity = () => {
   const { classId, activityId } = useParams();
+  const { isLightMode } = useContext(StudentThemeContext);
   
   const [activity, setActivity] = useState(null);
   const [previousSubmission, setPreviousSubmission] = useState(null);
@@ -237,32 +239,32 @@ const SubmitActivity = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="relative bg-white/80 dark:bg-gray-900/80 rounded-2xl shadow-2xl p-8 border border-indigo-100 dark:border-gray-700 backdrop-blur-md overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_40px_0_rgba(99,102,241,0.25)] hover:border-indigo-300">
+            <form onSubmit={handleSubmit} className={`relative ${isLightMode ? 'bg-white/80 border-indigo-100' : 'bg-gray-900/80 border-gray-700'} rounded-2xl shadow-2xl p-8 border backdrop-blur-md overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_40px_0_rgba(99,102,241,0.25)] hover:border-indigo-300`}>
               {/* Animated accent bar */}
               <div className="absolute left-0 top-0 h-full w-2 bg-gradient-to-b from-indigo-500 via-blue-500 to-transparent rounded-l-2xl opacity-80 animate-pulse" />
               {/* Soft inner shadow */}
               <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{boxShadow:'inset 0 2px 24px 0 rgba(99,102,241,0.10)'}} />
               {/* Subtle border glow on hover */}
               <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-indigo-400 group-hover:shadow-[0_0_24px_0_rgba(99,102,241,0.15)] pointer-events-none transition-all duration-300" />
-              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-6 border-b-2 border-indigo-100 dark:border-gray-800 pb-4 tracking-tight flex items-center gap-2">
-                <FaFileUpload className="text-indigo-500 dark:text-indigo-400 text-2xl animate-bounce-slow" />
+              <h2 className={`text-2xl font-extrabold ${isLightMode ? 'text-gray-900 border-indigo-100' : 'text-white border-gray-800'} mb-6 border-b-2 pb-4 tracking-tight flex items-center gap-2`}>
+                <FaFileUpload className={`${isLightMode ? 'text-indigo-500' : 'text-indigo-400'} text-2xl animate-bounce-slow`} />
                 {previousSubmission ? 'Your Submission' : 'Submit Your Work'}
               </h2>
 
               {previousSubmission && (
-                <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                <div className={`mb-4 p-3 ${isLightMode ? 'bg-gray-100' : 'bg-gray-700'} rounded-lg`}>
                   <div className="flex justify-between items-center">
-                    <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Previously Submitted</h3>
+                    <h3 className={`text-sm font-semibold ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>Previously Submitted</h3>
                     <button type="button" onClick={handleDelete} disabled={submitting} className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-800 disabled:opacity-50">
                       <FaTrash /> Delete
                     </button>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <a href={getAttachmentUrl(previousSubmission.filePath)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-sm hover:underline">
+                    <a href={getAttachmentUrl(previousSubmission.filePath)} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 ${isLightMode ? 'text-indigo-600' : 'text-indigo-400'} text-sm hover:underline`}>
                       <FaFileAlt />
                       <span>{previousSubmission.fileName}</span>
                     </a>
-                    <a href={`${API_BASE_URL}/activities/submission/${previousSubmission._id}/download`} className="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white">
+                    <a href={`${API_BASE_URL}/activities/submission/${previousSubmission._id}/download`} className={`inline-flex items-center gap-1 text-xs ${isLightMode ? 'text-gray-600 hover:text-gray-800' : 'text-gray-300 hover:text-white'}`}>
                       <FaDownload /> Download
                     </a>
                   </div>
@@ -270,20 +272,20 @@ const SubmitActivity = () => {
               )}
 
               <div>
-                <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="file-upload" className={`block text-sm font-medium ${isLightMode ? 'text-gray-700' : 'text-gray-300'} mb-2`}>
                   {previousSubmission ? 'Upload a New Version' : 'Upload File'}
                 </label>
                 {!selectedFile ? (
                   <>
-                  <div className="mt-1 flex flex-col items-center justify-center gap-4 px-6 pt-8 pb-8 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
+                  <div className={`mt-1 flex flex-col items-center justify-center gap-4 px-6 pt-8 pb-8 border-2 ${isLightMode ? 'border-gray-300' : 'border-gray-600'} border-dashed rounded-md`}>
                     <div className="space-y-1 text-center">
                       <FaFileUpload className="mx-auto h-12 w-12 text-gray-400" />
-                      <div className="flex flex-col gap-2 justify-center items-center text-sm text-gray-600 dark:text-gray-400">
-                        <label htmlFor="file-upload" className="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 px-2 py-1">
+                      <div className={`flex flex-col gap-2 justify-center items-center text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                        <label htmlFor="file-upload" className={`relative cursor-pointer ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-md font-medium text-indigo-600 hover:text-indigo-500 px-2 py-1`}>
                           <span>Choose a file</span>
                           <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} />
                         </label>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Any file type, up to 10MB</p>
+                        <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} mt-2`}>Any file type, up to 10MB</p>
                       </div>
                     </div>
                   </div>
@@ -297,7 +299,7 @@ const SubmitActivity = () => {
                   {/* Camera modal */}
                   {showCamera && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-                      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 flex flex-col items-center relative">
+                      <div className={`${isLightMode ? 'bg-white' : 'bg-gray-900'} rounded-lg shadow-lg p-6 flex flex-col items-center relative`}>
                         <button type="button" className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-2xl" onClick={closeCamera}>&times;</button>
                         <video ref={videoRef} autoPlay playsInline className="rounded-lg border mb-4 max-w-full" style={{ width: 320, height: 240, background: '#222' }} />
                         <canvas ref={canvasRef} style={{ display: 'none' }} />
@@ -308,10 +310,10 @@ const SubmitActivity = () => {
                   )}
                   </>
                 ) : (
-                  <div className="p-3 bg-indigo-50 dark:bg-gray-700 rounded-lg flex items-center justify-between">
+                  <div className={`p-3 ${isLightMode ? 'bg-indigo-50' : 'bg-gray-700'} rounded-lg flex items-center justify-between`}>
                     <div className="flex items-center gap-3">
-                      <FaFileAlt className="text-indigo-500 dark:text-indigo-300 text-lg" />
-                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{selectedFile.name}</span>
+                      <FaFileAlt className={`${isLightMode ? 'text-indigo-500' : 'text-indigo-300'} text-lg`} />
+                      <span className={`text-sm font-medium ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>{selectedFile.name}</span>
                     </div>
                     <button type="button" onClick={() => setSelectedFile(null)} className="text-gray-500 hover:text-red-600">
                       <FaTimesCircle />
@@ -324,16 +326,16 @@ const SubmitActivity = () => {
               {success && <p className="text-green-500 text-sm mt-4">{success}</p>}
 
               <div className="mt-6">
-                <button type="submit" disabled={submitting || !selectedFile} className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-400 dark:disabled:bg-indigo-800 disabled:cursor-not-allowed transition-colors">
+                <button type="submit" disabled={submitting || !selectedFile} className={`w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${isLightMode ? 'disabled:bg-indigo-400' : 'disabled:bg-indigo-800'} disabled:cursor-not-allowed transition-colors`}>
                   {submitting ? 'Submitting...' : (previousSubmission ? 'Submit New Version' : 'Submit Assignment')}
                 </button>
               </div>
             </form>
           </div>
 
-          <div className="lg:col-span-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{activity.title}</h1>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500 dark:text-gray-400 mt-3 border-b dark:border-gray-700 pb-4">
+          <div className={`lg:col-span-3 ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-xl shadow-lg p-6`}>
+            <h1 className={`text-3xl font-bold ${isLightMode ? 'text-gray-900' : 'text-white'}`}>{activity.title}</h1>
+            <div className={`flex flex-wrap gap-x-6 gap-y-2 text-sm ${isLightMode ? 'text-gray-500 border-b' : 'text-gray-400 border-b border-gray-700'} mt-3 pb-4`}>
               <div className="flex items-center gap-1.5">
                 <FaCalendarAlt />
                 <strong>Due:</strong> {new Date(activity.date).toLocaleString()}
@@ -345,18 +347,18 @@ const SubmitActivity = () => {
             </div>
             {activity.description && (
               <div className="mt-4">
-                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Instructions</h3>
-                <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{activity.description}</p>
+                <h3 className={`font-semibold ${isLightMode ? 'text-gray-800' : 'text-gray-200'} mb-2`}>Instructions</h3>
+                <p className={`${isLightMode ? 'text-gray-600' : 'text-gray-300'} whitespace-pre-wrap`}>{activity.description}</p>
               </div>
             )}
             {activity.attachment && (
               <div className="mt-6">
-                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Attachment</h3>
+                <h3 className={`font-semibold ${isLightMode ? 'text-gray-800' : 'text-gray-200'} mb-2`}>Attachment</h3>
                 <div className="flex items-center gap-4">
                   <a href={getAttachmentUrl(activity.attachment)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-white bg-indigo-600 rounded-lg px-4 py-2 hover:bg-indigo-700 transition-colors">
                       <FaPaperclip /> View Attachment
                   </a>
-                  <a href={`${API_BASE_URL}/activities/${activity._id}/download`} className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg px-4 py-2 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                  <a href={`${API_BASE_URL}/activities/${activity._id}/download`} className={`inline-flex items-center gap-2 text-sm font-medium ${isLightMode ? 'text-gray-700 bg-gray-200 hover:bg-gray-300' : 'text-gray-300 bg-gray-700 hover:bg-gray-600'} rounded-lg px-4 py-2 transition-colors`}>
                       <FaDownload /> Download
                   </a>
                 </div>

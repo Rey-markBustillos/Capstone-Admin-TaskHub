@@ -55,8 +55,8 @@ const Attendance = () => {
           <FaArrowLeft className="text-[10px] sm:text-xs md:text-sm" /> <span className="hidden sm:inline">Back to Class Menu</span><span className="sm:hidden">Back</span>
         </NavLink>
       </div>
-  <div className={`${isLightMode ? 'bg-white/90 border-indigo-300' : 'bg-white/80 dark:bg-gray-900/80 border-indigo-600 dark:border-indigo-800'} rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl p-2 sm:p-3 md:p-6 lg:p-8 xl:p-12 border-2 sm:border-4 md:border-6 lg:border-8 backdrop-blur-md w-full max-w-none overflow-x-auto`}>
-          <h2 className={`text-sm sm:text-lg md:text-2xl font-bold ${isLightMode ? 'text-indigo-700' : 'text-indigo-700 dark:text-indigo-300'} mb-2 sm:mb-3 md:mb-4 flex items-center gap-1 sm:gap-2`}>
+  <div className={`${isLightMode ? 'bg-white/90 border-indigo-300' : 'bg-gray-900/80 border-indigo-800'} rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl p-2 sm:p-3 md:p-6 lg:p-8 xl:p-12 border-2 sm:border-4 md:border-6 lg:border-8 backdrop-blur-md w-full max-w-none overflow-x-auto`}>
+          <h2 className={`text-sm sm:text-lg md:text-2xl font-bold ${isLightMode ? 'text-indigo-700' : 'text-indigo-300'} mb-2 sm:mb-3 md:mb-4 flex items-center gap-1 sm:gap-2`}>
             <FaCalendarCheck className="text-sm sm:text-base md:text-xl" /> Attendance History
           </h2>
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 w-full">
@@ -106,7 +106,7 @@ const Attendance = () => {
                 <button onClick={()=>setFilter('Absent')} className={`px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs md:text-sm font-semibold transition ${filter==='Absent'?'bg-red-600 text-white':'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-200'}`}>Absent</button>
               </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <table className={`min-w-full ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-md`}>
                   <thead>
                     <tr>
                       <th className="px-1 sm:px-2 md:px-4 py-1 sm:py-2 text-left text-indigo-700 dark:text-indigo-300 text-xs sm:text-sm md:text-base">Date</th>

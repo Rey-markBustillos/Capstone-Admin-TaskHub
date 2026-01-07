@@ -100,7 +100,7 @@ const StudentActivities = () => {
   };
 
   const getStatus = (activity, submission) => {
-    if (activity.isLocked) return { text: 'Locked', style: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' };
+    if (activity.isLocked) return { text: 'Locked', style: isLightMode ? 'bg-gray-100 text-gray-800' : 'bg-gray-900 text-gray-200' };
     const dueDate = new Date(activity.date);
     if (submission) {
       const submissionDate = new Date(submission.submissionDate);
@@ -145,7 +145,7 @@ const StudentActivities = () => {
           </NavLink>
         </div>
 
-        <div className="bg-white/80 dark:bg-gray-900/80 rounded-xl shadow-2xl p-4 border-2 border-indigo-600 dark:border-indigo-800 w-full overflow-x-auto">
+        <div className={`${isLightMode ? 'bg-white/90 border-indigo-300' : 'bg-gray-900/80 border-indigo-800'} rounded-xl shadow-2xl p-4 border-2 w-full overflow-x-auto`}>
           <div className="flex items-center gap-2 mb-4">
             <FaBookOpen className="text-indigo-600 dark:text-indigo-400 text-2xl" />
             <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Class Activities</h1>
@@ -163,7 +163,7 @@ const StudentActivities = () => {
 
                   return (
                     <div key={activity._id} onClick={() => handleSubmission(activity._id)}
-                      className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 flex flex-col justify-between border border-indigo-100 dark:border-indigo-900 relative ${activity.isLocked ? 'cursor-not-allowed opacity-75' : 'hover:shadow-2xl hover:-translate-y-1 cursor-pointer'}`}
+                      className={`${isLightMode ? 'bg-white border-indigo-200' : 'bg-gray-800 border-indigo-900'} rounded-xl shadow-lg p-4 flex flex-col justify-between border relative ${activity.isLocked ? 'cursor-not-allowed opacity-75' : 'hover:shadow-2xl hover:-translate-y-1 cursor-pointer'}`}
                       title={activity.isLocked ? 'This activity is locked' : 'Click to view/submit activity'}>
                       <div>
                         <div className="flex justify-between items-start mb-2">
@@ -218,7 +218,7 @@ const StudentActivities = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+              <div className={`text-center p-6 ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-md`}>
                 <FaBookOpen className="mx-auto mb-4 text-indigo-400 dark:text-indigo-500" size={36}/>
                 <p className="text-gray-600 dark:text-gray-400">No activities posted for this class yet.</p>
               </div>

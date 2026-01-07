@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams, NavLink } from 'react-router-dom';
 import { FaArrowLeft, FaUserGraduate, FaUsers } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -12,6 +13,7 @@ const StudentClassList = () => {
   const [error, setError] = useState(null);
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
+  const { isLightMode } = useContext(StudentThemeContext);
 
   useEffect(() => {
     if (!classId) return;
@@ -60,29 +62,29 @@ const StudentClassList = () => {
             <FaArrowLeft className="text-xs sm:text-sm" /> <span className="hidden xs:inline sm:inline">Back to Class Menu</span><span className="xs:hidden sm:hidden">Back</span>
           </NavLink>
         </div>
-        <div className="bg-white/80 dark:bg-gray-900/80 rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4 md:p-8 lg:p-12 xl:p-16 border-4 sm:border-8 border-indigo-600 dark:border-indigo-800 backdrop-blur-md w-full max-w-none overflow-x-auto">
+        <div className={`${isLightMode ? 'bg-white/80 border-indigo-600' : 'bg-gray-900/80 border-indigo-800'} rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4 md:p-8 lg:p-12 xl:p-16 border-4 sm:border-8 backdrop-blur-md w-full max-w-none overflow-x-auto`}>
           <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-            <FaUsers className="text-indigo-600 dark:text-indigo-400 text-lg sm:text-2xl" />
-            <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-indigo-700 dark:text-indigo-300">Class List</h1>
+            <FaUsers className={`${isLightMode ? 'text-indigo-600' : 'text-indigo-400'} text-lg sm:text-2xl`} />
+            <h1 className={`text-lg sm:text-2xl lg:text-3xl font-bold ${isLightMode ? 'text-indigo-700' : 'text-indigo-300'}`}>Class List</h1>
           </div>
           {students.length > 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+            <div className={`${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-md overflow-hidden`}>
+              <ul className={`divide-y ${isLightMode ? 'divide-gray-200' : 'divide-gray-700'}`}>
                 {students.map((student, index) => (
-                  <li key={student._id} className="p-3 sm:p-4 flex items-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-full mr-3 sm:mr-4">
-                      <span className="text-indigo-600 dark:text-indigo-400 font-bold text-sm sm:text-base">{index + 1}</span>
+                  <li key={student._id} className={`p-3 sm:p-4 flex items-center ${isLightMode ? 'hover:bg-gray-50' : 'hover:bg-gray-700/50'} transition-colors`}>
+                    <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 ${isLightMode ? 'bg-indigo-100' : 'bg-indigo-900/50'} rounded-full mr-3 sm:mr-4`}>
+                      <span className={`${isLightMode ? 'text-indigo-600' : 'text-indigo-400'} font-bold text-sm sm:text-base`}>{index + 1}</span>
                     </div>
                     <FaUserGraduate className="text-indigo-500 mr-2 sm:mr-3 text-sm sm:text-lg" />
-                    <span className="text-gray-800 dark:text-gray-200 font-medium text-sm sm:text-base">{student.name}</span>
+                    <span className={`${isLightMode ? 'text-gray-800' : 'text-gray-200'} font-medium text-sm sm:text-base`}>{student.name}</span>
                   </li>
                 ))}
               </ul>
             </div>
           ) : (
-            <div className="text-center p-6 sm:p-10 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-              <FaUserGraduate className="mx-auto mb-4 text-indigo-400 dark:text-indigo-500" size={36} />
-              <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">No students found in this class.</p>
+            <div className={`text-center p-6 sm:p-10 ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-md`}>
+              <FaUserGraduate className={`mx-auto mb-4 ${isLightMode ? 'text-indigo-400' : 'text-indigo-500'}`} size={36} />
+              <p className={`${isLightMode ? 'text-gray-600' : 'text-gray-400'} text-sm sm:text-base`}>No students found in this class.</p>
             </div>
           )}
         </div>
