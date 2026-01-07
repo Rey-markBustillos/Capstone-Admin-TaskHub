@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate, NavLink } from 'react-router-dom';
 import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf, FaLock } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -40,6 +41,7 @@ const StudentActivities = () => {
   const [error, setError] = useState(null);
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
+  const { isLightMode } = useContext(StudentThemeContext);
   const navigate = useNavigate();
 
   const storedUser = localStorage.getItem('user');
@@ -117,16 +119,16 @@ const StudentActivities = () => {
   };
 
   if (loading) return (
-    <div className={`min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
+    <div className={`min-h-screen ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <FaBookOpen className="animate-bounce text-indigo-500 mb-4" size={48} />
-        <div className="text-center p-10 text-lg font-semibold text-gray-100">Loading activities...</div>
+        <div className={`text-center p-10 text-lg font-semibold ${isLightMode ? 'text-gray-800' : 'text-gray-100'}`}>Loading activities...</div>
       </div>
     </div>
   );
 
   if (error) return (
-    <div className={`min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
+    <div className={`min-h-screen ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <FaTimesCircle className="text-red-500 mb-4" size={48} />
         <div className="text-center p-10 text-red-400">{error}</div>
@@ -135,10 +137,10 @@ const StudentActivities = () => {
   );
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
+    <div className={`min-h-screen ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
       <div className="max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh]">
         <div className="mb-4 ml-2 self-start">
-          <NavLink to={`/student/class/${classId}`} className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800">
+          <NavLink to={`/student/class/${classId}`} className={`inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg ${isLightMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-700 hover:bg-indigo-800'} text-white font-semibold shadow`}>
             <FaArrowLeft /> Back
           </NavLink>
         </div>

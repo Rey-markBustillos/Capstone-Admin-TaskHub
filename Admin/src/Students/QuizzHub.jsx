@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FaCalendarAlt, FaCheckCircle, FaTimesCircle, FaListOl, FaPlus, FaEye, FaArrowLeft, FaArrowRight, FaPen, FaSave } from 'react-icons/fa';
 import { useParams, NavLink } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -14,6 +15,7 @@ const QuizzHub = () => {
   const [startInput, setStartInput] = useState('');
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
+  const { isLightMode } = useContext(StudentThemeContext);
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const studentId = user?._id;

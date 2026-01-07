@@ -4,12 +4,14 @@ import { useParams, NavLink } from 'react-router-dom';
 import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, FaRegSmile, FaRegSadTear, FaRegLaughBeam, FaRegHeart, FaRegSurprise, FaArrowLeft, FaFileUpload, FaDownload } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
 import SidebarContext from '../contexts/SidebarContext';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 export default function StudentAnnouncements() {
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
+  const { isLightMode } = useContext(StudentThemeContext);
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const userId = user?._id;
@@ -135,12 +137,12 @@ export default function StudentAnnouncements() {
   // ...availableReactions imported from shared constants...
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-2 sm:p-4 pb-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-screen ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-2 sm:p-4 pb-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
       <div className="w-full max-w-none mx-auto min-h-screen px-1 sm:px-2 md:px-4 lg:px-6">
         <div className="mb-4 sm:mb-6 mt-2 sm:mt-4">
           <NavLink
             to={`/student/class/${classId}`}
-            className="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg bg-indigo-600 text-white font-medium shadow-sm hover:bg-indigo-700 transition mb-2 sm:mb-4"
+            className={`inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg ${isLightMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'} text-white font-medium shadow-sm transition mb-2 sm:mb-4`}
           >
             <FaArrowLeft className="text-xs sm:text-sm" /> <span className="hidden xs:inline sm:inline">Back to Class Menu</span><span className="xs:hidden sm:hidden">Back</span>
           </NavLink>
@@ -148,8 +150,8 @@ export default function StudentAnnouncements() {
         <div className="w-full max-w-none pb-6">
           {/* Header Section */}
           <div className="mb-4 sm:mb-6">
-            <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white flex items-center gap-2 sm:gap-3">
-              <FaBullhorn className="text-base sm:text-xl lg:text-2xl text-indigo-300" />
+            <h1 className={`text-lg sm:text-2xl lg:text-3xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2 sm:gap-3`}>
+              <FaBullhorn className={`text-base sm:text-xl lg:text-2xl ${isLightMode ? 'text-indigo-600' : 'text-indigo-300'}`} />
               <span className="hidden sm:inline">Announcements</span>
               <span className="sm:hidden">News</span>
             </h1>

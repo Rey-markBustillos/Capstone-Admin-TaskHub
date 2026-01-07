@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 import axios from 'axios';
 import { 
   FaBook, 
@@ -20,6 +21,7 @@ const StudentModules = () => {
   const { classId } = useParams();
   const navigate = useNavigate();
   const { isSidebarOpen } = useContext(SidebarContext);
+  const { isLightMode } = useContext(StudentThemeContext);
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

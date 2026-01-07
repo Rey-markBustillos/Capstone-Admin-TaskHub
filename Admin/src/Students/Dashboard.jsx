@@ -1,11 +1,12 @@
 
 // NOTE: This dashboard is always full width and should NEVER render a sidebar.
 // If you see a sidebar here, check your router/layout setup.
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone, Users } from 'lucide-react';
 import useAutoScrollToBottom from '../hooks/useAutoScrollToBottom';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -50,6 +51,7 @@ const LoadingSpinner = () => (
 );
 
 const StudentDashboard = () => {
+  const { isLightMode } = useContext(StudentThemeContext);
   const [classes, setClasses] = useState([]);
   const [activities, setActivities] = useState([]);
   const [submissions, setSubmissions] = useState([]);
@@ -271,28 +273,30 @@ const StudentDashboard = () => {
 
   return (
     // This page is intentionally full width, no sidebar allowed
-    <div className="relative min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 w-full min-w-0 mx-0 scrollbar-hidden overflow-y-auto overflow-x-hidden pt-4 pb-8 sm:pb-12">
+    <div className={`relative min-h-screen flex flex-col items-center justify-start ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} w-full min-w-0 mx-0 scrollbar-hidden overflow-y-auto overflow-x-hidden pt-4 pb-8 sm:pb-12`}>
       {/* Welcome section */}
       <div className="w-full flex items-center justify-center py-6">
-        <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight w-full text-center">Welcome, {studentName}!</h1>
+        <h1 className={`text-3xl sm:text-5xl font-extrabold ${isLightMode ? 'text-gray-800' : 'text-white'} tracking-tight w-full text-center`}>Welcome, {studentName}!</h1>
       </div>
       {/* Decorative background blobs (same as login) */}
       <div
         aria-hidden="true"
         className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3"
       >
-        <div className="w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-30 blur-3xl"></div>
+        <div className={`w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full ${isLightMode ? 'bg-gradient-to-tr from-blue-200 to-indigo-200 opacity-40' : 'bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-30'} blur-3xl`}></div>
       </div>
       <div
         aria-hidden="true"
         className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3"
       >
-        <div className="w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 opacity-30 blur-3xl"></div>
+        <div className={`w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full ${isLightMode ? 'bg-gradient-to-tr from-cyan-200 to-blue-200 opacity-40' : 'bg-gradient-to-tr from-cyan-500 to-blue-500 opacity-30'} blur-3xl`}></div>
       </div>
       {/* Falling books */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <FallingBooksAnimation />
-      </div>
+      {!isLightMode && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <FallingBooksAnimation />
+        </div>
+      )}
 
   <div className="relative z-10 w-full max-w-full p-2 sm:p-4 md:p-6 mx-auto overflow-x-hidden min-w-0 mb-4 sm:mb-6">
 
@@ -305,10 +309,10 @@ const StudentDashboard = () => {
           </div>
         )}
 
-  <main className="rounded-lg p-1.5 sm:p-2 md:p-4 lg:p-6 shadow-lg backdrop-blur-xl border border-indigo-700 w-full max-w-none overflow-x-hidden">
+  <main className={`rounded-lg p-1.5 sm:p-2 md:p-4 lg:p-6 shadow-lg backdrop-blur-xl ${isLightMode ? 'border border-indigo-200 bg-white/80' : 'border border-indigo-700'} w-full max-w-none overflow-x-hidden`}>
           {/* Summary Section */}
           <section className="mb-6">
-            <h2 className="text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">Activity Summary</h2>
+            <h2 className={`text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 ${isLightMode ? 'text-gray-800' : 'text-gray-100'}`}>Activity Summary</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 text-center">
               <button 
                 onClick={(e) => {
@@ -409,11 +413,11 @@ const StudentDashboard = () => {
             <section className="min-w-0 w-full order-1">
               {loadingClasses && <LoadingSpinner />}
               {error && <p className="text-red-600">{error}</p>}
-              {!loadingClasses && !error && classes.length === 0 && <p className="text-white">You are not enrolled in any classes.</p>}
+              {!loadingClasses && !error && classes.length === 0 && <p className={`${isLightMode ? 'text-gray-700' : 'text-white'}`}>You are not enrolled in any classes.</p>}
 
               {!loadingClasses && !error && classes.length > 0 && (
                 <>
-                  <h2 className="text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">Your Enrolled Classes</h2>
+                  <h2 className={`text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 ${isLightMode ? 'text-gray-800' : 'text-gray-100'}`}>Your Enrolled Classes</h2>
                   <ul className="space-y-2 sm:space-y-3 md:space-y-4 pb-4">
                     {classes.map((cls) => {
                       // Find soonest schedule for this class
@@ -455,9 +459,9 @@ const StudentDashboard = () => {
 
             {/* Announcements Section - Always appears second on mobile */}
             <section className="min-w-0 w-full order-2">
-              <h2 className="text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-gray-100">Announcements</h2>
+              <h2 className={`text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 ${isLightMode ? 'text-gray-800' : 'text-gray-100'}`}>Recent Announcements</h2>
               {loadingAnnouncements && <LoadingSpinner />}
-              {!loadingAnnouncements && announcements.length === 0 && <p className="text-white">No announcements available.</p>}
+              {!loadingAnnouncements && announcements.length === 0 && <p className={`${isLightMode ? 'text-gray-700' : 'text-white'}`}>No announcements available.</p>}
               {!loadingAnnouncements && announcements.length > 0 && (
                 <ul className="space-y-1.5 sm:space-y-2 md:space-y-3 pb-4 sm:pb-8">
                   {announcements.map((ann) => (

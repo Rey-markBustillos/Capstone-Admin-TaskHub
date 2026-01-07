@@ -3,12 +3,14 @@ import axios from 'axios';
 import { FaCalendarCheck, FaPercent, FaArrowLeft, FaFilter, FaCheckCircle, FaTimesCircle, FaClock } from 'react-icons/fa';
 import { NavLink, useParams } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 const Attendance = () => {
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
+  const { isLightMode } = useContext(StudentThemeContext);
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const studentId = user?._id;
@@ -43,18 +45,18 @@ const Attendance = () => {
   }, [studentId, classId]);
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-screen ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
   <div className="w-full max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh] px-1 sm:px-2 md:px-4 lg:px-8">
       <div className="mb-4 sm:mb-6 mt-2 sm:mt-4 ml-2 sm:ml-4 self-start">
         <NavLink
           to={`/student/class/${classId}`}
-          className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-5 py-1 sm:py-2 md:py-3 text-xs sm:text-sm md:text-base rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800 transition mb-1 sm:mb-2 md:mb-4"
+          className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-5 py-1 sm:py-2 md:py-3 text-xs sm:text-sm md:text-base rounded-lg ${isLightMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-700 hover:bg-indigo-800'} text-white font-semibold shadow transition mb-1 sm:mb-2 md:mb-4`}
         >
           <FaArrowLeft className="text-[10px] sm:text-xs md:text-sm" /> <span className="hidden sm:inline">Back to Class Menu</span><span className="sm:hidden">Back</span>
         </NavLink>
       </div>
-  <div className="bg-white/80 dark:bg-gray-900/80 rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl p-2 sm:p-3 md:p-6 lg:p-8 xl:p-12 border-2 sm:border-4 md:border-6 lg:border-8 border-indigo-600 dark:border-indigo-800 backdrop-blur-md w-full max-w-none overflow-x-auto">
-          <h2 className="text-sm sm:text-lg md:text-2xl font-bold text-indigo-700 dark:text-indigo-300 mb-2 sm:mb-3 md:mb-4 flex items-center gap-1 sm:gap-2">
+  <div className={`${isLightMode ? 'bg-white/90 border-indigo-300' : 'bg-white/80 dark:bg-gray-900/80 border-indigo-600 dark:border-indigo-800'} rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl p-2 sm:p-3 md:p-6 lg:p-8 xl:p-12 border-2 sm:border-4 md:border-6 lg:border-8 backdrop-blur-md w-full max-w-none overflow-x-auto`}>
+          <h2 className={`text-sm sm:text-lg md:text-2xl font-bold ${isLightMode ? 'text-indigo-700' : 'text-indigo-700 dark:text-indigo-300'} mb-2 sm:mb-3 md:mb-4 flex items-center gap-1 sm:gap-2`}>
             <FaCalendarCheck className="text-sm sm:text-base md:text-xl" /> Attendance History
           </h2>
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 w-full">
