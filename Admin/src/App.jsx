@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { SidebarProvider } from './contexts/SidebarContext';
+import { StudentThemeProvider } from './contexts/StudentThemeContext';
 
 // Import Components
 import Sidebar from './components/Sidebar';
@@ -92,20 +93,22 @@ const ProtectedLayout = ({ user, onLogout }) => {
   // Ibalik ang sidebar sa student dashboard/portal, pero alisin ang margin sa main
   if (isStudent && (isStudentDashboard || isStudentPortal || isStudentClass)) {
     return (
-      <SidebarProvider isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}>
-        <div className={`flex min-h-screen ${backgroundClass}`}>
-          <Sidebar 
-            role={user.role} 
-            onLogout={onLogout} 
-            isOpen={isSidebarOpen} 
-            setIsOpen={setIsSidebarOpen}
-            isOverlay={isStudentClass}
-          />
-          <main className={`flex-1 transition-all duration-300 ${isStudentClass ? 'ml-0' : (isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12')}`}>
-            <Outlet />
-          </main>
-        </div>
-      </SidebarProvider>
+      <StudentThemeProvider>
+        <SidebarProvider isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}>
+          <div className={`flex min-h-screen ${backgroundClass}`}>
+            <Sidebar 
+              role={user.role} 
+              onLogout={onLogout} 
+              isOpen={isSidebarOpen} 
+              setIsOpen={setIsSidebarOpen}
+              isOverlay={isStudentClass}
+            />
+            <main className={`flex-1 transition-all duration-300 ${isStudentClass ? 'ml-0' : (isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12')}`}>
+              <Outlet />
+            </main>
+          </div>
+        </SidebarProvider>
+      </StudentThemeProvider>
     );
   }
 

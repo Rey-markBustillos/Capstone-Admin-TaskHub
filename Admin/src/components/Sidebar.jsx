@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -9,7 +9,10 @@ import {
   ChevronRight,
   ChevronLeft,
   DoorClosed,
+  Sun,
+  Moon,
 } from 'lucide-react';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 // Menu items for each role
 const menuItemsByRole = {
@@ -70,6 +73,7 @@ const colorSchemes = {
 };
 
 export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen: setIsOpenProp, isOverlay = false }) {
+  const studentTheme = role === 'student' ? useContext(StudentThemeContext) : null;
   const [isOpen, setIsOpen] = useState(
     typeof isOpenProp === 'boolean' ? isOpenProp : window.innerWidth > 768
   );
@@ -178,6 +182,32 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
           ))}
         </ul>
       </div>
+
+      {/* Light Mode Toggle for Students */}
+      {role === 'student' && studentTheme && (
+        <div className={`p-2 sm:p-3 ${borderClass} border-t`}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              studentTheme.toggleLightMode();
+            }}
+            className={`w-full flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gradient-to-r ${
+              studentTheme.isLightMode 
+                ? 'from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500' 
+                : 'from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600'
+            } text-white font-bold rounded-lg sm:rounded-xl shadow focus:outline-none focus:ring-2 ${
+              studentTheme.isLightMode ? 'focus:ring-yellow-400' : 'focus:ring-blue-400'
+            } transition-all duration-200
+              ${isOpen ? 'justify-start' : 'justify-center'}`}
+            title={studentTheme.isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+          >
+            <span className="transition-transform duration-200 group-hover:scale-125 group-hover:rotate-12">
+              {studentTheme.isLightMode ? <Moon size={isOpen ? (window.innerWidth < 640 ? 20 : 28) : 20} /> : <Sun size={isOpen ? (window.innerWidth < 640 ? 20 : 28) : 20} />}
+            </span>
+            {isOpen && <span className="text-xs sm:text-base font-semibold tracking-wide">{studentTheme.isLightMode ? 'Dark' : 'Light'} Mode</span>}
+          </button>
+        </div>
+      )}
 
       {/* Logout */}
       <div className={`p-2 sm:p-3 ${borderClass} border-t bg-gradient-to-r from-red-100/60 to-white/0`}>

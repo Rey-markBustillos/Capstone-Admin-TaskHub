@@ -4,6 +4,7 @@ import { FaUserTie, FaMapMarkerAlt, FaClock, FaCalendarDay, FaSearch, FaChalkboa
 import { MdClass } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 import '../Css/StudentPortal.css'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
@@ -27,6 +28,7 @@ const StudentPortal = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { isSidebarOpen } = useContext(SidebarContext);
+  const { isLightMode } = useContext(StudentThemeContext);
   const navigate = useNavigate();
 
   const storedUser = localStorage.getItem('user');
@@ -85,7 +87,7 @@ const StudentPortal = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-100 dark:bg-gray-900">
+      <div className={`flex justify-center items-center h-screen ${isLightMode ? 'bg-gray-50' : 'bg-gray-100 dark:bg-gray-900'}`}>
         <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
@@ -93,49 +95,51 @@ const StudentPortal = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gray-100 dark:bg-gray-900 p-4">
+      <div className={`flex flex-col justify-center items-center h-screen ${isLightMode ? 'bg-gray-50' : 'bg-gray-100 dark:bg-gray-900'} p-4`}>
         <p className="text-xl text-red-500 text-center">Error: {error}</p>
       </div>
     );
   }
 
   return (
-  <div className="relative min-h-screen flex flex-col justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden w-full">
+  <div className={`relative min-h-screen flex flex-col justify-center ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} overflow-hidden w-full`}>
       {/* Decorative background blobs (same as dashboard/login) */}
       <div
         aria-hidden="true"
         className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3"
       >
-        <div className="w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-30 blur-3xl"></div>
+        <div className={`w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full ${isLightMode ? 'bg-gradient-to-tr from-blue-200 to-indigo-200 opacity-40' : 'bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-30'} blur-3xl`}></div>
       </div>
       <div
         aria-hidden="true"
         className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3"
       >
-        <div className="w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 opacity-30 blur-3xl"></div>
+        <div className={`w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full ${isLightMode ? 'bg-gradient-to-tr from-cyan-200 to-blue-200 opacity-40' : 'bg-gradient-to-tr from-cyan-500 to-blue-500 opacity-30'} blur-3xl`}></div>
       </div>
       {/* Falling books */}
-      <div className="absolute inset-0 pointer-events-none z-0">
-        <FallingBooksAnimation />
-      </div>
+      {!isLightMode && (
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <FallingBooksAnimation />
+        </div>
+      )}
   <main className={`flex-grow flex flex-col py-2 sm:py-4 md:py-8 relative z-10 transition-all duration-300 ${isSidebarOpen ? 'ml-0' : 'ml-0'} w-full`}>
         {/* Header */}
         <div className="flex-shrink-0">
           <div className="mb-2 sm:mb-4 md:mb-8 pt-2 sm:pt-3 md:pt-6 flex items-center gap-1 sm:gap-2 md:gap-3 pl-2">
-            <MdClass className="text-indigo-300" size={16} />
-            <h1 className="text-base sm:text-lg md:text-2xl lg:text-4xl font-bold text-slate-100">My Enrolled Classes</h1>
+            <MdClass className={`${isLightMode ? 'text-indigo-600' : 'text-indigo-300'}`} size={16} />
+            <h1 className={`text-base sm:text-lg md:text-2xl lg:text-4xl font-bold ${isLightMode ? 'text-gray-800' : 'text-slate-100'}`}>My Enrolled Classes</h1>
           </div>
-          <hr className="mb-2 sm:mb-4 md:mb-6 border-t-2 border-indigo-700" />
+          <hr className={`mb-2 sm:mb-4 md:mb-6 border-t-2 ${isLightMode ? 'border-indigo-300' : 'border-indigo-700'}`} />
 
           {/* Search Bar */}
           <div className="mb-3 sm:mb-4 md:mb-8 flex items-center gap-2 pl-2">
             <div className="relative w-full">
-              <span className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-indigo-400">
+              <span className={`absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 ${isLightMode ? 'text-indigo-500' : 'text-indigo-400'}`}>
                 <FaSearch size={14} />
               </span>
               <input
                 type="text"
-                className="w-full pl-7 sm:pl-9 md:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 md:py-3 text-xs sm:text-sm md:text-base border border-slate-600 rounded-lg sm:rounded-xl bg-slate-700/50 text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 shadow-sm transition"
+                className={`w-full pl-7 sm:pl-9 md:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 md:py-3 text-xs sm:text-sm md:text-base border ${isLightMode ? 'border-indigo-300 bg-white text-gray-800 placeholder:text-gray-500' : 'border-slate-600 bg-slate-700/50 text-slate-100 placeholder:text-slate-400'} rounded-lg sm:rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 shadow-sm transition`}
                 placeholder="Search classes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -165,51 +169,51 @@ const StudentPortal = () => {
               {filteredClasses.map((cls) => (
                 <div
                   key={cls._id}
-                  className="relative bg-gradient-to-br from-indigo-900/80 via-slate-900/80 to-blue-900/80 rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden border-2 border-indigo-700/60 backdrop-blur-md group"
-                  style={{boxShadow:'0 8px 32px 0 rgba(31,41,55,0.18), 0 1.5px 8px 0 rgba(99,102,241,0.10)'}}
+                  className={`relative ${isLightMode ? 'bg-gradient-to-br from-white via-blue-50 to-indigo-50 border-2 border-indigo-200' : 'bg-gradient-to-br from-indigo-900/80 via-slate-900/80 to-blue-900/80 border-2 border-indigo-700/60'} rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden backdrop-blur-md group`}
+                  style={{boxShadow: isLightMode ? '0 8px 32px 0 rgba(99,102,241,0.15)' : '0 8px 32px 0 rgba(31,41,55,0.18), 0 1.5px 8px 0 rgba(99,102,241,0.10)'}}
                   onClick={() => handleClassClick(cls._id)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleClassClick(cls._id)}
                 >
                   {/* Glassy overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-indigo-200/5 to-transparent pointer-events-none" />
+                  <div className={`absolute inset-0 ${isLightMode ? 'bg-gradient-to-br from-white/60 via-blue-100/20 to-transparent' : 'bg-gradient-to-br from-white/10 via-indigo-200/5 to-transparent'} pointer-events-none`} />
                   {/* Animated accent blob */}
                   <svg className="absolute -top-8 -right-8 w-32 h-32 opacity-20 animate-pulse-slow pointer-events-none" viewBox="0 0 100 100" fill="none"><ellipse cx="50" cy="50" rx="48" ry="32" fill="#6366f1" /></svg>
                   {/* Accent bar */}
                   <div className="absolute left-0 top-0 h-full w-2 bg-gradient-to-b from-indigo-400 via-indigo-600 to-blue-500 rounded-l-2xl shadow-md"></div>
                   <div className="p-3 sm:p-5 md:p-7 flex-grow relative z-10">
                     <div className="flex items-center gap-1 sm:gap-2 md:gap-3 mb-1 sm:mb-2">
-                      <FaChalkboardTeacher className="text-indigo-300" size={14} />
-                      <h2 className="text-xs sm:text-sm md:text-lg lg:text-2xl font-bold text-indigo-100 truncate" title={cls.className}>
+                      <FaChalkboardTeacher className={`${isLightMode ? 'text-indigo-600' : 'text-indigo-300'}`} size={14} />
+                      <h2 className={`text-xs sm:text-sm md:text-lg lg:text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-indigo-100'} truncate`} title={cls.className}>
                         {cls.className}
                       </h2>
                     </div>
                     <div className="space-y-1 sm:space-y-2 md:space-y-3 text-[10px] sm:text-xs md:text-sm lg:text-base mt-1 sm:mt-2 md:mt-4">
-                      <p className="text-indigo-100 flex items-center">
-                        <FaUserTie size={12} className="mr-1 sm:mr-2 md:mr-3 text-indigo-400" />
+                      <p className={`${isLightMode ? 'text-gray-700' : 'text-indigo-100'} flex items-center`}>
+                        <FaUserTie size={12} className={`mr-1 sm:mr-2 md:mr-3 ${isLightMode ? 'text-indigo-500' : 'text-indigo-400'}`} />
                         <strong>Teacher:</strong>&nbsp;
                         {cls.teacher?.name || cls.teacherName || 'N/A'}
                       </p>
-                      <p className="text-indigo-100 flex items-center">
-                        <FaCalendarDay size={12} className="mr-1 sm:mr-2 md:mr-3 text-indigo-400" />
+                      <p className={`${isLightMode ? 'text-gray-700' : 'text-indigo-100'} flex items-center`}>
+                        <FaCalendarDay size={12} className={`mr-1 sm:mr-2 md:mr-3 ${isLightMode ? 'text-indigo-500' : 'text-indigo-400'}`} />
                         <strong>Day:</strong>&nbsp;
                         {cls.day || 'TBA'}
                       </p>
-                      <p className="text-indigo-100 flex items-center">
-                        <FaClock size={12} className="mr-1 sm:mr-2 md:mr-3 text-indigo-400" />
+                      <p className={`${isLightMode ? 'text-gray-700' : 'text-indigo-100'} flex items-center`}>
+                        <FaClock size={12} className={`mr-1 sm:mr-2 md:mr-3 ${isLightMode ? 'text-indigo-500' : 'text-indigo-400'}`} />
                         <strong>Time:</strong>&nbsp;
                         {formatTimePH(cls.time, cls.endTime)}
                       </p>
-                      <p className="text-indigo-100 flex items-center">
-                        <FaMapMarkerAlt size={12} className="mr-1 sm:mr-2 md:mr-3 text-indigo-400" />
+                      <p className={`${isLightMode ? 'text-gray-700' : 'text-indigo-100'} flex items-center`}>
+                        <FaMapMarkerAlt size={12} className={`mr-1 sm:mr-2 md:mr-3 ${isLightMode ? 'text-indigo-500' : 'text-indigo-400'}`} />
                         <strong>Room:</strong>&nbsp;{cls.roomNumber || 'N/A'}
                       </p>
                     </div>
                   </div>
-                  <div className="bg-gradient-to-r from-indigo-900/80 via-slate-900/80 to-blue-900/80 px-2 sm:px-3 md:px-5 lg:px-7 py-1.5 sm:py-2 md:py-3 lg:py-4 border-t border-indigo-700 flex items-center justify-center gap-1 sm:gap-2 relative z-10">
-                    <FaDoorOpen className="text-indigo-300" size={10} />
-                    <p className="text-[10px] sm:text-xs md:text-sm text-indigo-200 font-semibold text-center">
+                  <div className={`${isLightMode ? 'bg-gradient-to-r from-indigo-100 via-blue-100 to-indigo-100 border-t border-indigo-200' : 'bg-gradient-to-r from-indigo-900/80 via-slate-900/80 to-blue-900/80 border-t border-indigo-700'} px-2 sm:px-3 md:px-5 lg:px-7 py-1.5 sm:py-2 md:py-3 lg:py-4 flex items-center justify-center gap-1 sm:gap-2 relative z-10`}>
+                    <FaDoorOpen className={`${isLightMode ? 'text-indigo-600' : 'text-indigo-300'}`} size={10} />
+                    <p className={`text-[10px] sm:text-xs md:text-sm ${isLightMode ? 'text-indigo-700' : 'text-indigo-200'} font-semibold text-center`}>
                       View Class &rarr;
                     </p>
                   </div>
@@ -217,11 +221,11 @@ const StudentPortal = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-10 mt-6 bg-slate-800/80 rounded-xl shadow-md border border-indigo-700">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className={`text-center py-10 mt-6 ${isLightMode ? 'bg-white border-indigo-200' : 'bg-slate-800/80 border-indigo-700'} rounded-xl shadow-md border`}>
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-16 w-16 ${isLightMode ? 'text-indigo-500' : 'text-indigo-400'} mx-auto mb-4`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
               </svg>
-              <p className="text-xl text-slate-300">
+              <p className={`text-xl ${isLightMode ? 'text-gray-700' : 'text-slate-300'}`}>
                 {searchTerm ? 'No classes found matching your search.' : 'You are not enrolled in any classes.'}
               </p>
             </div>
