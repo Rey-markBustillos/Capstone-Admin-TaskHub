@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const activityController = require('../controllers/activityController');
+const { verifyToken } = require('../middleware/auth');
 
 // --- Multer / Cloudinary Setup ---
 const multer = require('multer');
@@ -36,16 +37,16 @@ const uploadActivity = multer({
 // ------------------------------------------------------
 // 📌 SUBMISSIONS — MUST BE FIRST (prevents /:id conflicts)
 // ------------------------------------------------------
-router.post('/submit', uploadActivity.single('file'), activityController.submitActivity);
-router.get("/submission", activityController.getSubmissionForActivity);
-router.get("/submissions", activityController.getSubmissionsForStudentInClass);
-router.get("/submissions/teacher/:teacherId", activityController.getActivitySubmissionsByTeacher);
-router.put("/submissions/score/:submissionId", activityController.updateActivityScore);
-router.delete("/submission/:id", activityController.deleteSubmission);
+router.post('/submit', verifyToken, uploadActivity.single('file'), activityController.submitActivity);
+router.get("/submission", verifyToken, activityController.getSubmissionForActivity);
+router.get("/submissions", verifyToken, activityController.getSubmissionsForStudentInClass);
+router.get("/submissions/teacher/:teacherId", verifyToken, activityController.getActivitySubmissionsByTeacher);
+router.put("/submissions/score/:submissionId", verifyToken, activityController.updateActivityScore);
+router.delete("/submission/:id", verifyToken, activityController.deleteSubmission);
 
 // Legacy submission routes
-router.get("/submission/:id/download", activityController.downloadSubmissionFile);
-router.get("/submission/:id/info", activityController.getSubmissionInfo);
+router.get("/submission/:id/download", verifyToken, activityController.downloadSubmissionFile);
+router.get("/submission/:id/info", verifyToken, activityController.getSubmissionInfo);
 
 // ------------------------------------------------------
 // 📌 ACTIVITY CRUD
@@ -80,7 +81,7 @@ router.options("/resubmit/:id", (req, res) => {
   res.sendStatus(204);
 });
 
-router.put("/resubmit/:id", activityController.resubmitActivity);
+router.put("/resubmit/:id", verifyToken, activityController.resubmitActivity);
 
 // ------------------------------------------------------
 // 📌 FINAL — MUST BE LAST

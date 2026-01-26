@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 // Helper to remove password before sending user data
@@ -147,7 +148,7 @@ exports.addStudent = async (req, res) => {
   }
 };
 
-// POST /api/users/login - Authenticate user and respond with user info (no password)
+// POST /api/users/login - Authenticate user and respond with user info and JWT token
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -170,7 +171,15 @@ exports.loginUser = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    res.json(sanitizeUser(user));
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    const userData = sanitizeUser(user);
+    res.json({ ...userData, token });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Internal server error" });

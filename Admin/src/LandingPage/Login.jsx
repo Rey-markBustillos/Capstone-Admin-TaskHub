@@ -46,6 +46,10 @@ export default function Login({ onBack, onLoginSuccess }) {
         setError(data.message || "Invalid email or password.");
       } else {
         localStorage.setItem("user", JSON.stringify(data));
+        // Store JWT token if provided
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+        }
         // Record user login for active user tracking
         if (data.id && data.role) {
           recordUserLogin(data.id, data.role);
