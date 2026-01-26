@@ -183,28 +183,25 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
         </ul>
       </div>
 
-      {/* Light Mode Toggle for Students */}
+      {/* Light Mode Toggle for Students - Above Logout */}
       {role === 'student' && studentTheme && (
-        <div className={`p-2 sm:p-3 ${borderClass} border-t`}>
+        <div className="px-2 sm:px-3 pb-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
               studentTheme.toggleLightMode();
             }}
-            className={`w-full flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gradient-to-r ${
+            className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${
               studentTheme.isLightMode 
-                ? 'from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500' 
-                : 'from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600'
-            } text-white font-bold rounded-lg sm:rounded-xl shadow focus:outline-none focus:ring-2 ${
-              studentTheme.isLightMode ? 'focus:ring-yellow-400' : 'focus:ring-blue-400'
-            } transition-all duration-200
-              ${isOpen ? 'justify-start' : 'justify-center'}`}
+                ? 'bg-gray-100 hover:bg-gray-200 text-gray-800' 
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-100'
+            } ${isOpen ? 'justify-start' : 'justify-center'} shadow-sm hover:shadow-md`}
             title={studentTheme.isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
           >
-            <span className="transition-transform duration-200 group-hover:scale-125 group-hover:rotate-12">
-              {studentTheme.isLightMode ? <Moon size={isOpen ? (window.innerWidth < 640 ? 20 : 28) : 20} /> : <Sun size={isOpen ? (window.innerWidth < 640 ? 20 : 28) : 20} />}
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-md">
+              {studentTheme.isLightMode ? <Moon size={16} /> : <Sun size={16} />}
             </span>
-            {isOpen && <span className="text-xs sm:text-base font-semibold tracking-wide">{studentTheme.isLightMode ? 'Dark' : 'Light'} Mode</span>}
+            {isOpen && <span className="text-sm font-medium">{studentTheme.isLightMode ? 'Dark' : 'Light'} Mode</span>}
           </button>
         </div>
       )}
