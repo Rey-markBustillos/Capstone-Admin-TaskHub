@@ -45,12 +45,24 @@ const SubmitActivity = () => {
       } catch (submissionError) {
         if (submissionError.response && submissionError.response.status === 404) {
           setPreviousSubmission(null);
+        } else if (submissionError.response?.status === 401 || submissionError.response?.status === 403) {
+          setError('Your session has expired. Please login again.');
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
         } else {
           setError('Could not fetch previous submission.');
         }
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load activity details.');
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setError('Your session has expired. Please login again.');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else {
+        setError(err.response?.data?.message || 'Failed to load activity details.');
+      }
     } finally {
       setLoading(false);
     }
@@ -163,8 +175,17 @@ const SubmitActivity = () => {
       }, 2000);
 
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred during submission.');
       console.error('Submission Error:', err.response || err);
+      if (err.response?.status === 401) {
+        setError('Your session has expired. Please login again.');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else if (err.response?.status === 403) {
+        setError('You do not have permission to perform this action.');
+      } else {
+        setError(err.response?.data?.message || 'An error occurred during submission.');
+      }
     } finally {
       setSubmitting(false);
     }

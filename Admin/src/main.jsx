@@ -2,6 +2,22 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
+import axios from 'axios'
+
+// Setup global axios interceptor for 401/403 errors
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Clear user session
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      // Redirect to login
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Service Worker Registration
 if ('serviceWorker' in navigator) {
