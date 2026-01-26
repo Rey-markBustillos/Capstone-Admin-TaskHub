@@ -283,13 +283,13 @@ const StudentDashboard = () => {
         aria-hidden="true"
         className="absolute top-0 left-0 -translate-x-1/3 -translate-y-1/3"
       >
-        <div className={`w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full ${isLightMode ? 'bg-gradient-to-tr from-blue-200 to-indigo-200 opacity-40' : 'bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-30'} blur-3xl`}></div>
+        <div className={`w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full ${isLightMode ? 'bg-indigo-100 opacity-30' : 'bg-gradient-to-tr from-indigo-500 to-purple-500 opacity-30'} blur-3xl`}></div>
       </div>
       <div
         aria-hidden="true"
         className="absolute bottom-0 right-0 translate-x-1/3 translate-y-1/3"
       >
-        <div className={`w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full ${isLightMode ? 'bg-gradient-to-tr from-cyan-200 to-blue-200 opacity-40' : 'bg-gradient-to-tr from-cyan-500 to-blue-500 opacity-30'} blur-3xl`}></div>
+        <div className={`w-[24rem] sm:w-[40rem] h-[24rem] sm:h-[40rem] rounded-full ${isLightMode ? 'bg-blue-100 opacity-30' : 'bg-gradient-to-tr from-cyan-500 to-blue-500 opacity-30'} blur-3xl`}></div>
       </div>
       {/* Falling books */}
       {!isLightMode && (

@@ -183,7 +183,7 @@ const StudentClassView = () => {
         </div>
       )}
       {selectedClass && (
-  <div className={`relative ${isLightMode ? 'bg-gradient-to-r from-indigo-200 via-indigo-300 to-purple-300 text-gray-800 border-b-4 border-indigo-400' : 'bg-gradient-to-r from-indigo-900 via-indigo-700 to-purple-900 text-white border-b-4 border-indigo-900'} px-2 sm:px-4 py-2 sm:py-3 md:py-4 text-base flex flex-col justify-start items-start gap-1 sm:gap-2 shadow-xl overflow-hidden transition-all duration-[3000ms] animate-fade-in-down max-w-full min-h-[80px] sm:min-h-[100px] md:min-h-[120px]`} style={{animationDelay:'0.05s', animationDuration:'3s'}}>
+  <div className={`relative ${isLightMode ? 'bg-indigo-200 text-gray-800 border-b-4 border-indigo-400' : 'bg-gradient-to-r from-indigo-900 via-indigo-700 to-purple-900 text-white border-b-4 border-indigo-900'} px-2 sm:px-4 py-2 sm:py-3 md:py-4 text-base flex flex-col justify-start items-start gap-1 sm:gap-2 shadow-xl overflow-hidden transition-all duration-[3000ms] animate-fade-in-down max-w-full min-h-[80px] sm:min-h-[100px] md:min-h-[120px]`} style={{animationDelay:'0.05s', animationDuration:'3s'}}>
           {/* Decorative blob or icon on the right */}
           <div className="hidden sm:block absolute right-0 top-0 h-full w-40 sm:w-50 md:w-60 pointer-events-none select-none z-0">
             {/* Main dark blob */}
@@ -279,7 +279,7 @@ const StudentClassView = () => {
       </div>
   <div className="relative w-full mt-4">
     {/* Cardbox background */}
-    <div className={`absolute inset-0 ${isLightMode ? 'bg-gradient-to-br from-white/90 via-indigo-100/80 to-blue-100/80 border-indigo-300/40' : 'bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 border-indigo-900/40'} backdrop-blur-xl shadow-2xl border rounded-2xl z-0`} />
+    <div className={`absolute inset-0 ${isLightMode ? 'bg-white/95 border-indigo-300/40' : 'bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 border-indigo-900/40'} backdrop-blur-xl shadow-2xl border rounded-2xl z-0`} />
     
     {/* Grid Layout - Better visual hierarchy */}
     <div className={`relative z-10 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12'}`}>
@@ -350,7 +350,7 @@ const StudentClassView = () => {
         {/* Attendance */}
         <NavLink
           to={`attendance`}
-          className={`group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer ${isLightMode ? 'bg-gradient-to-br from-gray-100 via-indigo-100 to-slate-100 text-gray-800 hover:bg-gray-200/80' : 'bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80'} hover:scale-105 relative overflow-hidden`}
+          className={`group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer ${isLightMode ? 'bg-white text-gray-800 hover:bg-gray-50' : 'bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80'} hover:scale-105 relative overflow-hidden`}
           style={{ textDecoration: 'none', animationDelay: '0.15s', animationDuration: '3s' }}
         >
           <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-purple-400 rounded-l-lg sm:rounded-l-2xl"></div>
@@ -364,7 +364,7 @@ const StudentClassView = () => {
         {/* Announcements */}
         <NavLink
           to={`announcements`}
-          className={`group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer ${isLightMode ? 'bg-gradient-to-br from-gray-100 via-indigo-100 to-slate-100 text-gray-800 hover:bg-gray-200/80' : 'bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80'} hover:scale-105 relative overflow-hidden`}
+          className={`group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer ${isLightMode ? 'bg-white text-gray-800 hover:bg-gray-50' : 'bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80'} hover:scale-105 relative overflow-hidden`}
           style={{ textDecoration: 'none', animationDelay: '0.2s', animationDuration: '3s' }}
         >
           <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-yellow-400 rounded-l-lg sm:rounded-l-2xl"></div>
