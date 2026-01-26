@@ -198,24 +198,20 @@ const SubmitActivity = () => {
 
   const getAttachmentUrl = (filePath) => {
     if (!filePath) return '#';
-    // If it's already a full URL (Cloudinary), return as-is and ensure it's set to view inline
+    console.log('Original filePath:', filePath); // Debug log
+    
+    // If it's already a full URL (Cloudinary), return as-is
     if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
-      // For Cloudinary URLs, ensure inline display by adding fl_attachment:false
-      if (filePath.includes('cloudinary.com')) {
-        // Remove any existing fl_attachment flags
-        let url = filePath.replace(/\/fl_attachment[^/]*\//, '/');
-        // Add fl_attachment=false to force inline view
-        if (!url.includes('fl_attachment')) {
-          url = url.replace(/\/upload\//, '/upload/fl_attachment:false/');
-        }
-        return url;
-      }
+      console.log('Cloudinary URL detected:', filePath); // Debug log
       return filePath;
     }
+    
     // Otherwise, construct URL from API base
     const normalizedPath = filePath.replace(/\\/g, '/');
     const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
-    return `${API_BASE_URL}/${cleanPath}`;
+    const finalUrl = `${API_BASE_URL}/${cleanPath}`;
+    console.log('Constructed URL:', finalUrl); // Debug log
+    return finalUrl;
   };
 
   if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
