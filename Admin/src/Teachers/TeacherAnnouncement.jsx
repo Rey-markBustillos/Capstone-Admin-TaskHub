@@ -24,6 +24,7 @@ export default function TeacherAnnouncement() {
   const [openComments, setOpenComments] = useState({});
   const [viewersInfo, setViewersInfo] = useState({ isOpen: false, viewers: [], title: '' });
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
 
   // Removed view tracking refs since teachers don't need to track their own announcement views
 
@@ -143,6 +144,7 @@ export default function TeacherAnnouncement() {
       }
       setForm({ title: '', content: '', id: null });
       setSelectedFiles([]);
+      setFileInputKey(Date.now());
       fetchData();
       setIsModalOpen(false);
     } catch (err) {
@@ -188,6 +190,7 @@ export default function TeacherAnnouncement() {
   const openModalForCreate = () => {
     setForm({ title: '', content: '', id: null });
     setSelectedFiles([]);
+    setFileInputKey(Date.now());
     setError(null);
     setIsModalOpen(true);
   };
@@ -554,6 +557,7 @@ export default function TeacherAnnouncement() {
                     Attach Files (Optional)
                   </label>
                   <input
+                    key={fileInputKey}
                     type="file"
                     multiple
                     onChange={handleFileSelect}

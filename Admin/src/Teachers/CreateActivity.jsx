@@ -14,6 +14,7 @@ const getAttachmentUrl = (url) => {
 const CreateActivity = () => {
   const { classId } = useParams();
   const [activityData, setActivityData] = useState({ title: '', description: '', date: '', score: '', attachment: null });
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [className, setClassName] = useState('');
@@ -59,11 +60,15 @@ const CreateActivity = () => {
   const openCreateModal = () => {
     setIsCreateModalOpen(true);
     setActivityData({ title: '', description: '', date: '', score: '', attachment: null });
+    setFileInputKey(Date.now());
     setError('');
     setSuccess('');
   };
 
-  const closeCreateModal = () => setIsCreateModalOpen(false);
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+    setFileInputKey(Date.now());
+  };
 
   const openEditModal = (activity) => {
     setEditingActivity(activity);
@@ -74,6 +79,7 @@ const CreateActivity = () => {
       score: activity.totalPoints || activity.score || '',
       attachment: null
     });
+    setFileInputKey(Date.now());
     setError('');
     setSuccess('');
     setIsEditModalOpen(true);
@@ -83,6 +89,7 @@ const CreateActivity = () => {
     setIsEditModalOpen(false);
     setEditingActivity(null);
     setActivityData({ title: '', description: '', date: '', score: '', attachment: null });
+    setFileInputKey(Date.now());
   };
 
   const handleEdit = async (e) => {
@@ -274,6 +281,7 @@ const CreateActivity = () => {
               <div>
                 <label className="block text-gray-300 mb-2" htmlFor="activity-attachment">Attachment</label>
                 <input
+                  key={fileInputKey}
                   id="activity-attachment"
                   type="file"
                   className="w-full text-gray-100"
@@ -353,6 +361,7 @@ const CreateActivity = () => {
               <div>
                 <label className="block text-gray-300 mb-2" htmlFor="edit-activity-attachment">New Attachment (optional)</label>
 <input
+  key={fileInputKey}
   id="activity-attachment"
   type="file"
   name="attachment" // <-- idagdag ito!

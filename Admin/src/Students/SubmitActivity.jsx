@@ -23,6 +23,7 @@ const SubmitActivity = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fileInputKey, setFileInputKey] = useState(Date.now());
   // Camera states
   const [showCamera, setShowCamera] = useState(false);
   const [cameraError, setCameraError] = useState('');
@@ -158,6 +159,7 @@ const SubmitActivity = () => {
       setTimeout(() => {
         fetchDetails();
         setSelectedFile(null);
+        setFileInputKey(Date.now());
       }, 2000);
 
     } catch (err) {
@@ -283,7 +285,7 @@ const SubmitActivity = () => {
                       <div className={`flex flex-col gap-2 justify-center items-center text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
                         <label htmlFor="file-upload" className={`relative cursor-pointer ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-md font-medium text-indigo-600 hover:text-indigo-500 px-2 py-1`}>
                           <span>Choose a file</span>
-                          <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} />
+                          <input key={fileInputKey} id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleFileChange} />
                         </label>
                         <p className={`text-xs ${isLightMode ? 'text-gray-500' : 'text-gray-400'} mt-2`}>Any file type, up to 10MB</p>
                       </div>
@@ -315,7 +317,7 @@ const SubmitActivity = () => {
                       <FaFileAlt className={`${isLightMode ? 'text-indigo-500' : 'text-indigo-300'} text-lg`} />
                       <span className={`text-sm font-medium ${isLightMode ? 'text-gray-800' : 'text-gray-200'}`}>{selectedFile.name}</span>
                     </div>
-                    <button type="button" onClick={() => setSelectedFile(null)} className="text-gray-500 hover:text-red-600">
+                    <button type="button" onClick={() => { setSelectedFile(null); setFileInputKey(Date.now()); }} className="text-gray-500 hover:text-red-600">
                       <FaTimesCircle />
                     </button>
                   </div>
