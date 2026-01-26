@@ -186,24 +186,24 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
       {/* Theme Toggle and Logout - Stacked */}
       <div className={`p-2 sm:p-3 ${borderClass} border-t bg-gradient-to-r from-red-100/60 to-white/0`}>
         <div className="flex flex-col gap-2">
-          {/* Theme Toggle for Students - Above Logout */}
+          {/* Theme Toggle for Students - Modern Design */}
           {role === 'student' && studentTheme && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 studentTheme.toggleLightMode();
               }}
-              className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${
+              className={`w-full flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 ${
                 studentTheme.isLightMode 
-                  ? 'bg-gray-100 hover:bg-gray-200 text-gray-800' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-100'
-              } ${isOpen ? 'justify-start' : 'justify-center'} shadow-sm hover:shadow-md`}
+                  ? 'bg-gradient-to-r from-yellow-400 via-orange-400 to-amber-500 hover:from-yellow-500 hover:via-orange-500 hover:to-amber-600 text-white shadow-lg hover:shadow-xl' 
+                  : 'bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 hover:from-indigo-700 hover:via-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl'
+              } ${isOpen ? 'justify-start' : 'justify-center'} font-semibold`}
               title={studentTheme.isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             >
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-md">
-                {studentTheme.isLightMode ? <Moon size={16} /> : <Sun size={16} />}
+              <span className={`flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 backdrop-blur-sm transition-transform duration-300 ${studentTheme.isLightMode ? 'rotate-0' : 'rotate-180'}`}>
+                {studentTheme.isLightMode ? <Moon size={isOpen ? (window.innerWidth < 640 ? 16 : 18) : 16} className="drop-shadow" /> : <Sun size={isOpen ? (window.innerWidth < 640 ? 16 : 18) : 16} className="drop-shadow" />}
               </span>
-              {isOpen && <span className="text-sm font-medium">{studentTheme.isLightMode ? 'Dark' : 'Light'} Mode</span>}
+              {isOpen && <span className="text-xs sm:text-sm tracking-wide drop-shadow">{studentTheme.isLightMode ? 'Dark' : 'Light'} Mode</span>}
             </button>
           )}
           
