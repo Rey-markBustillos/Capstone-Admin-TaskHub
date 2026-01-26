@@ -16,11 +16,15 @@ cloudinary.config({
 // filepath: c:\xampp\htdocs\Capstone-Admin-TaskHub\backend\routes\activityRoutes.js
 const activityCloudinaryStorage = new CloudinaryStorage({
   cloudinary,
-  params: async (req, file) => ({
-    folder: "taskhub/activities",
-    public_id: `activity-${Date.now()}`,
-    resource_type: /\.(pdf|docx?|pptx?|xlsx?)$/i.test(file.originalname) ? "raw" : "image",
-  }),
+  params: async (req, file) => {
+    const fileExtension = file.originalname.split('.').pop();
+    return {
+      folder: "taskhub/activities",
+      public_id: `activity-${Date.now()}.${fileExtension}`,
+      resource_type: /\.(pdf|docx?|pptx?|xlsx?)$/i.test(file.originalname) ? "raw" : "image",
+      format: fileExtension, // Preserve the file extension
+    };
+  },
 });
 
 const uploadActivity = multer({
