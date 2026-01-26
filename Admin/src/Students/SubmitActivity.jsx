@@ -198,8 +198,18 @@ const SubmitActivity = () => {
 
   const getAttachmentUrl = (filePath) => {
     if (!filePath) return '#';
-    // If it's already a full URL (Cloudinary), return as-is
+    // If it's already a full URL (Cloudinary), return as-is and ensure it's set to view inline
     if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      // For Cloudinary URLs, ensure inline display by adding fl_attachment:false
+      if (filePath.includes('cloudinary.com')) {
+        // Remove any existing fl_attachment flags
+        let url = filePath.replace(/\/fl_attachment[^/]*\//, '/');
+        // Add fl_attachment=false to force inline view
+        if (!url.includes('fl_attachment')) {
+          url = url.replace(/\/upload\//, '/upload/fl_attachment:false/');
+        }
+        return url;
+      }
       return filePath;
     }
     // Otherwise, construct URL from API base
