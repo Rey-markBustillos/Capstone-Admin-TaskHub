@@ -161,7 +161,7 @@ const StudentClassView = () => {
     !validRoutes.includes(location.pathname);
 
   return (
-    <div className={`h-screen overflow-y-auto overflow-x-hidden hide-scrollbar relative ${isLightMode ? 'bg-gradient-to-br from-indigo-100 via-slate-100 to-blue-100' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} transition-all duration-300`}>
+    <div className={`h-screen overflow-y-auto overflow-x-hidden hide-scrollbar relative ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} transition-all duration-300`}>
       {/* Decorative scroll background (matches StudentPortal) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="w-full h-full absolute inset-0 blur-3xl opacity-30">

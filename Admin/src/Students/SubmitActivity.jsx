@@ -205,7 +205,7 @@ const SubmitActivity = () => {
   if (!activity) return <div className="text-center p-10 text-red-500">{error || 'Activity could not be loaded.'}</div>;
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8 relative bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 overflow-hidden">
+    <div className={`min-h-screen p-4 sm:p-6 lg:p-8 relative ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} overflow-hidden`}>
       {/* Animated, blurred SVG background for extra depth and floating blobs */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <svg className="w-full h-full blur-2xl opacity-40 animate-pulse-slow" viewBox="0 0 1200 400" fill="none" xmlns="http://www.w3.org/2000/svg">

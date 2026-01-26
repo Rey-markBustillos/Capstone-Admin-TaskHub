@@ -119,7 +119,7 @@ const StudentActivities = () => {
   };
 
   if (loading) return (
-    <div className={`min-h-screen ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
+    <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <FaBookOpen className="animate-bounce text-indigo-500 mb-4" size={48} />
         <div className={`text-center p-10 text-lg font-semibold ${isLightMode ? 'text-gray-800' : 'text-gray-100'}`}>Loading activities...</div>
@@ -128,7 +128,7 @@ const StudentActivities = () => {
   );
 
   if (error) return (
-    <div className={`min-h-screen ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
+    <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <FaTimesCircle className="text-red-500 mb-4" size={48} />
         <div className="text-center p-10 text-red-400">{error}</div>
@@ -137,7 +137,7 @@ const StudentActivities = () => {
   );
 
   return (
-    <div className={`min-h-screen ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
+    <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
       <div className="max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh]">
         <div className="mb-4 ml-2 self-start">
           <NavLink to={`/student/class/${classId}`} className={`inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg ${isLightMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-700 hover:bg-indigo-800'} text-white font-semibold shadow`}>

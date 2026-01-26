@@ -102,7 +102,7 @@ const StudentPortal = () => {
   }
 
   return (
-  <div className={`relative min-h-screen flex flex-col justify-center ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} overflow-hidden w-full`}>
+  <div className={`relative min-h-screen flex flex-col justify-center ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} overflow-hidden w-full`}>
       {/* Decorative background blobs (same as dashboard/login) */}
       <div
         aria-hidden="true"

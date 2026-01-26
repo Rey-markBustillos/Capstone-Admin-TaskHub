@@ -273,7 +273,7 @@ const StudentDashboard = () => {
 
   return (
     // This page is intentionally full width, no sidebar allowed
-    <div className={`relative min-h-screen flex flex-col items-center justify-start ${isLightMode ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} w-full min-w-0 mx-0 scrollbar-hidden overflow-y-auto overflow-x-hidden pt-4 pb-8 sm:pb-12`}>
+    <div className={`relative min-h-screen flex flex-col items-center justify-start ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} w-full min-w-0 mx-0 scrollbar-hidden overflow-y-auto overflow-x-hidden pt-4 pb-8 sm:pb-12`}>
       {/* Welcome section */}
       <div className="w-full flex items-center justify-center py-6">
         <h1 className={`text-3xl sm:text-5xl font-extrabold ${isLightMode ? 'text-gray-800' : 'text-white'} tracking-tight w-full text-center`}>Welcome, {studentName}!</h1>
