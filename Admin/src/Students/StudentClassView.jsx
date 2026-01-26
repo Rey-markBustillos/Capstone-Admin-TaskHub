@@ -19,6 +19,7 @@ import { FaBullhorn, FaTasks, FaUsers, FaChalkboardTeacher, FaClock, FaDoorOpen,
 import { FaQuestionCircle } from 'react-icons/fa';
 import { useContext } from 'react';
 import SidebarContext from '../contexts/SidebarContext';
+import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -26,6 +27,7 @@ const StudentClassView = () => {
   const { classId } = useParams();
   const location = useLocation();
   const { isSidebarOpen } = useContext(SidebarContext);
+  const { isLightMode } = useContext(StudentThemeContext);
   const [selectedClass, setSelectedClass] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastOpenedComponent, setLastOpenedComponent] = useState(null);
@@ -159,7 +161,7 @@ const StudentClassView = () => {
     !validRoutes.includes(location.pathname);
 
   return (
-    <div className={`h-screen overflow-y-auto overflow-x-hidden hide-scrollbar relative bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 transition-all duration-300`}>
+    <div className={`h-screen overflow-y-auto overflow-x-hidden hide-scrollbar relative ${isLightMode ? 'bg-gradient-to-br from-indigo-100 via-slate-100 to-blue-100' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} transition-all duration-300`}>
       {/* Decorative scroll background (matches StudentPortal) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="w-full h-full absolute inset-0 blur-3xl opacity-30">
@@ -174,14 +176,14 @@ const StudentClassView = () => {
           </svg>
         </div>
       </div>
-      {/* Falling books animation (matches StudentPortal, only on index view) */}
-      {isIndex && (
+      {/* Falling books animation (matches StudentPortal, only on index view and dark mode) */}
+      {isIndex && !isLightMode && (
         <div className="absolute inset-0 pointer-events-none z-0">
           <FallingBooksAnimation />
         </div>
       )}
       {selectedClass && (
-  <div className="relative bg-gradient-to-r from-indigo-900 via-indigo-700 to-purple-900 text-white px-2 sm:px-4 py-2 sm:py-3 md:py-4 text-base flex flex-col justify-start items-start gap-1 sm:gap-2 shadow-xl border-b-4 border-indigo-900 overflow-hidden transition-all duration-[3000ms] animate-fade-in-down max-w-full min-h-[80px] sm:min-h-[100px] md:min-h-[120px]" style={{animationDelay:'0.05s', animationDuration:'3s'}}>
+  <div className={`relative ${isLightMode ? 'bg-gradient-to-r from-indigo-200 via-indigo-300 to-purple-300 text-gray-800 border-b-4 border-indigo-400' : 'bg-gradient-to-r from-indigo-900 via-indigo-700 to-purple-900 text-white border-b-4 border-indigo-900'} px-2 sm:px-4 py-2 sm:py-3 md:py-4 text-base flex flex-col justify-start items-start gap-1 sm:gap-2 shadow-xl overflow-hidden transition-all duration-[3000ms] animate-fade-in-down max-w-full min-h-[80px] sm:min-h-[100px] md:min-h-[120px]`} style={{animationDelay:'0.05s', animationDuration:'3s'}}>
           {/* Decorative blob or icon on the right */}
           <div className="hidden sm:block absolute right-0 top-0 h-full w-40 sm:w-50 md:w-60 pointer-events-none select-none z-0">
             {/* Main dark blob */}
@@ -233,18 +235,18 @@ const StudentClassView = () => {
             <span className="bg-gradient-to-tr from-yellow-400 via-orange-400 to-pink-400 p-1 sm:p-1.5 rounded-full shadow-lg ring-1 ring-yellow-200/40 flex items-center justify-center flex-shrink-0">
               <FaBullhorn className="text-white text-xs sm:text-sm" />
             </span>
-            <span className="text-xs sm:text-sm md:text-base font-bold tracking-wide drop-shadow truncate">Welcome <span className="text-yellow-200">{getStudentName()}</span> to <span className="text-yellow-200">{selectedClass.className}</span>!</span>
+            <span className={`text-xs sm:text-sm md:text-base font-bold tracking-wide drop-shadow truncate`}>Welcome <span className={isLightMode ? 'text-yellow-700' : 'text-yellow-200'}>{getStudentName()}</span> to <span className={isLightMode ? 'text-yellow-700' : 'text-yellow-200'}>{selectedClass.className}</span>!</span>
           </div>
           <div className={`flex flex-col gap-0.5 sm:gap-1 relative overflow-hidden max-w-full transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 pl-1 sm:pl-2 md:pl-4' : 'ml-10 sm:ml-12 pl-1 sm:pl-2 md:pl-4'}`}>
             <div className="flex items-center gap-1 sm:gap-2 px-1 py-0.5 relative z-10 text-xs sm:text-sm">
-              <FaChalkboardTeacher className="text-yellow-300 text-xs sm:text-sm flex-shrink-0" />
-              <span className="font-medium text-yellow-100 whitespace-nowrap">Teacher:</span>
-              <span className="font-semibold text-white truncate">{selectedClass.teacherName || (selectedClass.teacher && selectedClass.teacher.name) || 'N/A'}</span>
+              <FaChalkboardTeacher className={`${isLightMode ? 'text-yellow-600' : 'text-yellow-300'} text-xs sm:text-sm flex-shrink-0`} />
+              <span className={`font-medium ${isLightMode ? 'text-yellow-700' : 'text-yellow-100'} whitespace-nowrap`}>Teacher:</span>
+              <span className={`font-semibold ${isLightMode ? 'text-gray-800' : 'text-white'} truncate`}>{selectedClass.teacherName || (selectedClass.teacher && selectedClass.teacher.name) || 'N/A'}</span>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 px-1 py-0.5 relative z-10 text-xs sm:text-sm">
-              <FaClock className="text-blue-300 text-xs sm:text-sm flex-shrink-0" />
-              <span className="font-medium text-blue-100 whitespace-nowrap">Schedule:</span>
-              <span className="font-semibold text-white truncate">
+              <FaClock className={`${isLightMode ? 'text-blue-600' : 'text-blue-300'} text-xs sm:text-sm flex-shrink-0`} />
+              <span className={`font-medium ${isLightMode ? 'text-blue-700' : 'text-blue-100'} whitespace-nowrap`}>Schedule:</span>
+              <span className={`font-semibold ${isLightMode ? 'text-gray-800' : 'text-white'} truncate`}>
                 {selectedClass.day && selectedClass.time 
                   ? `${selectedClass.day} at ${formatTime(selectedClass.time)}` 
                   : selectedClass.day 
@@ -256,9 +258,9 @@ const StudentClassView = () => {
               </span>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 px-1 py-0.5 relative z-10 text-xs sm:text-sm">
-              <FaDoorOpen className="text-pink-300 text-xs sm:text-sm flex-shrink-0" />
-              <span className="font-medium text-pink-100 whitespace-nowrap">Room:</span>
-              <span className="font-semibold text-white truncate">{selectedClass.roomNumber || 'N/A'}</span>
+              <FaDoorOpen className={`${isLightMode ? 'text-pink-600' : 'text-pink-300'} text-xs sm:text-sm flex-shrink-0`} />
+              <span className={`font-medium ${isLightMode ? 'text-pink-700' : 'text-pink-100'} whitespace-nowrap`}>Room:</span>
+              <span className={`font-semibold ${isLightMode ? 'text-gray-800' : 'text-white'} truncate`}>{selectedClass.roomNumber || 'N/A'}</span>
             </div>
           </div>
         </div>
@@ -270,26 +272,26 @@ const StudentClassView = () => {
   <div className={`mb-4 sm:mb-8 transition-all duration-[3000ms] animate-fade-in-up px-2 sm:px-4 md:px-8 ${isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12'}`} style={{animationDelay:'0.15s', animationDuration:'3s'}}>
         <NavLink
           to="/studentportal"
-          className="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-lg bg-indigo-700 text-white font-semibold shadow hover:bg-indigo-800 transition mb-4 text-sm sm:text-base"
+          className={`inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-lg ${isLightMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-700 hover:bg-indigo-800'} text-white font-semibold shadow transition mb-4 text-sm sm:text-base`}
         >
           <FaArrowLeft className="text-sm sm:text-base" /> Back to My Classes
         </NavLink>
       </div>
   <div className="relative w-full mt-4">
     {/* Cardbox background */}
-    <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 backdrop-blur-xl shadow-2xl border border-indigo-900/40 rounded-2xl z-0" />
+    <div className={`absolute inset-0 ${isLightMode ? 'bg-gradient-to-br from-white/90 via-indigo-100/80 to-blue-100/80 border-indigo-300/40' : 'bg-gradient-to-br from-gray-900/80 via-indigo-900/70 to-blue-900/80 border-indigo-900/40'} backdrop-blur-xl shadow-2xl border rounded-2xl z-0`} />
     
     {/* Grid Layout - Better visual hierarchy */}
     <div className={`relative z-10 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12'}`}>
       {/* Recent Open Heading */}
       <div className="mb-4 sm:mb-6">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3">
+        <h2 className={`text-lg sm:text-xl md:text-2xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'} mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3`}>
           <span className="bg-gradient-to-tr from-indigo-400 via-purple-400 to-pink-400 p-1.5 sm:p-2 rounded-full shadow-lg">
             <FaClock className="text-white text-sm sm:text-base md:text-lg" />
           </span>
           Recent Open
         </h2>
-        <p className="text-gray-300 text-xs sm:text-sm">Quick access to your recently visited components</p>
+        <p className={`${isLightMode ? 'text-gray-600' : 'text-gray-300'} text-xs sm:text-sm`}>Quick access to your recently visited components</p>
       </div>
 
       {/* Recent Components Row */}
@@ -305,7 +307,7 @@ const StudentClassView = () => {
               <lastOpenedComponent.icon className="text-white text-xs sm:text-lg md:text-2xl group-hover:animate-bounce" />
             </span>
             <span className="font-bold text-[8px] sm:text-sm md:text-lg tracking-wide text-center px-0.5">{lastOpenedComponent.name}</span>
-            <span className="text-[6px] sm:text-xs text-gray-200">Recent</span>
+            <span className={`text-[6px] sm:text-xs ${isLightMode ? 'text-gray-200' : 'text-gray-200'}`}>Recent</span>
           </NavLink>
         ) : (
           <div className="group flex flex-col items-center justify-center h-[60px] sm:h-[120px] md:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-gray-600/60 cursor-not-allowed bg-gradient-to-br from-gray-700 via-gray-800 to-slate-800 text-white relative overflow-hidden">
@@ -314,7 +316,7 @@ const StudentClassView = () => {
               <FaClock className="text-white text-xs sm:text-lg md:text-2xl" />
             </span>
             <span className="font-bold text-[8px] sm:text-sm md:text-lg tracking-wide text-center px-0.5">Recent</span>
-            <span className="text-[6px] sm:text-xs text-gray-300">None</span>
+            <span className={`text-[6px] sm:text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>None</span>
           </div>
         )}
 
@@ -329,7 +331,7 @@ const StudentClassView = () => {
               <secondLastComponent.icon className="text-white text-xs sm:text-lg md:text-2xl group-hover:animate-bounce" />
             </span>
             <span className="font-bold text-[8px] sm:text-sm md:text-lg tracking-wide text-center px-0.5">{secondLastComponent.name}</span>
-            <span className="text-[6px] sm:text-xs text-gray-200">Quick</span>
+            <span className={`text-[6px] sm:text-xs ${isLightMode ? 'text-gray-200' : 'text-gray-200'}`}>Quick</span>
           </NavLink>
         ) : (
           <div className="group flex flex-col items-center justify-center h-[60px] sm:h-[120px] md:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-gray-600/60 cursor-not-allowed bg-gradient-to-br from-gray-700 via-gray-800 to-slate-800 text-white relative overflow-hidden">
@@ -338,7 +340,7 @@ const StudentClassView = () => {
               <FaRocket className="text-white text-xs sm:text-lg md:text-2xl" />
             </span>
             <span className="font-bold text-[8px] sm:text-sm md:text-lg tracking-wide text-center px-0.5">Quick</span>
-            <span className="text-[6px] sm:text-xs text-gray-300">None</span>
+            <span className={`text-[6px] sm:text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>None</span>
           </div>
         )}
       </div>
@@ -348,7 +350,7 @@ const StudentClassView = () => {
         {/* Attendance */}
         <NavLink
           to={`attendance`}
-          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className={`group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer ${isLightMode ? 'bg-gradient-to-br from-gray-100 via-indigo-100 to-slate-100 text-gray-800 hover:bg-gray-200/80' : 'bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80'} hover:scale-105 relative overflow-hidden`}
           style={{ textDecoration: 'none', animationDelay: '0.15s', animationDuration: '3s' }}
         >
           <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-purple-400 rounded-l-lg sm:rounded-l-2xl"></div>
@@ -356,13 +358,13 @@ const StudentClassView = () => {
             <FaCalendarCheck className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
           <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">Attendance</span>
-          <span className="text-[6px] sm:text-xs text-gray-300">Track presence</span>
+          <span className={`text-[6px] sm:text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>Track presence</span>
         </NavLink>
 
         {/* Announcements */}
         <NavLink
           to={`announcements`}
-          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className={`group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer ${isLightMode ? 'bg-gradient-to-br from-gray-100 via-indigo-100 to-slate-100 text-gray-800 hover:bg-gray-200/80' : 'bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80'} hover:scale-105 relative overflow-hidden`}
           style={{ textDecoration: 'none', animationDelay: '0.2s', animationDuration: '3s' }}
         >
           <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-yellow-400 rounded-l-lg sm:rounded-l-2xl"></div>
@@ -370,13 +372,13 @@ const StudentClassView = () => {
             <FaBullhorn className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
           <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">News</span>
-          <span className="text-[6px] sm:text-xs text-gray-300">Updates</span>
+          <span className={`text-[6px] sm:text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>Updates</span>
         </NavLink>
 
         {/* Activities */}
         <NavLink
           to={`activities`}
-          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className={`group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer ${isLightMode ? 'bg-gradient-to-br from-gray-100 via-indigo-100 to-slate-100 text-gray-800 hover:bg-gray-200/80' : 'bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80'} hover:scale-105 relative overflow-hidden`}
           style={{ textDecoration: 'none', animationDelay: '0.3s', animationDuration: '3s' }}
         >
           <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-blue-400 rounded-l-lg sm:rounded-l-2xl"></div>
@@ -384,13 +386,13 @@ const StudentClassView = () => {
             <FaTasks className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
           <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">Activities</span>
-          <span className="text-[6px] sm:text-xs text-gray-300">Submit work</span>
+          <span className={`text-[6px] sm:text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>Submit work</span>
         </NavLink>
 
         {/* Modules - Learning Materials */}
         <NavLink
           to={`modules`}
-          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className={`group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer ${isLightMode ? 'bg-gradient-to-br from-gray-100 via-indigo-100 to-slate-100 text-gray-800 hover:bg-gray-200/80' : 'bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80'} hover:scale-105 relative overflow-hidden`}
           style={{ textDecoration: 'none', animationDelay: '0.35s', animationDuration: '3s' }}
         >
           <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-teal-400 rounded-l-lg sm:rounded-l-2xl"></div>
@@ -398,13 +400,13 @@ const StudentClassView = () => {
             <FaBook className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
           <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">Modules</span>
-          <span className="text-[6px] sm:text-xs text-gray-300">Materials</span>
+          <span className={`text-[6px] sm:text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>Materials</span>
         </NavLink>
 
         {/* Quiz Hub */}
         <NavLink
           to={`quiz`}
-          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className={`group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer ${isLightMode ? 'bg-gradient-to-br from-gray-100 via-indigo-100 to-slate-100 text-gray-800 hover:bg-gray-200/80' : 'bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80'} hover:scale-105 relative overflow-hidden`}
           style={{ textDecoration: 'none', animationDelay: '0.4s', animationDuration: '3s' }}
         >
           <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-pink-400 rounded-l-lg sm:rounded-l-2xl"></div>
@@ -412,13 +414,13 @@ const StudentClassView = () => {
             <FaQuestionCircle className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
           <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">Quiz Hub</span>
-          <span className="text-[6px] sm:text-xs text-gray-300">Take quiz</span>
+          <span className={`text-[6px] sm:text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>Take quiz</span>
         </NavLink>
 
         {/* Class List */}
         <NavLink
           to={`classlist`}
-          className="group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80 hover:scale-105 relative overflow-hidden"
+          className={`group flex flex-col items-center justify-center h-[70px] sm:h-[140px] rounded-lg sm:rounded-2xl shadow-xl transition-all duration-300 animate-fade-in-up border-1 sm:border-3 border-indigo-600/60 cursor-pointer ${isLightMode ? 'bg-gradient-to-br from-gray-100 via-indigo-100 to-slate-100 text-gray-800 hover:bg-gray-200/80' : 'bg-gradient-to-br from-gray-800 via-indigo-800 to-slate-800 text-white hover:bg-gray-800/80'} hover:scale-105 relative overflow-hidden`}
           style={{ textDecoration: 'none', animationDelay: '0.45s', animationDuration: '3s' }}
         >
           <div className="absolute left-0 top-0 h-full w-0.5 sm:w-1.5 bg-green-400 rounded-l-lg sm:rounded-l-2xl"></div>
@@ -426,7 +428,7 @@ const StudentClassView = () => {
             <FaUsers className="text-white text-xs sm:text-2xl group-hover:animate-bounce" />
           </span>
           <span className="font-bold text-[8px] sm:text-lg tracking-wide text-center px-0.5">Class List</span>
-          <span className="text-[6px] sm:text-xs text-gray-300">Classmates</span>
+          <span className={`text-[6px] sm:text-xs ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>Classmates</span>
         </NavLink>
       </div>
     </div>
