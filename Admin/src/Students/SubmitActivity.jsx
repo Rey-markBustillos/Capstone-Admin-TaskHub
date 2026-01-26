@@ -198,9 +198,14 @@ const SubmitActivity = () => {
 
   const getAttachmentUrl = (filePath) => {
     if (!filePath) return '#';
+    // If it's already a full URL (Cloudinary), return as-is
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      return filePath;
+    }
+    // Otherwise, construct URL from API base
     const normalizedPath = filePath.replace(/\\/g, '/');
     const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
-  return `${API_BASE_URL}/${cleanPath}`;
+    return `${API_BASE_URL}/${cleanPath}`;
   };
 
   if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
