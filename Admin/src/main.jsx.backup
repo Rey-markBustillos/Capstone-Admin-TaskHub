@@ -11,12 +11,6 @@ axios.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // CRITICAL FIX: For FormData, remove Content-Type header so browser can set it with proper multipart boundary
-    if (config.data instanceof FormData) {
-      delete config.headers['Content-Type'];
-    }
-    
     return config;
   },
   error => Promise.reject(error)
@@ -80,4 +74,3 @@ createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </StrictMode>,
 )
-

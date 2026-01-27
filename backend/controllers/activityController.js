@@ -1,4 +1,4 @@
-const Activity = require('../models/Activity');
+﻿const Activity = require('../models/Activity');
 const Class = require('../models/Class');
 const Submission = require('../models/Submission');
 const mongoose = require('mongoose');
@@ -32,7 +32,13 @@ exports.createActivity = async (req, res) => {
     let attachmentPath = null;
 
     if (req.file) {
+      // CRITICAL: Validate Cloudinary URL is not null/undefined
       attachmentPath = req.file.secure_url || req.file.url || req.file.path || req.file.filename || null;
+      if (!attachmentPath) {
+        console.error('[ERROR] File upload to Cloudinary failed - no URL returned', req.file);
+        return res.status(400).json({ message: 'File upload failed. Please try again.' });
+      }
+      console.log([SUCCESS] File uploaded to Cloudinary: ${attachmentPath});
     }
 
     if (!title || !date || !classId) {
@@ -112,6 +118,11 @@ exports.updateActivity = async (req, res) => {
     let updateData = { ...req.body };
     if (req.file) {
       updateData.attachment = req.file.secure_url || req.file.url || req.file.path || req.file.filename || null;
+      if (!attachmentPath) {
+        console.error('[ERROR] File upload to Cloudinary failed - no URL returned', req.file);
+        return res.status(400).json({ message: 'File upload failed. Please try again.' });
+      }
+      console.log([SUCCESS] File uploaded to Cloudinary: ${attachmentPath});
     }
 
     const updated = await Activity.findByIdAndUpdate(id, updateData, {

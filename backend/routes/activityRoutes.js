@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const activityController = require('../controllers/activityController');
 const { verifyToken } = require('../middleware/auth');
@@ -58,14 +58,14 @@ router.get("/submission/:id/info", verifyToken, activityController.getSubmission
 // 📌 ACTIVITY CRUD
 // ------------------------------------------------------
 router.get("/", activityController.getActivities); // Get all activities
-router.post("/", uploadActivity.single("attachment"), activityController.createActivity); // Create new activity
-router.put("/:id", uploadActivity.single("attachment"), activityController.updateActivity); // Update activity
-router.delete("/:id", activityController.deleteActivity); // Delete activity
+router.post("/", verifyToken, uploadActivity.single("attachment"), activityController.createActivity); // Create new activity
+router.put("/:id", verifyToken, uploadActivity.single("attachment"), activityController.updateActivity); // Update activity
+router.delete("/:id", verifyToken, activityController.deleteActivity); // Delete activity
 
 // ------------------------------------------------------
 // 📌 Lock / Unlock Activity
 // ------------------------------------------------------
-router.patch("/:id/lock", activityController.toggleActivityLock);
+router.patch("/:id/lock", verifyToken, activityController.toggleActivityLock);
 
 // ------------------------------------------------------
 // 📌 Download activity attachment
@@ -75,7 +75,7 @@ router.get("/:id/download", activityController.downloadActivityAttachment);
 // ------------------------------------------------------
 // 📌 Export Scores (ADD THIS BEFORE FINAL ROUTE)
 // ------------------------------------------------------
-router.get("/export-scores", activityController.exportScores);
+router.get("/export-scores", verifyToken, activityController.exportScores);
 
 // ------------------------------------------------------
 // 📌 Resubmission (Legacy Support)
