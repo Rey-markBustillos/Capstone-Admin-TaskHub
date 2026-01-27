@@ -8,13 +8,26 @@ const getAttachmentUrl = (url) => {
   if (!url) return null;
   // If it's already a full URL (Cloudinary), return as-is
   if (url.startsWith('http://') || url.startsWith('https://')) {
+    // For PDFs from Cloudinary, add fl_attachment:inline to force inline display
+    if (url.includes('.pdf')) {
+      // If already has transformation params, add to them
+      if (url.includes('/upload/')) {
+        return url.replace('/upload/', '/upload/fl_attachment:inline/');
+      }
+    }
     return url;
   }
   // Otherwise, construct URL from API base
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
   const normalizedPath = url.replace(/\\/g, '/');
   const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
-  return `${API_BASE_URL}/${cleanPath}`;
+  const fullUrl = `${API_BASE_URL}/${cleanPath}`;
+  
+  // For local PDFs, add download endpoint
+  if (fullUrl.includes('.pdf')) {
+    return fullUrl;
+  }
+  return fullUrl;
 };
 
 const CreateActivity = () => {
@@ -445,7 +458,9 @@ const CreateActivity = () => {
                         href={getAttachmentUrl(activity.attachment)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center text-indigo-400 hover:underline mt-2 text-xs"
+                        download
+                        className="inline-flex items-center text-indigo-400 hover:text-indigo-300 hover:underline mt-2 text-xs font-medium"
+                        title={`Download ${activity.title} attachment`}
                       >
                         <FaPaperclip className="mr-1" /> Attachment
                       </a>

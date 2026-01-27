@@ -527,6 +527,17 @@ exports.downloadActivityAttachment = async (req, res) => {
       return res.status(404).json({ message: 'Attachment not found for this activity.' });
     }
 
+    // If attachment is a Cloudinary URL, redirect to it
+    if (activity.attachment.startsWith('http://') || activity.attachment.startsWith('https://')) {
+      // For PDFs, modify URL to force inline display
+      let downloadUrl = activity.attachment;
+      if (downloadUrl.includes('.pdf') && downloadUrl.includes('/upload/')) {
+        downloadUrl = downloadUrl.replace('/upload/', '/upload/fl_attachment:inline/');
+      }
+      return res.redirect(downloadUrl);
+    }
+
+    // For local files
     const filePath = path.join(__dirname, '..', activity.attachment);
     if (fs.existsSync(filePath)) {
       res.download(filePath, path.basename(activity.attachment));
