@@ -527,48 +527,91 @@ exports.downloadActivityAttachment = async (req, res) => {
       return res.status(404).json({ message: 'Attachment not found for this activity.' });
     }
 
+    console.log(`[DEBUG] Downloading attachment for activity ${id}: ${activity.attachment}`);
+
     // If attachment is a Cloudinary URL, proxy it directly with proper headers
     if (activity.attachment.startsWith('http://') || activity.attachment.startsWith('https://')) {
       try {
         const axios = require('axios');
         
-        // For PDFs, use the inline transformation
+        // Build the URL with proper transformation for inline viewing
         let fileUrl = activity.attachment;
-        if (fileUrl.includes('.pdf') && fileUrl.includes('/upload/')) {
-          fileUrl = fileUrl.replace('/upload/', '/upload/fl_attachment:inline/');
+        
+        // For PDFs, ensure inline transformation is applied
+        if (fileUrl.includes('.pdf')) {
+          if (fileUrl.includes('/upload/')) {
+            fileUrl = fileUrl.replace('/upload/', '/upload/fl_attachment:inline/');
+          } else if (fileUrl.includes('cloudinary.com')) {
+            // Fallback if URL structure is different
+            fileUrl = fileUrl + '?fl_attachment:inline';
+          }
         }
         
-        console.log(`[DEBUG] Proxying Cloudinary file: ${fileUrl}`);
+        console.log(`[DEBUG] Fetching from Cloudinary: ${fileUrl}`);
         
-        // Fetch the file from Cloudinary
+        // Fetch the file from Cloudinary with timeout
         const response = await axios.get(fileUrl, {
           responseType: 'stream',
-          timeout: 30000
+          timeout: 30000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+          }
         });
         
-        // Set proper headers for PDF viewing
-        res.set('Content-Type', response.headers['content-type'] || 'application/pdf');
-        res.set('Content-Disposition', 'inline');
-        res.set('Access-Control-Allow-Origin', '*');
-        res.set('Cache-Control', 'public, max-age=86400');
+        // Determine content type
+        let contentType = response.headers['content-type'];
+        if (!contentType) {
+          if (fileUrl.includes('.pdf')) contentType = 'application/pdf';
+          else if (fileUrl.includes('.doc')) contentType = 'application/msword';
+          else if (fileUrl.includes('.png')) contentType = 'image/png';
+          else if (fileUrl.includes('.jpg') || fileUrl.includes('.jpeg')) contentType = 'image/jpeg';
+          else contentType = 'application/octet-stream';
+        }
+        
+        // Set response headers
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        
+        // Log successful header setup
+        console.log(`[DEBUG] Headers set. Content-Type: ${contentType}, Disposition: inline`);
         
         // Pipe the stream to response
         response.data.pipe(res);
         
         // Handle stream errors
         response.data.on('error', (err) => {
-          console.error(`[ERROR] Stream error while proxying Cloudinary file:`, err);
+          console.error(`[ERROR] Stream error:`, err.message);
           if (!res.headersSent) {
             res.status(500).json({ message: 'Failed to stream file' });
+          } else {
+            res.end();
           }
         });
+        
+        // Handle response errors
+        res.on('error', (err) => {
+          console.error(`[ERROR] Response error:`, err.message);
+          response.data.destroy();
+        });
+        
       } catch (error) {
         console.error(`[ERROR] Failed to proxy Cloudinary file:`, error.message);
-        return res.status(500).json({ message: 'Failed to fetch file from cloud storage', error: error.message });
+        console.error(`[ERROR] Stack:`, error.stack);
+        
+        if (!res.headersSent) {
+          return res.status(500).json({ 
+            message: 'Failed to fetch file from cloud storage', 
+            error: error.message 
+          });
+        }
       }
     } else {
       // For local files
       const filePath = path.join(__dirname, '..', activity.attachment);
+      console.log(`[DEBUG] Serving local file: ${filePath}`);
       if (fs.existsSync(filePath)) {
         res.download(filePath, path.basename(activity.attachment));
       } else {
@@ -576,8 +619,11 @@ exports.downloadActivityAttachment = async (req, res) => {
       }
     }
   } catch (error) {
-    console.error('Error downloading activity attachment:', error);
-    res.status(500).json({ message: 'Error downloading file', error: error.message });
+    console.error('Error downloading activity attachment:', error.message);
+    console.error('[ERROR] Stack:', error.stack);
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Error downloading file', error: error.message });
+    }
   }
 };
 
