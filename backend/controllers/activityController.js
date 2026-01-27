@@ -527,22 +527,53 @@ exports.downloadActivityAttachment = async (req, res) => {
       return res.status(404).json({ message: 'Attachment not found for this activity.' });
     }
 
-    // If attachment is a Cloudinary URL, redirect to it
+    // If attachment is a Cloudinary URL, proxy it directly with proper headers
     if (activity.attachment.startsWith('http://') || activity.attachment.startsWith('https://')) {
-      // For PDFs, modify URL to force inline display
-      let downloadUrl = activity.attachment;
-      if (downloadUrl.includes('.pdf') && downloadUrl.includes('/upload/')) {
-        downloadUrl = downloadUrl.replace('/upload/', '/upload/fl_attachment:inline/');
+      try {
+        const axios = require('axios');
+        
+        // For PDFs, use the inline transformation
+        let fileUrl = activity.attachment;
+        if (fileUrl.includes('.pdf') && fileUrl.includes('/upload/')) {
+          fileUrl = fileUrl.replace('/upload/', '/upload/fl_attachment:inline/');
+        }
+        
+        console.log(`[DEBUG] Proxying Cloudinary file: ${fileUrl}`);
+        
+        // Fetch the file from Cloudinary
+        const response = await axios.get(fileUrl, {
+          responseType: 'stream',
+          timeout: 30000
+        });
+        
+        // Set proper headers for PDF viewing
+        res.set('Content-Type', response.headers['content-type'] || 'application/pdf');
+        res.set('Content-Disposition', 'inline');
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Cache-Control', 'public, max-age=86400');
+        
+        // Pipe the stream to response
+        response.data.pipe(res);
+        
+        // Handle stream errors
+        response.data.on('error', (err) => {
+          console.error(`[ERROR] Stream error while proxying Cloudinary file:`, err);
+          if (!res.headersSent) {
+            res.status(500).json({ message: 'Failed to stream file' });
+          }
+        });
+      } catch (error) {
+        console.error(`[ERROR] Failed to proxy Cloudinary file:`, error.message);
+        return res.status(500).json({ message: 'Failed to fetch file from cloud storage', error: error.message });
       }
-      return res.redirect(downloadUrl);
-    }
-
-    // For local files
-    const filePath = path.join(__dirname, '..', activity.attachment);
-    if (fs.existsSync(filePath)) {
-      res.download(filePath, path.basename(activity.attachment));
     } else {
-      res.status(404).json({ message: 'File not found on server.' });
+      // For local files
+      const filePath = path.join(__dirname, '..', activity.attachment);
+      if (fs.existsSync(filePath)) {
+        res.download(filePath, path.basename(activity.attachment));
+      } else {
+        res.status(404).json({ message: 'File not found on server.' });
+      }
     }
   } catch (error) {
     console.error('Error downloading activity attachment:', error);
