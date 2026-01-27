@@ -6,9 +6,15 @@ import { FaPaperclip, FaListOl, FaPlusCircle, FaBook, FaTimes, FaTasks, FaEdit, 
 
 const getAttachmentUrl = (url) => {
   if (!url) return null;
-  if (/\.(jpg|jpeg|png|gif)$/i.test(url)) return url;
-  if (/\.pdf$/i.test(url)) return url + '?inline=true';
-  return url.replace('/image/', '/raw/');
+  // If it's already a full URL (Cloudinary), return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // Otherwise, construct URL from API base
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  const normalizedPath = url.replace(/\\/g, '/');
+  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
+  return `${API_BASE_URL}/${cleanPath}`;
 };
 
 const CreateActivity = () => {
