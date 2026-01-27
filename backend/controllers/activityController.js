@@ -38,7 +38,7 @@ exports.createActivity = async (req, res) => {
         console.error('[ERROR] File upload to Cloudinary failed - no URL returned', req.file);
         return res.status(400).json({ message: 'File upload failed. Please try again.' });
       }
-      console.log([SUCCESS] File uploaded to Cloudinary: ${attachmentPath});
+      console.log(`[SUCCESS] File uploaded to Cloudinary: ${attachmentPath}`);
     }
 
     if (!title || !date || !classId) {
@@ -122,7 +122,7 @@ exports.updateActivity = async (req, res) => {
         console.error('[ERROR] File upload to Cloudinary failed - no URL returned', req.file);
         return res.status(400).json({ message: 'File upload failed. Please try again.' });
       }
-      console.log([SUCCESS] File uploaded to Cloudinary: ${attachmentPath});
+      console.log(`[SUCCESS] File uploaded to Cloudinary: ${attachmentPath}`);
     }
 
     const updated = await Activity.findByIdAndUpdate(id, updateData, {

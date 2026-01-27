@@ -2,6 +2,7 @@
 const router = express.Router();
 const activityController = require('../controllers/activityController');
 const { verifyToken } = require('../middleware/auth');
+const path = require('path');
 
 // --- Multer / Cloudinary Setup ---
 const multer = require('multer');
@@ -28,8 +29,6 @@ const activityCloudinaryStorage = new CloudinaryStorage({
     return {
       folder: "taskhub/activities",
       public_id: `activity-${Date.now()}.${fileExtension}`,
-      resource_type: /\.(pdf|docx?|pptx?|xlsx?)$/i.test(file.originalname) ? "raw" : "image",
-      format: fileExtension, // Preserve the file extension
     };
   },
 });
@@ -37,7 +36,18 @@ const activityCloudinaryStorage = new CloudinaryStorage({
 const uploadActivity = multer({
   storage: activityCloudinaryStorage,
   limits: { fileSize: 10 * 1024 * 1024 }, 
-  fileFilter: (req, file, cb) => cb(null, true),
+  fileFilter: (req, file, cb) => {
+    // Allow common file types including images, documents, videos, audio, and archives
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|ppt|pptx|txt|mp4|mp3|zip|rar/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only images, documents, videos, audio, and archive files are allowed'));
+    }
+  },
 });
 
 // ------------------------------------------------------

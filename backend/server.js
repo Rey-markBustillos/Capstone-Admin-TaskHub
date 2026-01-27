@@ -1,7 +1,8 @@
 
 // Load environment variables FIRST before any other imports
 const dotenv = require('dotenv');
-dotenv.config();
+const path = require('path');
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 // Debug environment variables
 console.log('Environment variables loaded:');
@@ -13,7 +14,6 @@ if (process.env.MONGO_URI) {
 
 const express = require('express');
 const cors = require('cors');
-const path = require('path'); 
 const fs = require('fs');
 const connectDB = require('./config/db');
 
