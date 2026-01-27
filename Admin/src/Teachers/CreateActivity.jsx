@@ -47,12 +47,7 @@ const CreateActivity = () => {
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const teacherId = user?._id;
-  const token = localStorage.getItem('token');
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-
-  const getAuthHeaders = () => ({
-    headers: token ? { Authorization: `Bearer ${token}` } : {}
-  });
 
   const fetchClassData = useCallback(async () => {
     if (!classId) {
@@ -62,10 +57,9 @@ const CreateActivity = () => {
     setLoadingActivities(true);
     setActivitiesError('');
     try {
-      const authHeaders = { headers: token ? { Authorization: `Bearer ${token}` } : {} };
       const [classRes, activitiesRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/class/${classId}`, authHeaders),
-        axios.get(`${API_BASE_URL}/activities?classId=${classId}`, authHeaders)
+        axios.get(`${API_BASE_URL}/class/${classId}`),
+        axios.get(`${API_BASE_URL}/activities?classId=${classId}`)
       ]);
       setClassName(classRes.data.className);
       setActivitiesList(activitiesRes.data || []);
@@ -81,7 +75,7 @@ const CreateActivity = () => {
     } finally {
       setLoadingActivities(false);
     }
-  },  [classId, API_BASE_URL, token]);
+  }, [classId, API_BASE_URL]);
 
   useEffect(() => {
     fetchClassData();
@@ -141,12 +135,7 @@ const CreateActivity = () => {
       if (activityData.attachment) {
         formData.append('attachment', activityData.attachment);
       }
-      await axios.put(`${API_BASE_URL}/activities/${editingActivity._id}`, formData, {
-        headers: { 
-          'Content-Type': 'multipart/form-data',
-          ...(token && { Authorization: `Bearer ${token}` })
-        }
-      });
+      await axios.put(`${API_BASE_URL}/activities/${editingActivity._id}`, formData);
       setSuccess('Activity updated successfully!');
       fetchClassData();
       setTimeout(() => {
@@ -161,7 +150,7 @@ const CreateActivity = () => {
   const handleDelete = async (activityId, activityTitle) => {
     if (window.confirm(`Are you sure you want to delete "${activityTitle}"? This action cannot be undone.`)) {
       try {
-        await axios.delete(`${API_BASE_URL}/activities/${activityId}`, getAuthHeaders());
+        await axios.delete(`${API_BASE_URL}/activities/${activityId}`);
         setSuccess('Activity deleted successfully!');
         fetchClassData();
         setTimeout(() => setSuccess(''), 3000);
@@ -176,7 +165,7 @@ const CreateActivity = () => {
     try {
       await axios.patch(`${API_BASE_URL}/activities/${activityId}/lock`, {
         isLocked: !currentLockStatus
-      }, getAuthHeaders());
+      });
       setSuccess(`Activity ${!currentLockStatus ? 'locked' : 'unlocked'} successfully!`);
       fetchClassData();
       setTimeout(() => setSuccess(''), 3000);
@@ -213,12 +202,7 @@ const CreateActivity = () => {
       if (activityData.attachment) {
         formData.append('attachment', activityData.attachment);
       }
-      await axios.post(`${API_BASE_URL}/activities`, formData, { 
-        headers: { 
-          'Content-Type': 'multipart/form-data',
-          ...(token && { Authorization: `Bearer ${token}` })
-        }
-      });
+      await axios.post(`${API_BASE_URL}/activities`, formData);
       setSuccess('Activity created successfully!');
       fetchClassData();
       setTimeout(() => {
