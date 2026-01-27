@@ -14,6 +14,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Debug: Verify Cloudinary config loaded
+console.log('[DEBUG] Cloudinary Config:');
+console.log('- Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME || 'MISSING ❌');
+console.log('- API Key:', process.env.CLOUDINARY_API_KEY ? '✅ Loaded' : 'MISSING ❌');
+console.log('- API Secret:', process.env.CLOUDINARY_API_SECRET ? '✅ Loaded' : 'MISSING ❌');
+
 // filepath: c:\xampp\htdocs\Capstone-Admin-TaskHub\backend\routes\activityRoutes.js
 const activityCloudinaryStorage = new CloudinaryStorage({
   cloudinary,
