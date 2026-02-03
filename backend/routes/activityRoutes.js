@@ -25,10 +25,15 @@ console.log('- API Secret:', process.env.CLOUDINARY_API_SECRET ? '✅ Loaded' : 
 const activityCloudinaryStorage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
-    const fileExtension = file.originalname.split('.').pop();
+    const ext = (file.originalname.split(".").pop() || "").toLowerCase();
+    const isDoc = /^(pdf|doc|docx|ppt|pptx|xls|xlsx|txt|zip|rar)$/i.test(ext);
+
     return {
       folder: "taskhub/activities",
-      public_id: `activity-${Date.now()}.${fileExtension}`,
+      public_id: `activity-${Date.now()}.${ext}`,  // ✅ Extension in public_id
+      resource_type: isDoc ? "raw" : "image",
+      access_mode: "public",  // ✅ Ensure files are publicly accessible
+      type: "upload",
     };
   },
 });
@@ -78,17 +83,18 @@ router.delete("/:id", verifyToken, activityController.deleteActivity); // Delete
 router.patch("/:id/lock", verifyToken, activityController.toggleActivityLock);
 
 // ------------------------------------------------------
-// 📌 Download activity attachment
+// 📌 Download activity attachment - MUST BE BEFORE /:id
 // ------------------------------------------------------
 router.get("/:id/download", activityController.downloadActivityAttachment);
 
 // ------------------------------------------------------
-// 📌 Export Scores (ADD THIS BEFORE FINAL ROUTE)
+// 📌 Export Scores - MUST BE BEFORE /:id
 // ------------------------------------------------------
 router.get("/export-scores", verifyToken, activityController.exportScores);
 
 // ------------------------------------------------------
 // 📌 Resubmission (Legacy Support)
+// ------------------------------------------------------
 router.options("/resubmit/:id", (req, res) => {
   res.header("Access-Control-Allow-Origin", "https://capstone-admin-task-hub-jske.vercel.app");
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
@@ -97,10 +103,10 @@ router.options("/resubmit/:id", (req, res) => {
   res.sendStatus(204);
 });
 
-router.put("/resubmit/:id", verifyToken, activityController.resubmitActivity);
+router.put("/resubmit/:id", verifyToken, uploadActivity.single("file"), activityController.resubmitActivity);
 
 // ------------------------------------------------------
-// 📌 FINAL — MUST BE LAST
+// 📌 Get single activity (MUST BE LAST to avoid route conflicts)
 // ------------------------------------------------------
 router.get("/:id", activityController.getActivityById);
 

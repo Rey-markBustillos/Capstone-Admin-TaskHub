@@ -1,4 +1,4 @@
-﻿const Activity = require('../models/Activity');
+const Activity = require('../models/Activity');
 const Class = require('../models/Class');
 const Submission = require('../models/Submission');
 const mongoose = require('mongoose');
@@ -32,12 +32,13 @@ exports.createActivity = async (req, res) => {
     let attachmentPath = null;
 
     if (req.file) {
-      // CRITICAL: Validate Cloudinary URL is not null/undefined
-      attachmentPath = req.file.secure_url || req.file.url || req.file.path || req.file.filename || null;
+      // Get the Cloudinary URL - prioritize secure_url
+      attachmentPath = req.file.secure_url || req.file.url || req.file.path || null;
+      
       if (!attachmentPath) {
-        console.error('[ERROR] File upload to Cloudinary failed - no URL returned', req.file);
-        return res.status(400).json({ message: 'File upload failed. Please try again.' });
+        return res.status(400).json({ message: "File upload failed. Please try again." });
       }
+      
       console.log(`[SUCCESS] File uploaded to Cloudinary: ${attachmentPath}`);
     }
 
@@ -51,12 +52,13 @@ exports.createActivity = async (req, res) => {
       date,
       score: totalPoints,
       link,
-      attachment: attachmentPath,
+      attachment: attachmentPath,  // This will be the Cloudinary URL or null
       createdBy,
       classId,
     });
 
     const savedActivity = await activity.save();
+    console.log('[SUCCESS] Activity saved:', savedActivity._id, 'Attachment:', savedActivity.attachment);
     res.status(201).json(savedActivity);
   } catch (error) {
     console.error('Error creating activity:', error);
@@ -116,13 +118,20 @@ exports.updateActivity = async (req, res) => {
     }
 
     let updateData = { ...req.body };
+    
+    // Map totalPoints to score (for consistency with create)
+    if (req.body.totalPoints !== undefined) {
+      updateData.score = req.body.totalPoints;
+      delete updateData.totalPoints;
+    }
+    
     if (req.file) {
-      updateData.attachment = req.file.secure_url || req.file.url || req.file.path || req.file.filename || null;
+      const attachmentPath = req.file.secure_url || req.file.url || req.file.path || req.file.filename || null;
       if (!attachmentPath) {
-        console.error('[ERROR] File upload to Cloudinary failed - no URL returned', req.file);
-        return res.status(400).json({ message: 'File upload failed. Please try again.' });
+        return res.status(400).json({ message: "File upload failed. Please try again." });
       }
       console.log(`[SUCCESS] File uploaded to Cloudinary: ${attachmentPath}`);
+      updateData.attachment = attachmentPath;
     }
 
     const updated = await Activity.findByIdAndUpdate(id, updateData, {
@@ -358,12 +367,20 @@ exports.submitActivity = async (req, res) => {
 
     // If file is present, add file info
     if (req.file) {
-      submissionData.filePath = req.file.secure_url || req.file.url || req.file.path || req.file.filename;
+      console.log('[DEBUG] File uploaded to Cloudinary:', req.file);
+      submissionData.filePath = req.file.secure_url || req.file.url || req.file.path;
       submissionData.fileName = req.file.originalname;
-      submissionData.cloudinaryUrl = req.file.secure_url || req.file.url || req.file.path || req.file.filename;
+      submissionData.cloudinaryUrl = req.file.secure_url || req.file.url;
       submissionData.cloudinaryPublicId = req.file.public_id;
       submissionData.fileType = req.file.mimetype;
       submissionData.fileSize = req.file.size;
+      submissionData.resourceType = req.file.resource_type || 'auto';
+      
+      console.log('[SUCCESS] Submission file info stored:', {
+        cloudinaryUrl: submissionData.cloudinaryUrl,
+        fileName: submissionData.fileName,
+        resourceType: submissionData.resourceType
+      });
     }
 
     // If content is present, add content
@@ -380,7 +397,7 @@ exports.submitActivity = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error submitting activity:', error);
+    console.error('? Error submitting activity:', error);
 
     return res.status(500).json({
       message: 'Error submitting activity',
@@ -419,12 +436,13 @@ exports.resubmitActivity = async (req, res) => {
     const updatedSubmission = await Submission.findByIdAndUpdate(
       id,
       {
-        filePath: req.file.secure_url || req.file.url || req.file.path || req.file.filename,
+        filePath: req.file.secure_url || req.file.url || req.file.path,
         fileName: req.file.originalname,
-        cloudinaryUrl: req.file.secure_url || req.file.url || req.file.path || req.file.filename,
+        cloudinaryUrl: req.file.secure_url || req.file.url,
         cloudinaryPublicId: req.file.public_id,
         fileType: req.file.mimetype,
         fileSize: req.file.size,
+        resourceType: req.file.resource_type || 'auto',
         submissionDate: new Date(),
         status: 'Resubmitted',
         score: null,
@@ -432,9 +450,10 @@ exports.resubmitActivity = async (req, res) => {
       { new: true }
     );
 
-    if (!updatedSubmission) {
-      return res.status(404).json({ message: 'Submission not found to update.' });
-    }
+    console.log('[SUCCESS] Resubmission updated:', {
+      cloudinaryUrl: updatedSubmission.cloudinaryUrl,
+      fileName: updatedSubmission.fileName
+    });
 
     res.status(200).json(updatedSubmission);
   } catch (error) {
@@ -518,7 +537,7 @@ exports.getStudentSubmissions = async (req, res) => {
 
     res.json({ submissions: formatted });
   } catch (error) {
-    console.error('❌ [getStudentSubmissions] Error fetching submissions:', error);
+    console.error('? [getStudentSubmissions] Error fetching submissions:', error);
     res.status(500).json({ message: "Error fetching submissions", error: error.message });
   }
 };
@@ -529,112 +548,45 @@ exports.getStudentSubmissions = async (req, res) => {
 exports.downloadActivityAttachment = async (req, res) => {
   try {
     const { id } = req.params;
+    
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid activity ID' });
     }
 
     const activity = await Activity.findById(id);
-    if (!activity || !activity.attachment) {
-      return res.status(404).json({ message: 'Attachment not found for this activity.' });
+    
+    if (!activity) {
+      return res.status(404).json({ message: 'Activity not found' });
     }
 
-    console.log(`[DEBUG] Downloading attachment for activity ${id}: ${activity.attachment}`);
-
-    // If attachment is a Cloudinary URL, proxy it directly with proper headers
-    if (activity.attachment.startsWith('http://') || activity.attachment.startsWith('https://')) {
-      try {
-        const axios = require('axios');
-        
-        // Build the URL with proper transformation for inline viewing
-        let fileUrl = activity.attachment;
-        
-        // For PDFs, ensure inline transformation is applied
-        if (fileUrl.includes('.pdf')) {
-          if (fileUrl.includes('/upload/')) {
-            fileUrl = fileUrl.replace('/upload/', '/upload/fl_attachment:inline/');
-          } else if (fileUrl.includes('cloudinary.com')) {
-            // Fallback if URL structure is different
-            fileUrl = fileUrl + '?fl_attachment:inline';
-          }
-        }
-        
-        console.log(`[DEBUG] Fetching from Cloudinary: ${fileUrl}`);
-        
-        // Fetch the file from Cloudinary with timeout
-        const response = await axios.get(fileUrl, {
-          responseType: 'stream',
-          timeout: 30000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-          }
-        });
-        
-        // Determine content type
-        let contentType = response.headers['content-type'];
-        if (!contentType) {
-          if (fileUrl.includes('.pdf')) contentType = 'application/pdf';
-          else if (fileUrl.includes('.doc')) contentType = 'application/msword';
-          else if (fileUrl.includes('.png')) contentType = 'image/png';
-          else if (fileUrl.includes('.jpg') || fileUrl.includes('.jpeg')) contentType = 'image/jpeg';
-          else contentType = 'application/octet-stream';
-        }
-        
-        // Set response headers
-        res.setHeader('Content-Type', contentType);
-        res.setHeader('Content-Disposition', 'inline');
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Cache-Control', 'public, max-age=86400');
-        res.setHeader('X-Content-Type-Options', 'nosniff');
-        
-        // Log successful header setup
-        console.log(`[DEBUG] Headers set. Content-Type: ${contentType}, Disposition: inline`);
-        
-        // Pipe the stream to response
-        response.data.pipe(res);
-        
-        // Handle stream errors
-        response.data.on('error', (err) => {
-          console.error(`[ERROR] Stream error:`, err.message);
-          if (!res.headersSent) {
-            res.status(500).json({ message: 'Failed to stream file' });
-          } else {
-            res.end();
-          }
-        });
-        
-        // Handle response errors
-        res.on('error', (err) => {
-          console.error(`[ERROR] Response error:`, err.message);
-          response.data.destroy();
-        });
-        
-      } catch (error) {
-        console.error(`[ERROR] Failed to proxy Cloudinary file:`, error.message);
-        console.error(`[ERROR] Stack:`, error.stack);
-        
-        if (!res.headersSent) {
-          return res.status(500).json({ 
-            message: 'Failed to fetch file from cloud storage', 
-            error: error.message 
-          });
-        }
-      }
-    } else {
-      // For local files
-      const filePath = path.join(__dirname, '..', activity.attachment);
-      console.log(`[DEBUG] Serving local file: ${filePath}`);
-      if (fs.existsSync(filePath)) {
-        res.download(filePath, path.basename(activity.attachment));
-      } else {
-        res.status(404).json({ message: 'File not found on server.' });
-      }
+    if (!activity.attachment) {
+      return res.status(404).json({ message: 'No attachment found for this activity' });
     }
+
+    const attachmentUrl = activity.attachment;
+
+    // If it's a Cloudinary URL, redirect to it
+    if (attachmentUrl.startsWith('http://') || attachmentUrl.startsWith('https://')) {
+      return res.redirect(attachmentUrl);
+    }
+
+    // For local files (fallback for old data)
+    const filePath = path.join(__dirname, '..', attachmentUrl);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'File not found on server' });
+    }
+
+    const fileName = path.basename(filePath);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
   } catch (error) {
-    console.error('Error downloading activity attachment:', error.message);
-    console.error('[ERROR] Stack:', error.stack);
-    if (!res.headersSent) {
-      res.status(500).json({ message: 'Error downloading file', error: error.message });
-    }
+    console.error('Error downloading activity attachment:', error);
+    res.status(500).json({ message: 'Error downloading file', error: error.message });
   }
 };
 
@@ -740,3 +692,5 @@ exports.getSubmissionInfo = async (req, res) => {
     res.status(500).json({ message: 'Error fetching submission info', error: error.message });
   }
 };
+
+

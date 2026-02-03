@@ -118,6 +118,13 @@ const StudentActivities = () => {
     navigate(`/student/class/${classId}/activity/${activityId}/submit`);
   };
 
+  const getAttachmentUrl = (activityId, attachment) => {
+    if (!attachment) return null;
+    // Always use backend download endpoint for activity attachments
+    // This ensures proper viewing and avoids "Submission not found" errors
+    return `${API_BASE_URL.replace(/\/$/, '')}/activities/${activityId}/download`;
+  };
+
   if (loading) return (
     <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -157,9 +164,7 @@ const StudentActivities = () => {
                 {activities.map(activity => {
                   const submission = getSubmissionForActivity(activity._id);
                   const statusInfo = getStatus(activity, submission);
-                  const attachmentUrl = activity.attachment
-                    ? activity.attachment.startsWith('http') ? activity.attachment : `${API_BASE_URL.replace('/api','')}/uploads/activities/${activity.attachment.split(/[\\/]/).pop()}`
-                    : null;
+                  const attachmentUrl = activity.attachment ? getAttachmentUrl(activity._id, activity.attachment) : null;
 
                   return (
                     <div key={activity._id} onClick={() => handleSubmission(activity._id)}
@@ -188,29 +193,39 @@ const StudentActivities = () => {
                       </div>
 
                       <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-2 flex justify-between items-center">
-                        {attachmentUrl ? <a href={attachmentUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center text-indigo-600 dark:text-indigo-400 text-xs"><FaPaperclip className="mr-1"/> View</a> : <span className="text-gray-400 text-xs">No File</span>}
+                        {attachmentUrl ? (
+                          <a 
+                            href={attachmentUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            onClick={(e) => e.stopPropagation()} 
+                            className="flex items-center text-indigo-600 dark:text-indigo-400 text-xs hover:underline"
+                          >
+                            <FaPaperclip className="mr-1"/> View Attachment
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 text-xs">No File</span>
+                        )}
 
                         {!activity.isLocked && ((statusInfo.text !== 'Missing' && new Date() < new Date(activity.date)) || statusInfo.text === 'Needs Resubmission') && (
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    const answer = window.prompt('Enter your answer (quick submit):', '');
-    if (!answer || answer.trim() === '') { alert("Answer is required!"); return; }
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const answer = window.prompt('Enter your answer (quick submit):', '');
+                              if (!answer || answer.trim() === '') { alert("Answer is required!"); return; }
 
-    // Debug log to verify payload before submission
-    console.log('QuickSubmit payload:', {
-      activityId: activity._id,
-      studentId,
-      content: answer.trim()
-    });
+                              console.log('QuickSubmit payload:', {
+                                activityId: activity._id,
+                                studentId,
+                                content: answer.trim()
+                              });
 
-    submitActivity({ activityId: activity._id, studentId, content: answer.trim() });
-  }}
-  className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2"
->
-  Quick Submit
-</button>
-
+                              submitActivity({ activityId: activity._id, studentId, content: answer.trim() });
+                            }}
+                            className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2"
+                          >
+                            Quick Submit
+                          </button>
                         )}
                       </div>
                     </div>

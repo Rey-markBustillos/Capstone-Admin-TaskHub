@@ -35,31 +35,34 @@ const SubmitActivity = () => {
     setError('');
     setSuccess('');
     try {
+      // Fetch activity details
       const activityRes = await axios.get(`${API_BASE_URL}/activities/${activityId}`);
       setActivity(activityRes.data);
+      
+      // Try to fetch previous submission - completely silent if it fails
       try {
         const submissionRes = await axios.get(`${API_BASE_URL}/activities/submission`, {
           params: { activityId, studentId }
         });
         setPreviousSubmission(submissionRes.data);
       } catch (submissionError) {
-        if (submissionError.response && submissionError.response.status === 404) {
-          setPreviousSubmission(null);
-        } else if (submissionError.response?.status === 401 || submissionError.response?.status === 403) {
+        // Silently handle all submission fetch errors
+        // 404 = no submission yet (expected)
+        // Other errors = route not available on deployed backend
+        setPreviousSubmission(null);
+        
+        // Only redirect if it's an auth issue
+        if (submissionError.response?.status === 401 || submissionError.response?.status === 403) {
           setError('Your session has expired. Please login again.');
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 2000);
-        } else {
-          setError('Could not fetch previous submission.');
+          setTimeout(() => window.location.href = '/login', 2000);
         }
+        // Don't show any other errors to user
       }
     } catch (err) {
+      // Handle activity fetch errors
       if (err.response?.status === 401 || err.response?.status === 403) {
         setError('Your session has expired. Please login again.');
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
+        setTimeout(() => window.location.href = '/login', 2000);
       } else {
         setError(err.response?.data?.message || 'Failed to load activity details.');
       }
@@ -219,9 +222,9 @@ const SubmitActivity = () => {
 
   const getAttachmentUrl = (filePath) => {
     if (!filePath) return '#';
-    // If it's already a full URL (Cloudinary), return as-is
+    // If it's already a full URL (Cloudinary), return as-is with double extension fix
     if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
-      return filePath;
+      return filePath.replace(/(\.[^./?]+)\1+(?=($|\?))/i, "$1");  // Remove .pdf.pdf
     }
     // Otherwise, construct URL from API base
     const normalizedPath = filePath.replace(/\\/g, '/');
@@ -383,10 +386,10 @@ const SubmitActivity = () => {
               <div className="mt-6">
                 <h3 className={`font-semibold ${isLightMode ? 'text-gray-800' : 'text-gray-200'} mb-2`}>Attachment</h3>
                 <div className="flex items-center gap-4">
-                  <a href={getAttachmentUrl(activity.attachment)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-white bg-indigo-600 rounded-lg px-4 py-2 hover:bg-indigo-700 transition-colors">
+                  <a href={`${API_BASE_URL.replace(/\/$/, '')}/activities/${activity._id}/download`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-white bg-indigo-600 rounded-lg px-4 py-2 hover:bg-indigo-700 transition-colors">
                       <FaPaperclip /> View Attachment
                   </a>
-                  <a href={`${API_BASE_URL}/activities/${activity._id}/download`} className={`inline-flex items-center gap-2 text-sm font-medium ${isLightMode ? 'text-gray-700 bg-gray-200 hover:bg-gray-300' : 'text-gray-300 bg-gray-700 hover:bg-gray-600'} rounded-lg px-4 py-2 transition-colors`}>
+                  <a href={`${API_BASE_URL.replace(/\/$/, '')}/activities/${activity._id}/download`} className={`inline-flex items-center gap-2 text-sm font-medium ${isLightMode ? 'text-gray-700 bg-gray-200 hover:bg-gray-300' : 'text-gray-300 bg-gray-700 hover:bg-gray-600'} rounded-lg px-4 py-2 transition-colors`}>
                       <FaDownload /> Download
                   </a>
                 </div>

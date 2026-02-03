@@ -31,6 +31,9 @@ const announcementCloudinaryStorage = new CloudinaryStorage({
   params: async (req, file) => ({
     folder: "taskhub/announcements",
     public_id: `announcement-${Date.now()}`,
+    resource_type: 'auto', // ⭐ REQUIRED: Handles images + documents
+    access_mode: "public",  // ✅ Ensure files are publicly accessible
+    type: "upload",
   }),
 });
 

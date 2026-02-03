@@ -4,15 +4,6 @@ import moment from 'moment-timezone';
 import { useParams } from 'react-router-dom';
 import { FaPaperclip, FaListOl, FaPlusCircle, FaBook, FaTimes, FaTasks, FaEdit, FaTrashAlt, FaLock, FaUnlock } from 'react-icons/fa';
 
-const getAttachmentUrl = (url, activityId) => {
-  if (!url || !activityId) return null;
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-  
-  // Use backend download endpoint for all files to avoid CORS issues
-  // Backend will handle Cloudinary URLs and serve with proper headers
-  return `${API_BASE_URL}/activities/${activityId}/download`;
-};
-
 const CreateActivity = () => {
   const { classId } = useParams();
   const [activityData, setActivityData] = useState({ title: '', description: '', date: '', score: '', attachment: null });
@@ -154,6 +145,36 @@ const CreateActivity = () => {
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to toggle activity lock.');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  const handleDownloadAttachment = async (attachmentUrl, activityId, activityTitle) => {
+    try {
+      // If it's a Cloudinary URL, download directly
+      if (attachmentUrl.startsWith('http://') || attachmentUrl.startsWith('https://')) {
+        window.open(attachmentUrl, '_blank');
+        return;
+      }
+      
+      // Otherwise, fetch through backend with auth headers
+      const response = await axios.get(`${API_BASE_URL}/activities/${activityId}/download`, {
+        responseType: 'blob'
+      });
+      
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${activityTitle}-attachment`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      setError(err.response?.data?.message || 'Failed to download attachment.');
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -421,15 +442,13 @@ const CreateActivity = () => {
                       Deadline: {moment(activity.date).tz('Asia/Manila').format('YYYY-MM-DD HH:mm')}
                     </div>
                     {activity.attachment && (
-                      <a
-                        href={getAttachmentUrl(activity.attachment, activity._id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center text-indigo-400 hover:text-indigo-300 hover:underline mt-2 text-xs font-medium"
+                      <button
+                        onClick={() => handleDownloadAttachment(activity.attachment, activity._id, activity.title)}
+                        className="inline-flex items-center text-indigo-400 hover:text-indigo-300 hover:underline mt-2 text-xs font-medium cursor-pointer bg-transparent border-none"
                         title={`View ${activity.title} attachment`}
                       >
                         <FaPaperclip className="mr-1" /> Attachment
-                      </a>
+                      </button>
                     )}
                   </div>
                   <div className="mt-2 sm:mt-0 flex flex-col sm:flex-row items-start sm:items-center gap-2">

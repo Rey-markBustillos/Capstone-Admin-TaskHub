@@ -24,6 +24,8 @@ const moduleCloudinaryStorage = new CloudinaryStorage({
     folder: "taskhub/modules",
     public_id: `module-${Date.now()}`,
     resource_type: "raw", // All module files are stored as raw since they're documents
+    access_mode: "public",  // ✅ Ensure files are publicly accessible
+    type: "upload",
   }),
 });
 
