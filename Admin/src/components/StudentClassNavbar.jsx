@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
-import { FaBullhorn, FaTasks, FaUsers, FaArrowLeft, FaBars, FaTimes, FaChalkboardTeacher, FaClock, FaMapMarkerAlt, FaBook } from 'react-icons/fa';
+import { FaBullhorn, FaTasks, FaUsers, FaArrowLeft, FaBars, FaTimes, FaChalkboardTeacher, FaClock, FaMapMarkerAlt, FaBook, FaCalendarAlt, FaSchool, FaCalendarCheck, FaQuestionCircle } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
 
 const StudentClassNavbar = ({ selectedClass }) => {
@@ -26,212 +26,241 @@ const StudentClassNavbar = ({ selectedClass }) => {
 
   return (
     <>
-      {/* Class Details Bar - Simplified & Clean */}
+      {/* Top Class Info Bar */}
       {selectedClass && (
-        <div className="w-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-500 text-white px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between shadow-lg border-b border-indigo-400/30 transition-all duration-200 ease-in-out overflow-hidden">
-          {/* Left side - Class info */}
-          <div className={`flex items-center gap-3 sm:gap-4 min-w-0 flex-1 ${isSidebarOpen ? 'ml-44' : 'ml-12'}`}>
-            <span className="bg-white/20 p-2 sm:p-3 rounded-xl shadow-lg flex items-center justify-center flex-shrink-0">
-              <FaChalkboardTeacher className="text-white text-lg sm:text-xl" />
-            </span>
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-lg sm:text-xl font-bold tracking-wide truncate">{selectedClass.className}</span>
-              <span className="text-sm text-indigo-100 truncate">{getTeacherName(selectedClass) || 'No teacher assigned'}</span>
+        <div className={`bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-5 shadow-xl fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+          isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'
+        }`}>
+          <div className="flex flex-col lg:flex-row lg:flex-wrap justify-start lg:justify-between items-start lg:items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="bg-white/20 backdrop-blur-sm p-2.5 sm:p-3 rounded-xl shadow-lg">
+                <FaSchool className="text-white text-2xl sm:text-3xl" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold drop-shadow-md">{selectedClass.className}</h1>
+                {getTeacherName(selectedClass) && (
+                  <div className="text-xs sm:text-sm text-blue-100 mt-1 flex items-center gap-2">
+                    <FaChalkboardTeacher className="text-blue-200" />
+                    <span><strong>Teacher:</strong> {getTeacherName(selectedClass)}</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-          
-          {/* Right side - Quick info */}
-          <div className="hidden sm:flex items-center gap-4 flex-shrink-0 mr-4">
-            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
-              <FaClock className="text-indigo-200 text-sm flex-shrink-0" />
-              <span className="text-sm font-medium truncate max-w-32">{selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
-              <FaMapMarkerAlt className="text-indigo-200 text-sm flex-shrink-0" />
-              <span className="text-sm font-medium truncate">{selectedClass.roomNumber || 'No room'}</span>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm w-full lg:w-auto">
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors px-3 sm:px-4 py-2 rounded-lg shadow-md">
+                <FaClock className="text-blue-200 text-sm sm:text-base flex-shrink-0" />
+                <span className="font-medium"><strong className="text-blue-100">Schedule:</strong> {selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}</span>
+              </div>
+              {selectedClass.day && (
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors px-3 sm:px-4 py-2 rounded-lg shadow-md">
+                  <FaCalendarAlt className="text-blue-200 text-sm sm:text-base flex-shrink-0" />
+                  <span className="font-medium"><strong className="text-blue-100">Day:</strong> {selectedClass.day}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors px-3 sm:px-4 py-2 rounded-lg shadow-md">
+                <FaMapMarkerAlt className="text-blue-200 text-sm sm:text-base flex-shrink-0" />
+                <span className="font-medium"><strong className="text-blue-100">Room:</strong> {selectedClass.roomNumber || 'N/A'}</span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Main Navigation - Modern & Clean */}
-      <nav className={`w-full bg-white/98 backdrop-blur-md text-gray-800 px-4 py-3.5 flex justify-between items-center sticky top-0 z-30 shadow-sm border-b border-gray-200/60 transition-all duration-200 ease-in-out overflow-hidden ${isSidebarOpen ? 'ml-44' : 'ml-12'}`}>
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-3 text-sm min-w-0 flex-1">
-          <NavLink to="/studentportal" className="flex items-center gap-2 text-indigo-600 hover:text-indigo-800 transition-colors font-medium flex-shrink-0 group">
-            <FaArrowLeft className="text-xs group-hover:-translate-x-0.5 transition-transform" />
-            <span className="hidden sm:inline">Classes</span>
-          </NavLink>
-          <span className="text-gray-300 hidden sm:inline">/</span>
-          <span className="text-gray-700 font-semibold truncate">{selectedClass?.className || 'Class'}</span>
-        </div>
+      {/* Main Navigation */}
+      <nav className={`bg-white shadow-lg fixed z-30 border-b-2 border-blue-100 transition-all duration-300 ${
+        selectedClass ? 'top-[88px] sm:top-[100px]' : 'top-0'
+      } ${
+        isSidebarOpen ? 'left-36 sm:left-44 right-0 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'left-10 sm:left-12 right-0 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'
+      }`}>
+        <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex justify-between items-center">
+            {/* Back to Classes */}
+            <NavLink
+              to="/studentportal"
+              className="flex items-center gap-2 py-2.5 px-5 rounded-lg transition-all duration-200 text-gray-700 hover:bg-blue-600 hover:text-white font-semibold border-2 border-blue-600 hover:border-blue-700 shadow-md hover:shadow-lg hover:scale-105 min-h-[44px]"
+            >
+              <FaArrowLeft className="text-sm" />
+              <span>Back to Classes</span>
+            </NavLink>
 
-        {/* Desktop Menu - Modern Pills with Better Spacing */}
-        <div className="hidden md:flex items-center gap-1 lg:gap-2 flex-shrink-0">
-          <NavLink
-            to={`/student/class/${classId}/announcements`}
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap min-w-fit ${
-                isActive
-                  ? 'bg-indigo-500 text-white shadow-md transform scale-105'
-                  : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 hover:shadow-sm'
-              }`
-            }
-          >
-            <FaBullhorn className="text-sm flex-shrink-0" />
-            <span className="hidden lg:inline">Announcements</span>
-            <span className="lg:hidden">News</span>
-          </NavLink>
-          <NavLink
-            to={`/student/class/${classId}/activities`}
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap min-w-fit ${
-                isActive
-                  ? 'bg-indigo-500 text-white shadow-md transform scale-105'
-                  : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 hover:shadow-sm'
-              }`
-            }
-          >
-            <FaTasks className="text-sm flex-shrink-0" />
-            <span className="hidden lg:inline">Activities</span>
-            <span className="lg:hidden">Tasks</span>
-          </NavLink>
-          <NavLink
-            to={`/student/class/${classId}/classlist`}
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap min-w-fit ${
-                isActive
-                  ? 'bg-indigo-500 text-white shadow-md transform scale-105'
-                  : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 hover:shadow-sm'
-              }`
-            }
-          >
-            <FaUsers className="text-sm flex-shrink-0" />
-            <span className="hidden lg:inline">Class List</span>
-            <span className="lg:hidden">People</span>
-          </NavLink>
-          <NavLink
-            to={`/student/class/${classId}/modules`}
-            className={({ isActive }) =>
-              `flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap min-w-fit ${
-                isActive
-                  ? 'bg-indigo-500 text-white shadow-md transform scale-105'
-                  : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 hover:shadow-sm'
-              }`
-            }
-          >
-            <FaBook className="text-sm flex-shrink-0" />
-            <span className="hidden lg:inline">Modules</span>
-            <span className="lg:hidden">Books</span>
-          </NavLink>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <div className="md:hidden">
-          <button onClick={handleHamburgerClick} className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors duration-200" aria-label="Toggle menu">
-            {open ? <FaTimes className="text-lg" /> : <FaBars className="text-lg" />}
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile Menu Dropdown - Modern Design */}
-      {open && (
-        <div
-          className={`md:hidden fixed inset-0 z-50 transition-all duration-200 ease-in-out ${isSidebarOpen ? 'ml-44' : 'ml-12'}`}
-          style={{ background: 'rgba(0,0,0,0.5)' }}
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="absolute top-16 right-4 left-4 max-w-sm mx-auto bg-white rounded-xl shadow-xl p-4 animate-in slide-in-from-top-2 duration-200"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Mobile Menu Header */}
-            <div className="border-b border-gray-200 pb-3 mb-3">
-              <h3 className="font-semibold text-gray-800">Navigation</h3>
-            </div>
-            
-            {/* Mobile Menu Items - Improved Spacing */}
-            <div className="space-y-1">
+            {/* Menu Items */}
+            <div className="flex items-center gap-2 lg:gap-3">
+              <NavLink
+                to={`/student/class/${classId}/attendance`}
+                className={({ isActive }) => `flex items-center gap-2 py-2.5 px-3 lg:px-4 rounded-lg transition-all duration-200 font-semibold border-2 min-h-[44px] ${
+                  isActive 
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-md' 
+                    : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
+                }`}
+              >
+                <FaCalendarCheck className="text-lg" />
+                <span className="hidden lg:inline">Attendance</span>
+              </NavLink>
               <NavLink
                 to={`/student/class/${classId}/announcements`}
-                className={({ isActive }) =>
-                  `flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 ${
-                    isActive
-                      ? 'bg-indigo-500 text-white shadow-lg'
-                      : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
-                  }`
-                }
-                onClick={() => setOpen(false)}
+                className={({ isActive }) => `flex items-center gap-2 py-2.5 px-3 lg:px-4 rounded-lg transition-all duration-200 font-semibold border-2 min-h-[44px] ${
+                  isActive 
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-md' 
+                    : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
+                }`}
               >
-                <div className="p-2 rounded-lg bg-indigo-100">
-                  <FaBullhorn className="text-sm text-indigo-600" />
-                </div>
-                <span className="font-medium text-base">Announcements</span>
+                <FaBullhorn className="text-lg" />
+                <span className="hidden lg:inline">Announcements</span>
               </NavLink>
               <NavLink
                 to={`/student/class/${classId}/activities`}
-                className={({ isActive }) =>
-                  `flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 ${
-                    isActive
-                      ? 'bg-indigo-500 text-white shadow-lg'
-                      : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
-                  }`
-                }
-                onClick={() => setOpen(false)}
+                className={({ isActive }) => `flex items-center gap-2 py-2.5 px-3 lg:px-4 rounded-lg transition-all duration-200 font-semibold border-2 min-h-[44px] ${
+                  isActive 
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-md' 
+                    : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
+                }`}
               >
-                <div className="p-2 rounded-lg bg-indigo-100">
-                  <FaTasks className="text-sm text-indigo-600" />
-                </div>
-                <span className="font-medium text-base">Activities</span>
+                <FaTasks className="text-lg" />
+                <span className="hidden lg:inline">Activities</span>
               </NavLink>
               <NavLink
-                to={`/student/class/${classId}/classlist`}
-                className={({ isActive }) =>
-                  `flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 ${
-                    isActive
-                      ? 'bg-indigo-500 text-white shadow-lg'
-                      : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
-                  }`
-                }
-                onClick={() => setOpen(false)}
+                to={`/student/class/${classId}/quiz`}
+                className={({ isActive }) => `flex items-center gap-2 py-2.5 px-3 lg:px-4 rounded-lg transition-all duration-200 font-semibold border-2 min-h-[44px] ${
+                  isActive 
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-md' 
+                    : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
+                }`}
               >
-                <div className="p-2 rounded-lg bg-indigo-100">
-                  <FaUsers className="text-sm text-indigo-600" />
-                </div>
-                <span className="font-medium text-base">Class List</span>
+                <FaQuestionCircle className="text-lg" />
+                <span className="hidden lg:inline">Quiz</span>
               </NavLink>
               <NavLink
                 to={`/student/class/${classId}/modules`}
-                className={({ isActive }) =>
-                  `flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 ${
-                    isActive
-                      ? 'bg-indigo-500 text-white shadow-lg'
-                      : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600'
-                  }`
-                }
-                onClick={() => setOpen(false)}
+                className={({ isActive }) => `flex items-center gap-2 py-2.5 px-3 lg:px-4 rounded-lg transition-all duration-200 font-semibold border-2 min-h-[44px] ${
+                  isActive 
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-md' 
+                    : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
+                }`}
               >
-                <div className="p-2 rounded-lg bg-indigo-100">
-                  <FaBook className="text-sm text-indigo-600" />
-                </div>
-                <span className="font-medium text-base">Modules</span>
+                <FaBook className="text-lg" />
+                <span className="hidden lg:inline">Modules</span>
               </NavLink>
-              
-              {/* Divider */}
-              <div className="border-t border-gray-200 my-4"></div>
-              
-              {/* Back to Classes - Improved */}
-              <NavLink 
-                to="/studentportal" 
-                className="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200"
-                onClick={() => setOpen(false)}
+              <NavLink
+                to={`/student/class/${classId}/classlist`}
+                className={({ isActive }) => `flex items-center gap-2 py-2.5 px-3 lg:px-4 rounded-lg transition-all duration-200 font-semibold border-2 min-h-[44px] ${
+                  isActive 
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-md' 
+                    : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
+                }`}
               >
-                <div className="p-2 rounded-lg bg-gray-100">
-                  <FaArrowLeft className="text-sm text-gray-600" />
-                </div>
-                <span className="font-medium text-base">Back to Classes</span>
+                <FaUsers className="text-lg" />
+                <span className="hidden lg:inline">Class List</span>
               </NavLink>
             </div>
+          </div>
+
+          {/* Mobile Navigation Header */}
+          <div className="flex md:hidden justify-between items-center gap-2">
+            <NavLink
+              to="/studentportal"
+              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg transition-all duration-200 text-white bg-blue-600 hover:bg-blue-700 font-semibold border-2 border-blue-700 shadow-md hover:shadow-lg min-h-[44px]"
+            >
+              <FaArrowLeft className="text-sm" />
+              <span className="text-sm">Back</span>
+            </NavLink>
+
+            <button
+              onClick={handleHamburgerClick}
+              className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg transition-all duration-200 font-semibold border-2 shadow-md hover:shadow-lg min-h-[44px] ${
+                open 
+                  ? 'bg-red-500 text-white border-red-600 hover:bg-red-600' 
+                  : 'bg-blue-600 text-white border-blue-700 hover:bg-blue-700'
+              }`}
+              aria-label="Toggle menu"
+            >
+              <span className="text-sm font-bold">{open ? 'Close' : 'Menu'}</span>
+              {open ? <FaTimes size={18} /> : <FaBars size={16} />}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Dropdown Menu */}
+      {open && (
+        <div className={`md:hidden bg-gradient-to-b from-blue-50 to-white border-t-2 border-blue-200 shadow-xl animate-fadeIn fixed z-20 transition-all duration-300 ${
+          selectedClass ? 'top-[144px] sm:top-[164px]' : 'top-[56px]'
+        } ${
+          isSidebarOpen ? 'left-36 sm:left-44 right-0 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'left-10 sm:left-12 right-0 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'
+        } max-h-[calc(100vh-200px)] overflow-y-auto`}>
+          <div className="p-3 sm:p-4 grid grid-cols-2 gap-3">
+            <NavLink
+              to={`/student/class/${classId}/attendance`}
+              className={({ isActive }) => `flex flex-col items-center justify-center gap-2 sm:gap-3 py-5 px-2 rounded-xl transition-all duration-200 font-bold border-2 shadow-md hover:shadow-xl hover:scale-105 min-h-[100px] ${
+                isActive 
+                  ? 'bg-blue-600 text-white border-blue-700' 
+                  : 'bg-white text-gray-700 hover:bg-blue-50 border-blue-200 hover:border-blue-400'
+              }`}
+              onClick={() => setOpen(false)}
+            >
+              <FaCalendarCheck className="text-3xl" />
+              <span className="text-xs sm:text-sm text-center">Attendance</span>
+            </NavLink>
+            <NavLink
+              to={`/student/class/${classId}/announcements`}
+              className={({ isActive }) => `flex flex-col items-center justify-center gap-2 sm:gap-3 py-5 px-2 rounded-xl transition-all duration-200 font-bold border-2 shadow-md hover:shadow-xl hover:scale-105 min-h-[100px] ${
+                isActive 
+                  ? 'bg-blue-600 text-white border-blue-700' 
+                  : 'bg-white text-gray-700 hover:bg-blue-50 border-blue-200 hover:border-blue-400'
+              }`}
+              onClick={() => setOpen(false)}
+            >
+              <FaBullhorn className="text-3xl" />
+              <span className="text-xs sm:text-sm text-center">Announcements</span>
+            </NavLink>
+            <NavLink
+              to={`/student/class/${classId}/activities`}
+              className={({ isActive }) => `flex flex-col items-center justify-center gap-2 sm:gap-3 py-5 px-2 rounded-xl transition-all duration-200 font-bold border-2 shadow-md hover:shadow-xl hover:scale-105 min-h-[100px] ${
+                isActive 
+                  ? 'bg-blue-600 text-white border-blue-700' 
+                  : 'bg-white text-gray-700 hover:bg-blue-50 border-blue-200 hover:border-blue-400'
+              }`}
+              onClick={() => setOpen(false)}
+            >
+              <FaTasks className="text-3xl" />
+              <span className="text-xs sm:text-sm text-center">Activities</span>
+            </NavLink>
+            <NavLink
+              to={`/student/class/${classId}/quiz`}
+              className={({ isActive }) => `flex flex-col items-center justify-center gap-2 sm:gap-3 py-5 px-2 rounded-xl transition-all duration-200 font-bold border-2 shadow-md hover:shadow-xl hover:scale-105 min-h-[100px] ${
+                isActive 
+                  ? 'bg-blue-600 text-white border-blue-700' 
+                  : 'bg-white text-gray-700 hover:bg-blue-50 border-blue-200 hover:border-blue-400'
+              }`}
+              onClick={() => setOpen(false)}
+            >
+              <FaQuestionCircle className="text-3xl" />
+              <span className="text-xs sm:text-sm text-center">Quiz</span>
+            </NavLink>
+            <NavLink
+              to={`/student/class/${classId}/modules`}
+              className={({ isActive }) => `flex flex-col items-center justify-center gap-2 sm:gap-3 py-5 px-2 rounded-xl transition-all duration-200 font-bold border-2 shadow-md hover:shadow-xl hover:scale-105 min-h-[100px] ${
+                isActive 
+                  ? 'bg-blue-600 text-white border-blue-700' 
+                  : 'bg-white text-gray-700 hover:bg-blue-50 border-blue-200 hover:border-blue-400'
+              }`}
+              onClick={() => setOpen(false)}
+            >
+              <FaBook className="text-3xl" />
+              <span className="text-xs sm:text-sm text-center">Modules</span>
+            </NavLink>
+            <NavLink
+              to={`/student/class/${classId}/classlist`}
+              className={({ isActive }) => `flex flex-col items-center justify-center gap-2 sm:gap-3 py-5 px-2 rounded-xl transition-all duration-200 font-bold border-2 shadow-md hover:shadow-xl hover:scale-105 min-h-[100px] ${
+                isActive 
+                  ? 'bg-blue-600 text-white border-blue-700' 
+                  : 'bg-white text-gray-700 hover:bg-blue-50 border-blue-200 hover:border-blue-400'
+              }`}
+              onClick={() => setOpen(false)}
+            >
+              <FaUsers className="text-3xl" />
+              <span className="text-xs sm:text-sm text-center">Class List</span>
+            </NavLink>
           </div>
         </div>
       )}

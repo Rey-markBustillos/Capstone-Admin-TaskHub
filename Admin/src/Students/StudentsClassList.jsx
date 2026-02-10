@@ -37,22 +37,22 @@ const StudentClassList = () => {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
-        <div className={`text-center p-6 sm:p-10 ${isLightMode ? 'text-gray-800' : 'text-gray-100'}`}>Loading class list...</div>
+      <div className={`min-h-screen ${isLightMode ? 'bg-[#F6F4F0]' : 'bg-[#F6F4F0]'} p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+        <div className={`text-center p-6 sm:p-10 ${isLightMode ? 'text-gray-800' : 'text-gray-800'}`}>Loading class list...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
-        <div className="text-center p-6 sm:p-10 text-red-400">{error}</div>
+      <div className={`min-h-screen ${isLightMode ? 'bg-[#F6F4F0]' : 'bg-[#F6F4F0]'} p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+        <div className="text-center p-6 sm:p-10 text-red-600">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-screen ${isLightMode ? 'bg-[#F6F4F0]' : 'bg-[#F6F4F0]'} p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
       <div className="w-full max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh] px-1 sm:px-2 md:px-4 lg:px-8">
         <div className="mb-4 sm:mb-6 mt-2 sm:mt-4 ml-2 sm:ml-4 self-start">
           <NavLink

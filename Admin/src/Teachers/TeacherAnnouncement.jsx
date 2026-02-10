@@ -203,23 +203,23 @@ export default function TeacherAnnouncement() {
   // ...availableReactions imported from shared constants...
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 py-8 px-2 sm:px-6">
+    <div className="min-h-screen bg-white py-8 px-2 sm:px-6">
       {/* Header Section with Icon */}
-      <div className="flex items-center justify-between mb-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg px-6 py-5 border border-indigo-100 dark:border-indigo-900">
+      <div className="flex items-center justify-between mb-8 bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-xl shadow-lg px-6 py-5 border-l-4 border-blue-400">
         <div className="flex items-center gap-4">
-          <FaBullhorn className="text-yellow-300 text-4xl drop-shadow-lg animate-pulse" />
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-gray-100 drop-shadow">Announcements for <span className="text-yellow-200">{className}</span></h1>
+          <FaBullhorn className="text-blue-500 text-4xl drop-shadow-lg animate-pulse" />
+          <h1 className="text-3xl sm:text-4xl font-bold text-blue-900 drop-shadow">Announcements for <span className="text-indigo-600">{className}</span></h1>
         </div>
-        <button onClick={openModalForCreate} className="bg-yellow-400 hover:bg-yellow-500 text-indigo-900 dark:text-gray-900 font-bold py-3 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center" aria-label="Create New Announcement">
+        <button onClick={openModalForCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center" aria-label="Create New Announcement">
           <FaPlus className="mr-2 h-5 w-5" /> New Announcement
         </button>
       </div>
 
       <div className={`${isModalOpen || viewersInfo.isOpen ? 'blur-sm pointer-events-none' : ''} transition-all duration-300`}>
-        {loading ? <p className="text-center text-lg text-gray-800 dark:text-gray-300">Loading...</p> : error && announcements.length === 0 ? <p className="text-center text-red-400">{error}</p> : !loading && announcements.length === 0 ? (
-          <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 flex flex-col items-center justify-center gap-4">
-            <FaBullhorn className="text-yellow-300 text-4xl mb-2 animate-bounce" />
-            <p className="text-lg text-gray-800 dark:text-gray-300">No announcements posted yet.</p>
+        {loading ? <p className="text-center text-lg text-gray-700">Loading...</p> : error && announcements.length === 0 ? <p className="text-center text-red-600">{error}</p> : !loading && announcements.length === 0 ? (
+          <div className="text-center py-10 bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-lg shadow-md p-8 flex flex-col items-center justify-center gap-4">
+            <FaBullhorn className="text-blue-500 text-4xl mb-2 animate-bounce" />
+            <p className="text-lg text-gray-700">No announcements posted yet.</p>
           </div>
         ) : (
           <div className="max-h-screen overflow-y-auto pr-2">
@@ -229,18 +229,18 @@ export default function TeacherAnnouncement() {
               const isCommentsOpen = openComments[ann._id];
 
               return (
-                <li key={ann._id} data-ann-id={ann._id} className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl border border-indigo-100 dark:border-indigo-900 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
+                <li key={ann._id} data-ann-id={ann._id} className="bg-white shadow-xl rounded-2xl border border-blue-200 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-2">
-                      <FaBullhorn className="text-yellow-300 text-xl" />
-                      <h2 className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-yellow-100 mb-0 drop-shadow">{ann.title}</h2>
+                      <FaBullhorn className="text-blue-500 text-xl" />
+                      <h2 className="text-xl sm:text-2xl font-bold text-blue-900 mb-0 drop-shadow">{ann.title}</h2>
                     </div>
-                    <p className="text-gray-700 dark:text-gray-300 mb-3 whitespace-pre-line leading-relaxed text-base">{ann.content}</p>
+                    <p className="text-gray-700 mb-3 whitespace-pre-line leading-relaxed text-base">{ann.content}</p>
                     
                     {/* Display attachments if any */}
                     {ann.attachments && ann.attachments.length > 0 && (
                       <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-3">
+                        <p className="text-sm font-medium text-blue-700 mb-3">
                           <FaFileUpload className="inline mr-1" />
                           Attached Files ({ann.attachments.length})
                         </p>
@@ -463,16 +463,16 @@ export default function TeacherAnnouncement() {
                     )}
 
                     <div className="pt-3 mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs sm:text-sm">
-                      <p className="text-gray-500 dark:text-gray-400 mb-2 sm:mb-0">
-                        Posted by: <span className="font-semibold text-yellow-200">{ann.postedBy?.name || 'You'}</span> on {new Date(ann.datePosted).toLocaleDateString()}
+                      <p className="text-gray-600 mb-2 sm:mb-0">
+                        Posted by: <span className="font-semibold text-blue-700">{ann.postedBy?.name || 'You'}</span> on {new Date(ann.datePosted).toLocaleDateString()}
                       </p>
                       <div className="flex space-x-3">
-                        <button onClick={() => handleEdit(ann)} className="flex items-center text-blue-400 hover:text-blue-200 font-medium py-1 px-3 rounded-md hover:bg-blue-900/30 transition-colors"><FaEdit className="mr-1.5 h-4 w-4" /> Edit</button>
-                        <button onClick={() => handleDelete(ann._id)} className="flex items-center text-red-500 hover:text-red-300 font-medium py-1 px-3 rounded-md hover:bg-red-900/30 transition-colors"><FaTrashAlt className="mr-1.5 h-4 w-4" /> Delete</button>
+                        <button onClick={() => handleEdit(ann)} className="flex items-center text-blue-600 hover:text-blue-700 font-medium py-1 px-3 rounded-md hover:bg-blue-50 transition-colors"><FaEdit className="mr-1.5 h-4 w-4" /> Edit</button>
+                        <button onClick={() => handleDelete(ann._id)} className="flex items-center text-red-600 hover:text-red-700 font-medium py-1 px-3 rounded-md hover:bg-red-50 transition-colors"><FaTrashAlt className="mr-1.5 h-4 w-4" /> Delete</button>
                       </div>
                     </div>
                   </div>
-                  <div className="px-6 pt-2 pb-4 border-t border-indigo-100 dark:border-indigo-900 flex items-center justify-between flex-wrap gap-y-2">
+                  <div className="px-6 pt-2 pb-4 border-t border-blue-100 flex items-center justify-between flex-wrap gap-y-2">
                     <div className="flex items-center gap-2">
                       {availableReactions.map(emoji => {
                         const userHasReacted = ann.reactions?.some(r => r.user?._id === userId && r.emoji === emoji);
@@ -485,32 +485,32 @@ export default function TeacherAnnouncement() {
                       })}
                     </div>
                     <div className="flex items-center gap-4">
-                      <button onClick={() => openViewersModal(ann._id)} className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-yellow-300 font-medium py-1 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                      <button onClick={() => openViewersModal(ann._id)} className="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-medium py-1 px-3 rounded-md hover:bg-blue-50 transition-colors">
                         <FaEye />
                         <span>{ann.viewedBy?.length || 0} Views</span>
                       </button>
-                      <button onClick={() => toggleComments(ann._id)} className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-yellow-300 font-medium py-1 px-3 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
+                      <button onClick={() => toggleComments(ann._id)} className="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-medium py-1 px-3 rounded-md hover:bg-blue-50 transition-colors">
                         <FaCommentAlt />
                         <span>{ann.comments?.length || 0} Comments</span>
                       </button>
                     </div>
                   </div>
                   {isCommentsOpen && (
-                    <div className="bg-indigo-50 dark:bg-indigo-900/30 px-6 py-4 border-t border-indigo-100 dark:border-indigo-900 animate-fadeIn">
-                      <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Comments</h4>
+                    <div className="bg-gradient-to-r from-blue-50 via-white to-indigo-50 px-6 py-4 border-t border-blue-100 animate-fadeIn">
+                      <h4 className="font-semibold text-blue-900 mb-3">Comments</h4>
                       <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
                         {ann.comments?.length > 0 ? ann.comments.map(comment => (
                           <div key={comment._id} className="flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-full bg-indigo-200 dark:bg-indigo-800 flex-shrink-0"></div>
+                            <div className="w-8 h-8 rounded-full bg-blue-200 flex-shrink-0"></div>
                             <div>
                               <p className="text-sm">
-                                <span className="font-bold text-gray-900 dark:text-white">{comment.postedBy?.name || 'User'}</span>
-                                <span className="text-gray-500 dark:text-gray-400 ml-2 text-xs">{new Date(comment.date).toLocaleDateString()}</span>
+                                <span className="font-bold text-gray-900">{comment.postedBy?.name || 'User'}</span>
+                                <span className="text-gray-500 ml-2 text-xs">{new Date(comment.date).toLocaleDateString()}</span>
                               </p>
-                              <p className="text-gray-700 dark:text-gray-300">{comment.text}</p>
+                              <p className="text-gray-700">{comment.text}</p>
                             </div>
                           </div>
-                        )) : <p className="text-sm text-gray-500 dark:text-gray-400">No comments yet. Be the first to comment!</p>}
+                        )) : <p className="text-sm text-gray-500">No comments yet. Be the first to comment!</p>}
                       </div>
                       <form onSubmit={(e) => handleCommentSubmit(e, ann._id)} className="mt-4 flex gap-3">
                         <input
@@ -518,9 +518,9 @@ export default function TeacherAnnouncement() {
                           value={commentInputs[ann._id] || ''}
                           onChange={(e) => handleCommentChange(ann._id, e.target.value)}
                           placeholder="Write a comment..."
-                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full border border-gray-300 rounded-lg p-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                        <button type="submit" className="bg-yellow-400 hover:bg-yellow-500 text-indigo-900 dark:text-gray-900 font-semibold p-2 rounded-lg flex items-center justify-center px-4">
+                        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold p-2 rounded-lg flex items-center justify-center px-4">
                           <FaPaperPlane />
                         </button>
                       </form>
@@ -536,23 +536,23 @@ export default function TeacherAnnouncement() {
 
       {isModalOpen && (
         <div className="fixed inset-0 flex justify-center items-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-lg relative border border-gray-700">
-            <h2 className="text-2xl font-bold mb-6 text-gray-100">{form.id ? 'Edit' : 'Create'} Announcement</h2>
+          <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-lg relative border border-blue-200">
+            <h2 className="text-2xl font-bold mb-6 text-blue-900">{form.id ? 'Edit' : 'Create'} Announcement</h2>
             <form onSubmit={handleSubmit}>
-              {error && <p className="text-red-400 mb-4">{error}</p>}
+              {error && <p className="text-red-600 mb-4">{error}</p>}
               <div className="mb-4">
-                <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">Title</label>
-                <input type="text" id="title" name="title" defaultValue={form.title} className="w-full border border-gray-600 rounded-lg p-2.5 bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input type="text" id="title" name="title" defaultValue={form.title} className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
               </div>
               <div className="mb-4">
-                <label htmlFor="content" className="block text-sm font-medium text-gray-300 mb-1">Content</label>
-                <textarea id="content" name="content" defaultValue={form.content} rows="5" className="w-full border border-gray-600 rounded-lg p-2.5 bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" required ></textarea>
+                <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                <textarea id="content" name="content" defaultValue={form.content} rows="5" className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500" required ></textarea>
               </div>
               
               {/* File Upload Section */}
               {!form.id && (
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     <FaFileUpload className="inline mr-2" />
                     Attach Files (Optional)
                   </label>
@@ -561,25 +561,25 @@ export default function TeacherAnnouncement() {
                     type="file"
                     multiple
                     onChange={handleFileSelect}
-                    className="w-full border border-gray-600 rounded-lg p-2.5 bg-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.ppt,.pptx,.txt,.mp4,.mp3,.zip,.rar"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Max 10MB per file. Allowed: images (JPG, PNG, GIF), documents (PDF, Word, PowerPoint), videos, audio, archives</p>
+                  <p className="text-xs text-gray-500 mt-1">Max 10MB per file. Allowed: images (JPG, PNG, GIF), documents (PDF, Word, PowerPoint), videos, audio, archives</p>
                 </div>
-              )}
+              )})
 
               {/* Selected Files Display */}
               {selectedFiles.length > 0 && (
                 <div className="mb-4">
-                  <p className="text-sm text-gray-300 mb-2">Selected Files:</p>
+                  <p className="text-sm text-gray-700 mb-2">Selected Files:</p>
                   <div className="space-y-2">
                     {selectedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between bg-gray-700 p-2 rounded">
-                        <span className="text-sm text-gray-300 truncate">{file.name}</span>
+                      <div key={index} className="flex items-center justify-between bg-blue-50 p-2 rounded border border-blue-200">
+                        <span className="text-sm text-gray-700 truncate">{file.name}</span>
                         <button
                           type="button"
                           onClick={() => removeFile(index)}
-                          className="text-red-400 hover:text-red-300 ml-2"
+                          className="text-red-600 hover:text-red-700 ml-2"
                         >
                           <FaTimes />
                         </button>
@@ -590,8 +590,8 @@ export default function TeacherAnnouncement() {
               )}
 
               <div className="flex justify-end space-x-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
-                <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">{form.id ? 'Update' : 'Create'}</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">{form.id ? 'Update' : 'Create'}</button>
               </div>
             </form>
           </div>
@@ -600,17 +600,17 @@ export default function TeacherAnnouncement() {
 
       {viewersInfo.isOpen && (
         <div className="fixed inset-0 flex justify-center items-center z-50 p-4" onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}>
-          <div className="bg-gray-800 rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-md relative border border-gray-700" onClick={e => e.stopPropagation()}>
-            <h3 className="text-xl font-bold mb-4 text-gray-100">Viewed By</h3>
-            <p className="text-sm text-gray-400 mb-4 truncate">For: "{viewersInfo.title}"</p>
+          <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-md relative border border-blue-200" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-bold mb-4 text-blue-900">Viewed By</h3>
+            <p className="text-sm text-gray-600 mb-4 truncate">For: "{viewersInfo.title}"</p>
             <ul className="space-y-3 max-h-60 overflow-y-auto pr-2">
               {Array.isArray(viewersInfo.viewers) && viewersInfo.viewers.length > 0 ? viewersInfo.viewers.map(viewer => (
-                <li key={viewer._id || viewer.name} className="text-gray-300 bg-gray-700/50 p-2 rounded-md">{viewer.name}</li>
+                <li key={viewer._id || viewer.name} className="text-gray-700 bg-blue-50 p-2 rounded-md border border-blue-200">{viewer.name}</li>
               )) : (
-                <li className="text-gray-400">No one has viewed this announcement yet.</li>
+                <li className="text-gray-500">No one has viewed this announcement yet.</li>
               )}
             </ul>
-            <button onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })} className="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+            <button onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })} className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
               Close
             </button>
           </div>

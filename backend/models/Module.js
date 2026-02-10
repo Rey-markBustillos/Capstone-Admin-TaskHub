@@ -30,13 +30,20 @@ const moduleSchema = new mongoose.Schema({
   },
   // Cloudinary fields for cloud storage
   cloudinaryUrl: {
-    type: String
+    type: String,
+    default: null
+  },
+  viewerUrl: {
+    type: String,
+    default: null
   },
   publicId: {
-    type: String
+    type: String,
+    default: null
   },
   resourceType: {
-    type: String
+    type: String,
+    default: 'raw'
   },
   classId: {
     type: mongoose.Schema.Types.ObjectId,

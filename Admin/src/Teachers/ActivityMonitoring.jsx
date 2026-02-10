@@ -19,36 +19,12 @@ import {
   FaTasks,
   FaCheckCircle,
   FaTimesCircle,
+  FaSpinner,
+  FaSearch,
 } from "react-icons/fa";
-import '../Css/ActivityMonitoring.css';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/+$/, "");
-
-const FallingBooksAnimation = () => {
-  const bookEmojis = ["📚", "📖", "📘", "📙", "📗"];
-  const numberOfBooks = 7;
-
-  return (
-    <div className="falling-books-container">
-      {Array.from({ length: numberOfBooks }, (_, index) => {
-        const randomLeft = Math.random() * 100;
-        const randomDuration = Math.random() * 5 + 5;
-        const randomDelay = Math.random() * 2;
-        const randomEmoji = bookEmojis[Math.floor(Math.random() * bookEmojis.length)];
-
-        return (
-          <div
-            className="falling-book"
-            key={`book-${index}`}
-            style={{ left: `${randomLeft}vw`, animationDuration: `${randomDuration}s`, animationDelay: `${randomDelay}s` }}
-          >
-            {randomEmoji}
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+// Ensure API_BASE_URL ends with a slash
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/$/, '') + '/';
 
 export default function ActivityMonitoring() {
   const [classes, setClasses] = useState([]);
@@ -72,10 +48,10 @@ export default function ActivityMonitoring() {
     const fetchClasses = async () => {
       setLoading(true);
       try {
-  const res = await axios.get(`${API_BASE_URL}/class?teacherId=${teacherId}`);
+        const res = await axios.get(`${API_BASE_URL}class`, { params: { teacherId } });
         setClasses(res.data || []);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch classes.");
+        setError(err.response?.data?.message || "Failed to load classes");
       } finally {
         setLoading(false);
       }
@@ -90,23 +66,28 @@ export default function ActivityMonitoring() {
       setLoading(true);
       setError(null);
       try {
-  const activitiesRes = await axios.get(`${API_BASE_URL}/activities?classId=${selectedClass._id}`);
-        const classActivities = activitiesRes.data || [];
-
-  const submissionsRes = await axios.get(`${API_BASE_URL}/activities/submissions/teacher/${teacherId}?classId=${selectedClass._id}`);
-        const allSubmissions = submissionsRes.data.submissions.filter(sub => sub.studentId) || [];
-
-        const activitiesWithSubmissions = classActivities.map(activity => {
-          const relatedSubmissions = allSubmissions.filter(sub => {
-            const submissionActivityId = sub.activityId?._id || sub.activityId;
-            return submissionActivityId === activity._id;
-          });
-          return { ...activity, submissions: relatedSubmissions };
+        const activitiesRes = await axios.get(`${API_BASE_URL}activities`, {
+          params: { classId: selectedClass._id },
         });
+        const activitiesData = activitiesRes.data || [];
+
+        const activitiesWithSubmissions = await Promise.all(
+          activitiesData.map(async (activity) => {
+            try {
+              const submissionsRes = await axios.get(
+                `${API_BASE_URL}activities/submissions/teacher/${teacherId}`,
+                { params: { activityId: activity._id } }
+              );
+              return { ...activity, submissions: submissionsRes.data.submissions || [] };
+            } catch {
+              return { ...activity, submissions: [] };
+            }
+          })
+        );
 
         setActivities(activitiesWithSubmissions);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch data.");
+        setError(err.response?.data?.message || "Failed to load activities");
       } finally {
         setLoading(false);
       }
@@ -119,19 +100,21 @@ export default function ActivityMonitoring() {
     setActivities(prevActivities =>
       prevActivities.map(activity => {
         if (activity._id === activityId) {
-          const updatedSubmissions = activity.submissions.map(sub =>
-            sub._id === submissionId ? { ...sub, score: newScore } : sub
-          );
-          return { ...activity, submissions: updatedSubmissions };
+          return {
+            ...activity,
+            submissions: activity.submissions.map(sub =>
+              sub._id === submissionId ? { ...sub, score: newScore } : sub
+            ),
+          };
         }
         return activity;
       })
     );
     if (selectedActivity?._id === activityId) {
-        setSelectedActivity(prev => ({
-            ...prev,
-            submissions: prev.submissions.map(sub => sub._id === submissionId ? { ...sub, score: newScore } : sub)
-        }));
+      setSelectedActivity(prev => ({
+        ...prev,
+        submissions: prev.submissions.map(sub => sub._id === submissionId ? { ...sub, score: newScore } : sub)
+      }));
     }
   };
 
@@ -139,10 +122,10 @@ export default function ActivityMonitoring() {
     try {
       const scoreNumber = Number(score);
       if (isNaN(scoreNumber)) {
-        alert("Score must be a number");
+        alert("Please enter a valid number");
         return;
       }
-  await axios.put(`${API_BASE_URL}/activities/submissions/score/${submissionId}`, { score: scoreNumber });
+      await axios.put(`${API_BASE_URL}activities/submissions/score/${submissionId}`, { score: scoreNumber });
       alert("Score updated successfully!");
     } catch (err) {
       alert(`Failed to update score: ${err.response?.data?.message || err.message}`);
@@ -150,13 +133,13 @@ export default function ActivityMonitoring() {
   };
 
   const getFileIcon = (fileName) => {
-    if (!fileName) return <FaFile className="text-gray-500" />;
+    if (!fileName) return <FaFile className="text-gray-400" />;
     const lower = fileName.toLowerCase();
     if (lower.endsWith(".pdf")) return <FaFilePdf className="text-red-500" />;
     if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png")) return <FaFileImage className="text-blue-500" />;
     if (lower.endsWith(".docx")) return <FaFileWord className="text-blue-600" />;
     if (lower.endsWith(".zip")) return <FaFileArchive className="text-yellow-500" />;
-    return <FaFile className="text-gray-500" />;
+    return <FaFile className="text-gray-400" />;
   };
 
   const filteredClasses = classes.filter(cls =>
@@ -174,14 +157,14 @@ export default function ActivityMonitoring() {
     setSubmissionSearchTerm("");
   };
 
-  // Export to Excel handler
   const handleExportExcel = async () => {
     if (!selectedClass) return;
     try {
-  const res = await axios.get(`${API_BASE_URL}/activities/export-scores?classId=${selectedClass._id}`);
+      const res = await axios.get(`${API_BASE_URL}activities/export-scores`, {
+        params: { classId: selectedClass._id }
+      });
       const { exportData, activityTitles } = res.data;
 
-      // Set column order: Name, Email, then all activity titles
       const columns = ["Name", "Email", ...activityTitles];
       const worksheet = XLSX.utils.json_to_sheet(exportData, { header: columns });
       const workbook = XLSX.utils.book_new();
@@ -194,49 +177,105 @@ export default function ActivityMonitoring() {
   };
 
   return (
-    <div className="app-container bg-white dark:bg-gray-800 min-h-screen">
-      <FallingBooksAnimation />
-      <div className="content p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
-        {loading && <p className="text-center mt-6 text-lg font-semibold">Loading...</p>}
-        {error && <p className="text-center mt-6 text-red-500 dark:text-red-400 text-lg">Error: {error}</p>}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <FaSpinner className="animate-spin text-4xl text-blue-600 mr-3" />
+            <p className="text-lg font-semibold text-gray-600">Loading...</p>
+          </div>
+        )}
 
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+            <div className="flex items-center">
+              <FaTimesCircle className="text-red-500 text-xl mr-3" />
+              <p className="text-red-700 font-medium">Error: {error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Class Selection View */}
         {!selectedClass && (
           <>
-            <h1 className="text-3xl font-bold mb-6 text-center text-indigo-700 dark:text-indigo-300 flex items-center justify-center gap-2">
-              <FaClipboardList className="mr-2" /> Select a Class
-            </h1>
-            <input
-              type="text"
-              placeholder="Search class..."
-              className="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700"
-              value={classSearchTerm}
-              onChange={(e) => setClassSearchTerm(e.target.value)}
-            />
+            {/* Header */}
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-blue-600 p-3 rounded-xl">
+                  <FaClipboardList className="text-3xl text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">Activity Monitoring</h1>
+                  <p className="text-gray-600 text-sm sm:text-base">Select a class to view activities and submissions</p>
+                </div>
+              </div>
+              <div className="h-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-full w-24"></div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mb-8">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search classes..."
+                  className="w-full p-4 pl-12 border-2 border-blue-200 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all"
+                  value={classSearchTerm}
+                  onChange={(e) => setClassSearchTerm(e.target.value)}
+                />
+                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
+
+            {/* Classes Grid */}
             {filteredClasses.length === 0 && !loading ? (
-              <p className="text-center mt-6 text-lg">No classes found.</p>
+              <div className="text-center py-16">
+                <div className="bg-white rounded-xl shadow-md p-12 max-w-md mx-auto">
+                  <FaClipboardList className="text-6xl text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">No Classes Found</h3>
+                  <p className="text-gray-600">No classes match your search criteria.</p>
+                </div>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredClasses.map((cls) => (
-                  <div key={cls._id} className="cursor-pointer p-0 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition duration-300 ease-in-out transform hover:scale-105 bg-white dark:bg-gray-800 flex flex-col" onClick={() => setSelectedClass(cls)}>
-                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4 flex items-center gap-2">
-                      <FaBookOpen className="mr-2" />
-                      <h3 className="text-xl font-bold text-white mb-1 truncate">{cls.className}</h3>
-                      {cls.section && <p className="text-indigo-100 text-sm"><span className="opacity-75">Section:</span> {cls.section}</p>}
+                  <div
+                    key={cls._id}
+                    className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden border-2 border-transparent hover:border-blue-300"
+                    onClick={() => setSelectedClass(cls)}
+                  >
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FaBookOpen className="text-white text-xl" />
+                        <h3 className="text-xl font-bold text-white truncate">{cls.className}</h3>
+                      </div>
+                      {cls.section && (
+                        <p className="text-blue-100 text-sm">Section: {cls.section}</p>
+                      )}
                     </div>
-                    <div className="px-6 py-4 flex-grow space-y-1">
-                      <p className="text-gray-700 dark:text-gray-300 flex items-center mb-1">
-                        <FaMapMarkerAlt className="mr-2" /> Room: {cls.roomNumber || "N/A"}
-                      </p>
-                      <p className="text-gray-700 dark:text-gray-300 flex items-center mb-1">
-                        <FaCalendarAlt className="mr-2" /> Day: {cls.day || "N/A"}
-                      </p>
-                      <p className="text-gray-700 dark:text-gray-300 flex items-center">
-                        <FaClock className="mr-2" /> Time: {cls.time ? new Date(cls.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "N/A"}
-                      </p>
+
+                    {/* Body */}
+                    <div className="p-6 space-y-3">
+                      <div className="flex items-center gap-3 text-gray-700">
+                        <FaMapMarkerAlt className="text-blue-600 flex-shrink-0" />
+                        <span className="text-sm"><strong>Room:</strong> {cls.roomNumber || "N/A"}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-gray-700">
+                        <FaCalendarAlt className="text-blue-600 flex-shrink-0" />
+                        <span className="text-sm"><strong>Day:</strong> {cls.day || "N/A"}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-gray-700">
+                        <FaClock className="text-blue-600 flex-shrink-0" />
+                        <span className="text-sm"><strong>Time:</strong> {cls.time ? new Date(cls.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "N/A"}</span>
+                      </div>
                     </div>
-                    <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
-                      <p className="text-xs text-center text-indigo-500 dark:text-indigo-400 font-medium flex items-center justify-center gap-1">
-                        <FaTasks className="mr-1" /> Click to view activities
+
+                    {/* Footer */}
+                    <div className="bg-blue-50 px-6 py-3 border-t-2 border-blue-100">
+                      <p className="text-sm text-blue-700 font-semibold text-center flex items-center justify-center gap-2">
+                        <FaTasks /> View Activities
                       </p>
                     </div>
                   </div>
@@ -246,51 +285,87 @@ export default function ActivityMonitoring() {
           </>
         )}
 
+        {/* Activities View */}
         {selectedClass && !selectedActivity && (
           <>
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
-              <button className="px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition duration-300 ease-in-out flex items-center shadow-md hover:shadow-lg mb-2 sm:mb-0" onClick={handleBackToClasses}>
-                <FaChevronLeft className="mr-2" /> Back to Classes
+            {/* Header with Back Button */}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+              <button
+                className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-blue-200 text-blue-700 rounded-xl font-semibold hover:bg-blue-50 transition-all shadow-sm"
+                onClick={handleBackToClasses}
+              >
+                <FaChevronLeft /> Back to Classes
               </button>
               <button
-                className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition duration-300 ease-in-out flex items-center shadow-md hover:shadow-lg"
+                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all shadow-md"
                 onClick={handleExportExcel}
               >
-                <FaFileExport className="mr-2" /> Export Excel
+                <FaFileExport /> Export to Excel
               </button>
             </div>
-            <h1 className="text-4xl font-bold mb-8 text-indigo-700 dark:text-indigo-300 text-center flex items-center justify-center gap-2">
-              <FaTasks className="mr-2" />
-              Activities for: <span className="text-purple-600 dark:text-purple-400">{selectedClass.className}</span>
-            </h1>
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4">
-              <div className="flex items-center text-gray-700 dark:text-gray-300">
-                <FaMapMarkerAlt className="mr-2" /> <span className="font-semibold">Room:</span>&nbsp;{selectedClass.roomNumber || "N/A"}
+
+            {/* Class Info Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-xl p-6 sm:p-8 mb-8 text-white">
+              <div className="flex items-center gap-3 mb-4">
+                <FaTasks className="text-4xl" />
+                <h1 className="text-2xl sm:text-3xl font-bold">Activities for {selectedClass.className}</h1>
               </div>
-              <div className="flex items-center text-gray-700 dark:text-gray-300">
-                <FaCalendarAlt className="mr-2" /> <span className="font-semibold">Day:</span>&nbsp;{selectedClass.day || "N/A"}
-              </div>
-              <div className="flex items-center text-gray-700 dark:text-gray-300">
-                <FaClock className="mr-2" /> <span className="font-semibold">Time:</span>&nbsp;{selectedClass.time ? new Date(selectedClass.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "N/A"}
+              <div className="flex flex-wrap gap-4 text-sm sm:text-base">
+                <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+                  <FaMapMarkerAlt />
+                  <span><strong>Room:</strong> {selectedClass.roomNumber || "N/A"}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+                  <FaCalendarAlt />
+                  <span><strong>Day:</strong> {selectedClass.day || "N/A"}</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+                  <FaClock />
+                  <span><strong>Time:</strong> {selectedClass.time ? new Date(selectedClass.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "N/A"}</span>
+                </div>
               </div>
             </div>
+
+            {/* Activities Grid */}
             {activities.length === 0 && !loading ? (
-              <div className="text-center py-10"><p className="text-xl text-gray-600 dark:text-gray-400">No activities found for this class.</p></div>
+              <div className="text-center py-16">
+                <div className="bg-white rounded-xl shadow-md p-12 max-w-md mx-auto">
+                  <FaBookOpen className="text-6xl text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">No Activities</h3>
+                  <p className="text-gray-600">No activities found for this class.</p>
+                </div>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {activities.map(activity => (
-                  <div key={activity._id} onClick={() => setSelectedActivity(activity)} className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden cursor-pointer hover:shadow-2xl hover:scale-105 transform transition-all duration-300 flex flex-col">
-                    <div className="p-5 flex-grow flex items-center gap-2">
-                      <FaBookOpen className="text-indigo-500 mr-2" />
-                      <h2 className="text-xl font-bold text-indigo-600 dark:text-indigo-400 truncate mb-2">{activity.title}</h2>
+                  <div
+                    key={activity._id}
+                    onClick={() => setSelectedActivity(activity)}
+                    className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden border-2 border-transparent hover:border-blue-300"
+                  >
+                    {/* Activity Title */}
+                    <div className="p-6 border-b-2 border-blue-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FaBookOpen className="text-blue-600 text-xl" />
+                        <h2 className="text-lg font-bold text-gray-800 truncate">{activity.title}</h2>
+                      </div>
+                      {activity.date && (
+                        <p className="text-sm text-gray-600 flex items-center gap-2">
+                          <FaCalendarAlt className="text-blue-600" />
+                          Due: {new Date(activity.date).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-700/50 px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                        <div className="text-sm font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                          <FaUsers className="mr-1" /> Submissions
-                        </div>
-                        <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-500/20 rounded-full h-8 w-8 flex items-center justify-center">
-                            {activity.submissions.length}
-                        </div>
+
+                    {/* Submissions Count */}
+                    <div className="bg-blue-50 px-6 py-4 flex justify-between items-center">
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <FaUsers className="text-blue-600" />
+                        <span className="text-sm font-semibold">Submissions</span>
+                      </div>
+                      <div className="bg-blue-600 text-white font-bold text-lg rounded-full h-10 w-10 flex items-center justify-center shadow-md">
+                        {activity.submissions.length}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -299,207 +374,197 @@ export default function ActivityMonitoring() {
           </>
         )}
 
-{selectedClass && selectedActivity && (
-  <>
-    <button className="mb-8 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition duration-300 ease-in-out flex items-center shadow-md hover:shadow-lg" onClick={handleBackToActivities}>
-      <FaChevronLeft className="mr-2" /> Back to Activities
-    </button>
-    <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white p-4 flex items-center gap-2">
-        <FaBookOpen className="mr-2" />
-        <h2 className="text-2xl font-bold">{selectedActivity.title}</h2>
-        <p className="text-sm opacity-80 ml-4 flex items-center gap-1">
-          <FaCalendarAlt className="mr-1" />
-          Due: {selectedActivity.date ? new Date(selectedActivity.date).toLocaleDateString() : 'N/A'}
-        </p>
-      </div>
-      <div className="p-4">
-        <input
-          type="text"
-          placeholder="Search by student name..."
-          className="w-full md:w-1/2 lg:w-1/3 p-3 border border-gray-300 dark:border-gray-600 rounded-lg mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700"
-          value={submissionSearchTerm}
-          onChange={(e) => setSubmissionSearchTerm(e.target.value)}
-        />
-        {selectedActivity.submissions.filter(sub => sub.studentId?.name.toLowerCase().includes(submissionSearchTerm.toLowerCase())).length === 0 ? (
-          <p className="p-6 text-center text-gray-500 dark:text-gray-400">No submissions found for this activity.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full table-auto border-collapse text-left">
-              <thead className="border-b border-gray-200 dark:border-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wider text-center">Submitted By</th>
-                  <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wider text-center">Date</th>
-                  <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wider text-center">Attachment</th>
-                  <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wider text-center">Score</th>
-                  <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wider text-center">Status</th>
-                  <th className="px-6 py-3 text-sm font-semibold uppercase tracking-wider text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-700 dark:text-gray-300">
-                {selectedActivity.submissions
-                  .filter(sub => sub.studentId?.name.toLowerCase().includes(submissionSearchTerm.toLowerCase()))
-                  .map((sub, index) => {
-                    const fileTypeIcon = getFileIcon(sub.fileName);
-                    
-                    // Simplified download strategy - prioritize Cloudinary URLs
-                    let fileUrl = null;
-                    
-                    // Check if submission has cloudinaryUrl (new system)
-                    if (sub.cloudinaryUrl) {
-                      fileUrl = sub.cloudinaryUrl;
-                    } 
-                    // Fallback to backend download endpoint
-                    else if (sub._id) {
-                      fileUrl = `${API_BASE_URL}/activities/submission/${sub._id}/download`;
-                    }
-                    
+        {/* Submissions View */}
+        {selectedClass && selectedActivity && (
+          <>
+            {/* Back Button */}
+            <button
+              className="flex items-center gap-2 mb-8 px-6 py-3 bg-white border-2 border-blue-200 text-blue-700 rounded-xl font-semibold hover:bg-blue-50 transition-all shadow-sm"
+              onClick={handleBackToActivities}
+            >
+              <FaChevronLeft /> Back to Activities
+            </button>
 
-                    const dueDate = selectedActivity.date ? new Date(selectedActivity.date) : null;
-                    const submissionDate = sub.submissionDate ? new Date(sub.submissionDate) : null;
-                    const statusText = submissionDate && dueDate ? (submissionDate > dueDate ? "Late" : "Submitted") : "Submitted";
-                    const statusIcon = submissionDate && dueDate
-                      ? (submissionDate > dueDate
-                        ? <FaTimesCircle className="text-red-500 inline-block mr-1" />
-                        : <FaCheckCircle className="text-green-500 inline-block mr-1" />)
-                      : null;
+            {/* Activity Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-xl p-6 mb-8 text-white">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <FaBookOpen className="text-3xl" />
+                  <div>
+                    <h2 className="text-2xl font-bold">{selectedActivity.title}</h2>
+                    {selectedActivity.date && (
+                      <p className="text-blue-100 text-sm flex items-center gap-2 mt-1">
+                        <FaCalendarAlt />
+                        Due: {new Date(selectedActivity.date).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="bg-white/20 px-4 py-2 rounded-lg">
+                  <p className="text-sm font-semibold">Total Submissions: {selectedActivity.submissions.length}</p>
+                </div>
+              </div>
+            </div>
 
-                    return (
-                      <tr key={sub._id} className={`border-b border-gray-200 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-gray-700/50 transition-all duration-200 ease-in-out ${index % 2 !== 0 ? 'bg-gray-50 dark:bg-gray-800/60' : ''}`}>
-                        {/* Submitted By */}
-                        <td className="px-6 py-4 text-center align-middle">
-                          <div className="flex flex-col items-center">
-                            <span className="font-medium text-gray-900 dark:text-white flex items-center gap-2 justify-center">
-                              <FaUsers className="text-indigo-400" />
-                              {sub.studentId?.name || "-"}
-                            </span>
-                            <span className="text-sm text-gray-500 flex items-center gap-2 justify-center">
-                              <FaClipboardList />
-                              {sub.studentId?.email || "-"}
-                            </span>
-                          </div>
-                        </td>
-                        {/* Date */}
-                        <td className="px-6 py-4 text-center align-middle">
-                          <div className="flex flex-col items-center">
-                            <span className="flex items-center gap-2 justify-center">
-                              <FaCalendarAlt className="text-indigo-400" />
-                              {submissionDate ? new Date(submissionDate).toLocaleString() : "-"}
-                            </span>
-                          </div>
-                        </td>
-                        {/* Attachment */}
-                        <td className="px-6 py-4 text-center align-middle">
-                          <div className="flex flex-col items-center">
-                            {sub.fileName && fileUrl ? (
-                              <>
-                                <span className="mb-1 text-xs text-gray-500 dark:text-gray-400 break-all">{sub.fileName}</span>
-                                {/* Preview for images */}
-                                {/\.(jpg|jpeg|png|gif)$/i.test(sub.fileName) ? (
-                                  <a
-                                    href={fileUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="mb-2"
-                                  >
-                                    <img
-                                      src={fileUrl}
-                                      alt={sub.fileName}
-                                      style={{ maxWidth: 120, maxHeight: 80, borderRadius: 6, border: "1px solid #ddd" }}
-                                    />
-                                  </a>
-                                ) : null}
-                                {/* View Submission link */}
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center justify-center px-3 py-1 rounded-md bg-indigo-100 dark:bg-indigo-500/30 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-200 dark:hover:bg-indigo-500/50 w-fit shadow-sm gap-2"
-                                  onClick={async (e) => {
-                                    e.preventDefault();
-                                    
-                                    if (!fileUrl) {
-                                      alert('No file available for download.');
-                                      return;
-                                    }
-                                    
-                                    try {
-                                      // If it's a Cloudinary URL, open directly
-                                      if (sub.cloudinaryUrl) {
-                                        window.open(fileUrl, '_blank');
-                                      } else {
-                                        // For backend endpoints, test first
-                                        const testResponse = await fetch(fileUrl, { method: 'HEAD' });
-                                        if (testResponse.ok) {
-                                          window.open(fileUrl, '_blank');
-                                        } else {
-                                          throw new Error('File not accessible');
-                                        }
-                                      }
-                                    } catch {
-                                      alert(`File could not be accessed.\n\nFile: ${sub.fileName || 'Unknown'}\n\nThis may be due to server storage limitations.`);
-                                    }
-                                  }}
-                                >
-                                  <span className="text-lg">{fileTypeIcon}</span>
-                                  <span className="text-sm font-medium">View Submission</span>
-                                  <FaDownload />
-                                </a>
+            {/* Search Bar */}
+            <div className="mb-6">
+              <div className="relative max-w-md">
+                <input
+                  type="text"
+                  placeholder="Search by student name..."
+                  className="w-full p-3 pl-10 border-2 border-blue-200 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  value={submissionSearchTerm}
+                  onChange={(e) => setSubmissionSearchTerm(e.target.value)}
+                />
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
 
-                              </>
-                            ) : (
-                              <span className="text-gray-400 dark:text-gray-500 italic flex items-center gap-1 justify-center">
-                                <FaFile className="mr-1" /> No file
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        {/* Score */}
-                        <td className="px-6 py-4 text-center align-middle">
-                          <div className="flex flex-col items-center">
-                            <span className="flex items-center gap-2 justify-center">
-                              <FaTasks className="text-indigo-400" />
-                              <input
-                                type="number"
-                                value={sub.score || ""}
-                                onChange={(e) => handleScoreChange(selectedActivity._id, sub._id, e.target.value)}
-                                className="p-2 border rounded-md w-20 text-center bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
-                                placeholder="Score"
-                              />
-                            </span>
-                          </div>
-                        </td>
-                        {/* Status */}
-                        <td className="px-6 py-4 text-center align-middle">
-                          <div className="flex flex-col items-center">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center justify-center gap-1 ${statusText === "Late" ? "bg-red-100 dark:bg-red-500/30 text-red-800 dark:text-red-200" : "bg-green-100 dark:bg-green-500/30 text-green-800 dark:text-green-200"}`}>
-                              {statusIcon}
-                              {statusText}
-                            </span>
-                          </div>
-                        </td>
-                        {/* Action */}
-                        <td className="px-6 py-4 text-center align-middle">
-                          <div className="flex flex-col items-center">
-                            <button
-                              onClick={() => handleSubmitScore(sub._id, sub.score)}
-                              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium shadow-md flex items-center gap-1"
-                            >
-                              <FaCheckCircle className="mr-1" />Save
-                            </button>
-                          </div>
-                        </td>
+            {/* Submissions Table */}
+            {selectedActivity.submissions.filter(sub => sub.studentId?.name.toLowerCase().includes(submissionSearchTerm.toLowerCase())).length === 0 ? (
+              <div className="text-center py-16">
+                <div className="bg-white rounded-xl shadow-md p-12 max-w-md mx-auto">
+                  <FaUsers className="text-6xl text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">No Submissions</h3>
+                  <p className="text-gray-600">No submissions found for this activity.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Student</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Submitted</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold uppercase tracking-wider">Attachment</th>
+                        <th className="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Score</th>
+                        <th className="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-4 text-center text-sm font-semibold uppercase tracking-wider">Action</th>
                       </tr>
-                    );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {selectedActivity.submissions
+                        .filter(sub => sub.studentId?.name.toLowerCase().includes(submissionSearchTerm.toLowerCase()))
+                        .map((sub, index) => {
+                          const fileTypeIcon = getFileIcon(sub.fileName);
+                          
+                          let fileUrl = null;
+                          if (sub.cloudinaryUrl) {
+                            fileUrl = sub.cloudinaryUrl;
+                          } else if (sub._id) {
+                            fileUrl = `${API_BASE_URL}activities/submissions/download/${sub._id}`;
+                          }
+
+                          const dueDate = selectedActivity.date ? new Date(selectedActivity.date) : null;
+                          const submissionDate = sub.submissionDate ? new Date(sub.submissionDate) : null;
+                          const isLate = submissionDate && dueDate && submissionDate > dueDate;
+
+                          return (
+                            <tr key={sub._id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-blue-50/50'} hover:bg-blue-50 transition-colors`}>
+                              {/* Student Info */}
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="bg-blue-100 p-2 rounded-full">
+                                    <FaUsers className="text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-gray-800">{sub.studentId?.name || "-"}</p>
+                                    <p className="text-sm text-gray-600">{sub.studentId?.email || "-"}</p>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Submission Date */}
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2 text-gray-700">
+                                  <FaCalendarAlt className="text-blue-600" />
+                                  <span className="text-sm">
+                                    {submissionDate ? submissionDate.toLocaleDateString() : "-"}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Attachment */}
+                              <td className="px-6 py-4">
+                                {sub.fileName && fileUrl ? (
+                                  <div className="flex flex-col gap-2">
+                                    <span className="text-xs text-gray-600 truncate max-w-xs">{sub.fileName}</span>
+                                    {/\.(jpg|jpeg|png|gif)$/i.test(sub.fileName) && (
+                                      <img
+                                        src={fileUrl}
+                                        alt={sub.fileName}
+                                        className="w-24 h-16 object-cover rounded border border-gray-200"
+                                      />
+                                    )}
+                                    <a
+                                      href={fileUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium w-fit"
+                                    >
+                                      {fileTypeIcon}
+                                      <span>View</span>
+                                      <FaDownload size={12} />
+                                    </a>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400 italic flex items-center gap-2">
+                                    <FaFile /> No file
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Score Input */}
+                              <td className="px-6 py-4">
+                                <div className="flex items-center justify-center gap-2">
+                                  <FaTasks className="text-blue-600" />
+                                  <input
+                                    type="number"
+                                    value={sub.score || ""}
+                                    onChange={(e) => handleScoreChange(selectedActivity._id, sub._id, e.target.value)}
+                                    className="w-20 p-2 border-2 border-blue-200 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="0"
+                                  />
+                                </div>
+                              </td>
+
+                              {/* Status */}
+                              <td className="px-6 py-4">
+                                <div className="flex justify-center">
+                                  {isLate ? (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                                      <FaTimesCircle /> Late
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                                      <FaCheckCircle /> On Time
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* Save Button */}
+                              <td className="px-6 py-4">
+                                <div className="flex justify-center">
+                                  <button
+                                    onClick={() => handleSubmitScore(sub._id, sub.score)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
+                                  >
+                                    <FaCheckCircle /> Save
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
         )}
-      </div>
-    </div>
-  </>
-)}  
       </div>
     </div>
   );

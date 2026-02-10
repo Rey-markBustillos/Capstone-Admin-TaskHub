@@ -5,7 +5,7 @@ import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, 
 import SidebarContext from '../contexts/SidebarContext';
 import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 const statusIcons = {
   'Graded': <FaCheckCircle className="text-blue-500 mr-1" />,
@@ -20,9 +20,9 @@ const statusIcons = {
 
 const submitActivity = async ({ activityId, studentId, content }) => {
   try {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
     const response = await axios.post(
-      `${API_BASE_URL.replace(/\/$/, '')}/activities/submit`,
+      `${API_BASE_URL}/activities/submit`,
       { activityId, studentId, content, submittedAt: new Date() },
       { headers: { 'Content-Type': 'application/json' } }
     );
@@ -58,7 +58,7 @@ const StudentActivities = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`${API_BASE_URL.replace(/\/$/, '')}/class/my-classes/${studentId}`);
+        const res = await axios.get(`${API_BASE_URL}/class/my-classes/${studentId}`);
         const isEnrolled = res.data.some(cls => String(cls._id) === String(classId));
         if (!isEnrolled) {
           setError("You are not enrolled in this class.");
@@ -69,8 +69,8 @@ const StudentActivities = () => {
         }
 
         const [activitiesRes, submissionsRes] = await Promise.all([
-          axios.get(`${API_BASE_URL.replace(/\/$/, '')}/activities?classId=${classId}`),
-          axios.get(`${API_BASE_URL.replace(/\/$/, '')}/activities/submissions?classId=${classId}&studentId=${studentId}`)
+          axios.get(`${API_BASE_URL}/activities?classId=${classId}`),
+          axios.get(`${API_BASE_URL}/activities/submissions?classId=${classId}&studentId=${studentId}`)
         ]);
 
         const subs = Array.isArray(submissionsRes.data)
@@ -118,11 +118,18 @@ const StudentActivities = () => {
     navigate(`/student/class/${classId}/activity/${activityId}/submit`);
   };
 
-  const getAttachmentUrl = (activityId, attachment) => {
-    if (!attachment) return null;
-    // Always use backend download endpoint for activity attachments
-    // This ensures proper viewing and avoids "Submission not found" errors
-    return `${API_BASE_URL.replace(/\/$/, '')}/activities/${activityId}/download`;
+  const getAttachmentUrl = (activity) => {
+    if (!activity || !activity.attachment) return null;
+    
+    // If attachment is already a Cloudinary URL, use it directly
+    if (activity.attachment.startsWith('http://') || activity.attachment.startsWith('https://')) {
+      console.log('📎 Using Cloudinary URL for activity:', activity.title);
+      return activity.attachment;
+    }
+    
+    // Otherwise, use backend download endpoint for legacy local files
+    console.log('📎 Using backend download for activity:', activity.title);
+    return `${API_BASE_URL}/activities/${activity._id}/download`;
   };
 
   if (loading) return (
@@ -164,7 +171,7 @@ const StudentActivities = () => {
                 {activities.map(activity => {
                   const submission = getSubmissionForActivity(activity._id);
                   const statusInfo = getStatus(activity, submission);
-                  const attachmentUrl = activity.attachment ? getAttachmentUrl(activity._id, activity.attachment) : null;
+                  const attachmentUrl = getAttachmentUrl(activity);
 
                   return (
                     <div key={activity._id} onClick={() => handleSubmission(activity._id)}

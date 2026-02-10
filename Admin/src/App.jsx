@@ -103,7 +103,7 @@ const ProtectedLayout = ({ user, onLogout }) => {
               setIsOpen={setIsSidebarOpen}
               isOverlay={isStudentClass}
             />
-            <main className={`flex-1 transition-all duration-300 ${isStudentClass ? 'ml-0' : (isSidebarOpen ? 'ml-36 sm:ml-44' : 'ml-10 sm:ml-12')}`}>
+            <main className={`flex-1 transition-all duration-300 ${isStudentClass ? 'ml-0' : (isSidebarOpen ? 'ml-64' : 'ml-20')}`}>
               <Outlet />
             </main>
           </div>
@@ -120,7 +120,7 @@ const ProtectedLayout = ({ user, onLogout }) => {
         isOpen={isSidebarOpen} 
         setIsOpen={setIsSidebarOpen} 
       />
-      <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-56' : 'ml-16'}`}>
+      <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
         <Outlet /> {/* Dito lalabas ang mga nested routes */}
       </main>
     </div>

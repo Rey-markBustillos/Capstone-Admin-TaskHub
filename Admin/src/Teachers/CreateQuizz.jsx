@@ -589,7 +589,7 @@ export default function CreateQuizz() {
         </Row>`;
     
     // Add data rows for each quiz
-    analytics.forEach(({ quiz, totalSubmissions }) => {
+    analytics.forEach(({ quiz }) => {
       const submissions = submissionsByQuiz[quiz._id] || [];
       
       submissions.forEach(submission => {
@@ -901,12 +901,12 @@ export default function CreateQuizz() {
 
   // Wrap the whole return in a single centered div
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen bg-gradient-to-br from-[#181a20] via-[#23263a] to-[#1e2746] py-4 sm:py-6 lg:py-10 px-2 sm:px-4">{/* Improved responsive padding */}
+    <div className="flex flex-col items-center justify-start min-h-screen bg-white py-4 sm:py-6 lg:py-10 px-2 sm:px-4">{/* Improved responsive padding */}
       {/* Quiz Actions Dropdown at the top */}
       <div className="w-full flex justify-center sm:justify-end max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] mb-4 sm:mb-6 relative">
         <div className="relative" ref={dropdownRef}>
           <button
-            className="bg-gradient-to-r from-indigo-700 to-purple-800 hover:from-indigo-800 hover:to-purple-900 text-white px-6 sm:px-8 py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg border-2 border-indigo-400 hover:border-purple-500 transition-all duration-200 flex items-center gap-2 text-sm sm:text-base"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 sm:px-8 py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg border-2 border-blue-400 hover:border-indigo-500 transition-all duration-200 flex items-center gap-2 text-sm sm:text-base"
             onClick={() => setShowDropdown(!showDropdown)}
           >
             Quiz Actions
@@ -916,36 +916,36 @@ export default function CreateQuizz() {
           </button>
           
           {showDropdown && (
-            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto mt-2 w-full sm:w-64 bg-gradient-to-br from-indigo-900 to-purple-900 rounded-xl shadow-2xl border-2 border-indigo-500 z-50">
+            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto mt-2 w-full sm:w-64 bg-white rounded-xl shadow-2xl border-2 border-blue-300 z-50">
               <div className="py-2">
                 <button
-                  className="w-full px-4 sm:px-6 py-3 text-left text-white hover:bg-purple-800/50 transition-colors flex items-center gap-3 text-sm sm:text-base"
+                  className="w-full px-4 sm:px-6 py-3 text-left text-gray-900 hover:bg-blue-50 transition-colors flex items-center gap-3 text-sm sm:text-base"
                   onClick={() => {
                     setShowAnalyticsModal(true);
                     setShowDropdown(false);
                   }}
                 >
-                  <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                   </svg>
                   <div>
                     <div className="font-semibold">Quiz Analytics</div>
-                    <div className="text-sm text-indigo-300">View performance insights</div>
+                    <div className="text-sm text-blue-700">View performance insights</div>
                   </div>
                 </button>
                 <button
-                  className="w-full px-4 sm:px-6 py-3 text-left text-white hover:bg-green-800/50 transition-colors flex items-center gap-3 text-sm sm:text-base"
+                  className="w-full px-4 sm:px-6 py-3 text-left text-gray-900 hover:bg-indigo-50 transition-colors flex items-center gap-3 text-sm sm:text-base"
                   onClick={() => {
                     setShowSubModal(true);
                     setShowDropdown(false);
                   }}
                 >
-                  <svg className="w-5 h-5 text-green-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
                   <div>
                     <div className="font-semibold">View All Submissions</div>
-                    <div className="text-sm text-green-300">Student quiz responses</div>
+                    <div className="text-sm text-indigo-700">Student quiz responses</div>
                   </div>
                 </button>
               </div>
@@ -953,28 +953,28 @@ export default function CreateQuizz() {
           )}
         </div>
       </div>
-      <div className="w-full max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] p-2 sm:p-6 lg:p-10 bg-gradient-to-br from-[#181a20] via-[#23263a] to-[#1e2746] rounded-xl sm:rounded-3xl shadow-2xl border-2 sm:border-4 border-indigo-900 overflow-hidden max-h-[85vh] sm:max-h-[88vh] lg:max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-500 hover:scrollbar-thumb-indigo-400 scrollbar-track-indigo-900/30 relative scroll-smooth">
-        <div className="bg-gradient-to-r from-indigo-900 to-blue-900 px-4 sm:px-8 py-4 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-4 border-b-2 sm:border-b-4 border-indigo-800 shadow-lg justify-center sticky top-0 z-10">{/* Made header sticky */}
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white drop-shadow-lg tracking-wide flex items-center gap-3 justify-center">
-            <svg className="w-10 h-10 text-green-400 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v1.5m9 0v1.5m0-1.5h-9m9 0a2.25 2.25 0 012.25 2.25v8.25A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V9a2.25 2.25 0 012.25-2.25h9z" /></svg>
+      <div className="w-full max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] p-2 sm:p-6 lg:p-10 bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-xl sm:rounded-3xl shadow-lg border-l-4 border-blue-400 overflow-hidden max-h-[85vh] sm:max-h-[88vh] lg:max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-500 hover:scrollbar-thumb-blue-600 scrollbar-track-blue-100 relative scroll-smooth">
+        <div className="bg-gradient-to-r from-blue-50 via-white to-indigo-50 px-4 sm:px-8 py-4 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-4 border-b-2 sm:border-b-4 border-blue-200 shadow-md justify-center sticky top-0 z-10">{/* Made header sticky */}
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-blue-900 drop-shadow tracking-wide flex items-center gap-3 justify-center">
+            <svg className="w-10 h-10 text-blue-500 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v1.5m9 0v1.5m0-1.5h-9m9 0a2.25 2.25 0 012.25 2.25v8.25A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V9a2.25 2.25 0 012.25-2.25h9z" /></svg>
             Quiz Generator
           </h2>
         </div>
         <div className="px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-20 sm:pb-24 min-h-full">{/* Enhanced responsive padding with more bottom space */}
-        <h3 className="text-xl font-bold mb-2 text-indigo-200 flex items-center gap-2">
-          <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+        <h3 className="text-xl font-bold mb-2 text-blue-900 flex items-center gap-2">
+          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
           Module Upload / Paste
         </h3>
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <label className="flex items-center gap-2 cursor-pointer bg-[#23263a] hover:bg-[#23263a]/80 border-2 border-indigo-900 px-4 py-2 rounded-lg shadow-md transition group">
-            <FaUpload className="text-indigo-300 group-hover:text-green-400 transition" />
+          <label className="flex items-center gap-2 cursor-pointer bg-white hover:bg-blue-50 border-2 border-blue-300 px-4 py-2 rounded-lg shadow-md transition group">
+            <FaUpload className="text-blue-600 group-hover:text-blue-700 transition" />
             <input type="file" accept=".txt,.pdf,.jpg,.jpeg,.png,.docx,.doc,.pptx,.ppt" className="hidden" onChange={handleFileChange} />
-            <span className="font-medium text-indigo-200 group-hover:text-green-400 transition">Upload file</span>
+            <span className="font-medium text-blue-700 group-hover:text-blue-800 transition">Upload file</span>
           </label>
           <label className="flex-1 flex items-start gap-2">
-            <FaPaste className="mt-2 text-indigo-400" />
+            <FaPaste className="mt-2 text-blue-600" />
             <textarea
-              className="border-2 border-indigo-900 bg-[#23263a] text-indigo-100 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-green-400 placeholder:text-indigo-400 shadow-md"
+              className="border-2 border-blue-300 bg-white text-gray-900 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 shadow-md"
               rows={5}
               placeholder="Paste module text here..."
               value={moduleText}
@@ -983,13 +983,13 @@ export default function CreateQuizz() {
           </label>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex items-center gap-2 bg-[#23263a] border-2 border-indigo-900 rounded-lg px-4 py-2 shadow">
-            <label className="text-indigo-200 font-semibold">Number of Questions:</label>
+          <div className="flex items-center gap-2 bg-white border-2 border-blue-300 rounded-lg px-4 py-2 shadow">
+            <label className="text-blue-900 font-semibold">Number of Questions:</label>
             <input
               type="number"
               min={1}
               max={100}
-              className={`w-20 border border-indigo-700 rounded bg-[#23263a] text-indigo-100 p-1 focus:ring-2 focus:ring-green-400 ${
+              className={`w-20 border border-blue-300 rounded bg-white text-gray-900 p-1 focus:ring-2 focus:ring-blue-500 ${
                 quizType === 'mixed' ? 'opacity-60 cursor-not-allowed' : ''
               }`}
               value={count}
@@ -998,13 +998,13 @@ export default function CreateQuizz() {
               required
             />
             {quizType === 'mixed' && (
-              <span className="text-indigo-400 text-xs">(Auto-calculated)</span>
+              <span className="text-gray-600 text-xs">(Auto-calculated)</span>
             )}
           </div>
-          <div className="flex items-center gap-2 bg-[#23263a] border-2 border-indigo-900 rounded-lg px-4 py-2 shadow">
-            <label className="text-indigo-200 font-semibold">Quiz Type:</label>
+          <div className="flex items-center gap-2 bg-white border-2 border-blue-300 rounded-lg px-4 py-2 shadow">
+            <label className="text-blue-900 font-semibold">Quiz Type:</label>
             <select
-              className="border border-indigo-700 rounded bg-[#23263a] text-indigo-100 p-1 focus:ring-2 focus:ring-green-400"
+              className="border border-blue-300 rounded bg-white text-gray-900 p-1 focus:ring-2 focus:ring-blue-500"
               value={quizType}
               onChange={e => setQuizType(e.target.value)}
             >
@@ -1017,16 +1017,16 @@ export default function CreateQuizz() {
 
           {/* Mixed Type Question Count Inputs */}
           {quizType === 'mixed' && (
-            <div className="bg-[#1a1d2e] border-2 border-indigo-800 rounded-lg p-4 space-y-3">
-              <h3 className="text-indigo-200 font-semibold text-sm mb-3">Question Type Distribution:</h3>
+            <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 space-y-3">
+              <h3 className="text-blue-900 font-semibold text-sm mb-3">Question Type Distribution:</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="flex items-center gap-2 bg-[#23263a] border border-indigo-700 rounded-lg px-3 py-2">
-                  <label className="text-indigo-200 text-sm font-medium">Multiple Choice:</label>
+                <div className="flex items-center gap-2 bg-white border border-blue-300 rounded-lg px-3 py-2">
+                  <label className="text-blue-900 text-sm font-medium">Multiple Choice:</label>
                   <input
                     type="number"
                     min={0}
                     max={50}
-                    className="w-16 border border-indigo-600 rounded bg-[#2a2d42] text-indigo-100 p-1 text-sm focus:ring-2 focus:ring-green-400"
+                    className="w-16 border border-blue-300 rounded bg-white text-gray-900 p-1 text-sm focus:ring-2 focus:ring-blue-500"
                     value={mcqCount}
                     onChange={e => {
                       const value = Math.max(0, Number(e.target.value));
@@ -1035,13 +1035,13 @@ export default function CreateQuizz() {
                     }}
                   />
                 </div>
-                <div className="flex items-center gap-2 bg-[#23263a] border border-indigo-700 rounded-lg px-3 py-2">
-                  <label className="text-indigo-200 text-sm font-medium">True/False:</label>
+                <div className="flex items-center gap-2 bg-white border border-blue-300 rounded-lg px-3 py-2">
+                  <label className="text-blue-900 text-sm font-medium">True/False:</label>
                   <input
                     type="number"
                     min={0}
                     max={50}
-                    className="w-16 border border-indigo-600 rounded bg-[#2a2d42] text-indigo-100 p-1 text-sm focus:ring-2 focus:ring-green-400"
+                    className="w-16 border border-blue-300 rounded bg-white text-gray-900 p-1 text-sm focus:ring-2 focus:ring-blue-500"
                     value={trueFalseCount}
                     onChange={e => {
                       const value = Math.max(0, Number(e.target.value));
@@ -1050,13 +1050,13 @@ export default function CreateQuizz() {
                     }}
                   />
                 </div>
-                <div className="flex items-center gap-2 bg-[#23263a] border border-indigo-700 rounded-lg px-3 py-2">
-                  <label className="text-indigo-200 text-sm font-medium">Identification:</label>
+                <div className="flex items-center gap-2 bg-white border border-blue-300 rounded-lg px-3 py-2">
+                  <label className="text-blue-900 text-sm font-medium">Identification:</label>
                   <input
                     type="number"
                     min={0}
                     max={50}
-                    className="w-16 border border-indigo-600 rounded bg-[#2a2d42] text-indigo-100 p-1 text-sm focus:ring-2 focus:ring-green-400"
+                    className="w-16 border border-blue-300 rounded bg-white text-gray-900 p-1 text-sm focus:ring-2 focus:ring-blue-500"
                     value={identificationCount}
                     onChange={e => {
                       const value = Math.max(0, Number(e.target.value));
@@ -1066,25 +1066,25 @@ export default function CreateQuizz() {
                   />
                 </div>
               </div>
-              <div className="text-indigo-300 text-sm text-center mt-2">
-                Total Questions: <span className="font-bold text-green-400">{mcqCount + trueFalseCount + identificationCount}</span>
+              <div className="text-blue-900 text-sm text-center mt-2">
+                Total Questions: <span className="font-bold text-blue-600">{mcqCount + trueFalseCount + identificationCount}</span>
               </div>
             </div>
           )}
         </div>
         <button
-          className="bg-gradient-to-r from-indigo-800 to-blue-800 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:from-indigo-900 hover:to-blue-900 transition mb-8 w-full text-lg disabled:opacity-60 tracking-wider focus:ring-4 focus:ring-green-400"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:from-blue-700 hover:to-indigo-700 transition mb-8 w-full text-lg disabled:opacity-60 tracking-wider focus:ring-4 focus:ring-blue-400"
           onClick={handleGenerate}
           disabled={loading || !moduleText}
         >
           {loading ? (
             <span className="flex items-center gap-2 justify-center">
-              <svg className="w-6 h-6 animate-spin text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /></svg>
+              <svg className="w-6 h-6 animate-spin text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /></svg>
               Generating...
             </span>
           ) : (
             <span className="flex items-center gap-2 justify-center">
-              <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
               Generate Quiz
             </span>
           )}
@@ -1092,9 +1092,9 @@ export default function CreateQuizz() {
 
         {questions.length > 0 && (
           <>
-            <div className="border-b-2 border-indigo-900 mb-6"></div>
+            <div className="border-b-2 border-blue-200 mb-6"></div>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-2xl font-bold text-indigo-200 flex items-center gap-2">Quiz Questions</h3>
+              <h3 className="text-2xl font-bold text-blue-900 flex items-center gap-2">Quiz Questions</h3>
               <button
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition flex items-center gap-2"
                 onClick={handleExportToWord}
@@ -1113,25 +1113,25 @@ export default function CreateQuizz() {
                   correctAnswer = q.options && q.options.length > 0 ? q.options[0] : '';
                 }
                 return (
-                  <div key={idx} className="border-2 border-indigo-900 rounded-xl bg-[#23263a] p-4 shadow flex flex-col gap-2 relative">
+                  <div key={idx} className="border-2 border-blue-200 rounded-xl bg-white p-4 shadow flex flex-col gap-2 relative">
                     {editingIdx === idx ? (
                       <>
                         <input
-                          className="border-2 border-indigo-700 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full text-lg"
+                          className="border-2 border-blue-300 bg-white text-gray-900 rounded p-2 mb-2 w-full text-lg"
                           value={editQ.question}
                           onChange={e => handleEditChange('question', e.target.value)}
                         />
                         {q.type === 'mcq' && (
                           <>
                             <textarea
-                              className="border-2 border-indigo-900 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full"
+                              className="border-2 border-blue-300 bg-white text-gray-900 rounded p-2 mb-2 w-full"
                               value={editQ.options?.join('\n')}
                               onChange={e => handleEditChange('options', e.target.value.split('\n'))}
                               placeholder="Options (one per line)"
                             />
-                            <label className="block text-green-300 font-semibold mb-2">Correct Answer</label>
+                            <label className="block text-blue-900 font-semibold mb-2">Correct Answer</label>
                             <select
-                              className="border-2 border-green-700 bg-[#23263a] text-green-100 rounded p-2 mb-2 w-full"
+                              className="border-2 border-blue-300 bg-white text-gray-900 rounded p-2 mb-2 w-full"
                               value={editQ.answer || (editQ.options && editQ.options[0]) || ''}
                               onChange={e => handleEditChange('answer', e.target.value)}
                             >
@@ -1153,7 +1153,7 @@ export default function CreateQuizz() {
                         )}
                         {q.type === 'identification' && (
                           <input
-                            className="border-2 border-indigo-900 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full"
+                            className="border-2 border-blue-300 bg-white text-gray-900 rounded p-2 mb-2 w-full"
                             value={editQ.answer}
                             onChange={e => handleEditChange('answer', e.target.value)}
                             placeholder="Type the correct answer here"
@@ -1162,56 +1162,56 @@ export default function CreateQuizz() {
                         {/* fallback for other types */}
                         {q.type !== 'mcq' && q.type !== 'true_false' && q.type !== 'identification' && (
                           <input
-                            className="border-2 border-indigo-900 bg-[#23263a] text-indigo-100 rounded p-2 mb-2 w-full"
+                            className="border-2 border-blue-300 bg-white text-gray-900 rounded p-2 mb-2 w-full"
                             value={editQ.answer}
                             onChange={e => handleEditChange('answer', e.target.value)}
                             placeholder="Answer"
                           />
                         )}
                         <div className="flex gap-2 mt-2">
-                          <button className="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded shadow" onClick={handleSaveEdit}><FaSave /></button>
-                          <button className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded shadow" onClick={() => setEditingIdx(null)}><FaTimes /></button>
+                          <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow" onClick={handleSaveEdit}><FaSave /></button>
+                          <button className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded shadow" onClick={() => setEditingIdx(null)}><FaTimes /></button>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="font-semibold text-lg text-white drop-shadow" style={{textShadow:'0 1px 4px #23263a'}}> {q.question} </div>
-                        <div className="text-sm italic text-green-300 font-bold tracking-wide mb-1">Type: {q.displayType || q.type.toUpperCase()}</div>
+                        <div className="font-semibold text-lg text-gray-900"> {q.question} </div>
+                        <div className="text-sm italic text-blue-700 font-bold tracking-wide mb-1">Type: {q.displayType || q.type.toUpperCase()}</div>
                         {q.type === 'mcq' && (
                           <>
-                            <ul className="list-disc ml-6 text-green-200 text-base font-semibold">
+                            <ul className="list-disc ml-6 text-gray-700 text-base font-semibold">
                               {q.options.map((opt, i) => <li key={i} className="mb-1">{opt}</li>)}
                             </ul>
-                            <div className="flex items-center gap-2 bg-[#181a20] border-2 border-green-700 rounded-lg px-4 py-2 shadow-md w-fit mt-2">
-                              <span className="font-semibold text-green-300 mr-2">Correct Answer:</span>
-                              <span className="bg-green-600 text-white px-3 py-1 rounded-lg font-bold tracking-wide shadow" style={{letterSpacing:'1px'}}>{correctAnswer || ''}</span>
+                            <div className="flex items-center gap-2 bg-blue-50 border-2 border-blue-300 rounded-lg px-4 py-2 shadow-md w-fit mt-2">
+                              <span className="font-semibold text-blue-900 mr-2">Correct Answer:</span>
+                              <span className="bg-blue-600 text-white px-3 py-1 rounded-lg font-bold tracking-wide shadow" style={{letterSpacing:'1px'}}>{correctAnswer || ''}</span>
                             </div>
                           </>
                         )}
                         {q.type === 'true_false' && (
                           <div className="flex gap-4 mb-2">
-                            <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${q.answer === 'True' ? 'bg-green-600 text-white border-green-400' : 'bg-[#181a20] text-green-200 border-green-700'}` }>
+                            <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${q.answer === 'True' ? 'bg-green-600 text-white border-green-400' : 'bg-blue-50 text-gray-700 border-blue-300'}` }>
                               <input type="radio" name={`viewQ${idx}`} value="True" checked={q.answer === 'True'} readOnly className="accent-green-400" />
                               <span className="font-bold">True</span>
                             </label>
-                            <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${q.answer === 'False' ? 'bg-red-600 text-white border-red-400' : 'bg-[#181a20] text-red-200 border-red-700'}` }>
+                            <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${q.answer === 'False' ? 'bg-red-600 text-white border-red-400' : 'bg-blue-50 text-gray-700 border-blue-300'}` }>
                               <input type="radio" name={`viewQ${idx}`} value="False" checked={q.answer === 'False'} readOnly className="accent-red-400" />
                               <span className="font-bold">False</span>
                             </label>
                           </div>
                         )}
                         {q.type === 'identification' && (
-                          <div className="flex items-center gap-2 bg-[#181a20] border-2 border-green-700 rounded-lg px-4 py-2 shadow-md w-fit">
-                            <span className="font-semibold text-green-300 mr-2">Correct Answer:</span>
-                            <span className="bg-green-600 text-white px-3 py-1 rounded-lg font-bold tracking-wide shadow" style={{letterSpacing:'1px'}}>{q.answer || ''}</span>
+                          <div className="flex items-center gap-2 bg-blue-50 border-2 border-blue-300 rounded-lg px-4 py-2 shadow-md w-fit">
+                            <span className="font-semibold text-blue-900 mr-2">Correct Answer:</span>
+                            <span className="bg-blue-600 text-white px-3 py-1 rounded-lg font-bold tracking-wide shadow" style={{letterSpacing:'1px'}}>{q.answer || ''}</span>
                           </div>
                         )}
                         {q.type !== 'mcq' && q.type !== 'true_false' && q.type !== 'identification' && (
-                          <div className="text-sm">Answer: <span className="font-bold text-indigo-300">{q.answer?.toString()}</span></div>
+                          <div className="text-sm">Answer: <span className="font-bold text-blue-700">{q.answer?.toString()}</span></div>
                         )}
                         <div className="flex gap-2 mt-2">
-                          <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded shadow" onClick={() => handleEdit(idx)}><FaEdit /></button>
-                          <button className="bg-red-700 hover:bg-red-800 text-white px-3 py-1 rounded shadow" onClick={() => handleDelete(idx)}><FaTrash /></button>
+                          <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow" onClick={() => handleEdit(idx)}><FaEdit /></button>
+                          <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow" onClick={() => handleDelete(idx)}><FaTrash /></button>
                         </div>
                       </>
                     )}
@@ -1240,11 +1240,11 @@ export default function CreateQuizz() {
             
             {/* Save Quiz Button */}
             <button
-              className="relative bg-gradient-to-br from-green-600 via-green-700 to-blue-800 text-white px-10 py-4 rounded-3xl font-extrabold shadow-2xl hover:from-green-800 hover:to-blue-900 transition text-xl animate-slideInRight animate-bounceOnce border-4 border-green-400 hover:border-blue-500 focus:ring-4 focus:ring-green-300 focus:outline-none group overflow-hidden"
+              className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 text-white px-10 py-4 rounded-3xl font-extrabold shadow-2xl hover:from-blue-700 hover:to-indigo-800 transition text-xl animate-slideInRight animate-bounceOnce border-4 border-blue-400 hover:border-indigo-500 focus:ring-4 focus:ring-blue-300 focus:outline-none group overflow-hidden"
               onClick={() => setShowSaveModal(true)}
               disabled={loading}
             >
-              <span className="absolute left-0 top-0 w-full h-full bg-green-400 opacity-0 group-hover:opacity-10 transition-all rounded-3xl"></span>
+              <span className="absolute left-0 top-0 w-full h-full bg-blue-400 opacity-0 group-hover:opacity-10 transition-all rounded-3xl"></span>
               <span className="flex items-center gap-2">
                 <svg className="w-7 h-7 text-white drop-shadow-lg" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
                 Save Quiz to Class
@@ -1308,22 +1308,22 @@ export default function CreateQuizz() {
         {/* Created Quizzes and Student Submissions Section */}
         {questions.length === 0 && (
           <div className="mt-6 sm:mt-8 mb-12 sm:mb-16">{/* Enhanced responsive margins */}
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-indigo-200">Your Quizzes</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-blue-900">Your Quizzes</h2>
             {subLoading ? (
-              <div className="text-indigo-300 p-4 bg-indigo-900/20 rounded-lg animate-pulse">Loading quizzes and submissions...</div>
+              <div className="text-blue-700 p-4 bg-blue-100 rounded-lg animate-pulse">Loading quizzes and submissions...</div>
             ) : createdQuizzes.length === 0 ? (
-              <div className="bg-[#23263a] rounded-lg p-6 sm:p-8 shadow-lg border border-indigo-800/50">
-                <p className="text-indigo-300 text-center">No quizzes created yet. Generate a quiz using the module text.</p>
+              <div className="bg-white rounded-lg p-6 sm:p-8 shadow-lg border border-blue-200">
+                <p className="text-gray-700 text-center">No quizzes created yet. Generate a quiz using the module text.</p>
               </div>
             ) : (
               <div className="space-y-4 sm:space-y-6">{/* Improved spacing using space-y */}
                 {createdQuizzes.map(quiz => (
-                  <div key={quiz._id} className="bg-gradient-to-r from-[#23263a] to-[#2a2f45] rounded-xl p-4 sm:p-6 shadow-lg border border-indigo-700/30 hover:border-indigo-600/50 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
+                  <div key={quiz._id} className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-blue-200 hover:border-blue-400 transition-all duration-300 hover:shadow-xl hover:scale-[1.02]">
                     <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center gap-4">
                       <div className="flex-1 min-w-0 space-y-2">{/* Added space-y for better vertical spacing */}
-                        <div className="font-bold text-lg sm:text-xl text-indigo-100 break-words leading-tight">{quiz.title}</div>
+                        <div className="font-bold text-lg sm:text-xl text-blue-900 break-words leading-tight">{quiz.title}</div>
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                          <div className="text-indigo-300 text-sm bg-indigo-900/30 px-3 py-1 rounded-full inline-flex items-center gap-2">
+                          <div className="text-blue-700 text-sm bg-blue-100 px-3 py-1 rounded-full inline-flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
@@ -1336,7 +1336,7 @@ export default function CreateQuizz() {
                               hour12: true 
                             }) : 'N/A'}
                           </div>
-                          <div className="text-indigo-200 text-sm bg-blue-900/30 px-3 py-1 rounded-full inline-flex items-center gap-2">
+                          <div className="text-blue-700 text-sm bg-indigo-100 px-3 py-1 rounded-full inline-flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
@@ -1365,36 +1365,36 @@ export default function CreateQuizz() {
         {/* Submissions Modal - all quizzes */}
         {showSubModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-gradient-to-br from-green-900 to-blue-900 rounded-2xl p-8 shadow-2xl w-full max-w-4xl border-4 border-green-500 animate-fadeIn pointer-events-auto relative">
+            <div className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-4xl border-4 border-blue-400 animate-fadeIn pointer-events-auto relative">
               <button
-                className="absolute top-4 right-4 text-green-200 hover:text-white text-2xl font-bold focus:outline-none"
+                className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold focus:outline-none"
                 onClick={() => setShowSubModal(false)}
               >
                 ×
               </button>
-              <h2 className="text-2xl font-extrabold text-white mb-4">All Student Submissions</h2>
+              <h2 className="text-2xl font-extrabold text-blue-900 mb-4">All Student Submissions</h2>
               <div className="overflow-x-auto max-h-[70vh]">
                 {createdQuizzes.length === 0 ? (
-                  <div className="text-green-300">No quizzes created yet.</div>
+                  <div className="text-gray-700">No quizzes created yet.</div>
                 ) : (
                   createdQuizzes.map(quiz => (
                     <div key={quiz._id} className="mb-8">
-                      <div className="font-bold text-lg text-green-100 mb-2">{quiz.title}</div>
-                      <table className="min-w-full text-green-100 text-sm border border-green-600 rounded-lg mb-2">
+                      <div className="font-bold text-lg text-blue-900 mb-2">{quiz.title}</div>
+                      <table className="min-w-full text-gray-900 text-sm border border-blue-300 rounded-lg mb-2">
                         <thead>
-                          <tr className="bg-gradient-to-r from-green-800 to-blue-800 text-white">
-                            <th className="px-3 py-2 border-b border-green-600">Student Name</th>
-                            <th className="px-3 py-2 border-b border-green-600">Student Email</th>
-                            <th className="px-3 py-2 border-b border-green-600">Score</th>
-                            <th className="px-3 py-2 border-b border-green-600">Submitted At</th>
+                          <tr className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                            <th className="px-3 py-2 border-b border-blue-400">Student Name</th>
+                            <th className="px-3 py-2 border-b border-blue-400">Student Email</th>
+                            <th className="px-3 py-2 border-b border-blue-400">Score</th>
+                            <th className="px-3 py-2 border-b border-blue-400">Submitted At</th>
                           </tr>
                         </thead>
                         <tbody>
                           {(submissionsByQuiz[quiz._id] || []).length === 0 ? (
-                            <tr><td colSpan="4" className="text-green-400 text-center py-3">No submissions yet.</td></tr>
+                            <tr><td colSpan="4" className="text-gray-600 text-center py-3">No submissions yet.</td></tr>
                           ) : (
                             submissionsByQuiz[quiz._id].map((sub, i) => (
-                              <tr key={sub._id || i} className="border-b border-green-700 hover:bg-green-800/20 transition-colors">
+                              <tr key={sub._id || i} className="border-b border-blue-200 hover:bg-blue-50 transition-colors">
                                 <td className="px-3 py-2">{sub.studentId?.name || sub.student?.name || sub.studentName || 'N/A'}</td>
                                 <td className="px-3 py-2">{sub.studentId?.email || sub.student?.email || sub.studentEmail || 'N/A'}</td>
                                 <td className="px-3 py-2">{typeof sub.score === 'number' ? sub.score : 'N/A'}</td>
@@ -1415,16 +1415,16 @@ export default function CreateQuizz() {
         {/* Analytics Modal */}
         {showAnalyticsModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 shadow-2xl w-full max-w-6xl border-4 border-slate-600 animate-fadeIn pointer-events-auto relative max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-6xl border-4 border-blue-400 animate-fadeIn pointer-events-auto relative max-h-[90vh] overflow-y-auto">
               <button
-                className="absolute top-4 right-4 text-slate-300 hover:text-white text-2xl font-bold focus:outline-none"
+                className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold focus:outline-none"
                 onClick={() => setShowAnalyticsModal(false)}
               >
                 ×
               </button>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-extrabold text-white flex items-center gap-3">
-                  <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <h2 className="text-2xl font-extrabold text-blue-900 flex items-center gap-3">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                   </svg>
                   Quiz Analytics Dashboard
@@ -1455,24 +1455,24 @@ export default function CreateQuizz() {
                   const analytics = calculateQuizAnalytics();
                   if (analytics.length === 0) {
                     return (
-                      <div className="text-slate-300 text-center py-8">
+                      <div className="text-gray-700 text-center py-8">
                         No quiz data available for analytics. Students need to submit quizzes first.
                       </div>
                     );
                   }
                   return analytics.map(({ quiz, totalSubmissions, questionAnalytics }) => (
-                    <div key={quiz._id} className="bg-slate-700/40 rounded-xl p-6 border border-slate-500">
+                    <div key={quiz._id} className="bg-blue-50 rounded-xl p-6 border border-blue-300">
                       <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold text-slate-100">{quiz.title}</h3>
-                        <span className="bg-slate-600 text-slate-200 px-3 py-1 rounded-full text-sm">
+                        <h3 className="text-xl font-bold text-blue-900">{quiz.title}</h3>
+                        <span className="bg-blue-200 text-blue-900 px-3 py-1 rounded-full text-sm">
                           {totalSubmissions} submissions
                         </span>
                       </div>
                       
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Overall Stats */}
-                        <div className="bg-slate-800/50 rounded-lg p-4">
-                          <h4 className="text-lg font-semibold text-slate-200 mb-3">Overall Performance</h4>
+                        <div className="bg-white rounded-lg p-4 border border-blue-200">
+                          <h4 className="text-lg font-semibold text-blue-900 mb-3">Overall Performance</h4>
                           <div className="space-y-2">
                             {(() => {
                               const avgDifficulty = questionAnalytics.reduce((sum, q) => sum + q.difficultyPercentage, 0) / questionAnalytics.length;
@@ -1480,16 +1480,16 @@ export default function CreateQuizz() {
                               return (
                                 <>
                                   <div className="flex justify-between">
-                                    <span className="text-slate-300">Average Success Rate:</span>
-                                    <span className="text-emerald-400 font-bold">{Math.round(avgSuccess)}%</span>
+                                    <span className="text-gray-700">Average Success Rate:</span>
+                                    <span className="text-green-600 font-bold">{Math.round(avgSuccess)}%</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-slate-300">Average Difficulty:</span>
-                                    <span className="text-orange-400 font-bold">{Math.round(avgDifficulty)}%</span>
+                                    <span className="text-gray-700">Average Difficulty:</span>
+                                    <span className="text-orange-600 font-bold">{Math.round(avgDifficulty)}%</span>
                                   </div>
                                   <div className="flex justify-between">
-                                    <span className="text-slate-300">Total Questions:</span>
-                                    <span className="text-slate-200 font-bold">{questionAnalytics.length}</span>
+                                    <span className="text-gray-700">Total Questions:</span>
+                                    <span className="text-blue-900 font-bold">{questionAnalytics.length}</span>
                                   </div>
                                 </>
                               );
@@ -1498,17 +1498,17 @@ export default function CreateQuizz() {
                         </div>
 
                         {/* Difficult Questions */}
-                        <div className="bg-slate-800/50 rounded-lg p-4">
-                          <h4 className="text-lg font-semibold text-slate-200 mb-3">Most Difficult Questions</h4>
+                        <div className="bg-white rounded-lg p-4 border border-blue-200">
+                          <h4 className="text-lg font-semibold text-blue-900 mb-3">Most Difficult Questions</h4>
                           <div className="space-y-3">
                             {questionAnalytics
                               .sort((a, b) => b.difficultyPercentage - a.difficultyPercentage)
                               .slice(0, 3)
                               .map((q) => (
                                 <div key={q.questionIndex} className="border-l-4 border-orange-500 pl-3">
-                                  <div className="text-sm text-slate-200">Question {q.questionIndex + 1}</div>
-                                  <div className="text-orange-400 font-bold">{q.difficultyPercentage}% incorrect</div>
-                                  <div className="text-xs text-slate-300 truncate">{q.question}</div>
+                                  <div className="text-sm text-gray-900">Question {q.questionIndex + 1}</div>
+                                  <div className="text-orange-600 font-bold">{q.difficultyPercentage}% incorrect</div>
+                                  <div className="text-xs text-gray-700 truncate">{q.question}</div>
                                 </div>
                               ))}
                           </div>
@@ -1517,31 +1517,31 @@ export default function CreateQuizz() {
 
                       {/* Detailed Question Analysis */}
                       <div className="mt-6">
-                        <h4 className="text-lg font-semibold text-slate-200 mb-4">Question-by-Question Analysis</h4>
+                        <h4 className="text-lg font-semibold text-blue-900 mb-4">Question-by-Question Analysis</h4>
                         <div className="space-y-4">
                           {questionAnalytics.map(q => {
                             const questionKey = `${quiz._id}-${q.questionIndex}`;
                             const isExpanded = expandedQuestions[questionKey];
                             
                             return (
-                              <div key={q.questionIndex} className="bg-slate-800/30 rounded-lg p-4 border border-slate-600">
+                              <div key={q.questionIndex} className="bg-white rounded-lg p-4 border border-blue-200">
                                 <div className="flex justify-between items-start mb-3">
                                   <div className="flex-1">
-                                    <div className="font-semibold text-slate-100">Q{q.questionIndex + 1}: {q.question}</div>
-                                    <div className="text-sm text-slate-300 mt-1">Correct Answer: {String(q.correctAnswer)}</div>
+                                    <div className="font-semibold text-gray-900">Q{q.questionIndex + 1}: {q.question}</div>
+                                    <div className="text-sm text-gray-700 mt-1">Correct Answer: {String(q.correctAnswer)}</div>
                                   </div>
                                   <div className="text-right ml-4">
-                                    <div className={`text-lg font-bold ${q.difficultyPercentage > 50 ? 'text-orange-400' : q.difficultyPercentage > 25 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                    <div className={`text-lg font-bold ${q.difficultyPercentage > 50 ? 'text-orange-600' : q.difficultyPercentage > 25 ? 'text-amber-600' : 'text-green-600'}`}>
                                       {q.successPercentage}% correct
                                     </div>
-                                    <div className="text-sm text-slate-300">{q.totalAttempts} attempts</div>
+                                    <div className="text-sm text-gray-600">{q.totalAttempts} attempts</div>
                                   </div>
                                 </div>
                                 
                                 {/* Progress bar */}
-                                <div className="w-full bg-slate-700 rounded-full h-3 mb-3">
+                                <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
                                   <div 
-                                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-3 rounded-full transition-all duration-500"
+                                    className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500"
                                     style={{ width: `${q.successPercentage}%` }}
                                   ></div>
                                 </div>
@@ -1549,10 +1549,10 @@ export default function CreateQuizz() {
                                 {/* Common wrong answers */}
                                 {q.commonWrongAnswers.length > 0 && (
                                   <div className="mt-3">
-                                    <div className="text-sm font-semibold text-slate-200 mb-2">Common Wrong Answers:</div>
+                                    <div className="text-sm font-semibold text-gray-900 mb-2">Common Wrong Answers:</div>
                                     <div className="flex flex-wrap gap-2">
                                       {q.commonWrongAnswers.map((wrong, idx) => (
-                                        <span key={idx} className="bg-orange-900/40 text-orange-200 px-2 py-1 rounded text-xs border border-orange-600">
+                                        <span key={idx} className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs border border-orange-300">
                                           "{wrong.answer}" ({wrong.count}x)
                                         </span>
                                       ))}
@@ -1567,7 +1567,7 @@ export default function CreateQuizz() {
                                       ...prev,
                                       [questionKey]: !prev[questionKey]
                                     }))}
-                                    className="bg-slate-600 hover:bg-slate-500 text-slate-100 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
                                   >
                                     <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
@@ -1581,8 +1581,8 @@ export default function CreateQuizz() {
                                   <div className="mt-4 space-y-4">
                                     {/* Correct answers section */}
                                     {q.correctStudents.length > 0 && (
-                                      <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-600">
-                                        <h5 className="text-emerald-300 font-semibold mb-3 flex items-center gap-2">
+                                      <div className="bg-green-50 rounded-lg p-4 border border-green-300">
+                                        <h5 className="text-green-800 font-semibold mb-3 flex items-center gap-2">
                                           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
                                           </svg>
@@ -1590,10 +1590,10 @@ export default function CreateQuizz() {
                                         </h5>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                           {q.correctStudents.map((student, idx) => (
-                                            <div key={idx} className="bg-emerald-800/30 rounded p-3 border border-emerald-500">
-                                              <div className="font-medium text-emerald-100">{student.studentName}</div>
-                                              <div className="text-sm text-emerald-300">{student.studentEmail}</div>
-                                              <div className="text-sm text-emerald-200 mt-1">Answer: "{student.answer}"</div>
+                                            <div key={idx} className="bg-white rounded p-3 border border-green-300">
+                                              <div className="font-medium text-green-900">{student.studentName}</div>
+                                              <div className="text-sm text-green-700">{student.studentEmail}</div>
+                                              <div className="text-sm text-green-800 mt-1">Answer: "{student.answer}"</div>
                                             </div>
                                           ))}
                                         </div>
@@ -1602,8 +1602,8 @@ export default function CreateQuizz() {
                                     
                                     {/* Incorrect answers section */}
                                     {q.incorrectStudents.length > 0 && (
-                                      <div className="bg-orange-900/20 rounded-lg p-4 border border-orange-600">
-                                        <h5 className="text-orange-300 font-semibold mb-3 flex items-center gap-2">
+                                      <div className="bg-orange-50 rounded-lg p-4 border border-orange-300">
+                                        <h5 className="text-orange-800 font-semibold mb-3 flex items-center gap-2">
                                           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
                                           </svg>
@@ -1611,10 +1611,10 @@ export default function CreateQuizz() {
                                         </h5>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                           {q.incorrectStudents.map((student, idx) => (
-                                            <div key={idx} className="bg-orange-800/30 rounded p-3 border border-orange-500">
-                                              <div className="font-medium text-orange-100">{student.studentName}</div>
-                                              <div className="text-sm text-orange-300">{student.studentEmail}</div>
-                                              <div className="text-sm text-orange-200 mt-1">Answer: "{student.answer}"</div>
+                                            <div key={idx} className="bg-white rounded p-3 border border-orange-300">
+                                              <div className="font-medium text-orange-900">{student.studentName}</div>
+                                              <div className="text-sm text-orange-700">{student.studentEmail}</div>
+                                              <div className="text-sm text-orange-800 mt-1">Answer: "{student.answer}"</div>
                                             </div>
                                           ))}
                                         </div>
@@ -1654,45 +1654,45 @@ export default function CreateQuizz() {
     )}
     {showSaveModal && (
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-        <div className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl p-8 shadow-2xl w-full max-w-md border-4 border-indigo-500 animate-fadeIn pointer-events-auto relative">
+        <div className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-md border-4 border-blue-400 animate-fadeIn pointer-events-auto relative">
           <button
-            className="absolute top-4 right-4 text-indigo-200 hover:text-white text-2xl font-bold focus:outline-none"
+            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold focus:outline-none"
             onClick={() => setShowSaveModal(false)}
           >
             ×
           </button>
-          <h2 className="text-2xl font-extrabold text-white mb-4">Save Quiz</h2>
+          <h2 className="text-2xl font-extrabold text-blue-900 mb-4">Save Quiz</h2>
           <input
-            className="border-2 border-indigo-700 bg-[#23263a] text-indigo-100 rounded-lg p-3 w-full mb-4 text-lg focus:ring-2 focus:ring-indigo-400"
+            className="border-2 border-blue-300 bg-white text-gray-900 rounded-lg p-3 w-full mb-4 text-lg focus:ring-2 focus:ring-blue-500"
             placeholder="Quiz Title"
             value={title}
             onChange={e => setTitle(e.target.value)}
           />
-          <label className="block text-indigo-200 font-semibold mb-2">Due Date</label>
+          <label className="block text-blue-900 font-semibold mb-2">Due Date</label>
           <input
             type="datetime-local"
-            className="border-2 border-indigo-700 bg-[#23263a] text-indigo-100 rounded-lg p-2 w-full mb-4 focus:ring-2 focus:ring-green-400"
+            className="border-2 border-blue-300 bg-white text-gray-900 rounded-lg p-2 w-full mb-4 focus:ring-2 focus:ring-blue-500"
             value={dueDate}
             onChange={e => setDueDate(e.target.value)}
           />
-          <label className="block text-indigo-200 font-semibold mb-2">Time Limit per Question (seconds)</label>
+          <label className="block text-blue-900 font-semibold mb-2">Time Limit per Question (seconds)</label>
           <input
             type="number"
             min={5}
             max={600}
-            className="border-2 border-indigo-700 bg-[#23263a] text-indigo-100 rounded-lg p-2 w-full mb-4 focus:ring-2 focus:ring-green-400"
+            className="border-2 border-blue-300 bg-white text-gray-900 rounded-lg p-2 w-full mb-4 focus:ring-2 focus:ring-blue-500"
             value={questionTime}
             onChange={e => setQuestionTime(Number(e.target.value))}
           />
           <div className="flex gap-4 justify-end">
             <button
-              className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded shadow"
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded shadow"
               onClick={() => setShowSaveModal(false)}
             >
               Cancel
             </button>
             <button
-              className="bg-gradient-to-r from-green-700 to-green-800 text-white px-6 py-2 rounded-xl font-bold shadow hover:from-green-800 hover:to-green-900 transition disabled:opacity-60"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-xl font-bold shadow hover:from-blue-700 hover:to-indigo-700 transition disabled:opacity-60"
               onClick={async () => { await handleSaveQuiz(); setShowSaveModal(false); }}
               disabled={loading || !title || questions.length === 0}
             >

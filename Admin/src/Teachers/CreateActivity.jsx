@@ -233,16 +233,16 @@ const CreateActivity = () => {
       )}
       
       {/* Header Section with Icon */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-gradient-to-r from-indigo-700 via-indigo-600 to-indigo-500 rounded-xl shadow-lg px-6 py-5">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-xl shadow-lg px-6 py-5 border-l-4 border-blue-400">
         <div className="flex items-center gap-4">
-          <FaTasks className="text-yellow-300 text-4xl drop-shadow-lg animate-pulse" />
-          <h2 className="text-3xl sm:text-4xl font-bold text-white drop-shadow text-center sm:text-left">
-            Activities for <span className="text-yellow-200">{className}</span>
+          <FaTasks className="text-blue-500 text-4xl drop-shadow-lg animate-pulse" />
+          <h2 className="text-3xl sm:text-4xl font-bold text-blue-900 drop-shadow text-center sm:text-left">
+            Activities for <span className="text-indigo-600">{className}</span>
           </h2>
         </div>
         <button
           onClick={openCreateModal}
-          className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-indigo-900 font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150"
+          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150"
         >
           <FaPlusCircle className="mr-2" /> Create New Activity
         </button>
@@ -250,76 +250,76 @@ const CreateActivity = () => {
 
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border border-gray-700">
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
-              <h3 className="text-xl sm:text-2xl font-semibold text-gray-100 flex items-center">
-                <FaPlusCircle className="mr-3 text-indigo-400" /> Create Activity
+          <div className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border border-blue-200">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-blue-200">
+              <h3 className="text-xl sm:text-2xl font-semibold text-blue-900 flex items-center">
+                <FaPlusCircle className="mr-3 text-blue-600" /> Create Activity
               </h3>
-              <button onClick={closeCreateModal} className="text-gray-500 hover:text-gray-300 transition-colors" aria-label="Close modal">
+              <button onClick={closeCreateModal} className="text-gray-500 hover:text-gray-700 transition-colors" aria-label="Close modal">
                 <FaTimes size={20} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="overflow-y-auto flex-grow pr-2 space-y-5">
-              {error && <div className="text-red-400 p-3 bg-red-900/30 rounded-lg text-sm text-center">{error}</div>}
-              {success && <div className="text-green-400 p-3 bg-green-900/30 rounded-lg text-sm text-center">{success}</div>}
+              {error && <div className="text-red-700 p-3 bg-red-100 rounded-lg text-sm text-center border border-red-300">{error}</div>}
+              {success && <div className="text-green-700 p-3 bg-green-100 rounded-lg text-sm text-center border border-green-300">{success}</div>}
               {/* Form fields... */}
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="activity-title">Title<span className="text-red-400">*</span></label>
+                <label className="block text-gray-700 mb-2 font-medium" htmlFor="activity-title">Title<span className="text-red-600">*</span></label>
                 <input
                   id="activity-title"
                   type="text"
-                  className="w-full p-2 rounded bg-gray-900 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={activityData.title}
                   onChange={e => setActivityData({ ...activityData, title: e.target.value })}
                   required
                 />
               </div>
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="activity-description">Instruction</label>
+                <label className="block text-gray-700 mb-2 font-medium" htmlFor="activity-description">Instruction</label>
                 <textarea
                   id="activity-description"
-                  className="w-full p-2 rounded bg-gray-900 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={activityData.description}
                   onChange={e => setActivityData({ ...activityData, description: e.target.value })}
                   rows={3}
                 />
               </div>
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="activity-date">Deadline<span className="text-red-400">*</span></label>
+                <label className="block text-gray-700 mb-2 font-medium" htmlFor="activity-date">Deadline<span className="text-red-600">*</span></label>
                 <input
                   id="activity-date"
                   type="datetime-local"
-                  className="w-full p-2 rounded bg-gray-900 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={activityData.date}
                   onChange={e => setActivityData({ ...activityData, date: e.target.value })}
                   required
                 />
               </div>
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="activity-score">Score</label>
+                <label className="block text-gray-700 mb-2 font-medium" htmlFor="activity-score">Score</label>
                 <input
                   id="activity-score"
                   type="number"
-                  className="w-full p-2 rounded bg-gray-900 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={activityData.score}
                   onChange={e => setActivityData({ ...activityData, score: e.target.value })}
                   min={0}
                 />
               </div>
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="activity-attachment">Attachment</label>
+                <label className="block text-gray-700 mb-2 font-medium" htmlFor="activity-attachment">Attachment</label>
                 <input
                   key={fileInputKey}
                   id="activity-attachment"
                   type="file"
-                  className="w-full text-gray-100"
+                  className="w-full text-gray-900"
                   onChange={handleFileChange}
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150 mt-4"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150 mt-4"
               >
                 <FaPlusCircle className="mr-2" /> Create Activity
               </button>
@@ -331,77 +331,77 @@ const CreateActivity = () => {
       {/* Edit Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border border-gray-700">
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-700">
-              <h3 className="text-xl sm:text-2xl font-semibold text-gray-100 flex items-center">
-                <FaEdit className="mr-3 text-indigo-400" /> Edit Activity
+          <div className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border border-blue-200">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-blue-200">
+              <h3 className="text-xl sm:text-2xl font-semibold text-blue-900 flex items-center">
+                <FaEdit className="mr-3 text-blue-600" /> Edit Activity
               </h3>
-              <button onClick={closeEditModal} className="text-gray-500 hover:text-gray-300 transition-colors" aria-label="Close modal">
+              <button onClick={closeEditModal} className="text-gray-500 hover:text-gray-700 transition-colors" aria-label="Close modal">
                 <FaTimes size={20} />
               </button>
             </div>
             <form onSubmit={handleEdit} className="overflow-y-auto flex-grow pr-2 space-y-5">
-              {error && <div className="text-red-400 p-3 bg-red-900/30 rounded-lg text-sm text-center">{error}</div>}
-              {success && <div className="text-green-400 p-3 bg-green-900/30 rounded-lg text-sm text-center">{success}</div>}
+              {error && <div className="text-red-700 p-3 bg-red-100 rounded-lg text-sm text-center border border-red-300">{error}</div>}
+              {success && <div className="text-green-700 p-3 bg-green-100 rounded-lg text-sm text-center border border-green-300">{success}</div>}
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="edit-activity-title">Title<span className="text-red-400">*</span></label>
+                <label className="block text-gray-700 mb-2 font-medium" htmlFor="edit-activity-title">Title<span className="text-red-600">*</span></label>
                 <input
                   id="edit-activity-title"
                   type="text"
-                  className="w-full p-2 rounded bg-gray-900 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={activityData.title}
                   onChange={e => setActivityData({ ...activityData, title: e.target.value })}
                   required
                 />
               </div>
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="edit-activity-description">Description</label>
+                <label className="block text-gray-700 mb-2 font-medium" htmlFor="edit-activity-description">Description</label>
                 <textarea
                   id="edit-activity-description"
-                  className="w-full p-2 rounded bg-gray-900 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={activityData.description}
                   onChange={e => setActivityData({ ...activityData, description: e.target.value })}
                   rows={3}
                 />
               </div>
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="edit-activity-date">Deadline<span className="text-red-400">*</span></label>
+                <label className="block text-gray-700 mb-2 font-medium" htmlFor="edit-activity-date">Deadline<span className="text-red-600">*</span></label>
                 <input
                   id="edit-activity-date"
                   type="datetime-local"
-                  className="w-full p-2 rounded bg-gray-900 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={activityData.date}
                   onChange={e => setActivityData({ ...activityData, date: e.target.value })}
                   required
                 />
               </div>
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="edit-activity-score">Score</label>
+                <label className="block text-gray-700 mb-2 font-medium" htmlFor="edit-activity-score">Score</label>
                 <input
                   id="edit-activity-score"
                   type="number"
-                  className="w-full p-2 rounded bg-gray-900 text-gray-100 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={activityData.score}
                   onChange={e => setActivityData({ ...activityData, score: e.target.value })}
                   min={0}
                 />
               </div>
               <div>
-                <label className="block text-gray-300 mb-2" htmlFor="edit-activity-attachment">New Attachment (optional)</label>
+                <label className="block text-gray-700 mb-2 font-medium" htmlFor="edit-activity-attachment">New Attachment (optional)</label>
 <input
   key={fileInputKey}
   id="activity-attachment"
   type="file"
   name="attachment" // <-- idagdag ito!
-  className="w-full text-gray-100"
+  className="w-full text-gray-900"
   onChange={handleFileChange}
   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx"
 />
-                <p className="text-gray-400 text-xs mt-1">Leave empty to keep existing attachment</p>
+                <p className="text-gray-600 text-xs mt-1">Leave empty to keep existing attachment</p>
               </div>
               <button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150 mt-4"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150 mt-4"
               >
                 <FaEdit className="mr-2" /> Update Activity
               </button>
@@ -410,41 +410,41 @@ const CreateActivity = () => {
         </div>
       )}
 
-      <div className="w-full bg-gray-800/70 backdrop-blur-sm p-6 sm:p-8 rounded-xl shadow-2xl border border-gray-700">
-        <h3 className="text-2xl font-semibold mb-6 text-center text-gray-100 flex items-center justify-center">
-          <FaListOl className="mr-3 text-indigo-400" /> Activities List
+      <div className="w-full bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-6 sm:p-8 rounded-xl shadow-lg border-l-4 border-blue-400">
+        <h3 className="text-2xl font-semibold mb-6 text-center text-blue-900 flex items-center justify-center">
+          <FaListOl className="mr-3 text-blue-600" /> Activities List
         </h3>
         <div className="overflow-y-auto max-h-[calc(100vh-22rem)]">
           {loadingActivities ? (
-            <div className="text-gray-400 text-center py-4">Loading activities...</div>
+            <div className="text-gray-600 text-center py-4">Loading activities...</div>
           ) : activitiesError ? (
-            <div className="text-red-400 text-center py-4">{activitiesError}</div>
+            <div className="text-red-600 text-center py-4">{activitiesError}</div>
           ) : activitiesList.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 text-gray-400 text-center py-8">
-              <FaTasks className="text-yellow-300 text-4xl mb-2 animate-bounce" />
+            <div className="flex flex-col items-center justify-center gap-2 text-gray-600 text-center py-8">
+              <FaTasks className="text-blue-500 text-4xl mb-2 animate-bounce" />
               <span className="text-lg">No activities found.</span>
             </div>
           ) : (
             <ul className="space-y-4">
               {activitiesList.map((activity) => (
-                <li key={activity._id} className="bg-gray-700/60 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between">
+                <li key={activity._id} className="bg-white rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-md border border-blue-200 hover:shadow-lg transition-shadow">
                   <div>
-                    <div className="font-semibold text-indigo-300 text-lg flex items-center">
+                    <div className="font-semibold text-blue-700 text-lg flex items-center">
                       <FaBook className="mr-2" /> {activity.title}
                       {activity.isLocked && (
-                        <span className="ml-2 text-yellow-400 text-sm flex items-center">
+                        <span className="ml-2 text-amber-600 text-sm flex items-center">
                           <FaLock className="mr-1" size={12} /> Locked
                         </span>
                       )}
                     </div>
-                    <div className="text-gray-300 text-sm mt-1">{activity.description}</div>
-                    <div className="text-gray-400 text-xs mt-1">
+                    <div className="text-gray-700 text-sm mt-1">{activity.description}</div>
+                    <div className="text-gray-600 text-xs mt-1">
                       Deadline: {moment(activity.date).tz('Asia/Manila').format('YYYY-MM-DD HH:mm')}
                     </div>
                     {activity.attachment && (
                       <button
                         onClick={() => handleDownloadAttachment(activity.attachment, activity._id, activity.title)}
-                        className="inline-flex items-center text-indigo-400 hover:text-indigo-300 hover:underline mt-2 text-xs font-medium cursor-pointer bg-transparent border-none"
+                        className="inline-flex items-center text-blue-600 hover:text-blue-700 hover:underline mt-2 text-xs font-medium cursor-pointer bg-transparent border-none"
                         title={`View ${activity.title} attachment`}
                       >
                         <FaPaperclip className="mr-1" /> Attachment
@@ -452,13 +452,13 @@ const CreateActivity = () => {
                     )}
                   </div>
                   <div className="mt-2 sm:mt-0 flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                    <div className="text-gray-400 text-sm mb-2 sm:mb-0 sm:mr-4">
+                    <div className="text-gray-600 text-sm mb-2 sm:mb-0 sm:mr-4">
                       Score: {activity.totalPoints || activity.score || 'N/A'}
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openEditModal(activity)}
-                        className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-900/30 transition-colors"
+                        className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-100 transition-colors"
                         title="Edit Activity"
                       >
                         <FaEdit size={16} />
@@ -467,8 +467,8 @@ const CreateActivity = () => {
                         onClick={() => handleToggleLock(activity._id, activity.isLocked)}
                         className={`p-2 rounded-lg transition-colors ${
                           activity.isLocked
-                            ? 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-900/30'
-                            : 'text-green-400 hover:text-green-300 hover:bg-green-900/30'
+                            ? 'text-amber-600 hover:text-amber-700 hover:bg-amber-100'
+                            : 'text-green-600 hover:text-green-700 hover:bg-green-100'
                         }`}
                         title={activity.isLocked ? 'Unlock Activity' : 'Lock Activity'}
                       >
@@ -476,7 +476,7 @@ const CreateActivity = () => {
                       </button>
                       <button
                         onClick={() => handleDelete(activity._id, activity.title)}
-                        className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-900/30 transition-colors"
+                        className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-100 transition-colors"
                         title="Delete Activity"
                       >
                         <FaTrashAlt size={16} />

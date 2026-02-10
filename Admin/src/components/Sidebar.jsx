@@ -8,13 +8,18 @@ import {
   Calendar,
   ChevronRight,
   ChevronLeft,
-  DoorClosed,
+  LogOut,
   Sun,
   Moon,
+  GraduationCap,
+  BookOpen,
+  BarChart3,
+  Menu,
+  X,
 } from 'lucide-react';
 import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
-// Menu items for each role
+// Menu items for each role with updated icons
 const menuItemsByRole = {
   admin: [
     { name: 'Dashboard', path: '/admindashboard', icon: <LayoutDashboard size={20} />, badge: 5 },
@@ -23,202 +28,341 @@ const menuItemsByRole = {
   ],
   student: [
     { name: 'Dashboard', path: '/studentdashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'Classes', path: '/studentportal', icon: <ClipboardList size={20} /> },
+    { name: 'Classes', path: '/studentportal', icon: <BookOpen size={20} /> },
   ],
   teacher: [
-    { name: 'Dashboard', path: '/teacherdashboard', icon: <LayoutDashboard size={20} />, badge: 2 },
-    { name: 'Classes', path: '/classes', icon: <ClipboardList size={20} />, badge: 12 },
-    { name: 'Activity Monitoring', path: '/activitymonitoring', icon: <FileText size={20} /> },
+    { name: 'Dashboard', path: '/teacherdashboard', icon: <LayoutDashboard size={20} /> },
+    { name: 'Classes', path: '/classes', icon: <BookOpen size={20} /> },
+    { name: 'Activity Monitoring', path: '/activitymonitoring', icon: <BarChart3 size={20} /> },
   ],
 };
 
-// Color schemes for each role
+// Professional Blue & White color schemes
 const colorSchemes = {
   admin: {
-    active: 'bg-violet-600 text-white',
-    hover: 'hover:bg-violet-100',
+    active: 'bg-blue-600 text-white shadow-lg',
+    hover: 'hover:bg-blue-50',
     text: 'text-gray-700',
-    badge: 'bg-violet-500 text-white',
-    icon: 'text-gray-800',
-    sidebarBg: 'bg-gray-200', // solid gray-200 for admin sidebar
-    border: 'border-gray-200/10',
+    badge: 'bg-blue-600 text-white',
+    icon: 'text-blue-600',
+    sidebarBg: 'bg-white border-r-2 border-blue-100',
+    headerBg: 'bg-gradient-to-r from-blue-600 to-blue-700',
   },
   teacher: {
-    active: 'bg-indigo-700 text-white',
-    hover: 'hover:bg-indigo-800/70',
-    text: 'text-gray-100',
-    badge: 'bg-indigo-600 text-white',
-    icon: 'text-indigo-200',
-    sidebarBg: 'bg-white dark:bg-gray-800',
-    border: 'border-indigo-800',
+    active: 'bg-blue-600 text-white shadow-lg',
+    hover: 'hover:bg-blue-50',
+    text: 'text-gray-700',
+    badge: 'bg-blue-600 text-white',
+    icon: 'text-blue-600',
+    sidebarBg: 'bg-white border-r-2 border-blue-100',
+    headerBg: 'bg-gradient-to-r from-blue-600 to-blue-700',
   },
   student: {
-    active: 'bg-blue-700 text-white',
-    hover: 'hover:bg-blue-800/70',
-    text: 'text-gray-100',
+    active: 'bg-blue-600 text-white shadow-lg',
+    hover: 'hover:bg-blue-50',
+    text: 'text-gray-700',
     badge: 'bg-blue-600 text-white',
-    icon: 'text-blue-200',
-    sidebarBg: 'bg-white dark:bg-gray-800',
-    border: 'border-blue-800',
+    icon: 'text-blue-600',
+    sidebarBg: 'bg-white border-r-2 border-blue-100',
+    headerBg: 'bg-gradient-to-r from-blue-600 to-blue-700',
   },
   default: {
-    active: 'bg-gray-700 text-white',
-    hover: 'hover:bg-gray-700',
-    text: 'text-gray-200',
-    badge: 'bg-violet-500 text-white',
-    icon: 'text-gray-300',
-    sidebarBg: 'bg-white dark:bg-gray-800',
-    border: 'border-gray-200/10',
+    active: 'bg-blue-600 text-white shadow-lg',
+    hover: 'hover:bg-blue-50',
+    text: 'text-gray-700',
+    badge: 'bg-blue-600 text-white',
+    icon: 'text-blue-600',
+    sidebarBg: 'bg-white border-r-2 border-blue-100',
+    headerBg: 'bg-gradient-to-r from-blue-600 to-blue-700',
   },
 };
 
 export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen: setIsOpenProp, isOverlay = false }) {
-  const studentTheme = role === 'student' ? useContext(StudentThemeContext) : null;
-  const [isOpen, setIsOpen] = useState(
-    typeof isOpenProp === 'boolean' ? isOpenProp : window.innerWidth > 768
-  );
+  const studentThemeContext = useContext(StudentThemeContext);
+  const studentTheme = role === 'student' ? studentThemeContext : null;
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Allow parent to control sidebar open state if props are provided
-  useEffect(() => {
-    if (typeof isOpenProp === 'boolean') setIsOpen(isOpenProp);
-  }, [isOpenProp]);
-
+  // Handle responsive behavior
   useEffect(() => {
     const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
       if (typeof setIsOpenProp === 'function') {
-        setIsOpenProp(window.innerWidth > 768);
+        setIsOpenProp(!mobile);
       } else {
-        setIsOpen(window.innerWidth > 768);
+        setIsOpen(!mobile);
       }
     };
+
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [setIsOpenProp]);
 
+  // Sync with parent component
+  useEffect(() => {
+    if (typeof isOpenProp === 'boolean' && !isMobile) {
+      setIsOpen(isOpenProp);
+    }
+  }, [isOpenProp, isMobile]);
+
   const menuItems = menuItemsByRole[role] || [];
   const colors = colorSchemes[role] || colorSchemes.default;
-  // const sidebarBgClass = colors.sidebarBg; // no longer used
-  const borderClass = colors.border;
 
-  // Sidebar background and shadow per role
-  let sidebarBg = '';
-  let sidebarShadow = '';
-   if (role === 'admin') {
-     sidebarBg = 'bg-gradient-to-br from-violet-200/80 via-white/60 to-blue-100/80 backdrop-blur-xl';
-     sidebarShadow = isOpen ? 'shadow-2xl border-violet-200' : 'border-violet-200';
-   } else if (role === 'teacher') {
-     sidebarBg = 'bg-white dark:bg-gray-800';
-     sidebarShadow = isOpen ? 'shadow-lg border-indigo-800' : 'border-indigo-800';
-   } else if (role === 'student') {
-     sidebarBg = 'bg-white dark:bg-gray-800';
-     sidebarShadow = isOpen ? 'shadow-lg border-blue-800' : 'border-blue-800';
-   } else {
-     sidebarBg = 'bg-white dark:bg-gray-800';
-     sidebarShadow = isOpen ? 'shadow-lg border-gray-200/10' : 'border-gray-200/10';
-  }
-  return (
-    <div
-      className={`h-screen flex flex-col justify-between fixed top-0 left-0 transition-all duration-300 ${isOverlay ? 'z-50' : 'z-30'}
-        ${isOpen ? (role === 'student' ? 'w-28 sm:w-36 md:w-44' : 'w-44 sm:w-56') : (role === 'student' ? 'w-8 sm:w-10 md:w-12' : 'w-12 sm:w-16')} ${sidebarBg} ${sidebarShadow} ${borderClass} border-r cursor-pointer`}
-      style={role === 'admin' ? { boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)' } : {}}
-      onClick={() => {
-        if (typeof setIsOpenProp === 'function') setIsOpenProp(!isOpen);
-        else setIsOpen(!isOpen);
-      }}
-    >
-      <div>
-        {/* Header at Toggle Button */}
-        <div className={`flex flex-col items-center ${borderClass} border-b ${isOpen ? 'px-2 sm:px-4' : 'px-1 sm:px-2'} py-2 sm:py-4 md:py-6`}>
-          {isOpen && (
-            <>
-              {/* Profile section at the very top */}
-              <span className="flex items-center gap-1 sm:gap-2 text-sm sm:text-lg md:text-2xl font-extrabold text-violet-700 tracking-tight drop-shadow mb-1 sm:mb-2">
-                <img
-                  src="/taskhublogos.png"
-                  alt="TaskHub Logo"
-                  className="w-5 h-5 sm:w-7 sm:h-7 md:w-9 md:h-9 object-contain"
-                  style={{ minWidth: '1rem' }}
-                />
-                <span className="hidden sm:inline">TaskHub</span>
-                <span className="sm:hidden text-xs">TH</span>
-              </span>
-              
-              {/* Profile sections - consistent layout for all roles */}
-              {/* Profile circles removed for clean UI */}
-            </>
-          )}
-        </div>
+  // Use prop state if provided (controlled), otherwise use local state
+  const isActuallyOpen = typeof isOpenProp === 'boolean' ? isOpenProp : isOpen;
 
-        {/* Menu Items */}
-        <ul className="flex-1 space-y-1 sm:space-y-2 mt-3 sm:mt-6 px-1 sm:px-2">
-          {menuItems.map(({ name, path, icon, badge }) => (
-            <li key={path}>
-              <NavLink
-                to={path}
-                title={name}
-                className={({ isActive }) =>
-                  `flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-200 group
-                  ${isOpen ? '' : 'justify-center'}
-                  ${
-                    isActive
-                      ? 'bg-gradient-to-r from-violet-500 to-blue-400 text-white shadow-lg scale-105'
-                      : 'hover:bg-violet-100/80 hover:scale-105 ' + colors.text
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <span className={`transition-transform duration-200 group-hover:scale-125 group-hover:rotate-6 ${isActive ? 'text-white' : 'text-violet-500'}`}>{
-                      React.cloneElement(icon, { size: isOpen ? (window.innerWidth < 640 ? 20 : 28) : 20 })
-                    }</span>
-                    {isOpen && <span className="flex-1 truncate text-xs sm:text-base font-semibold tracking-wide">{name}</span>}
-                    {isOpen && badge && role !== 'student' && (
-                      <span className={`text-[10px] sm:text-xs font-bold bg-gradient-to-r from-violet-400 to-blue-400 text-white px-1 sm:px-2 py-0.5 rounded-full shadow`}>{badge}</span>
-                    )}
-                  </>
-                )}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </div>
+  const toggleSidebar = () => {
+    if (typeof setIsOpenProp === 'function') {
+      setIsOpenProp(!isActuallyOpen);
+    } else {
+      setIsOpen(!isActuallyOpen);
+    }
+  };
 
-      {/* Theme Toggle and Logout - Stacked */}
-      <div className={`p-2 sm:p-3 ${borderClass} border-t bg-gradient-to-r from-red-100/60 to-white/0`}>
-        <div className="flex flex-col gap-2">
-          {/* Theme Toggle for Students - Above Logout */}
-          {role === 'student' && studentTheme && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                studentTheme.toggleLightMode();
-              }}
-              className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${
-                studentTheme.isLightMode 
-                  ? 'bg-gray-100 hover:bg-gray-200 text-gray-800' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-100'
-              } ${isOpen ? 'justify-start' : 'justify-center'} shadow-sm hover:shadow-md`}
-              title={studentTheme.isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-            >
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-md">
-                {studentTheme.isLightMode ? <Moon size={16} /> : <Sun size={16} />}
-              </span>
-              {isOpen && <span className="text-sm font-medium">{studentTheme.isLightMode ? 'Dark' : 'Light'} Mode</span>}
-            </button>
+  const handleMenuItemClick = () => {
+    // Close sidebar when menu item is clicked (both mobile and desktop)
+    if (typeof setIsOpenProp === 'function') {
+      setIsOpenProp(false);
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  // Desktop Sidebar
+  if (!isMobile) {
+    return (
+      <div
+        className={`h-screen flex flex-col fixed top-0 left-0 transition-all duration-300 ${isOverlay ? 'z-50' : 'z-40'} ${colors.sidebarBg} shadow-xl
+          ${isActuallyOpen ? 'w-64' : 'w-20'}`}
+      >
+        {/* Header Section */}
+        <div 
+          className={`${colors.headerBg} ${isActuallyOpen ? 'px-6' : 'px-4'} py-5 flex items-center justify-between cursor-pointer`}
+          onClick={toggleSidebar}
+        >
+          {isActuallyOpen ? (
+            <div className="flex items-center gap-3">
+              <GraduationCap className="text-white" size={32} />
+              <span className="text-xl font-bold text-white tracking-tight">TaskHub</span>
+            </div>
+          ) : (
+            <GraduationCap className="text-white mx-auto" size={28} />
           )}
           
-          {/* Logout Button */}
+          {/* Toggle button */}
           <button
-            onClick={onLogout}
-            className={`w-full flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold rounded-lg sm:rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-red-400 transition-all duration-200
-              ${isOpen ? 'justify-start' : 'justify-center'}`}
-            title="Logout"
+            onClick={toggleSidebar}
+            className={`${isActuallyOpen ? 'block' : 'hidden'} text-white hover:bg-white/20 p-1.5 rounded-lg transition-colors`}
+            aria-label="Toggle Sidebar"
           >
-            <span className="transition-transform duration-200 group-hover:scale-125 group-hover:-rotate-6"><DoorClosed size={isOpen ? (window.innerWidth < 640 ? 20 : 28) : 20} /></span>
-            {isOpen && <span className="text-xs sm:text-base font-semibold tracking-wide">Logout</span>}
+            <ChevronLeft size={20} />
+          </button>
+        </div>
+
+        {/* Collapsed Toggle Button */}
+        {!isActuallyOpen && (
+          <button
+            onClick={toggleSidebar}
+            className="absolute -right-3 top-20 bg-blue-600 text-white p-1.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-50"
+            aria-label="Expand Sidebar"
+          >
+            <ChevronRight size={16} />
+          </button>
+        )}
+
+        {/* Menu Items */}
+        <nav className="flex-1 py-6 px-3 overflow-y-auto">
+          <ul className="space-y-2">
+            {menuItems.map(({ name, path, icon, badge }) => (
+              <li key={path}>
+                <NavLink
+                  to={path}
+                  onClick={handleMenuItemClick}
+                  title={name}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-medium
+                    ${isActuallyOpen ? '' : 'justify-center'}
+                    ${isActive ? colors.active : `${colors.text} ${colors.hover}`}`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span className={isActive ? 'text-white' : colors.icon}>
+                        {React.cloneElement(icon, { size: 22 })}
+                      </span>
+                      {isActuallyOpen && (
+                        <>
+                          <span className="flex-1 text-sm">{name}</span>
+                          {badge && (
+                            <span className={`text-xs font-semibold ${colors.badge} px-2 py-0.5 rounded-full`}>
+                              {badge}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Footer Section */}
+        <div className="p-3 border-t-2 border-blue-100 bg-gray-50">
+          <div className="flex flex-col gap-2">
+            {/* Theme Toggle for Students */}
+            {role === 'student' && studentTheme && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  studentTheme.toggleLightMode();
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 font-medium
+                  ${studentTheme.isLightMode ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-gray-700 hover:bg-gray-600 text-gray-100'}
+                  ${isActuallyOpen ? 'justify-start' : 'justify-center'}`}
+                title={studentTheme.isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+              >
+                {studentTheme.isLightMode ? <Moon size={20} /> : <Sun size={20} />}
+                {isActuallyOpen && <span className="text-sm">{studentTheme.isLightMode ? 'Dark Mode' : 'Light Mode'}</span>}
+              </button>
+            )}
+            
+            {/* Logout Button */}
+            <button
+              onClick={onLogout}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-all duration-200 shadow-md
+                ${isActuallyOpen ? 'justify-start' : 'justify-center'}`}
+              title="Logout"
+            >
+              <LogOut size={20} />
+              {isActuallyOpen && <span className="text-sm">Logout</span>}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile Bottom Navigation
+  return (
+    <>
+      {/* Mobile Top Bar */}
+      <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="text-white" size={28} />
+            <span className="text-lg font-bold text-white">TaskHub</span>
+          </div>
+          <button
+            onClick={toggleSidebar}
+            className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+            aria-label="Toggle Menu"
+          >
+            {isActuallyOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
-    </div>
+
+      {/* Mobile Overlay Menu */}
+      {isActuallyOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+            onClick={toggleSidebar}
+          />
+          
+          {/* Slide-in Menu */}
+          <div className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white z-50 shadow-2xl transform transition-transform duration-300">
+            <div className="flex flex-col h-full">
+              {/* Menu Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <GraduationCap className="text-white" size={32} />
+                  <span className="text-xl font-bold text-white">TaskHub</span>
+                </div>
+                <button
+                  onClick={toggleSidebar}
+                  className="text-white hover:bg-white/20 p-1.5 rounded-lg transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Menu Items */}
+              <nav className="flex-1 py-6 px-4 overflow-y-auto">
+                <ul className="space-y-2">
+                  {menuItems.map(({ name, path, icon, badge }) => (
+                    <li key={path}>
+                      <NavLink
+                        to={path}
+                        onClick={handleMenuItemClick}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-medium
+                          ${isActive ? colors.active : `${colors.text} ${colors.hover}`}`
+                        }
+                      >
+                        {({ isActive }) => (
+                          <>
+                            <span className={isActive ? 'text-white' : colors.icon}>
+                              {React.cloneElement(icon, { size: 22 })}
+                            </span>
+                            <span className="flex-1 text-sm">{name}</span>
+                            {badge && (
+                              <span className={`text-xs font-semibold ${colors.badge} px-2 py-0.5 rounded-full`}>
+                                {badge}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+
+              {/* Footer Buttons */}
+              <div className="p-4 border-t-2 border-blue-100 bg-gray-50">
+                <div className="flex flex-col gap-2">
+                  {/* Theme Toggle for Students */}
+                  {role === 'student' && studentTheme && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        studentTheme.toggleLightMode();
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-medium
+                        ${studentTheme.isLightMode ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-gray-700 hover:bg-gray-600 text-gray-100'}`}
+                    >
+                      {studentTheme.isLightMode ? <Moon size={20} /> : <Sun size={20} />}
+                      <span className="text-sm">{studentTheme.isLightMode ? 'Dark Mode' : 'Light Mode'}</span>
+                    </button>
+                  )}
+                  
+                  {/* Logout Button */}
+                  <button
+                    onClick={() => {
+                      handleMenuItemClick();
+                      onLogout();
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-all duration-200 shadow-md"
+                  >
+                    <LogOut size={20} />
+                    <span className="text-sm">Logout</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Spacer for top bar */}
+      <div className="h-14" />
+    </>
   );
 }

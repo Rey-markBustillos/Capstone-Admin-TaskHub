@@ -137,23 +137,22 @@ export default function StudentAnnouncements() {
   // ...availableReactions imported from shared constants...
 
   return (
-    <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-2 sm:p-4 pb-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
-      <div className="w-full max-w-none mx-auto min-h-screen px-1 sm:px-2 md:px-4 lg:px-6">
+    <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-2 sm:p-4 md:p-6 pb-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+      <div className="w-full min-h-screen px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="mb-4 sm:mb-6 mt-2 sm:mt-4">
           <NavLink
             to={`/student/class/${classId}`}
-            className={`inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg ${isLightMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'} text-white font-medium shadow-sm transition mb-2 sm:mb-4`}
+            className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 text-sm sm:text-base rounded-lg ${isLightMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'} text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 min-h-[44px]`}
           >
-            <FaArrowLeft className="text-xs sm:text-sm" /> <span className="hidden xs:inline sm:inline">Back to Class Menu</span><span className="xs:hidden sm:hidden">Back</span>
+            <FaArrowLeft className="text-sm sm:text-base" /> <span className="hidden sm:inline">Back to Class Menu</span><span className="sm:hidden">Back</span>
           </NavLink>
         </div>
-        <div className="w-full max-w-none pb-6">
+        <div className="w-full pb-6">
           {/* Header Section */}
           <div className="mb-4 sm:mb-6">
-            <h1 className={`text-lg sm:text-2xl lg:text-3xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2 sm:gap-3`}>
-              <FaBullhorn className={`text-base sm:text-xl lg:text-2xl ${isLightMode ? 'text-indigo-600' : 'text-indigo-300'}`} />
-              <span className="hidden sm:inline">Announcements</span>
-              <span className="sm:hidden">News</span>
+            <h1 className={`text-xl sm:text-2xl md:text-3xl font-bold ${isLightMode ? 'text-gray-800' : 'text-white'} flex items-center gap-2 sm:gap-3`}>
+              <FaBullhorn className={`text-lg sm:text-xl md:text-2xl ${isLightMode ? 'text-indigo-600' : 'text-indigo-300'}`} />
+              <span>Announcements</span>
             </h1>
           </div>
 
@@ -170,12 +169,12 @@ export default function StudentAnnouncements() {
                 <p className="text-center text-red-500">{error}</p>
               </div>
             ) : announcements.length === 0 ? (
-              <div className={`text-center py-12 ${isLightMode ? 'bg-white border-indigo-200 text-gray-700' : 'bg-white/10 border-indigo-500/30 text-gray-300'} backdrop-blur-sm rounded-lg shadow-sm border p-8`}>
+              <div className={`text-center py-8 sm:py-12 ${isLightMode ? 'bg-white border-indigo-200 text-gray-700' : 'bg-white/10 border-indigo-500/30 text-gray-300'} backdrop-blur-sm rounded-xl shadow-md border-2 p-6 sm:p-8`}>
                 <FaBullhorn className="mx-auto mb-4 text-indigo-400" size={36} />
-                <p>No announcements posted yet.</p>
+                <p className="text-sm sm:text-base">No announcements posted yet.</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {announcements.map((ann) => {
                   const reactionCounts = getReactionCounts(ann.reactions);
                   const isCommentsOpen = openComments[ann._id];
@@ -185,22 +184,23 @@ export default function StudentAnnouncements() {
                     key={ann._id}
                     ref={announcementCardRef}
                     data-ann-id={ann._id}
-                    className={`${isLightMode ? 'bg-white border-indigo-200' : 'bg-gray-800 border-indigo-900'} shadow-lg rounded-xl border overflow-hidden`}
+                    className={`${isLightMode ? 'bg-white border-indigo-200' : 'bg-gray-800 border-indigo-900'} shadow-lg hover:shadow-xl rounded-xl border-2 overflow-hidden transition-shadow duration-200`}
                   >
-                    <div className="p-2 sm:p-3 md:p-4 lg:p-6">
-                      <h2 className={`text-sm sm:text-lg md:text-xl font-semibold ${isLightMode ? 'text-indigo-600' : 'text-indigo-400'} mb-1 sm:mb-2 flex items-center gap-1 sm:gap-2`}>
-                        <FaBullhorn className="mr-1 sm:mr-2 text-xs sm:text-base" /> {ann.title}
+                    <div className="p-3 sm:p-4 md:p-5 lg:p-6">
+                      <h2 className={`text-base sm:text-lg md:text-xl font-bold ${isLightMode ? 'text-indigo-600' : 'text-indigo-400'} mb-2 sm:mb-3 flex items-center gap-2`}>
+                        <FaBullhorn className="text-sm sm:text-base flex-shrink-0" /> 
+                        <span className="line-clamp-2">{ann.title}</span>
                       </h2>
-                      <p className={`${isLightMode ? 'text-gray-700' : 'text-gray-300'} mb-2 sm:mb-3 whitespace-pre-line leading-relaxed text-xs sm:text-sm md:text-base`}>{ann.content}</p>
+                      <p className={`${isLightMode ? 'text-gray-700' : 'text-gray-300'} mb-3 sm:mb-4 whitespace-pre-line leading-relaxed text-sm sm:text-base`}>{ann.content}</p>
                       
                       {/* Display attachments if any */}
                       {ann.attachments && ann.attachments.length > 0 && (
-                        <div className="mb-4">
-                          <p className={`text-sm font-medium ${isLightMode ? 'text-gray-600' : 'text-gray-300'} mb-3`}>
-                            <FaFileUpload className="inline mr-1" />
-                            Attached Files ({ann.attachments.length})
+                        <div className="mb-4 sm:mb-5">
+                          <p className={`text-xs sm:text-sm font-semibold ${isLightMode ? 'text-gray-600' : 'text-gray-300'} mb-3 flex items-center gap-2`}>
+                            <FaFileUpload className="text-sm" />
+                            <span>Attached Files ({ann.attachments.length})</span>
                           </p>
-                          <div className="space-y-3">
+                          <div className="space-y-2 sm:space-y-3">
                             {ann.attachments.map((attachment, index) => {
                               // Handle different file URL scenarios
                               let fileUrl;
@@ -344,10 +344,10 @@ export default function StudentAnnouncements() {
                         </div>
                       )}
 
-                      <div className="pt-3 mt-4 text-xs sm:text-sm flex items-center gap-2">
-                        <FaUserCircle className="text-indigo-400" />
+                      <div className="pt-3 mt-4 border-t border-gray-200 dark:border-gray-700 text-xs sm:text-sm flex items-center gap-2">
+                        <FaUserCircle className="text-indigo-400 text-sm sm:text-base" />
                         <span className="text-gray-500 dark:text-gray-400">
-                          Posted by: <span className="font-medium">{ann.postedBy?.name || 'Teacher'}</span> on {(() => {
+                          <span className="font-medium">{ann.postedBy?.name || 'Teacher'}</span> • {(() => {
                             const dateToUse = ann.createdAt || ann.date || new Date().toISOString();
                             const dateObj = new Date(dateToUse);
                             
@@ -378,8 +378,8 @@ export default function StudentAnnouncements() {
                       </div>
                     </div>
 
-                    <div className="px-4 sm:px-6 pt-2 pb-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-y-4">
-                      <div className="flex items-center gap-2">
+                    <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 border-t-2 border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                         {availableReactions.map(emoji => {
                           const userHasReacted = ann.reactions?.some(r => r.user?._id === userId && r.emoji === emoji);
                           return (
@@ -397,41 +397,41 @@ export default function StudentAnnouncements() {
                           );
                         })}
                       </div>
-                      <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-center">
+                      <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-center">
                         <button
                           onClick={() => openViewersModal(ann)}
-                          className={`flex items-center gap-2 ${isLightMode ? 'text-gray-600 hover:text-indigo-600 hover:bg-gray-100' : 'text-gray-300 hover:text-indigo-400 hover:bg-gray-700/50'} font-medium py-1 px-2 sm:px-3 rounded-md transition-colors text-sm`}
+                          className={`flex items-center justify-center gap-2 ${isLightMode ? 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50' : 'text-gray-300 hover:text-indigo-400 hover:bg-gray-700/50'} font-semibold py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 text-xs sm:text-sm min-h-[40px] border ${isLightMode ? 'border-gray-200' : 'border-gray-700'}`}
                         >
-                          <FaEye />
-                          <span>{ann.viewedBy?.length || 0}</span>
+                          <FaEye className="text-sm" />
+                          <span className="font-bold">{ann.viewedBy?.length || 0}</span>
                           <span className="hidden sm:inline">Views</span>
                         </button>
                         <button
                           onClick={() => toggleComments(ann._id)}
-                          className={`flex items-center gap-2 ${isLightMode ? 'text-gray-600 hover:text-indigo-600 hover:bg-gray-100' : 'text-gray-300 hover:text-indigo-400 hover:bg-gray-700/50'} font-medium py-1 px-2 sm:px-3 rounded-md transition-colors text-sm`}
+                          className={`flex items-center justify-center gap-2 ${isLightMode ? 'text-gray-700 hover:text-indigo-600 hover:bg-indigo-50' : 'text-gray-300 hover:text-indigo-400 hover:bg-gray-700/50'} font-semibold py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 text-xs sm:text-sm min-h-[40px] border ${isLightMode ? 'border-gray-200' : 'border-gray-700'}`}
                         >
-                          <FaCommentAlt />
-                          <span>{ann.comments?.length || 0}</span>
+                          <FaCommentAlt className="text-sm" />
+                          <span className="font-bold">{ann.comments?.length || 0}</span>
                           <span className="hidden sm:inline">Comments</span>
                         </button>
                       </div>
                     </div>
 
                     {isCommentsOpen && (
-                      <div className="bg-indigo-50 dark:bg-indigo-900/30 px-4 sm:px-6 py-4 border-t border-indigo-100 dark:border-indigo-900 animate-fadeIn">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                          <FaCommentAlt className="text-indigo-400" /> Comments
+                      <div className="bg-indigo-50 dark:bg-indigo-900/30 px-3 sm:px-4 md:px-6 py-4 border-t-2 border-indigo-200 dark:border-indigo-800 animate-fadeIn">
+                        <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2 text-sm sm:text-base">
+                          <FaCommentAlt className="text-indigo-500 text-sm" /> Comments ({ann.comments?.length || 0})
                         </h4>
-                        <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-3 sm:space-y-4 max-h-60 sm:max-h-80 overflow-y-auto pr-2 custom-scrollbar">
                           {ann.comments?.length > 0 ? ann.comments.map(comment => (
-                            <div key={comment._id} className="flex items-start gap-3">
-                              <div className={`w-8 h-8 rounded-full ${isLightMode ? 'bg-indigo-200 text-indigo-700' : 'bg-indigo-800 text-white'} flex-shrink-0 flex items-center justify-center font-bold text-sm`}>
+                            <div key={comment._id} className="flex items-start gap-2 sm:gap-3">
+                              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${isLightMode ? 'bg-indigo-200 text-indigo-700' : 'bg-indigo-800 text-white'} flex-shrink-0 flex items-center justify-center font-bold text-xs sm:text-sm`}>
                                 {comment.postedBy?.name?.charAt(0).toUpperCase() || <FaUserCircle />}
                               </div>
-                              <div>
-                                <p className="text-sm">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm mb-1">
                                   <span className="font-bold text-gray-900 dark:text-white">{comment.postedBy?.name || 'User'}</span>
-                                  <span className="text-gray-500 dark:text-gray-400 ml-2 text-xs">
+                                  <span className="text-gray-500 dark:text-gray-400 ml-2 text-[10px] sm:text-xs">
                                     {(() => {
                                       const dateToUse = comment.createdAt || comment.date || new Date().toISOString();
                                       const dateObj = new Date(dateToUse);
@@ -459,27 +459,27 @@ export default function StudentAnnouncements() {
                                     })()}
                                   </span>
                                 </p>
-                                <p className={`${isLightMode ? 'text-gray-700' : 'text-gray-300'} text-sm`}>{comment.text}</p>
+                                <p className={`${isLightMode ? 'text-gray-700' : 'text-gray-300'} text-xs sm:text-sm break-words`}>{comment.text}</p>
                               </div>
                             </div>
                           )) : (
-                            <p className="text-sm text-gray-500 dark:text-gray-400">No comments yet. Be the first to comment!</p>
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center py-4">No comments yet. Be the first to comment!</p>
                           )}
                         </div>
-                        <form onSubmit={(e) => handleCommentSubmit(e, ann._id)} className="mt-4 flex gap-3">
+                        <form onSubmit={(e) => handleCommentSubmit(e, ann._id)} className="mt-4 flex gap-2 sm:gap-3">
                           <input
                             type="text"
                             value={commentInputs[ann._id] || ''}
                             onChange={(e) => handleCommentChange(ann._id, e.target.value)}
                             placeholder="Write a comment..."
-                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                            className="flex-1 min-w-0 border-2 border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 sm:py-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-all"
                           />
                           <button
                             type="submit"
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold p-2 rounded-lg flex items-center justify-center px-4"
+                            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center justify-center px-4 sm:px-5 min-h-[44px] transition-all shadow-md hover:shadow-lg"
                             disabled={!commentInputs[ann._id] || !commentInputs[ann._id].trim()}
                           >
-                            <FaPaperPlane />
+                            <FaPaperPlane className="text-sm" />
                           </button>
                         </form>
                       </div>
@@ -490,45 +490,48 @@ export default function StudentAnnouncements() {
               </div>
             )}
           </div>
+        </div>
 
         {/* Viewers Modal */}
         {viewersInfo.isOpen && (
           <div
-            className="fixed inset-0 flex justify-center items-end sm:items-center z-50"
+            className="fixed inset-0 flex justify-center items-end sm:items-center z-50 bg-black/40 backdrop-blur-sm"
             onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}
           >
             <div
-              className={`${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-t-2xl sm:rounded-lg shadow-xl w-full max-w-md relative transition-transform duration-300 ease-out transform translate-y-full animate-slide-up`}
+              className={`${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[80vh] sm:max-h-[70vh] relative transition-transform duration-300 ease-out transform animate-slide-up overflow-hidden`}
               onClick={e => e.stopPropagation()}
             >
-              <div className="p-2 sm:p-3 md:p-4 lg:p-6">
-                <div className="flex justify-between items-center mb-2 sm:mb-4">
-                  <h3 className="text-sm sm:text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
-                    <FaEye className="text-indigo-400" /> Viewed By
+              <div className="p-4 sm:p-5 md:p-6">
+                <div className="flex justify-between items-start mb-3 sm:mb-4">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                    <FaEye className="text-indigo-500 text-lg sm:text-xl" /> Viewed By
                   </h3>
                   <button
                     onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all"
                   >
-                    <FaTimes size={16} className="sm:w-5 sm:h-5" />
+                    <FaTimes size={20} />
                   </button>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-2 sm:mb-4 truncate">For: "{viewersInfo.title}"</p>
-                <ul className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                  {viewersInfo.viewers.length > 0 ? viewersInfo.viewers.map(viewer => (
-                    <li key={viewer._id} className={`flex items-center gap-2 ${isLightMode ? 'text-gray-700 bg-gray-100' : 'text-gray-300 bg-gray-700/50'} p-3 rounded-md`}>
-                      <FaUserCircle className="text-indigo-400" /> {viewer.name}
-                    </li>
-                  )) : (
-                    <li className="text-gray-500 dark:text-gray-400 text-center py-4">No one has viewed this announcement yet.</li>
-                  )}
-                </ul>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-4 line-clamp-2">For: "{viewersInfo.title}"</p>
+                <div className="max-h-[50vh] sm:max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                  <ul className="space-y-2 sm:space-y-3">
+                    {viewersInfo.viewers.length > 0 ? viewersInfo.viewers.map(viewer => (
+                      <li key={viewer._id} className={`flex items-center gap-3 ${isLightMode ? 'text-gray-700 bg-gray-50 hover:bg-gray-100' : 'text-gray-300 bg-gray-700/50 hover:bg-gray-700'} p-3 rounded-lg transition-colors`}>
+                        <FaUserCircle className="text-indigo-500 text-lg sm:text-xl flex-shrink-0" /> 
+                        <span className="text-sm sm:text-base font-medium">{viewer.name}</span>
+                      </li>
+                    )) : (
+                      <li className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center py-8">No one has viewed this announcement yet.</li>
+                    )}
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
         )}
       </div>
-    </div>
     </div>
   );
 }

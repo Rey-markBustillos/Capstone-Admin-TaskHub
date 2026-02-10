@@ -13,7 +13,7 @@ import {
   FaExclamationTriangle
 } from 'react-icons/fa';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 const UploadModule = () => {
   const { classId } = useParams();
@@ -32,7 +32,10 @@ const UploadModule = () => {
   const fetchModules = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/modules?classId=${classId}`);
+      const apiUrl = `${API_BASE_URL}/modules?classId=${classId}`;
+      console.log('📋 Fetching modules from:', apiUrl);
+      const response = await axios.get(apiUrl);
+      console.log('📋 Modules received:', response.data.length);
       setModules(response.data || []);
     } catch (err) {
       console.error('Error fetching modules:', err);
@@ -67,6 +70,11 @@ const UploadModule = () => {
       return;
     }
 
+    if (!user || !user._id) {
+      setError('User information not found. Please login again.');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('module', selectedFile);
     formData.append('title', moduleTitle.trim());
@@ -78,12 +86,24 @@ const UploadModule = () => {
       setUploading(true);
       setError(null);
       
-      await axios.post(`${API_BASE_URL}/modules/upload`, formData, {
+      const uploadUrl = `${API_BASE_URL}/modules/upload`;
+      console.log('📤 Uploading to:', uploadUrl);
+      console.log('📤 FormData:', {
+        title: moduleTitle,
+        classId: classId,
+        uploadedBy: user._id,
+        fileName: selectedFile.name,
+        fileSize: selectedFile.size
+      });
+      
+      const response = await axios.post(uploadUrl, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        timeout: 120000, // 2 minutes timeout for large files
       });
 
+      console.log('✅ Upload successful:', response.data);
       setSuccess('Module uploaded successfully!');
       setModuleTitle('');
       setModuleDescription('');
@@ -94,14 +114,15 @@ const UploadModule = () => {
       if (fileInput) fileInput.value = '';
       
       // Refresh modules list
-      fetchModules();
+      await fetchModules();
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
       
     } catch (err) {
-      console.error('Upload error:', err);
-      setError(err.response?.data?.message || 'Failed to upload module');
+      console.error('❌ Upload error:', err);
+      console.error('❌ Error response:', err.response?.data);
+      setError(err.response?.data?.message || err.message || 'Failed to upload module');
     } finally {
       setUploading(false);
     }
@@ -153,14 +174,14 @@ const UploadModule = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 py-8 px-2 sm:px-6">
+    <div className="min-h-screen bg-white py-8 px-2 sm:px-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg px-6 py-5 border border-indigo-100 dark:border-indigo-900 mb-8">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg px-6 py-5 border border-blue-300 mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow flex items-center gap-4">
-          <FaUpload className="text-yellow-300 text-4xl drop-shadow-lg animate-pulse" />
+          <FaUpload className="text-blue-100 text-4xl drop-shadow-lg animate-pulse" />
           Upload Learning Modules
         </h1>
-        <p className="text-indigo-100 mt-2">Upload and manage learning materials for your students</p>
+        <p className="text-blue-50 mt-2">Upload and manage learning materials for your students</p>
       </div>
 
       {/* Success/Error Alerts */}
@@ -181,43 +202,43 @@ const UploadModule = () => {
       {/* Main Content - Side by Side Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upload Form */}
-        <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl border border-indigo-100 dark:border-indigo-900 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
+        <div className="bg-white shadow-xl rounded-2xl border border-blue-200 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
           <div className="p-6">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-          <FaUpload className="text-indigo-500" />
+        <h2 className="text-xl font-semibold mb-4 text-blue-900 flex items-center gap-2">
+          <FaUpload className="text-blue-600" />
           Upload New Module
         </h2>
         
         <form onSubmit={handleUpload} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Module Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={moduleTitle}
               onChange={(e) => setModuleTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               placeholder="Enter module title"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Description
             </label>
             <textarea
               value={moduleDescription}
               onChange={(e) => setModuleDescription(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               placeholder="Enter module description (optional)"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Select File <span className="text-red-500">*</span>
             </label>
             <input
@@ -225,20 +246,20 @@ const UploadModule = () => {
               type="file"
               onChange={handleFileSelect}
               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               required
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-600 mt-1">
               Supported formats: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX (Max: 10MB)
             </p>
           </div>
 
           {selectedFile && (
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-md border border-blue-200">
               {getFileIcon(selectedFile.name)}
               <div>
-                <p className="font-medium text-gray-800 dark:text-white">{selectedFile.name}</p>
-                <p className="text-sm text-gray-500">{formatFileSize(selectedFile.size)}</p>
+                <p className="font-medium text-gray-900">{selectedFile.name}</p>
+                <p className="text-sm text-gray-600">{formatFileSize(selectedFile.size)}</p>
               </div>
             </div>
           )}
@@ -249,7 +270,7 @@ const UploadModule = () => {
             className={`w-full py-2 px-4 rounded-md font-medium flex items-center justify-center gap-2 ${
               uploading || !selectedFile || !moduleTitle.trim()
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
             }`}
           >
             {uploading ? (
@@ -269,15 +290,15 @@ const UploadModule = () => {
         </div>
 
         {/* Modules List */}
-        <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl border border-indigo-100 dark:border-indigo-900 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
+        <div className="bg-white shadow-xl rounded-2xl border border-blue-200 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
           <div className="p-6">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center justify-between">
+        <h2 className="text-xl font-semibold mb-4 text-blue-900 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FaFileAlt className="text-indigo-500" />
+            <FaFileAlt className="text-blue-600" />
             Uploaded Modules
           </div>
           {modules.length > 0 && (
-            <span className="text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded-full">
+            <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
               {modules.length} module{modules.length !== 1 ? 's' : ''}
             </span>
           )}
@@ -285,63 +306,63 @@ const UploadModule = () => {
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <FaSpinner className="animate-spin text-2xl text-indigo-500 mr-3" />
-            <span className="text-gray-600 dark:text-gray-300">Loading modules...</span>
+            <FaSpinner className="animate-spin text-2xl text-blue-600 mr-3" />
+            <span className="text-gray-700">Loading modules...</span>
           </div>
         ) : modules.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-8 text-gray-600">
             <FaFileAlt className="text-4xl mb-3 mx-auto opacity-50" />
             <p>No modules uploaded yet</p>
           </div>
         ) : (
           <div className="relative">
             {modules.length > 3 && (
-              <div className="absolute top-0 right-0 z-10 bg-gradient-to-l from-white dark:from-gray-800 to-transparent w-8 h-6 flex items-center justify-end pr-1">
+              <div className="absolute top-0 right-0 z-10 bg-gradient-to-l from-white to-transparent w-8 h-6 flex items-center justify-end pr-1">
                 <div className="text-gray-400 text-xs">↓</div>
               </div>
             )}
             <div 
-              className="max-h-96 overflow-y-auto pr-2 space-y-3 border border-gray-200 dark:border-gray-600 rounded-lg p-3"
+              className="max-h-96 overflow-y-auto pr-2 space-y-3 border border-blue-200 rounded-lg p-3"
               style={{
                 scrollbarWidth: 'thin',
-                scrollbarColor: '#6366f1 #e5e7eb'
+                scrollbarColor: '#3b82f6 #dbeafe'
               }}
             >
               {modules.map((module) => (
               <div
                 key={module._id}
-                className="flex items-start justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm hover:shadow-md"
+                className="flex items-start justify-between p-4 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors shadow-sm hover:shadow-md"
               >
                 <div className="flex items-start gap-4 flex-1 min-w-0">
                   <div className="flex-shrink-0 mt-1">
                     {getFileIcon(module.fileName)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-800 dark:text-white truncate">{module.title}</h3>
+                    <h3 className="font-semibold text-gray-900 truncate">{module.title}</h3>
                     {module.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mt-1">{module.description}</p>
+                      <p className="text-sm text-gray-700 line-clamp-2 mt-1">{module.description}</p>
                     )}
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      <span className="bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 mt-2">
+                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded">
                         {module.fileName}
                       </span>
-                      <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
                         {formatFileSize(module.fileSize)}
                       </span>
-                      <span className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded">
+                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
                         {new Date(module.uploadDate).toLocaleDateString()}
                       </span>
                       {module.cloudinaryUrl ? (
-                        <span className="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-1 rounded" title="Stored in cloud">
+                        <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded" title="Stored in cloud">
                           ☁️ Cloud
                         </span>
                       ) : (
-                        <span className="bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded" title="Legacy local file">
+                        <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded" title="Legacy local file">
                           📁 Local
                         </span>
                       )}
                       {module.downloadCount > 0 && (
-                        <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded" title="Download count">
+                        <span className="bg-indigo-100 text-indigo-700 px-2 py-1 rounded" title="Download count">
                           📥 {module.downloadCount}
                         </span>
                       )}
@@ -354,18 +375,25 @@ const UploadModule = () => {
                     onClick={() => {
                       console.log('📋 Download module:', module.title, module._id);
                       
-                      // Create download link
-                      const downloadUrl = `${API_BASE_URL}/modules/download/${module._id}`;
-                      const link = document.createElement('a');
-                      link.href = downloadUrl;
-                      link.download = module.fileName;
-                      link.target = '_blank';
-                      link.rel = 'noopener noreferrer';
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
+                      // Check if module has Cloudinary URL
+                      if (module.cloudinaryUrl) {
+                        // Use Cloudinary URL with download transformation
+                        const downloadUrl = module.cloudinaryUrl.replace('/upload/', '/upload/fl_attachment/');
+                        const link = document.createElement('a');
+                        link.href = downloadUrl;
+                        link.download = module.fileName;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      } else {
+                        // Use backend download route for legacy files
+                        const downloadUrl = `${API_BASE_URL}/modules/download/${module._id}`;
+                        window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+                      }
                     }}
-                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900 rounded-md transition-colors"
+                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-md transition-colors"
                     title="Download"
                   >
                     <FaDownload size={14} />
@@ -382,14 +410,14 @@ const UploadModule = () => {
                         window.open(`${API_BASE_URL}/modules/view/${module._id}`, '_blank', 'noopener,noreferrer');
                       }
                     }}
-                    className="p-2 text-green-600 hover:text-green-800 hover:bg-green-100 dark:hover:bg-green-900 rounded-md transition-colors"
+                    className="p-2 text-green-600 hover:text-green-800 hover:bg-green-100 rounded-md transition-colors"
                     title="View"
                   >
                     <FaEye size={14} />
                   </button>
                   <button
                     onClick={() => handleDelete(module._id)}
-                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 dark:hover:bg-red-900 rounded-md transition-colors"
+                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-md transition-colors"
                     title="Delete"
                   >
                     <FaTrash size={14} />
@@ -399,7 +427,7 @@ const UploadModule = () => {
             ))}
           </div>
           {modules.length > 3 && (
-            <div className="absolute bottom-0 right-0 z-10 bg-gradient-to-l from-white dark:from-gray-800 to-transparent w-8 h-6 flex items-center justify-end pr-1">
+            <div className="absolute bottom-0 right-0 z-10 bg-gradient-to-l from-white to-transparent w-8 h-6 flex items-center justify-end pr-1">
               <div className="text-gray-400 text-xs">↑</div>
             </div>
           )}

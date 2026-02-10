@@ -1,39 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaClock, FaCalendarAlt, FaMapMarkerAlt, FaChalkboardTeacher } from 'react-icons/fa';
+import { FaClock, FaCalendarAlt, FaMapMarkerAlt, FaChalkboardTeacher, FaUsers, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import '../Css/FallingBooks.css';
 
-// FallingBooksAnimation component
-const FallingBooksAnimation = () => {
-  const bookEmojis = ["\uD83D\uDCDA", "\uD83D\uDCD3", "\uD83D\uDCD5", "\uD83D\uDCD7", "\uD83D\uDCD8"];
-  const numberOfBooks = 7;
-  return (
-    <div className="dashboard-background" aria-hidden="true">
-      {Array.from({ length: numberOfBooks }, (_, index) => {
-        const randomLeft = Math.random() * 100;
-        const randomDuration = Math.random() * 8 + 7;
-        const randomDelay = Math.random() * 10;
-        const randomEmoji = bookEmojis[Math.floor(Math.random() * bookEmojis.length)];
-        return (
-          <div
-            className="falling-book"
-            key={`book-${index}`}
-            style={{
-              left: `${randomLeft}vw`,
-              animationDuration: `${randomDuration}s`,
-              animationDelay: `${randomDelay}s`,
-              top: 0,
-              transform: "translateY(-120%)",
-            }}
-          >
-            {randomEmoji}
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+// Ensure API_BASE_URL ends with a slash
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/$/, '') + '/';
 
 // Helper to format time as hh:mm AM/PM in PH time
 const formatTimePH = (startTimeStr, endTimeStr) => {
@@ -80,8 +51,7 @@ const TeacherPortal = () => {
       setLoading(true);
       setError(null);
       try {
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
-  const res = await axios.get(`${API_BASE_URL}/class?teacherId=${teacherId}`);
+        const res = await axios.get(`${API_BASE_URL}class`, { params: { teacherId } });
         setClasses(res.data || []);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load classes.');
@@ -103,16 +73,23 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen text-white">
-        <p className="text-xl">Loading your classes...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-5xl text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600 font-medium">Loading your classes...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-screen text-red-400">
-        <p className="text-xl">Error: {error}</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col items-center justify-center text-center p-6">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Classes</h2>
+          <p className="text-gray-600">{error}</p>
+        </div>
       </div>
     );
   }
@@ -120,83 +97,126 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
   // Show a special message if the teacher has no classes at all
   if (!classes || classes.length === 0) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-white dark:bg-gray-800">
-        <FallingBooksAnimation />
-        <div className="bg-gray-800 rounded-xl shadow-md px-8 py-12 mt-8">
-          <h2 className="text-3xl font-bold text-indigo-300 mb-4 flex items-center gap-2"><FaChalkboardTeacher /> No Upcoming Classes</h2>
-          <p className="text-lg text-gray-300">You currently have no scheduled classes. Please check with your administrator or add a class to get started.</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col justify-center items-center p-6">
+        <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-12 max-w-2xl text-center">
+          <FaChalkboardTeacher className="text-6xl text-blue-600 mx-auto mb-4" />
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">No Classes Available</h2>
+          <p className="text-lg text-gray-600">You currently have no scheduled classes. Please check with your administrator or add a class to get started.</p>
         </div>
       </div>
     );
   }
 
   return (
-  <div className="app-container bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900 min-h-screen w-full">
-      <FallingBooksAnimation />
-      <div className="w-full px-2 sm:px-6 lg:px-8">
-        <div className="mb-8 pt-6">
-          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-3">
-            <FaChalkboardTeacher className="text-indigo-400" /> My Subjects
-          </h1>
-          <hr className="mt-3 border-t-2 border-indigo-600" />
-        </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <div className="p-4 sm:p-6 lg:p-8">
+        {/* Header */}
         <div className="mb-8">
-          <input
-            type="text"
-            className="w-full p-4 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-            placeholder="Search subjects..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-blue-600 p-3 rounded-xl">
+              <FaChalkboardTeacher className="text-3xl text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">My Classes</h1>
+              <p className="text-gray-600 text-sm sm:text-base">Manage and view all your classes</p>
+            </div>
+          </div>
+          <div className="h-1 bg-gradient-to-r from-blue-600 to-blue-400 rounded-full w-24"></div>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative">
+            <input
+              type="text"
+              className="w-full p-4 pl-12 border-2 border-blue-200 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all"
+              placeholder="Search classes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <svg
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+
+        {/* Classes Grid */}
         {filteredClasses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredClasses.map((cls) => (
               <div
                 key={cls._id}
-                className="relative bg-gradient-to-br from-indigo-900/80 to-gray-900/80 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden border border-indigo-700 group"
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer overflow-hidden border-2 border-transparent hover:border-blue-300 group"
                 onClick={() => handleClassClick(cls)}
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClassClick(cls); }}
               >
-                {/* Optional background image or pattern */}
-                <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('/class-bg.svg')] bg-cover bg-center" />
-                <div className="p-6 pt-12 flex-grow flex flex-col">
-                  <h2 className="text-2xl font-bold text-indigo-200 truncate mb-4" title={cls.className}>
+                {/* Header with gradient */}
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6">
+                  <h2 className="text-xl font-bold text-white mb-2 truncate" title={cls.className}>
                     {cls.className}
                   </h2>
-                  <div className="space-y-3 text-sm">
-                    <p className="text-gray-300 flex items-center">
-                      <FaCalendarAlt size={14} className="mr-3 text-indigo-400 flex-shrink-0" />
-                      <span className="font-medium">Day:</span>&nbsp;
-                      {cls.day || <span className="italic text-gray-400">N/A</span>}
-                    </p>
-                    <p className="text-gray-300 flex items-center">
-                      <FaClock size={14} className="mr-3 text-indigo-400 flex-shrink-0" />
-                      <span className="font-medium">Time:</span>&nbsp;
-                      {cls.time ? formatTimePH(cls.time, cls.endTime) : <span className="italic text-gray-400">TBA</span>}
-                    </p>
-                    <p className="text-gray-300 flex items-center">
-                      <FaMapMarkerAlt size={14} className="mr-3 text-indigo-400 flex-shrink-0" />
-                      <span className="font-medium">Room:</span>&nbsp;
-                      {cls.roomNumber || <span className="italic text-gray-400">N/A</span>}
-                    </p>
+                  <div className="flex items-center gap-2 text-blue-100 text-sm">
+                    <FaUsers size={14} />
+                    <span>{cls.students?.length || 0} Students</span>
                   </div>
                 </div>
-                <div className="bg-indigo-500/30 px-6 py-3 border-t border-indigo-700">
-                  <p className="text-xs text-indigo-200 font-semibold text-center tracking-wide group-hover:text-white transition">
-                    View Class &rarr;
+
+                {/* Body with class details */}
+                <div className="p-6 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <FaCalendarAlt className="text-blue-600 mt-1 flex-shrink-0" size={16} />
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Day</p>
+                      <p className="text-gray-800 font-medium">
+                        {cls.day || <span className="italic text-gray-400">Not set</span>}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <FaClock className="text-blue-600 mt-1 flex-shrink-0" size={16} />
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Time</p>
+                      <p className="text-gray-800 font-medium">
+                        {cls.time ? formatTimePH(cls.time, cls.endTime) : <span className="italic text-gray-400">TBA</span>}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <FaMapMarkerAlt className="text-blue-600 mt-1 flex-shrink-0" size={16} />
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Room</p>
+                      <p className="text-gray-800 font-medium">
+                        {cls.roomNumber || <span className="italic text-gray-400">Not assigned</span>}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="bg-blue-50 px-6 py-3 border-t-2 border-blue-100">
+                  <p className="text-sm text-blue-700 font-semibold text-center group-hover:text-blue-800 transition-colors">
+                    View Class Details →
                   </p>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-10 mt-6 bg-gray-800 rounded-xl shadow-md">
-            <p className="text-xl text-gray-400">No subjects found matching your search.</p>
+          <div className="text-center py-16">
+            <div className="bg-white rounded-xl shadow-md p-12 max-w-md mx-auto">
+              <div className="text-gray-300 text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">No Classes Found</h3>
+              <p className="text-gray-600">No classes match your search criteria. Try a different search term.</p>
+            </div>
           </div>
         )}
       </div>

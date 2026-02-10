@@ -20,13 +20,16 @@ cloudinary.config({
 // Cloudinary storage configuration for modules
 const moduleCloudinaryStorage = new CloudinaryStorage({
   cloudinary,
-  params: async (req, file) => ({
-    folder: "taskhub/modules",
-    public_id: `module-${Date.now()}`,
-    resource_type: "raw", // All module files are stored as raw since they're documents
-    access_mode: "public",  // ✅ Ensure files are publicly accessible
-    type: "upload",
-  }),
+  params: async (req, file) => {
+    return {
+      folder: "taskhub/modules",
+      public_id: `module-${Date.now()}`,
+      resource_type: 'raw',  // ✅ Changed from 'auto' to 'raw' for better document handling
+      access_mode: "public",
+      type: "upload",
+      format: file.originalname.split('.').pop(), // ✅ Preserve original format
+    };
+  },
 });
 
 // Keep legacy local storage for backward compatibility
@@ -89,7 +92,32 @@ router.get('/', async (req, res) => {
       .populate('uploadedBy', 'name email')
       .sort({ uploadDate: -1 });
     
-    res.json(modules);
+    // ✅ Fix Cloudinary URLs if they're missing but publicId exists
+    const fixedModules = modules.map(module => {
+      const moduleObj = module.toObject();
+
+      if (!moduleObj.cloudinaryUrl && moduleObj.publicId) {
+        const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+        const fileExtension = moduleObj.fileName?.split('.').pop()?.toLowerCase();
+        const extensionSuffix = fileExtension ? `.${fileExtension}` : '';
+        moduleObj.cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/raw/upload/${moduleObj.publicId}${extensionSuffix}`;
+        console.log('🔧 Fixed missing cloudinaryUrl for module:', moduleObj.title);
+      }
+
+      if (!moduleObj.viewerUrl && moduleObj.cloudinaryUrl) {
+        const fileExtension = moduleObj.fileName.split('.').pop().toLowerCase();
+        if (fileExtension === 'pdf') {
+          moduleObj.viewerUrl = moduleObj.cloudinaryUrl;
+        } else {
+          moduleObj.viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(moduleObj.cloudinaryUrl)}&embedded=true`;
+        }
+        console.log('🔧 Generated viewerUrl for module:', moduleObj.title);
+      }
+
+      return moduleObj;
+    });
+    
+    res.json(fixedModules);
   } catch (error) {
     console.error('Error fetching modules:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -111,49 +139,90 @@ router.post('/upload', upload.single('module'), async (req, res) => {
     
     console.log('📎 Processing module upload:', {
       originalname: req.file.originalname,
-      filename: req.file.filename,
-      secure_url: req.file.secure_url,
-      public_id: req.file.public_id,
-      resource_type: req.file.resource_type
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      cloudinary_data: {
+        public_id: req.file.public_id,
+        secure_url: req.file.secure_url,
+        url: req.file.url,
+        resource_type: req.file.resource_type,
+        format: req.file.format
+      }
     });
     
-    // Construct Cloudinary URL if secure_url is missing but we have public_id
+    // ✅ Properly construct Cloudinary URL
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     let cloudinaryUrl = req.file.secure_url || req.file.url;
+
+    // If URL is missing, construct it manually from publicId WITH EXTENSION
     if (!cloudinaryUrl && req.file.public_id) {
-      const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'dptg3ct9i';
-      const resourceType = req.file.resource_type || 'raw';
-      cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/${resourceType}/upload/${req.file.public_id}`;
-      console.log('🔧 Constructed Cloudinary URL for module:', cloudinaryUrl);
+      const fileExtension = req.file.originalname.split('.').pop().toLowerCase();
+      cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/raw/upload/${req.file.public_id}.${fileExtension}`;
+      console.log('🔧 Manually constructed Cloudinary URL:', cloudinaryUrl);
+    }
+    
+    if (!cloudinaryUrl) {
+      console.error('❌ Failed to get Cloudinary URL');
+      return res.status(500).json({ message: 'Failed to upload file to cloud storage' });
+    }
+    
+    // ✅ Create viewer URL
+    const fileExtension = req.file.originalname.split('.').pop().toLowerCase();
+    let viewerUrl;
+    
+    if (fileExtension === 'pdf') {
+      // PDFs can be viewed directly
+      viewerUrl = cloudinaryUrl;
+      console.log('📄 PDF - Direct viewer URL:', viewerUrl);
+    } else {
+      // Other documents use Google Docs Viewer
+      viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(cloudinaryUrl)}&embedded=true`;
+      console.log('📄 Document - Google Docs viewer URL:', viewerUrl);
     }
     
     const module = new Module({
       title: title.trim(),
       description: description ? description.trim() : '',
       fileName: req.file.originalname,
-      filePath: req.file.filename || req.file.public_id, // Store filename or public_id
+      filePath: req.file.public_id || req.file.filename,
       fileSize: req.file.size,
       mimeType: req.file.mimetype,
       classId,
       uploadedBy,
       uploadDate: new Date(),
-      // Cloudinary fields
       cloudinaryUrl: cloudinaryUrl,
+      viewerUrl: viewerUrl,
       publicId: req.file.public_id,
-      resourceType: req.file.resource_type
+      resourceType: 'raw'
     });
     
     await module.save();
-    
-    // Populate the uploadedBy field before sending response
     await module.populate('uploadedBy', 'name email');
     
-    console.log('✅ Module uploaded successfully with Cloudinary URL:', cloudinaryUrl);
+    console.log('✅ Module saved successfully:');
+    console.log('   - ID:', module._id);
+    console.log('   - Title:', module.title);
+    console.log('   - Cloudinary URL:', module.cloudinaryUrl);
+    console.log('   - Viewer URL:', module.viewerUrl);
+    console.log('   - Public ID:', module.publicId);
+    
     res.status(201).json({
       message: 'Module uploaded successfully',
       module
     });
   } catch (error) {
     console.error('❌ Error uploading module:', error);
+    
+    // Cleanup if upload failed
+    if (req.file && req.file.public_id) {
+      try {
+        await cloudinary.uploader.destroy(req.file.public_id, { resource_type: 'raw' });
+        console.log('🗑️ Cleaned up Cloudinary file after error');
+      } catch (cleanupError) {
+        console.error('Failed to cleanup Cloudinary file:', cleanupError);
+      }
+    }
+    
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -252,25 +321,104 @@ router.get('/view/:id', async (req, res) => {
     console.log('👀 Cloudinary URL:', module.cloudinaryUrl);
     console.log('👀 File path:', module.filePath);
     
-    // If it's a Cloudinary file, redirect to Cloudinary URL for inline viewing
+    // If it's a Cloudinary file, handle based on file type
     if (module.cloudinaryUrl) {
-      console.log('👀 Redirecting to Cloudinary view URL');
+      console.log('👀 Using Cloudinary URL for viewing');
+      
+      const fileExtension = module.fileName.split('.').pop().toLowerCase();
       
       // Add CORS headers
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET');
       res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
       
-      return res.redirect(module.cloudinaryUrl);
+      // For PDFs, redirect directly
+      if (fileExtension === 'pdf') {
+        return res.redirect(module.cloudinaryUrl);
+      }
+      
+      // For other documents, provide HTML with download button and Google Docs Viewer option
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>View ${module.fileName}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              max-width: 800px;
+              margin: 50px auto;
+              padding: 20px;
+              text-align: center;
+            }
+            .file-icon {
+              font-size: 64px;
+              margin-bottom: 20px;
+            }
+            .file-name {
+              font-size: 24px;
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            .file-type {
+              color: #666;
+              margin-bottom: 30px;
+            }
+            .buttons {
+              display: flex;
+              gap: 15px;
+              justify-content: center;
+              flex-wrap: wrap;
+            }
+            .btn {
+              padding: 12px 24px;
+              font-size: 16px;
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              text-decoration: none;
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+            }
+            .btn-primary {
+              background-color: #4F46E5;
+              color: white;
+            }
+            .btn-primary:hover {
+              background-color: #4338CA;
+            }
+            .btn-secondary {
+              background-color: #10B981;
+              color: white;
+            }
+            .btn-secondary:hover {
+              background-color: #059669;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="file-icon">📄</div>
+          <div class="file-name">${module.fileName}</div>
+          <div class="file-type">${fileExtension.toUpperCase()} Document</div>
+          <div class="buttons">
+            <a href="${module.cloudinaryUrl}" target="_blank" class="btn btn-primary" download="${module.fileName}">
+              ⬇️ Download File
+            </a>
+            <a href="https://docs.google.com/viewer?url=${encodeURIComponent(module.cloudinaryUrl)}&embedded=true" target="_blank" class="btn btn-secondary">
+              👁️ View in Browser
+            </a>
+          </div>
+        </body>
+        </html>
+      `);
     }
     
     // Legacy file handling - local files
     let filePath;
     if (path.isAbsolute(module.filePath)) {
-      // Old format: absolute path
       filePath = module.filePath;
     } else {
-      // New format: relative path (filename only)
       filePath = path.join(__dirname, '..', 'uploads', 'modules', module.filePath);
     }
     
@@ -446,6 +594,97 @@ router.get('/debug/fix-paths', async (req, res) => {
     });
   } catch (error) {
     console.error('Error in debug endpoint:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Cleanup endpoint - Delete all modules without Cloudinary URL
+router.get('/cleanup/legacy', async (req, res) => {
+  try {
+    // Find all modules without cloudinaryUrl
+    const legacyModules = await Module.find({ 
+      $or: [
+        { cloudinaryUrl: { $exists: false } },
+        { cloudinaryUrl: null },
+        { cloudinaryUrl: '' }
+      ]
+    });
+    
+    console.log(`🗑️ Found ${legacyModules.length} legacy modules to delete`);
+    
+    // Delete them
+    const result = await Module.deleteMany({
+      $or: [
+        { cloudinaryUrl: { $exists: false } },
+        { cloudinaryUrl: null },
+        { cloudinaryUrl: '' }
+      ]
+    });
+    
+    console.log(`✅ Deleted ${result.deletedCount} legacy modules`);
+    
+    res.json({
+      message: 'Legacy modules cleaned up successfully',
+      deletedCount: result.deletedCount,
+      modules: legacyModules.map(m => ({ id: m._id, title: m.title, fileName: m.fileName }))
+    });
+  } catch (error) {
+    console.error('❌ Error cleaning up legacy modules:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// ✅ Fix existing modules - migrate URLs
+router.post('/fix-urls', async (req, res) => {
+  try {
+    console.log('🔧 Starting module URL fix...');
+    
+    const modules = await Module.find({});
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    let fixedCount = 0;
+    
+    for (const module of modules) {
+      let updated = false;
+      
+      // Fix cloudinaryUrl if missing but publicId exists
+      if (!module.cloudinaryUrl && module.publicId) {
+        module.cloudinaryUrl = `https://res.cloudinary.com/${cloudName}/raw/upload/${module.publicId}`;
+        updated = true;
+        console.log(`✅ Fixed cloudinaryUrl for: ${module.title}`);
+      }
+      
+      // Fix viewerUrl if missing but cloudinaryUrl exists
+      if (!module.viewerUrl && module.cloudinaryUrl) {
+        const fileExtension = module.fileName.split('.').pop().toLowerCase();
+        if (fileExtension === 'pdf') {
+          module.viewerUrl = module.cloudinaryUrl;
+        } else {
+          module.viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(module.cloudinaryUrl)}&embedded=true`;
+        }
+        updated = true;
+        console.log(`✅ Fixed viewerUrl for: ${module.title}`);
+      }
+      
+      // Set resourceType if missing
+      if (!module.resourceType) {
+        module.resourceType = 'raw';
+        updated = true;
+      }
+      
+      if (updated) {
+        await module.save();
+        fixedCount++;
+      }
+    }
+    
+    console.log(`✅ Fixed ${fixedCount} modules`);
+    res.json({ 
+      message: `Successfully fixed ${fixedCount} modules`,
+      totalModules: modules.length,
+      fixedModules: fixedCount
+    });
+  } catch (error) {
+    console.error('❌ Error fixing module URLs:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
