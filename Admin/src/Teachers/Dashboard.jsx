@@ -182,7 +182,7 @@ export default function TeacherDashboard() {
 
   if (loadingStats && !classes.length) {
     return (
-      <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <FaSpinner className="animate-spin text-5xl text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600 font-medium">Loading dashboard...</p>
@@ -193,7 +193,7 @@ export default function TeacherDashboard() {
 
   if (error && !classes.length) {
     return (
-      <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col items-center justify-center text-center p-6">
+      <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col items-center justify-center text-center p-6">
         <FaExclamationTriangle className="text-5xl text-red-500 mb-4" />
         <p className="text-red-600 text-xl font-semibold mb-2">Error loading dashboard data</p>
         <p className="text-gray-600">{error}</p>
@@ -202,7 +202,7 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div className="p-4 sm:p-6 lg:p-8 pt-16 md:pt-4 max-w-7xl mx-auto">
         {/* Welcome Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl shadow-xl p-6 sm:p-8 mb-8 text-white">

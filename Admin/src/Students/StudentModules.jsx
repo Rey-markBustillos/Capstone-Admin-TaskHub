@@ -207,7 +207,7 @@ const StudentModules = () => {
   };
 
   return (
-    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
       <div className="w-full">
 
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 sm:p-6 rounded-xl shadow-lg border-l-4 border-blue-400">

@@ -174,7 +174,7 @@ const UploadModule = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-white py-8 px-2 sm:px-6">
+    <div className="min-h-full bg-white py-8 px-2 sm:px-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg px-6 py-5 border border-blue-300 mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow flex items-center gap-4">

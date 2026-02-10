@@ -219,7 +219,7 @@ const CreateActivity = () => {
   };
 
   return (
-    <div className="overflow-y-auto">
+    <div>
       {/* Global Success/Error Messages */}
       {success && !isCreateModalOpen && !isEditModalOpen && (
         <div className="fixed top-4 right-4 z-50 bg-green-500 text-white p-4 rounded-lg shadow-lg">

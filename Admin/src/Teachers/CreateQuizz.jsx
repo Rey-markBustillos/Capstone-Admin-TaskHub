@@ -901,7 +901,7 @@ export default function CreateQuizz() {
 
   // Wrap the whole return in a single centered div
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen overflow-y-auto bg-white py-4 sm:py-6 lg:py-10 px-2 sm:px-4">{/* Improved responsive padding */}
+    <div className="flex flex-col items-center justify-start min-h-full bg-white py-4 sm:py-6 lg:py-10 px-2 sm:px-4">{/* Improved responsive padding */}
       {/* Quiz Actions Dropdown at the top */}
       <div className="w-full flex justify-center sm:justify-end max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] mb-4 sm:mb-6 relative">
         <div className="relative" ref={dropdownRef}>

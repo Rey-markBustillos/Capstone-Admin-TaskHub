@@ -202,7 +202,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-white p-4 sm:p-8 pt-16 md:pt-8">
+    <div className="min-h-full bg-white p-4 sm:p-8 pt-16 md:pt-8">
         {/* Admin Dashboard Header */}
         <div className="flex items-center gap-4 mb-8">
           <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 via-indigo-400 to-blue-600 text-white shadow-lg border-4 border-white">

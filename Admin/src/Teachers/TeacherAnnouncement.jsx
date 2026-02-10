@@ -203,7 +203,7 @@ export default function TeacherAnnouncement() {
   // ...availableReactions imported from shared constants...
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-white py-8 px-2 sm:px-6">
+    <div className="min-h-full bg-white py-8 px-2 sm:px-6">
       {/* Header Section with Icon */}
       <div className="flex items-center justify-between mb-8 bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-xl shadow-lg px-6 py-5 border-l-4 border-blue-400">
         <div className="flex items-center gap-4">

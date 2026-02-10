@@ -38,7 +38,7 @@ const StudentClassView = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-gray-900">
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-gray-900">
         <FaSpinner className="animate-spin text-4xl text-blue-600" />
         <span className="ml-4 text-xl">Loading Class Details...</span>
       </div>
@@ -47,7 +47,7 @@ const StudentClassView = () => {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-gray-900 text-center p-4">
+      <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-gray-900 text-center p-4">
         <FaExclamationTriangle className="text-red-500 text-5xl mb-4" />
         <h2 className="text-2xl font-bold text-red-600">Error Loading Class</h2>
         <p className="text-gray-700 mt-2">{error}</p>
@@ -60,7 +60,7 @@ const StudentClassView = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-screen overflow-y-auto text-gray-900">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-full text-gray-900">
       <StudentClassNavbar selectedClass={selectedClass} />
       <main className="p-4 md:p-6 lg:p-8">
         <Outlet /> 

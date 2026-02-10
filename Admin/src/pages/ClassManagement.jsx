@@ -409,7 +409,7 @@ const ClassManagement = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6 pt-16 md:pt-6 min-h-screen overflow-y-auto">
+    <div className="max-w-6xl mx-auto p-6 pt-16 md:pt-6 min-h-full">
       {success && <div className="bg-green-100 text-green-800 p-3 rounded mb-4 text-center font-semibold">{success}</div>}
       {error && <div className="bg-red-100 text-red-800 p-3 rounded mb-4 text-center font-semibold">{error}</div>}
       <h1 className="text-3xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-2">

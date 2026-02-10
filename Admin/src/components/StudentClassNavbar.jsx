@@ -68,7 +68,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
 
       {/* Main Navigation */}
       <nav className={`bg-white shadow-lg fixed left-0 right-0 z-30 border-b-2 border-blue-100 transition-all duration-300 ${
-        selectedClass ? 'top-[60px] sm:top-[70px] md:top-[84px]' : 'top-0'
+        selectedClass ? 'top-[84px] sm:top-[94px] md:top-[108px]' : 'top-0'
       } ${
         isSidebarOpen ? 'md:left-36 lg:left-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:left-10 lg:left-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'
       }`}>
@@ -186,7 +186,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
       {/* Mobile Dropdown Menu */}
       {open && (
         <div className={`md:hidden bg-gradient-to-b from-blue-50 to-white border-t-2 border-blue-200 shadow-xl animate-fadeIn fixed left-0 right-0 z-20 transition-all duration-300 ${
-          selectedClass ? 'top-[110px] sm:top-[120px]' : 'top-[56px]'
+          selectedClass ? 'top-[134px] sm:top-[144px]' : 'top-[56px]'
         } max-h-[calc(100vh-120px)] overflow-y-auto`}>
           <div className="p-2 sm:p-3 md:p-4 grid grid-cols-2 gap-2 sm:gap-3">
             <NavLink

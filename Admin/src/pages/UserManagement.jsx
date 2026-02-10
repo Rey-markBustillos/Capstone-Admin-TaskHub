@@ -242,7 +242,7 @@ const UserManagement = () => {
   if (error) return <p className="text-center text-red-600 mt-10">{error}</p>;
 
   return (
-    <div className="w-full min-h-screen overflow-y-auto bg-white">
+    <div className="w-full min-h-full bg-white">
       <div className="max-w-5xl mx-auto p-2 sm:p-4 md:p-6 pt-16 md:pt-2 font-sans w-full">
         <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center flex items-center justify-center gap-2">
           <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">

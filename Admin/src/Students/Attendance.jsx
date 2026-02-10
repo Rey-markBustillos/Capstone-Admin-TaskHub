@@ -44,7 +44,7 @@ const Attendance = () => {
   }, [studentId, classId]);
 
   return (
-    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
       <div className="w-full h-full p-2 sm:p-3 md:p-4 lg:p-6">
         {/* Back Button */}
         <div className="mb-3 sm:mb-4 md:mb-6">

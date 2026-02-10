@@ -95,7 +95,7 @@ const ProtectedLayout = ({ user, onLogout }) => {
     return (
       <StudentThemeProvider>
         <SidebarProvider isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}>
-          <div className={`flex min-h-screen ${backgroundClass}`}>
+          <div className={`flex h-screen ${backgroundClass}`}>
             <Sidebar 
               role={user.role} 
               onLogout={onLogout} 
@@ -103,7 +103,7 @@ const ProtectedLayout = ({ user, onLogout }) => {
               setIsOpen={setIsSidebarOpen}
               isOverlay={isStudentClass}
             />
-            <main className={`flex-1 transition-all duration-300 ${isStudentClass ? 'ml-0' : (isSidebarOpen ? 'md:ml-64' : 'md:ml-20')}`}>
+            <main className={`flex-1 transition-all duration-300 overflow-y-auto ${isStudentClass ? 'ml-0' : (isSidebarOpen ? 'md:ml-64' : 'md:ml-20')}`}>
               <Outlet />
             </main>
           </div>
@@ -114,14 +114,14 @@ const ProtectedLayout = ({ user, onLogout }) => {
 
   return (
     <SidebarProvider isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen}>
-      <div className={`flex min-h-screen ${backgroundClass}`}>
+      <div className={`flex h-screen ${backgroundClass}`}>
         <Sidebar 
           role={user.role} 
           onLogout={onLogout} 
           isOpen={isSidebarOpen} 
           setIsOpen={setIsSidebarOpen} 
         />
-        <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
+        <main className={`flex-1 transition-all duration-300 overflow-y-auto ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
           <Outlet /> {/* Dito lalabas ang mga nested routes */}
         </main>
       </div>

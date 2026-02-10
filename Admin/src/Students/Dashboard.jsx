@@ -272,7 +272,7 @@ const StudentDashboard = () => {
 
   return (
     // This page is intentionally full width, no sidebar allowed
-    <div className={`relative min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-blue-50 via-white to-indigo-50 w-full min-w-0 mx-0 scrollbar-hidden overflow-y-auto overflow-x-hidden pt-16 sm:pt-4 md:pt-6 pb-8 sm:pb-12 md:pb-16 px-2 sm:px-4 md:px-6 lg:px-8`}>
+    <div className={`relative min-h-full flex flex-col items-center justify-start bg-gradient-to-br from-blue-50 via-white to-indigo-50 w-full min-w-0 mx-0 pt-16 sm:pt-4 md:pt-6 pb-8 sm:pb-12 md:pb-16 px-2 sm:px-4 md:px-6 lg:px-8`}>
       {/* Welcome section */}
       <div className="w-full flex items-center justify-center py-4 sm:py-6 md:py-8">
         <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-blue-900 tracking-tight w-full text-center`}>Welcome, {studentName}!</h1>

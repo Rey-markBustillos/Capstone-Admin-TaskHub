@@ -135,11 +135,11 @@ export default function StudentAnnouncements() {
   // ...availableReactions imported from shared constants...
 
   return (
-    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-28 sm:pt-32 md:pt-36 pb-8 sm:pb-12 md:pb-16 px-3 sm:px-4 md:px-6 transition-all duration-300 ${
+    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-28 sm:pt-32 md:pt-36 pb-8 sm:pb-12 md:pb-16 px-3 sm:px-4 md:px-6 transition-all duration-300 ${
       isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'
     }`}>
       <div className="w-full max-w-5xl mx-auto">
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-4 sm:mb-6 mt-2">
           <NavLink
             to={`/student/class/${classId}`}
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 text-sm sm:text-base rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 min-h-[44px]"

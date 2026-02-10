@@ -131,7 +131,7 @@ const StudentActivities = () => {
   };
 
   if (loading) return (
-    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <FaBookOpen className="animate-bounce text-blue-500 mb-4" size={48} />
         <div className="text-center p-10 text-lg font-semibold text-gray-800">Loading activities...</div>
@@ -140,7 +140,7 @@ const StudentActivities = () => {
   );
 
   if (error) return (
-    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <FaTimesCircle className="text-red-500 mb-4" size={48} />
         <div className="text-center p-10 text-red-500 bg-white rounded-xl shadow-lg">{error}</div>
@@ -149,7 +149,7 @@ const StudentActivities = () => {
   );
 
   return (
-    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
       <div className="max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh]">
         <div className="mb-4 sm:mb-6 ml-2 self-start">
         </div>
