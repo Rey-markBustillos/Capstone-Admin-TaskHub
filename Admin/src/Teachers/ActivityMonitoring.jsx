@@ -449,12 +449,19 @@ export default function ActivityMonitoring() {
                         .map((sub, index) => {
                           const fileTypeIcon = getFileIcon(sub.fileName);
                           
+                          // Build proper fileUrl
                           let fileUrl = null;
                           if (sub.cloudinaryUrl) {
                             fileUrl = sub.cloudinaryUrl;
+                          } else if (sub.filePath && sub.filePath.startsWith('http')) {
+                            fileUrl = sub.filePath;
                           } else if (sub._id) {
-                            fileUrl = `${API_BASE_URL}activities/submissions/download/${sub._id}`;
+                            fileUrl = `${API_BASE_URL}activities/submission/${sub._id}/download`;
                           }
+
+                          // Validate that fileUrl is a full URL (not just a filename)
+                          const isValidUrl = fileUrl && (fileUrl.startsWith('http://') || fileUrl.startsWith('https://'));
+                          const canShowImage = isValidUrl && /\.(jpg|jpeg|png|gif)$/i.test(sub.fileName);
 
                           const dueDate = selectedActivity.date ? new Date(selectedActivity.date) : null;
                           const submissionDate = sub.submissionDate ? new Date(sub.submissionDate) : null;
@@ -487,14 +494,20 @@ export default function ActivityMonitoring() {
 
                               {/* Attachment */}
                               <td className="px-6 py-4">
-                                {sub.fileName && fileUrl ? (
+                                {sub.fileName && isValidUrl ? (
                                   <div className="flex flex-col gap-2">
                                     <span className="text-xs text-gray-600 truncate max-w-xs">{sub.fileName}</span>
-                                    {/\.(jpg|jpeg|png|gif)$/i.test(sub.fileName) && (
+                                    {/* Only show image preview if it's a recent Cloudinary upload (has public_id) */}
+                                    {canShowImage && sub.cloudinaryPublicId && (
                                       <img
                                         src={fileUrl}
                                         alt={sub.fileName}
                                         className="w-24 h-16 object-cover rounded border border-gray-200"
+                                        onError={(e) => {
+                                          console.warn('Image failed to load:', fileUrl);
+                                          e.target.style.display = 'none';
+                                        }}
+                                        loading="lazy"
                                       />
                                     )}
                                     <a
@@ -504,10 +517,14 @@ export default function ActivityMonitoring() {
                                       className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium w-fit"
                                     >
                                       {fileTypeIcon}
-                                      <span>View</span>
+                                      <span>Download</span>
                                       <FaDownload size={12} />
                                     </a>
                                   </div>
+                                ) : sub.fileName ? (
+                                  <span className="text-amber-600 italic flex items-center gap-2 text-sm">
+                                    <FaFile /> {sub.fileName} (Legacy file - URL unavailable)
+                                  </span>
                                 ) : (
                                   <span className="text-gray-400 italic flex items-center gap-2">
                                     <FaFile /> No file
