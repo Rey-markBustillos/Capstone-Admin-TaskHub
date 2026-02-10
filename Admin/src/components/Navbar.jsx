@@ -90,6 +90,7 @@ const Navbar = ({ selectedClass }) => {
 
             {/* Menu Items */}
             <div className="flex items-center gap-2">
+              {/* eslint-disable-next-line no-unused-vars */}
               {menuItems.map(({ to, icon: IconComponent, label, color }) => (
                 <Link
                   key={to}
@@ -129,6 +130,7 @@ const Navbar = ({ selectedClass }) => {
         {open && isMobile && (
           <div className="md:hidden bg-white border-t-2 border-blue-100 shadow-lg animate-fadeIn">
             <div className="p-4 grid grid-cols-2 gap-2">
+              {/* eslint-disable-next-line no-unused-vars */}
               {menuItems.map(({ to, icon: IconComponent, label, color }) => (
                 <Link
                   key={to}

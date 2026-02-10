@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useParams, useNavigate, NavLink } from 'react-router-dom';
 import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf, FaLock } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
-import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -41,7 +40,6 @@ const StudentActivities = () => {
   const [error, setError] = useState(null);
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
-  const { isLightMode } = useContext(StudentThemeContext);
   const navigate = useNavigate();
 
   const storedUser = localStorage.getItem('user');
@@ -100,16 +98,16 @@ const StudentActivities = () => {
   };
 
   const getStatus = (activity, submission) => {
-    if (activity.isLocked) return { text: 'Locked', style: isLightMode ? 'bg-gray-100 text-gray-800' : 'bg-gray-900 text-gray-200' };
+    if (activity.isLocked) return { text: 'Locked', style: 'bg-gray-100 text-gray-700' };
     const dueDate = new Date(activity.date);
     if (submission) {
       const submissionDate = new Date(submission.submissionDate);
-      if (submission.status === 'Needs Resubmission') return { text: 'Needs Resubmission', style: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' };
-      if (submission.score != null) return { text: submissionDate > dueDate ? 'Graded (Late)' : 'Graded', style: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' };
-      if (submissionDate > dueDate) return { text: 'Late', style: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' };
-      return { text: 'Submitted', style: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' };
+      if (submission.status === 'Needs Resubmission') return { text: 'Needs Resubmission', style: 'bg-purple-100 text-purple-700' };
+      if (submission.score != null) return { text: submissionDate > dueDate ? 'Graded (Late)' : 'Graded', style: 'bg-blue-100 text-blue-700' };
+      if (submissionDate > dueDate) return { text: 'Late', style: 'bg-orange-100 text-orange-700' };
+      return { text: 'Submitted', style: 'bg-green-100 text-green-700' };
     }
-    return new Date() > dueDate ? { text: 'Missing', style: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' } : { text: 'Pending', style: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' };
+    return new Date() > dueDate ? { text: 'Missing', style: 'bg-red-100 text-red-700' } : { text: 'Pending', style: 'bg-yellow-100 text-yellow-700' };
   };
 
   const handleSubmission = (activityId) => {
@@ -133,41 +131,38 @@ const StudentActivities = () => {
   };
 
   if (loading) return (
-    <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
+    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <FaBookOpen className="animate-bounce text-indigo-500 mb-4" size={48} />
-        <div className={`text-center p-10 text-lg font-semibold ${isLightMode ? 'text-gray-800' : 'text-gray-100'}`}>Loading activities...</div>
+        <FaBookOpen className="animate-bounce text-blue-500 mb-4" size={48} />
+        <div className="text-center p-10 text-lg font-semibold text-gray-800">Loading activities...</div>
       </div>
     </div>
   );
 
   if (error) return (
-    <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
+    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <FaTimesCircle className="text-red-500 mb-4" size={48} />
-        <div className="text-center p-10 text-red-400">{error}</div>
+        <div className="text-center p-10 text-red-500 bg-white rounded-xl shadow-lg">{error}</div>
       </div>
     </div>
   );
 
   return (
-    <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-4 ${isSidebarOpen ? 'ml-36 w-[calc(100%-144px)]' : 'ml-10 w-[calc(100%-40px)]'}`}>
+    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
       <div className="max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh]">
-        <div className="mb-4 ml-2 self-start">
-          <NavLink to={`/student/class/${classId}`} className={`inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg ${isLightMode ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-indigo-700 hover:bg-indigo-800'} text-white font-semibold shadow`}>
-            <FaArrowLeft /> Back
-          </NavLink>
+        <div className="mb-4 sm:mb-6 ml-2 self-start">
         </div>
 
-        <div className={`${isLightMode ? 'bg-white/90 border-indigo-300' : 'bg-gray-900/80 border-indigo-800'} rounded-xl shadow-2xl p-4 border-2 w-full overflow-x-auto`}>
-          <div className="flex items-center gap-2 mb-4">
-            <FaBookOpen className="text-indigo-600 dark:text-indigo-400 text-2xl" />
-            <h1 className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">Class Activities</h1>
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-blue-200 w-full overflow-x-auto">
+          <div className="flex items-center gap-2 mb-6">
+            <FaBookOpen className="text-blue-600 text-2xl" />
+            <h1 className="text-2xl font-bold text-blue-900">Class Activities</h1>
           </div>
 
           <div className="overflow-y-auto" style={{ maxHeight: '70vh', minHeight: '200px' }}>
             {activities.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {activities.map(activity => {
                   const submission = getSubmissionForActivity(activity._id);
                   const statusInfo = getStatus(activity, submission);
@@ -175,12 +170,12 @@ const StudentActivities = () => {
 
                   return (
                     <div key={activity._id} onClick={() => handleSubmission(activity._id)}
-                      className={`${isLightMode ? 'bg-white border-indigo-200' : 'bg-gray-800 border-indigo-900'} rounded-xl shadow-lg p-4 flex flex-col justify-between border relative ${activity.isLocked ? 'cursor-not-allowed opacity-75' : 'hover:shadow-2xl hover:-translate-y-1 cursor-pointer'}`}
+                      className={`bg-white border-2 border-blue-200 rounded-xl shadow-md p-4 flex flex-col justify-between relative transition-all duration-200 ${activity.isLocked ? 'cursor-not-allowed opacity-75' : 'hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 cursor-pointer'}`}
                       title={activity.isLocked ? 'This activity is locked' : 'Click to view/submit activity'}>
                       <div>
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 truncate">
-                            <FaBookOpen className="text-indigo-400" /> {activity.title}
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="text-lg font-bold text-blue-900 flex items-center gap-2 truncate">
+                            <FaBookOpen className="text-blue-500" /> {activity.title}
                             {activity.isLocked && <FaLock className="text-gray-500" title="Locked" />}
                           </h3>
                           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusInfo.style}`}>
@@ -188,30 +183,30 @@ const StudentActivities = () => {
                           </span>
                         </div>
 
-                        <div className="flex items-center text-gray-500 mb-2 gap-2 text-xs">
+                        <div className="flex items-center text-gray-600 mb-2 gap-2 text-xs sm:text-sm">
                           <FaCalendarAlt /> Due: {new Date(activity.date).toLocaleString()}
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs">
-                          {submission?.score != null ? <span><FaStar className="text-yellow-500"/> {submission.score}/{activity.totalPoints || 100}</span> :
-                           submission ? <span className="text-gray-400"><FaStar /> Not Graded</span> :
-                           <span className="text-gray-400"><FaStar /> No Score</span>}
+                        <div className="flex items-center gap-2 text-xs sm:text-sm">
+                          {submission?.score != null ? <span className="flex items-center gap-1"><FaStar className="text-yellow-500"/> {submission.score}/{activity.totalPoints || 100}</span> :
+                           submission ? <span className="text-gray-500 flex items-center gap-1"><FaStar /> Not Graded</span> :
+                           <span className="text-gray-500 flex items-center gap-1"><FaStar /> No Score</span>}
                         </div>
                       </div>
 
-                      <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-2 flex justify-between items-center">
+                      <div className="mt-4 border-t border-blue-200 pt-3 flex justify-between items-center">
                         {attachmentUrl ? (
                           <a 
                             href={attachmentUrl} 
                             target="_blank" 
                             rel="noopener noreferrer" 
                             onClick={(e) => e.stopPropagation()} 
-                            className="flex items-center text-indigo-600 dark:text-indigo-400 text-xs hover:underline"
+                            className="flex items-center text-blue-600 text-xs sm:text-sm hover:underline font-medium"
                           >
                             <FaPaperclip className="mr-1"/> View Attachment
                           </a>
                         ) : (
-                          <span className="text-gray-400 text-xs">No File</span>
+                          <span className="text-gray-400 text-xs sm:text-sm">No File</span>
                         )}
 
                         {!activity.isLocked && ((statusInfo.text !== 'Missing' && new Date() < new Date(activity.date)) || statusInfo.text === 'Needs Resubmission') && (
@@ -229,7 +224,7 @@ const StudentActivities = () => {
 
                               submitActivity({ activityId: activity._id, studentId, content: answer.trim() });
                             }}
-                            className="px-2 py-1 bg-indigo-600 text-white rounded text-xs ml-2"
+                            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm min-h-[36px] ml-2"
                           >
                             Quick Submit
                           </button>
@@ -240,9 +235,9 @@ const StudentActivities = () => {
                 })}
               </div>
             ) : (
-              <div className={`text-center p-6 ${isLightMode ? 'bg-white' : 'bg-gray-800'} rounded-lg shadow-md`}>
-                <FaBookOpen className="mx-auto mb-4 text-indigo-400 dark:text-indigo-500" size={36}/>
-                <p className="text-gray-600 dark:text-gray-400">No activities posted for this class yet.</p>
+              <div className="text-center p-8 bg-blue-50 rounded-lg border border-blue-200">
+                <FaBookOpen className="mx-auto mb-4 text-blue-500" size={36}/>
+                <p className="text-gray-600">No activities posted for this class yet.</p>
               </div>
             )}
           </div>

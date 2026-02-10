@@ -44,18 +44,10 @@ const Attendance = () => {
   }, [studentId, classId]);
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 transition-all duration-300 pt-32 sm:pt-36 md:pt-40 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
       <div className="w-full h-full p-2 sm:p-3 md:p-4 lg:p-6">
         {/* Back Button */}
         <div className="mb-3 sm:mb-4 md:mb-6">
-          <NavLink
-            to={`/student/class/${classId}`}
-            className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm md:text-base rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 min-h-[44px]"
-          >
-            <FaArrowLeft className="text-xs sm:text-sm" /> 
-            <span className="hidden xs:inline">Back to Class Menu</span>
-            <span className="xs:hidden">Back</span>
-          </NavLink>
         </div>
 
         {/* Main Content Card */}

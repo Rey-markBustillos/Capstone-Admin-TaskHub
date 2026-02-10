@@ -488,15 +488,9 @@ const QuizzHub = () => {
           </div>
         </div>
       )}
-      <div className={`min-h-screen bg-white p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+      <div className={`min-h-screen overflow-y-auto bg-white p-2 sm:p-4 md:p-8 transition-all duration-300 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
         <div className="w-full max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh] px-1 sm:px-2 md:px-4 lg:px-8">
           <div className="mb-4 sm:mb-6 mt-2 sm:mt-4 ml-2 sm:ml-4 self-start">
-            <NavLink
-              to={`/student/class/${classId}`}
-              className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 md:px-5 py-1 sm:py-2 md:py-3 text-xs sm:text-sm md:text-base rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow transition mb-1 sm:mb-2 md:mb-4"
-            >
-              <FaArrowLeft className="text-[10px] sm:text-xs md:text-sm" /> <span className="hidden sm:inline">Back to Class Menu</span><span className="sm:hidden">Back</span>
-            </NavLink>
           </div>
           <div className="bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl p-2 sm:p-3 md:p-6 lg:p-8 xl:p-12 border-l-4 border-blue-400 w-full max-w-none overflow-x-auto">
             <h2 className="text-sm sm:text-lg md:text-2xl font-bold text-blue-900 mb-2 sm:mb-3 md:mb-4 flex items-center gap-1 sm:gap-2">

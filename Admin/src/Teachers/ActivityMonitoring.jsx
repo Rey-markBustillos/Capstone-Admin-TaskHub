@@ -177,7 +177,7 @@ export default function ActivityMonitoring() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
         {/* Loading State */}
         {loading && (

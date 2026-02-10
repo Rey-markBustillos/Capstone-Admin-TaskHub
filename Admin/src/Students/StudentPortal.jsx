@@ -69,7 +69,7 @@ const StudentPortal = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <FaSpinner className="animate-spin text-5xl text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600 font-medium">Loading your classes...</p>
@@ -80,7 +80,7 @@ const StudentPortal = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center text-center p-6">
+      <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center text-center p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md">
           <div className="text-red-500 text-5xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Classes</h2>
@@ -93,7 +93,7 @@ const StudentPortal = () => {
   // Show a special message if the student has no classes at all
   if (!classes || classes.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col justify-center items-center p-6">
+      <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col justify-center items-center p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-12 max-w-2xl text-center">
           <MdClass className="text-6xl text-blue-600 mx-auto mb-4" />
           <h2 className="text-3xl font-bold text-gray-800 mb-4">No Classes Available</h2>
@@ -104,8 +104,8 @@ const StudentPortal = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <div className="p-4 sm:p-6 lg:p-8 pt-16 md:pt-4">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">

@@ -1,7 +1,7 @@
 
 // NOTE: This dashboard is always full width and should NEVER render a sidebar.
 // If you see a sidebar here, check your router/layout setup.
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone, Users } from 'lucide-react';
@@ -51,7 +51,6 @@ const LoadingSpinner = () => (
 );
 
 const StudentDashboard = () => {
-  const { isLightMode } = useContext(StudentThemeContext);
   const [classes, setClasses] = useState([]);
   const [activities, setActivities] = useState([]);
   const [submissions, setSubmissions] = useState([]);
@@ -273,28 +272,28 @@ const StudentDashboard = () => {
 
   return (
     // This page is intentionally full width, no sidebar allowed
-    <div className={`relative min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-blue-50 via-white to-indigo-50 w-full min-w-0 mx-0 scrollbar-hidden overflow-y-auto overflow-x-hidden pt-4 pb-8 sm:pb-12`}>
+    <div className={`relative min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-blue-50 via-white to-indigo-50 w-full min-w-0 mx-0 scrollbar-hidden overflow-y-auto overflow-x-hidden pt-16 sm:pt-4 md:pt-6 pb-8 sm:pb-12 md:pb-16 px-2 sm:px-4 md:px-6 lg:px-8`}>
       {/* Welcome section */}
-      <div className="w-full flex items-center justify-center py-6">
-        <h1 className={`text-3xl sm:text-5xl font-extrabold text-blue-900 tracking-tight w-full text-center`}>Welcome, {studentName}!</h1>
+      <div className="w-full flex items-center justify-center py-4 sm:py-6 md:py-8">
+        <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-blue-900 tracking-tight w-full text-center`}>Welcome, {studentName}!</h1>
       </div>
 
-  <div className="relative z-10 w-full max-w-full p-2 sm:p-4 md:p-6 mx-auto overflow-x-hidden min-w-0 mb-4 sm:mb-6">
+  <div className="relative z-10 w-full max-w-7xl p-0 sm:p-2 md:p-4 mx-auto overflow-x-hidden min-w-0 mb-2 sm:mb-4 md:mb-6">
 
 
 
         {/* Voice Assistant Button */}
         {studentId && (
-          <div className="flex justify-center items-center w-full my-8">
+          <div className="flex justify-center items-center w-full my-4 sm:my-6 md:my-8">
             <VoiceAssistant userId={studentId} todaysClassTime={todaysSchedule[0]?.time || ""} />
           </div>
         )}
 
-  <main className={`rounded-xl p-1.5 sm:p-2 md:p-4 lg:p-6 shadow-lg bg-white border border-blue-200 w-full max-w-none overflow-x-hidden`}>
+  <main className={`rounded-xl p-3 sm:p-4 md:p-6 lg:p-8 shadow-lg bg-white border-2 border-blue-200 w-full max-w-none overflow-x-hidden`}>
           {/* Summary Section */}
-          <section className="mb-6">
-            <h2 className={`text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-blue-900`}>Activity Summary</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 text-center">
+          <section className="mb-4 sm:mb-6 md:mb-8">
+            <h2 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-3 sm:mb-4 md:mb-6 text-blue-900`}>Activity Summary</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 text-center">
               <button 
                 onClick={(e) => {
                   e.preventDefault();
@@ -302,11 +301,11 @@ const StudentDashboard = () => {
                   console.log('Pending Activities button clicked:', pendingActivities.length);
                   openActivityModal('pending', pendingActivities, 'Pending Activities');
                 }}
-                className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-1 sm:p-2 md:p-3 rounded-xl shadow-md border-l-4 border-indigo-400 flex flex-col items-center hover:shadow-lg transition-all cursor-pointer"
+                className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-2 sm:p-3 md:p-4 rounded-xl shadow-md border-l-4 border-indigo-400 flex flex-col items-center justify-center hover:shadow-lg transition-all cursor-pointer min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
               >
-                <CheckCircle className="text-indigo-600 mb-0.5 sm:mb-1" size={16} />
-                <p className="text-sm sm:text-lg md:text-2xl font-bold text-indigo-700">{totalPendingActivities}</p>
-                <p className="text-indigo-900 font-semibold text-[10px] sm:text-xs">Pending</p>
+                <CheckCircle className="text-indigo-600 mb-1 sm:mb-2" size={20} />
+                <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-indigo-700">{totalPendingActivities}</p>
+                <p className="text-indigo-900 font-semibold text-xs sm:text-sm md:text-base">Pending</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -318,11 +317,11 @@ const StudentDashboard = () => {
                   console.log('Late Activities button clicked:', lateActivities.length);
                   openActivityModal('late', lateActivities, 'Late Activities');
                 }}
-                className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-1 sm:p-2 md:p-3 rounded-xl shadow-md border-l-4 border-yellow-400 flex flex-col items-center hover:shadow-lg transition-all cursor-pointer"
+                className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-2 sm:p-3 md:p-4 rounded-xl shadow-md border-l-4 border-yellow-400 flex flex-col items-center justify-center hover:shadow-lg transition-all cursor-pointer min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
               >
-                <Clock className="text-yellow-600 mb-0.5 sm:mb-1" size={16} />
-                <p className="text-sm sm:text-lg md:text-2xl font-bold text-yellow-700">{totalLateActivities}</p>
-                <p className="text-yellow-900 font-semibold text-[10px] sm:text-xs">Late</p>
+                <Clock className="text-yellow-600 mb-1 sm:mb-2" size={20} />
+                <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-yellow-700">{totalLateActivities}</p>
+                <p className="text-yellow-900 font-semibold text-xs sm:text-sm md:text-base">Late</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -334,11 +333,11 @@ const StudentDashboard = () => {
                   console.log('Missing Activities button clicked:', missingActivities.length);
                   openActivityModal('missing', missingActivities, 'Missing Activities');
                 }}
-                className="bg-gradient-to-r from-red-50 to-red-100 p-1 sm:p-2 md:p-3 rounded-xl shadow-md border-l-4 border-red-400 flex flex-col items-center hover:shadow-lg transition-all cursor-pointer"
+                className="bg-gradient-to-r from-red-50 to-red-100 p-2 sm:p-3 md:p-4 rounded-xl shadow-md border-l-4 border-red-400 flex flex-col items-center justify-center hover:shadow-lg transition-all cursor-pointer min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
               >
-                <AlertTriangle className="text-red-600 mb-0.5 sm:mb-1" size={16} />
-                <p className="text-sm sm:text-lg md:text-2xl font-bold text-red-700">{totalMissingActivities}</p>
-                <p className="text-red-900 font-semibold text-[10px] sm:text-xs">Missing</p>
+                <AlertTriangle className="text-red-600 mb-1 sm:mb-2" size={20} />
+                <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-red-700">{totalMissingActivities}</p>
+                <p className="text-red-900 font-semibold text-xs sm:text-sm md:text-base">Missing</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -347,11 +346,11 @@ const StudentDashboard = () => {
                   console.log('Pending Quizzes button clicked:', pendingQuizzes.length);
                   openActivityModal('pending-quiz', pendingQuizzes, 'Pending Quizzes');
                 }}
-                className="bg-gradient-to-r from-blue-50 to-blue-100 p-1 sm:p-2 md:p-3 rounded-xl shadow-md border-l-4 border-blue-400 flex flex-col items-center hover:shadow-lg transition-all cursor-pointer"
+                className="bg-gradient-to-r from-blue-50 to-blue-100 p-2 sm:p-3 md:p-4 rounded-xl shadow-md border-l-4 border-blue-400 flex flex-col items-center justify-center hover:shadow-lg transition-all cursor-pointer min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
               >
-                <CheckCircle className="text-blue-600 mb-0.5 sm:mb-1" size={16} />
-                <p className="text-sm sm:text-lg md:text-2xl font-bold text-blue-700">{totalPendingQuizzes}</p>
-                <p className="text-blue-900 font-semibold text-[10px] sm:text-xs">Quiz</p>
+                <CheckCircle className="text-blue-600 mb-1 sm:mb-2" size={20} />
+                <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-blue-700">{totalPendingQuizzes}</p>
+                <p className="text-blue-900 font-semibold text-xs sm:text-sm md:text-base">Quiz</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -363,11 +362,11 @@ const StudentDashboard = () => {
                   console.log('Late Quizzes button clicked:', lateQuizzes.length);
                   openActivityModal('late-quiz', lateQuizzes, 'Late Quizzes');
                 }}
-                className="bg-gradient-to-r from-orange-50 to-orange-100 p-1 sm:p-2 md:p-3 rounded-xl shadow-md border-l-4 border-orange-400 flex flex-col items-center hover:shadow-lg transition-all cursor-pointer"
+                className="bg-gradient-to-r from-orange-50 to-orange-100 p-2 sm:p-3 md:p-4 rounded-xl shadow-md border-l-4 border-orange-400 flex flex-col items-center justify-center hover:shadow-lg transition-all cursor-pointer min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
               >
-                <Clock className="text-orange-600 mb-0.5 sm:mb-1" size={16} />
-                <p className="text-sm sm:text-lg md:text-2xl font-bold text-orange-700">{totalLateQuizzes}</p>
-                <p className="text-orange-900 font-semibold text-[10px] sm:text-xs">Late Quiz</p>
+                <Clock className="text-orange-600 mb-1 sm:mb-2" size={20} />
+                <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-orange-700">{totalLateQuizzes}</p>
+                <p className="text-orange-900 font-semibold text-xs sm:text-sm md:text-base">Late Quiz</p>
               </button>
               <button 
                 onClick={(e) => {
@@ -379,27 +378,27 @@ const StudentDashboard = () => {
                   console.log('Missing Quizzes button clicked:', missingQuizzes.length);
                   openActivityModal('missing-quiz', missingQuizzes, 'Missing Quizzes');
                 }}
-                className="bg-gradient-to-r from-red-100 to-red-200 p-1 sm:p-2 md:p-3 rounded-xl shadow-md border-l-4 border-red-500 flex flex-col items-center hover:shadow-lg transition-all cursor-pointer"
+                className="bg-gradient-to-r from-red-100 to-red-200 p-2 sm:p-3 md:p-4 rounded-xl shadow-md border-l-4 border-red-500 flex flex-col items-center justify-center hover:shadow-lg transition-all cursor-pointer min-h-[80px] sm:min-h-[100px] md:min-h-[120px]"
               >
-                <AlertTriangle className="text-red-700 mb-0.5 sm:mb-1" size={16} />
-                <p className="text-sm sm:text-lg md:text-2xl font-bold text-red-800">{totalMissingQuizzes}</p>
-                <p className="text-red-900 font-semibold text-[10px] sm:text-xs">Missing Quiz</p>
+                <AlertTriangle className="text-red-700 mb-1 sm:mb-2" size={20} />
+                <p className="text-base sm:text-xl md:text-2xl lg:text-3xl font-bold text-red-800">{totalMissingQuizzes}</p>
+                <p className="text-red-900 font-semibold text-xs sm:text-sm md:text-base">Missing Quiz</p>
               </button>
             </div>
           </section>
 
           {/* Classes and Announcements - Mobile: Stacked, Desktop: Side by Side */}
-          <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-8 min-w-0 w-full mb-8">
+          <div className="space-y-4 sm:space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6 xl:gap-8 min-w-0 w-full mb-6 sm:mb-8 md:mb-10">
             {/* Classes List - Always appears first on mobile */}
             <section className="min-w-0 w-full order-1">
               {loadingClasses && <LoadingSpinner />}
-              {error && <p className="text-red-600">{error}</p>}
-              {!loadingClasses && !error && classes.length === 0 && <p className={`text-gray-700`}>You are not enrolled in any classes.</p>}
+              {error && <p className="text-red-600 text-sm sm:text-base">{error}</p>}
+              {!loadingClasses && !error && classes.length === 0 && <p className={`text-gray-700 text-sm sm:text-base`}>You are not enrolled in any classes.</p>}
 
               {!loadingClasses && !error && classes.length > 0 && (
                 <>
-                  <h2 className={`text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-blue-900`}>Your Enrolled Classes</h2>
-                  <ul className="space-y-2 sm:space-y-3 md:space-y-4 pb-4">
+                  <h2 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-3 sm:mb-4 md:mb-6 text-blue-900`}>Your Enrolled Classes</h2>
+                  <ul className="space-y-3 sm:space-y-4 md:space-y-5 pb-4">
                     {classes.map((cls) => {
                       // Find soonest schedule for this class
                       let soonestSched = null;
@@ -415,11 +414,11 @@ const StudentDashboard = () => {
                         });
                       }
                       return (
-                        <li key={cls._id} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-2 sm:p-3 md:p-4 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-all min-w-0">
-                          <h3 className="text-sm sm:text-lg md:text-xl text-blue-900 font-bold truncate">{cls.className}</h3>
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
-                            <p className="text-gray-700 mr-0 sm:mr-4 text-xs sm:text-sm md:text-base"><strong>Teacher:</strong> <span className="truncate">{cls.teacherName}</span></p>
-                            <p className="text-gray-700 mr-0 sm:mr-4 text-xs sm:text-sm md:text-base"><strong>Room:</strong> <span className="truncate">{cls.roomNumber}</span></p>
+                        <li key={cls._id} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-5 rounded-xl shadow-md border-2 border-blue-200 hover:shadow-lg transition-all min-w-0">
+                          <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl text-blue-900 font-bold truncate mb-2">{cls.className}</h3>
+                          <div className="flex flex-col gap-2">
+                            <p className="text-gray-700 text-xs sm:text-sm md:text-base"><strong>Teacher:</strong> <span className="truncate">{cls.teacherName}</span></p>
+                            <p className="text-gray-700 text-xs sm:text-sm md:text-base"><strong>Room:</strong> <span className="truncate">{cls.roomNumber}</span></p>
                             <p className="text-gray-700 text-xs sm:text-sm md:text-base">
                               <strong>Time:</strong> <span className="truncate">{
                                 soonestSched
@@ -440,15 +439,15 @@ const StudentDashboard = () => {
 
             {/* Announcements Section - Always appears second on mobile */}
             <section className="min-w-0 w-full order-2">
-              <h2 className={`text-base sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 text-blue-900`}>Recent Announcements</h2>
+              <h2 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-3 sm:mb-4 md:mb-6 text-blue-900`}>Recent Announcements</h2>
               {loadingAnnouncements && <LoadingSpinner />}
-              {!loadingAnnouncements && announcements.length === 0 && <p className={`text-gray-700`}>No announcements available.</p>}
+              {!loadingAnnouncements && announcements.length === 0 && <p className={`text-gray-700 text-sm sm:text-base`}>No announcements available.</p>}
               {!loadingAnnouncements && announcements.length > 0 && (
-                <ul className="space-y-1.5 sm:space-y-2 md:space-y-3 pb-4 sm:pb-8">
+                <ul className="space-y-2 sm:space-y-3 md:space-y-4 pb-4 sm:pb-8">
                   {announcements.map((ann) => (
-                    <li key={ann._id} className="bg-gradient-to-r from-green-50 to-green-100 p-1.5 sm:p-2 md:p-3 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-all text-green-900 min-w-0">
-                      <p className="font-semibold text-xs sm:text-sm md:text-base truncate">{ann.title}</p>
-                      <p className="text-[10px] sm:text-xs md:text-sm italic">
+                    <li key={ann._id} className="bg-gradient-to-r from-green-50 to-green-100 p-3 sm:p-4 md:p-5 rounded-xl shadow-md border-2 border-green-200 hover:shadow-lg transition-all text-green-900 min-w-0">
+                      <p className="font-semibold text-sm sm:text-base md:text-lg truncate">{ann.title}</p>
+                      <p className="text-xs sm:text-sm md:text-base italic mt-1">
                         {(() => {
                           // Try different date fields in order of preference
                           const dateToUse = ann.createdAt || ann.date || ann.announcementDate || new Date().toISOString();
@@ -489,44 +488,43 @@ const StudentDashboard = () => {
         </main>
         
         {/* Extra spacing for mobile scroll */}
-        <div className="h-8 sm:h-12 w-full"></div>
+        <div className="h-12 sm:h-16 md:h-20 w-full"></div>
       </div>
 
       {/* Activity Details Modal */}
       {activityModal.isOpen && (
         <div 
-          className="fixed inset-0 backdrop-blur-[1px] flex items-center justify-center p-4"
-          style={{ zIndex: 9999 }}
+          className="fixed inset-0 backdrop-blur-[1px] bg-black/30 flex items-center justify-center p-3 sm:p-4 md:p-6 z-[9999]"
           onClick={closeActivityModal}
         >
           <div 
-            className={`bg-white border-blue-200 rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden border-2`}
+            className={`bg-white border-blue-200 rounded-xl sm:rounded-2xl shadow-2xl max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl w-full max-h-[85vh] sm:max-h-[80vh] overflow-hidden border-2`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <h3 className="text-lg font-semibold text-blue-900">{activityModal.title}</h3>
+            <div className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-blue-900">{activityModal.title}</h3>
               <button
                 onClick={closeActivityModal}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="p-4 overflow-y-auto max-h-[60vh]">
+            <div className="p-3 sm:p-4 md:p-6 overflow-y-auto max-h-[60vh] sm:max-h-[65vh]">
               {activityModal.activities.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No activities found.</p>
+                <p className="text-gray-500 text-center py-8 text-sm sm:text-base">No activities found.</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4 md:space-y-5">
                   {activityModal.activities.map((activity) => {
                     const classInfo = classes.find(cls => cls._id === (activity.classId?._id || activity.classId));
                     const submission = submissionMap[activity._id];
                     return (
-                      <div key={activity._id} className={`bg-blue-50 p-4 rounded-lg border border-blue-200`}>
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold text-gray-900">{activity.title}</h4>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      <div key={activity._id} className={`bg-blue-50 p-3 sm:p-4 md:p-5 rounded-lg border-2 border-blue-200`}>
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-3">
+                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base md:text-lg">{activity.title}</h4>
+                          <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${
                             activityModal.type === 'submitted' ? 'bg-green-100 text-green-800' :
                             activityModal.type === 'late' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-red-100 text-red-800'
@@ -535,7 +533,7 @@ const StudentDashboard = () => {
                              activityModal.type === 'late' ? 'Late' : 'Missing'}
                           </span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
+                        <div className="grid grid-cols-1 gap-2 text-xs sm:text-sm md:text-base text-gray-600">
                           <p><strong>Class:</strong> {classInfo?.className || 'Unknown Class'}</p>
                           <p><strong>Teacher:</strong> {classInfo?.teacherName || 'Unknown Teacher'}</p>
                           <p><strong>Due Date:</strong> {(() => {

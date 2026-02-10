@@ -59,7 +59,7 @@ const StudentList = () => {
   }
 
   return (
-    <div>
+    <div className="overflow-y-auto">
       {/* Header Section with Icon */}
       <div className="flex items-center justify-between mb-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg px-6 py-5 border border-blue-300">
         <div className="flex items-center gap-4">

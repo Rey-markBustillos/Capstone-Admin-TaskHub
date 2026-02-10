@@ -3,7 +3,6 @@ import axios from 'axios';
 import { FaCheckCircle, FaTimesCircle, FaClock, FaCalendarCheck, FaArrowLeft, FaFilter } from 'react-icons/fa';
 import { useParams, NavLink } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
-import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 // Handle API base URL properly
 const API_BASE_URL = (() => {
@@ -28,7 +27,7 @@ const today = new Date().toISOString().slice(0, 10);
 const TeacherAttendance = () => {
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
-  const { isLightMode } = useContext(StudentThemeContext);
+  const isLightMode = true; // Teachers always use light mode
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({}); // { studentId: status }
   const [submitting, setSubmitting] = useState(false);
@@ -143,7 +142,7 @@ const TeacherAttendance = () => {
   const totalRecords = allRecords.length;
 
   return (
-    <div className={`min-h-screen ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-screen overflow-y-auto ${isLightMode ? 'bg-white' : 'bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-900'} p-2 sm:p-4 md:p-8 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
       <div className="w-full max-w-none mx-auto px-1 sm:px-2 md:px-4 lg:px-8">
         <div className="mb-4 sm:mb-6 mt-2 sm:mt-4">
           <NavLink

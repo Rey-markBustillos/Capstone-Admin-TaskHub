@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
-import { StudentThemeContext } from '../contexts/StudentThemeContext';
 import axios from 'axios';
 import { 
   FaBook, 
@@ -11,8 +10,7 @@ import {
   FaExclamationTriangle,
   FaFileAlt,
   FaCalendarAlt,
-  FaUser,
-  FaArrowLeft
+  FaUser
 } from 'react-icons/fa';
 
 // ✅ Remove trailing slash
@@ -20,9 +18,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
 
 const StudentModules = () => {
   const { classId } = useParams();
-  const navigate = useNavigate();
   const { isSidebarOpen } = useContext(SidebarContext);
-  const { isLightMode } = useContext(StudentThemeContext);
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -211,107 +207,99 @@ const StudentModules = () => {
   };
 
   return (
-    <div className={`min-h-screen p-2 sm:p-4 space-y-3 sm:space-y-6 transition-all duration-300 ${isSidebarOpen ? 'ml-36 sm:ml-44 w-[calc(100%-144px)] sm:w-[calc(100%-176px)]' : 'ml-10 sm:ml-12 w-[calc(100%-40px)] sm:w-[calc(100%-48px)]'}`}>
-      <div className="max-w-6xl mx-auto">
-      <button
-        onClick={() => navigate(`/student/class/${classId}`)}
-        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium shadow-md hover:shadow-lg text-xs sm:text-base"
-      >
-        <FaArrowLeft className="text-xs sm:text-sm" />
-        Back to Class Menu
-      </button>
+    <div className={`min-h-screen overflow-y-auto bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
+      <div className="w-full">
 
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3 sm:p-6 rounded-lg shadow-lg">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
-          <FaBook className="text-yellow-300 text-base sm:text-xl" />
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 sm:p-6 rounded-xl shadow-lg border-l-4 border-blue-400">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold flex items-center gap-3 mb-2">
+          <FaBook className="text-yellow-300 text-2xl sm:text-3xl" />
           Learning Modules
         </h1>
-        <p className="text-blue-100 text-xs sm:text-base">Access course materials and resources uploaded by your teacher</p>
+        <p className="text-blue-100 text-sm sm:text-base">Access course materials and resources uploaded by your teacher</p>
       </div>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-2 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center gap-1 sm:gap-2 text-xs sm:text-base">
-          <FaExclamationTriangle className="text-red-500" />
-          {error}
+        <div className="bg-red-50 border-2 border-red-300 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2 text-sm sm:text-base shadow-sm">
+          <FaExclamationTriangle className="text-red-500 flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      <div className={`${isLightMode ? 'bg-white border-gray-200' : 'bg-gray-800 border-gray-700'} rounded-lg shadow-lg border`}>
+      <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-8 sm:py-12">
-            <FaSpinner className="animate-spin text-xl sm:text-3xl text-blue-500 mr-2 sm:mr-3" />
-            <span className={`text-sm sm:text-lg ${isLightMode ? 'text-gray-600' : 'text-gray-300'}`}>Loading modules...</span>
+          <div className="flex items-center justify-center py-12 sm:py-16">
+            <FaSpinner className="animate-spin text-2xl sm:text-3xl text-blue-500 mr-3" />
+            <span className="text-base sm:text-lg text-gray-700 font-medium">Loading modules...</span>
           </div>
         ) : modules.length === 0 ? (
-          <div className={`text-center py-8 sm:py-12 ${isLightMode ? 'text-gray-500' : 'text-gray-400'} px-2`}>
-            <FaBook className="text-4xl sm:text-6xl mb-3 sm:mb-4 mx-auto opacity-50" />
-            <h3 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2">No Modules Available</h3>
+          <div className="text-center py-12 sm:py-16 text-gray-500 px-4">
+            <FaBook className="text-5xl sm:text-6xl mb-4 mx-auto opacity-40 text-blue-300" />
+            <h3 className="text-xl sm:text-2xl font-bold mb-2 text-gray-700">No Modules Available</h3>
             <p className="text-sm sm:text-base">Your teacher hasn't uploaded any learning modules yet.</p>
           </div>
         ) : (
-          <div className={`divide-y ${isLightMode ? 'divide-gray-200' : 'divide-gray-600'}`}>
+          <div className="divide-y divide-blue-100">
             {modules.map((module) => (
               <div
                 key={module._id}
-                className={`p-2 sm:p-3 md:p-6 ${isLightMode ? 'hover:bg-gray-50' : 'hover:bg-gray-700'} transition-colors`}
+                className="p-4 sm:p-5 md:p-6 hover:bg-blue-50 transition-colors"
               >
-                <div className="flex items-start gap-1 sm:gap-2 md:gap-4">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                   <div className="flex-shrink-0">
                     {getFileIcon(module.fileName)}
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`text-xs sm:text-sm md:text-lg lg:text-xl font-semibold ${isLightMode ? 'text-gray-900' : 'text-white'} mb-0.5 sm:mb-1 md:mb-2`}>
+                  <div className="flex-1 min-w-0 w-full">
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-blue-900 mb-2 break-words">
                       {module.title}
                     </h3>
                     
                     {module.description && (
-                      <p className={`${isLightMode ? 'text-gray-600' : 'text-gray-300'} mb-1 sm:mb-2 md:mb-3 line-clamp-2 text-[10px] sm:text-xs md:text-base`}>
+                      <p className="text-gray-600 mb-3 text-sm sm:text-base break-words">
                         {module.description}
                       </p>
                     )}
                     
-                    <div className={`flex flex-wrap items-center gap-1 sm:gap-2 md:gap-4 text-[10px] sm:text-xs md:text-sm ${isLightMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                      <div className="flex items-center gap-0.5 sm:gap-1">
-                        <FaFileAlt className="text-[8px] sm:text-xs" />
-                        <span>{module.fileName}</span>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm text-gray-600 mb-4">
+                      <div className="flex items-center gap-1.5">
+                        <FaFileAlt className="text-blue-500 flex-shrink-0" />
+                        <span className="truncate max-w-[200px] sm:max-w-none">{module.fileName}</span>
                       </div>
-                      <div className="flex items-center gap-0.5 sm:gap-1">
-                        <FaCalendarAlt className="text-[8px] sm:text-xs" />
+                      <div className="flex items-center gap-1.5">
+                        <FaCalendarAlt className="text-blue-500 flex-shrink-0" />
                         <span>Uploaded: {new Date(module.uploadDate).toLocaleDateString()}</span>
                       </div>
-                      <div className="flex items-center gap-0.5 sm:gap-1">
-                        <FaUser className="text-[8px] sm:text-xs" />
+                      <div className="flex items-center gap-1.5">
+                        <FaUser className="text-blue-500 flex-shrink-0" />
                         <span>By: {module.uploadedBy?.name || 'Teacher'}</span>
                       </div>
-                      <div>
-                        <span>Size: {formatFileSize(module.fileSize)}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium">Size: {formatFileSize(module.fileSize)}</span>
                       </div>
-                      {/* ✅ Show cloud storage indicator */}
                       {module.cloudinaryUrl && (
-                        <div className="flex items-center gap-0.5 sm:gap-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-1 sm:px-2 py-0.5 rounded" title="Stored in cloud">
-                          <span>☁️</span>
+                        <div className="flex items-center gap-1.5 bg-purple-100 text-purple-700 px-2 py-1 rounded-md" title="Stored in cloud">
+                          <span>☁️ Cloud</span>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-0.5 sm:gap-1 md:gap-3 flex-shrink-0">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">
                     <button
                       onClick={() => handleView(module)}
-                      className="flex items-center gap-0.5 sm:gap-1 md:gap-2 px-1 sm:px-2 md:px-4 py-0.5 sm:py-1 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md sm:rounded-lg transition-colors font-medium text-[10px] sm:text-xs md:text-base"
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg min-h-[44px]"
                       title="View Module"
                     >
-                      <FaEye className="text-[8px] sm:text-xs md:text-sm" />
-                      <span className="hidden sm:inline">View</span>
+                      <FaEye />
+                      <span>View</span>
                     </button>
                     <button
                       onClick={() => handleDownload(module)}
-                      className="flex items-center gap-0.5 sm:gap-1 md:gap-2 px-1 sm:px-2 md:px-4 py-0.5 sm:py-1 md:py-2 bg-green-600 hover:bg-green-700 text-white rounded-md sm:rounded-lg transition-colors font-medium text-[10px] sm:text-xs md:text-base"
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg min-h-[44px]"
                       title="Download Module"
                     >
-                      <FaDownload className="text-[8px] sm:text-xs md:text-sm" />
-                      <span className="hidden sm:inline">Download</span>
+                      <FaDownload />
+                      <span>Download</span>
                     </button>
                   </div>
                 </div>
@@ -322,10 +310,10 @@ const StudentModules = () => {
       </div>
 
       {modules.length > 0 && (
-        <div className={`${isLightMode ? 'bg-gray-50 border-gray-200' : 'bg-gray-800 border-gray-700'} p-2 sm:p-4 rounded-lg border`}>
-          <div className={`flex items-center justify-between text-xs sm:text-sm ${isLightMode ? 'text-gray-600' : 'text-gray-400'}`}>
-            <span>Total modules: {modules.length}</span>
-            <span>Total size: {formatFileSize(modules.reduce((total, module) => total + module.fileSize, 0))}</span>
+        <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-lg shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm sm:text-base text-gray-700 font-medium">
+            <span>Total modules: <span className="font-bold text-blue-600">{modules.length}</span></span>
+            <span>Total size: <span className="font-bold text-blue-600">{formatFileSize(modules.reduce((total, module) => total + module.fileSize, 0))}</span></span>
           </div>
         </div>
       )}
