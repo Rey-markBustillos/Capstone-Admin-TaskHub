@@ -244,13 +244,10 @@ exports.getActivitySubmissionsByTeacher = async (req, res) => {
       .populate('activityId', 'title date')
       .sort({ submissionDate: -1 });
 
-    const host = `${req.protocol}://${req.get('host')}`;
-    const submissionsWithUrl = submissions.map(s => ({
-      ...s.toObject(),
-      fileUrl: s.filePath ? `${host}/${s.filePath.replace(/\\/g, '/')}` : null
-    }));
+    // Return submissions with proper cloudinaryUrl (no need to construct fileUrl)
+    const submissionsData = submissions.map(s => s.toObject());
 
-    res.json({ submissions: submissionsWithUrl });
+    res.json({ submissions: submissionsData });
   } catch (error) {
     console.error('Error fetching activity submissions:', error);
     res.status(500).json({ message: 'Error fetching submissions', error: error.message });
