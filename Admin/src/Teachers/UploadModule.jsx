@@ -402,11 +402,16 @@ const UploadModule = () => {
                     onClick={() => {
                       console.log('👀 View module:', module.title, module._id);
                       
-                      // Check if module has Cloudinary URL
-                      if (module.cloudinaryUrl) {
-                        window.open(module.cloudinaryUrl, '_blank', 'noopener,noreferrer');
+                      // Use viewerUrl (Google Docs Viewer) for inline viewing
+                      // Cloudinary raw URLs auto-download, so we must use a viewer
+                      if (module.viewerUrl) {
+                        window.open(module.viewerUrl, '_blank', 'noopener,noreferrer');
+                      } else if (module.cloudinaryUrl) {
+                        // Fallback: build Google Docs viewer URL on the fly
+                        const viewUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(module.cloudinaryUrl) + '&embedded=true';
+                        window.open(viewUrl, '_blank', 'noopener,noreferrer');
                       } else {
-                        // Use backend view route for legacy files
+                        // Legacy local files - use backend view route
                         window.open(`${API_BASE_URL}/modules/view/${module._id}`, '_blank', 'noopener,noreferrer');
                       }
                     }}

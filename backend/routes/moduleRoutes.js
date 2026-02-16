@@ -66,12 +66,8 @@ router.get('/', async (req, res) => {
       }
 
       if (!moduleObj.viewerUrl && moduleObj.cloudinaryUrl) {
-        const fileExtension = moduleObj.fileName.split('.').pop().toLowerCase();
-        if (fileExtension === 'pdf') {
-          moduleObj.viewerUrl = moduleObj.cloudinaryUrl;
-        } else {
-          moduleObj.viewerUrl = 'https://docs.google.com/viewer?url='+encodeURIComponent(moduleObj.cloudinaryUrl)+'&embedded=true';
-        }
+        // Always use Google Docs Viewer - Cloudinary raw URLs auto-download
+        moduleObj.viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(moduleObj.cloudinaryUrl) + '&embedded=true';
       }
 
       return moduleObj;
@@ -118,11 +114,13 @@ router.post('/upload', (req, res, next) => {
     });
     
     // Upload buffer to Cloudinary manually
+    // Include file extension in public_id so the URL has the correct format
+    const fileExtension = path.extname(req.file.originalname).toLowerCase();
     const cloudinaryResult = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder: 'taskhub/modules',
-          public_id: 'module-'+Date.now(),
+          public_id: 'module-' + Date.now() + fileExtension,
           resource_type: 'raw',
         },
         (error, result) => {
@@ -142,14 +140,9 @@ router.post('/upload', (req, res, next) => {
     
     const cloudinaryUrl = cloudinaryResult.secure_url;
     
-    // Create viewer URL
-    const fileExtension = req.file.originalname.split('.').pop().toLowerCase();
-    let viewerUrl;
-    if (fileExtension === 'pdf') {
-      viewerUrl = cloudinaryUrl;
-    } else {
-      viewerUrl = 'https://docs.google.com/viewer?url='+encodeURIComponent(cloudinaryUrl)+'&embedded=true';
-    }
+    // Create viewer URL - always use Google Docs Viewer for inline viewing
+    // (Cloudinary raw URLs trigger download by default)
+    const viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(cloudinaryUrl) + '&embedded=true';
     
     const module = new Module({
       title: title.trim(),
@@ -247,26 +240,12 @@ router.get('/view/:id', async (req, res) => {
     }
     
     if (module.cloudinaryUrl) {
-      const fileExtension = module.fileName.split('.').pop().toLowerCase();
       res.setHeader('Access-Control-Allow-Origin', '*');
       
-      if (fileExtension === 'pdf') {
-        return res.redirect(module.cloudinaryUrl);
-      }
-      
-      return res.send(
-        '<!DOCTYPE html><html><head><title>View '+module.fileName+'</title>' +
-        '<style>body{font-family:Arial,sans-serif;max-width:800px;margin:50px auto;padding:20px;text-align:center}' +
-        '.file-icon{font-size:64px;margin-bottom:20px}.file-name{font-size:24px;font-weight:bold;margin-bottom:10px}' +
-        '.file-type{color:#666;margin-bottom:30px}.buttons{display:flex;gap:15px;justify-content:center;flex-wrap:wrap}' +
-        '.btn{padding:12px 24px;font-size:16px;border:none;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}' +
-        '.btn-primary{background-color:#4F46E5;color:white}.btn-secondary{background-color:#10B981;color:white}</style></head>' +
-        '<body><div class="file-icon">&#128196;</div><div class="file-name">'+module.fileName+'</div>' +
-        '<div class="file-type">'+fileExtension.toUpperCase()+' Document</div>' +
-        '<div class="buttons"><a href="'+module.cloudinaryUrl+'" target="_blank" class="btn btn-primary" download="'+module.fileName+'">Download</a>' +
-        '<a href="https://docs.google.com/viewer?url='+encodeURIComponent(module.cloudinaryUrl)+'&embedded=true" target="_blank" class="btn btn-secondary">View in Browser</a>' +
-        '</div></body></html>'
-      );
+      // Always redirect to Google Docs Viewer for inline viewing
+      // Cloudinary raw URLs trigger auto-download
+      const viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(module.cloudinaryUrl) + '&embedded=true';
+      return res.redirect(viewerUrl);
     }
     
     // Legacy local files
@@ -354,8 +333,7 @@ router.post('/fix-urls', async (req, res) => {
         updated = true;
       }
       if (!module.viewerUrl && module.cloudinaryUrl) {
-        const ext = module.fileName.split('.').pop().toLowerCase();
-        module.viewerUrl = ext === 'pdf' ? module.cloudinaryUrl : 'https://docs.google.com/viewer?url='+encodeURIComponent(module.cloudinaryUrl)+'&embedded=true';
+        module.viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(module.cloudinaryUrl) + '&embedded=true';
         updated = true;
       }
       if (!module.resourceType) { module.resourceType = 'raw'; updated = true; }
