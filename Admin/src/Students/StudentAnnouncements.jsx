@@ -140,12 +140,6 @@ export default function StudentAnnouncements() {
     }`}>
       <div className="w-full max-w-5xl mx-auto">
         <div className="mb-4 sm:mb-6 mt-2">
-          <NavLink
-            to={`/student/class/${classId}`}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 text-sm sm:text-base rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-200 min-h-[44px]"
-          >
-            <FaArrowLeft className="text-sm sm:text-base" /> <span className="hidden sm:inline">Back to Class Menu</span><span className="sm:hidden">Back</span>
-          </NavLink>
         </div>
         <div className="w-full">
           {/* Header Section */}
