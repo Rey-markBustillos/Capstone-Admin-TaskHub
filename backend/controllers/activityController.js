@@ -215,14 +215,40 @@ exports.toggleActivityLock = async (req, res) => {
 exports.getActivitySubmissionsByTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
-    const { classId } = req.query;
+    const { classId, activityId } = req.query;
+
+    console.log('🔍 [DEBUG] Fetching submissions:', { teacherId, classId, activityId });
 
     if (!teacherId || !mongoose.Types.ObjectId.isValid(teacherId)) {
       return res.status(400).json({ message: 'Valid Teacher ID is required' });
     }
 
     let activityIds = [];
-    if (classId) {
+
+    // 🔥 PRIORITY 1: If activityId is provided, filter by specific activity only
+    if (activityId) {
+      if (!mongoose.Types.ObjectId.isValid(activityId)) {
+        return res.status(400).json({ message: 'Invalid activityId format' });
+      }
+      
+      console.log('🔥 [DEBUG] Filtering by specific activityId:', activityId);
+      
+      // Verify teacher owns this activity through their class
+      const activity = await Activity.findById(activityId);
+      if (!activity) {
+        return res.status(404).json({ message: 'Activity not found' });
+      }
+      
+      const activityClass = await Class.findOne({ _id: activity.classId, teacher: teacherId });
+      if (!activityClass) {
+        return res.status(403).json({ message: 'Access denied to this activity.' });
+      }
+      
+      // Just use the string ID directly - Mongoose will handle the conversion
+      activityIds = [activityId];
+    }
+    // 🔥 PRIORITY 2: If only classId is provided, get all activities in that class
+    else if (classId) {
       if (!mongoose.Types.ObjectId.isValid(classId)) {
         return res.status(400).json({ message: 'Invalid classId format' });
       }
@@ -232,7 +258,9 @@ exports.getActivitySubmissionsByTeacher = async (req, res) => {
       }
       const activitiesInClass = await Activity.find({ classId: classId }).select('_id');
       activityIds = activitiesInClass.map(activity => activity._id);
-    } else {
+    } 
+    // 🔥 PRIORITY 3: Get all activities from all teacher's classes
+    else {
       const teacherClasses = await Class.find({ teacher: teacherId }).select('_id');
       const classIds = teacherClasses.map(cls => cls._id);
       const activities = await Activity.find({ classId: { $in: classIds } }).select('_id');
@@ -243,6 +271,12 @@ exports.getActivitySubmissionsByTeacher = async (req, res) => {
       .populate('studentId', 'name email')
       .populate('activityId', 'title date')
       .sort({ submissionDate: -1 });
+
+    console.log(`✅ [DEBUG] Query: { activityId: { $in: ${JSON.stringify(activityIds)} } }`);
+    console.log(`✅ [DEBUG] Found ${submissions.length} submissions`);
+    if (submissions.length > 0) {
+      console.log(`✅ [DEBUG] First submission activityId:`, submissions[0].activityId?._id || submissions[0].activityId);
+    }
 
     // Return submissions with proper cloudinaryUrl (no need to construct fileUrl)
     const submissionsData = submissions.map(s => s.toObject());

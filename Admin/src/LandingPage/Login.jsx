@@ -65,70 +65,70 @@ export default function Login({ onBack, onLoginSuccess }) {
   };
 
   return (
-    <div className="relative min-h-screen bg-white flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
-      {/* Decorative solid blue circles for background - OUTSIDE the login box */}
+    <div className="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
+      {/* Decorative subtle blue circles for background */}
       <div aria-hidden="true" className="absolute top-8 left-8 pointer-events-none select-none">
-        <div className="w-12 h-12 rounded-full bg-blue-100 opacity-60"></div>
+        <div className="w-12 h-12 rounded-full bg-blue-100 opacity-40"></div>
       </div>
       <div aria-hidden="true" className="absolute top-24 left-32 pointer-events-none select-none">
-        <div className="w-20 h-20 rounded-full bg-blue-200 opacity-50"></div>
+        <div className="w-20 h-20 rounded-full bg-blue-200 opacity-30"></div>
       </div>
       <div aria-hidden="true" className="absolute top-1/2 left-16 -translate-y-1/2 pointer-events-none select-none">
-        <div className="w-32 h-32 rounded-full bg-blue-300 opacity-40"></div>
+        <div className="w-32 h-32 rounded-full bg-blue-300 opacity-25"></div>
       </div>
       <div aria-hidden="true" className="absolute bottom-24 right-32 pointer-events-none select-none">
-        <div className="w-40 h-40 rounded-full bg-blue-400 opacity-30"></div>
+        <div className="w-40 h-40 rounded-full bg-indigo-200 opacity-20"></div>
       </div>
       <div aria-hidden="true" className="absolute bottom-8 right-8 pointer-events-none select-none">
-        <div className="w-56 h-56 rounded-full bg-blue-500 opacity-25"></div>
+        <div className="w-56 h-56 rounded-full bg-blue-300 opacity-15"></div>
       </div>
       <div aria-hidden="true" className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-        <div className="w-72 h-72 rounded-full bg-blue-700 opacity-20"></div>
+        <div className="w-72 h-72 rounded-full bg-indigo-100 opacity-15"></div>
       </div>
       {/* 3D Bubble with studying.png and up-down animation */}
-      <div aria-hidden="true" className="absolute top-1/4 left-20 pointer-events-none select-none z-10">
+      <div aria-hidden="true" className="absolute top-1/4 left-20 pointer-events-none select-none z-10 hidden lg:block">
         <div className="relative w-40 h-40 animate-float">
           {/* Outer bubble with 3D effect */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-200/30 via-blue-300/20 to-blue-500/10 backdrop-blur-sm border border-blue-300/30 shadow-2xl">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-100/40 via-blue-200/30 to-blue-300/20 backdrop-blur-sm border border-blue-200/40 shadow-xl">
             {/* Inner glow */}
-            <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-white/20 to-transparent"></div>
+            <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-white/30 to-transparent"></div>
             {/* Highlight for 3D effect */}
-            <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-white/40 blur-sm"></div>
+            <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-white/50 blur-sm"></div>
           </div>
           {/* studying.png inside the bubble */}
           <div className="absolute inset-0 flex items-center justify-center">
             <img 
               src="/studying.png" 
               alt="Studying" 
-              className="w-24 h-24 object-contain drop-shadow-2xl"
+              className="w-24 h-24 object-contain drop-shadow-xl"
               style={{ imageRendering: 'crisp-edges' }}
             />
           </div>
         </div>
       </div>
-      {/* Additional 6 solid blue circles for background - OUTSIDE the login box */}
+      {/* Additional subtle blue circles for background */}
       <div aria-hidden="true" className="absolute top-40 left-1/2 -translate-x-1/2 pointer-events-none select-none">
-        <div className="w-10 h-10 rounded-full bg-blue-50 opacity-60"></div>
+        <div className="w-10 h-10 rounded-full bg-blue-50 opacity-40"></div>
       </div>
       <div aria-hidden="true" className="absolute top-1/4 right-24 pointer-events-none select-none">
-        <div className="w-16 h-16 rounded-full bg-blue-200 opacity-50"></div>
+        <div className="w-16 h-16 rounded-full bg-indigo-100 opacity-30"></div>
       </div>
       <div aria-hidden="true" className="absolute bottom-1/3 left-1/3 pointer-events-none select-none">
-        <div className="w-24 h-24 rounded-full bg-blue-300 opacity-40"></div>
+        <div className="w-24 h-24 rounded-full bg-blue-200 opacity-25"></div>
       </div>
       <div aria-hidden="true" className="absolute bottom-32 left-1/4 pointer-events-none select-none">
-        <div className="w-36 h-36 rounded-full bg-blue-400 opacity-30"></div>
+        <div className="w-36 h-36 rounded-full bg-indigo-200 opacity-20"></div>
       </div>
       <div aria-hidden="true" className="absolute top-3/4 right-1/4 pointer-events-none select-none">
-        <div className="w-48 h-48 rounded-full bg-blue-500 opacity-25"></div>
+        <div className="w-48 h-48 rounded-full bg-blue-100 opacity-15"></div>
       </div>
       <div aria-hidden="true" className="absolute bottom-1/4 right-1/2 translate-x-1/2 pointer-events-none select-none">
-        <div className="w-64 h-64 rounded-full bg-blue-800 opacity-20"></div>
+        <div className="w-64 h-64 rounded-full bg-indigo-100 opacity-15"></div>
       </div>
-      {/* LOGIN BOX - should NOT contain any circles */}
-      <div className="relative backdrop-blur-2xl p-6 sm:p-10 rounded-2xl shadow-2xl shadow-black/30 max-w-md w-full mx-auto border-2 border-indigo-700/10" style={{backgroundColor: '#0047AB'}}>
+      {/* LOGIN BOX */}
+      <div className="relative bg-white p-6 sm:p-10 rounded-xl shadow-lg max-w-md w-full mx-auto border border-gray-200">
         <div className="flex flex-col items-center mb-8">
-          <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white shadow-lg border-4 border-white mb-2 animate-bounce-slow overflow-hidden">
+          <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 via-indigo-400 to-blue-600 shadow-lg border-4 border-white mb-2 overflow-hidden">
             <img
               src="/taskhublogos.png"
               alt="TaskHub Logo"
@@ -136,22 +136,22 @@ export default function Login({ onBack, onLoginSuccess }) {
               style={{ imageRendering: 'crisp-edges' }}
             />
           </span>
-          <h1 className="text-4xl font-extrabold text-slate-100 tracking-tight flex items-center gap-2 drop-shadow-lg">
+          <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2 drop-shadow">
             TaskHub
           </h1>
-          <p className="text-slate-300 mt-2 text-lg font-medium">Sign in to continue</p>
+          <p className="text-gray-500 mt-2 text-lg font-medium">Sign in to continue</p>
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-6">
           <div>
             <label
               htmlFor="email"
-              className="block mb-2 text-sm font-medium text-slate-300"
+              className="block mb-2 text-sm font-semibold text-gray-700"
             >
               Email Address
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400 animate-pulse">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400">
                 <FaUserCircle size={22} />
               </span>
               <input
@@ -163,7 +163,7 @@ export default function Login({ onBack, onLoginSuccess }) {
                 onChange={handleChange}
                 required
                 autoComplete="username"
-                className="w-full pl-11 pr-4 py-3 border border-indigo-600/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow bg-slate-700/60 text-slate-100 placeholder:text-slate-400 shadow-inner"
+                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900 placeholder:text-gray-400 hover:border-blue-300"
               />
             </div>
           </div>
@@ -171,12 +171,12 @@ export default function Login({ onBack, onLoginSuccess }) {
           <div>
             <label
               htmlFor="password"
-              className="block mb-2 text-sm font-medium text-slate-300"
+              className="block mb-2 text-sm font-semibold text-gray-700"
             >
               Password
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-400 animate-pulse">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400">
                 <FaLock size={20} />
               </span>
               <input
@@ -188,13 +188,16 @@ export default function Login({ onBack, onLoginSuccess }) {
                 onChange={handleChange}
                 required
                 autoComplete="current-password"
-                className="w-full pl-11 pr-4 py-3 border border-indigo-600/40 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow bg-slate-700/60 text-slate-100 placeholder:text-slate-400 shadow-inner"
+                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900 placeholder:text-gray-400 hover:border-blue-300"
               />
             </div>
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
+            <div className="p-3 rounded-lg bg-red-50 border border-red-300 text-red-700 text-sm flex items-center gap-2">
+              <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
               {error}
             </div>
           )}
@@ -202,7 +205,7 @@ export default function Login({ onBack, onLoginSuccess }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center items-center gap-2 bg-gradient-to-r from-indigo-600 via-violet-500 to-blue-500 text-white py-3 px-4 rounded-xl hover:from-indigo-500 hover:to-blue-400 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-lg font-bold shadow-xl shadow-indigo-900/20 ring-2 ring-indigo-400/10"
+            className="w-full flex justify-center items-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-lg font-semibold shadow-md hover:shadow-lg"
             aria-busy={loading}
           >
             {loading ? (
@@ -212,7 +215,7 @@ export default function Login({ onBack, onLoginSuccess }) {
               </svg>
             ) : (
               <>
-                <FaSignInAlt className="mr-2 animate-bounce" /> Sign In
+                <FaSignInAlt className="mr-2" /> Sign In
               </>
             )}
           </button>
@@ -223,13 +226,13 @@ export default function Login({ onBack, onLoginSuccess }) {
             onClick={onBack}
             tabIndex={0}
             type="button"
-            className="inline-flex items-center gap-2 text-base font-semibold text-indigo-300 hover:text-indigo-100 cursor-pointer transition-all duration-200 px-4 py-2 rounded-lg bg-indigo-900/30 hover:bg-indigo-800/40 shadow"
+            className="inline-flex items-center gap-2 text-base font-medium text-blue-600 hover:text-blue-800 cursor-pointer transition-all duration-200 px-4 py-2 rounded-lg hover:bg-blue-50"
             aria-label="Back to Welcome"
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") onBack();
             }}
           >
-            <FaArrowLeft className="animate-pulse" /> Back to Welcome
+            <FaArrowLeft /> Back to Welcome
           </button>
         </div>
       </div>

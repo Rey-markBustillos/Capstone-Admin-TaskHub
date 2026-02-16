@@ -74,10 +74,12 @@ export default function ActivityMonitoring() {
         const activitiesWithSubmissions = await Promise.all(
           activitiesData.map(async (activity) => {
             try {
+              console.log('🔵 [FRONTEND] Fetching submissions for activity:', activity._id, activity.title);
               const submissionsRes = await axios.get(
                 `${API_BASE_URL}activities/submissions/teacher/${teacherId}`,
                 { params: { activityId: activity._id } }
               );
+              console.log('✅ [FRONTEND] Got', submissionsRes.data.submissions?.length || 0, 'submissions for activity:', activity.title);
               return { ...activity, submissions: submissionsRes.data.submissions || [] };
             } catch {
               return { ...activity, submissions: [] };
