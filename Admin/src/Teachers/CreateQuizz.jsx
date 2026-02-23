@@ -215,45 +215,52 @@ export default function CreateQuizz() {
       let allQuestions = [];
       
       if (quizType === 'mixed') {
-        // Generate questions for each type separately
-        const requests = [];
+        // Generate questions for each type sequentially to avoid duplicates
+        let collectedQuestions = [];
         
         if (mcqCount > 0) {
-          requests.push(
-            axios.post(`${API_BASE_URL}/quizzes/generate`, {
-              count: mcqCount,
-              moduleText: moduleText.trim() ? moduleText : undefined,
-              quizType: 'mcq',
-            })
-          );
+          const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
+            count: mcqCount,
+            moduleText: moduleText.trim() ? moduleText : undefined,
+            quizType: 'mcq',
+            existingQuestions: collectedQuestions.map(q => q.question),
+          });
+          if (res.data && Array.isArray(res.data.questions)) {
+            collectedQuestions = [...collectedQuestions, ...res.data.questions];
+          }
         }
         
         if (trueFalseCount > 0) {
-          requests.push(
-            axios.post(`${API_BASE_URL}/quizzes/generate`, {
-              count: trueFalseCount,
-              moduleText: moduleText.trim() ? moduleText : undefined,
-              quizType: 'true_false',
-            })
-          );
+          const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
+            count: trueFalseCount,
+            moduleText: moduleText.trim() ? moduleText : undefined,
+            quizType: 'true_false',
+            existingQuestions: collectedQuestions.map(q => q.question),
+          });
+          if (res.data && Array.isArray(res.data.questions)) {
+            collectedQuestions = [...collectedQuestions, ...res.data.questions];
+          }
         }
         
         if (identificationCount > 0) {
-          requests.push(
-            axios.post(`${API_BASE_URL}/quizzes/generate`, {
-              count: identificationCount,
-              moduleText: moduleText.trim() ? moduleText : undefined,
-              quizType: 'identification',
-            })
-          );
+          const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
+            count: identificationCount,
+            moduleText: moduleText.trim() ? moduleText : undefined,
+            quizType: 'identification',
+            existingQuestions: collectedQuestions.map(q => q.question),
+          });
+          if (res.data && Array.isArray(res.data.questions)) {
+            collectedQuestions = [...collectedQuestions, ...res.data.questions];
+          }
         }
         
-        // Execute all requests
-        const responses = await Promise.all(requests);
-        responses.forEach(response => {
-          if (response.data && Array.isArray(response.data.questions)) {
-            allQuestions = [...allQuestions, ...response.data.questions];
-          }
+        // Deduplicate by question text (safety net)
+        const seen = new Set();
+        allQuestions = collectedQuestions.filter(q => {
+          const key = q.question.toLowerCase().trim();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
         });
         
         // Shuffle the mixed questions for variety
@@ -283,7 +290,15 @@ export default function CreateQuizz() {
       }
       
       if (allQuestions.length > 0) {
-        setQuestions(allQuestions);
+        // Final deduplication safety net
+        const seen = new Set();
+        const uniqueQuestions = allQuestions.filter(q => {
+          const key = q.question.toLowerCase().trim();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setQuestions(uniqueQuestions);
       } else {
         alert('No questions generated.');
       }

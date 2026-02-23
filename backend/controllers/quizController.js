@@ -171,24 +171,36 @@ const generateFallbackQuiz = (count, moduleText, quizType) => {
     ];
   }
 
-  // Generate questions based on available topic questions
+  // Generate questions based on available topic questions (no repeats)
+  const shuffled = [...topicQuestions].sort(() => Math.random() - 0.5);
+  const usedQuestions = new Set();
+  
   for (let i = 0; i < count; i++) {
-    const questionIndex = i % topicQuestions.length;
-    const selectedQuestion = topicQuestions[questionIndex];
+    // Pick from shuffled list, but don't repeat
+    const baseQuestion = shuffled[i % shuffled.length];
+    const questionText = baseQuestion.question;
+    
+    // If we've already used all unique questions, modify to create variation
+    let finalQuestion = questionText;
+    if (usedQuestions.has(questionText) && i >= shuffled.length) {
+      // Skip duplicates - only generate up to available unique questions
+      continue;
+    }
+    usedQuestions.add(questionText);
     
     if (quizType === 'mcq' || quizType === 'multiple_choice') {
       questions.push({
         type: 'mcq',
         displayType: 'Multiple Choice',
-        question: selectedQuestion.question,
-        options: selectedQuestion.options,
-        answer: selectedQuestion.answer
+        question: baseQuestion.question,
+        options: baseQuestion.options,
+        answer: baseQuestion.answer
       });
     } else if (quizType === 'true_false') {
       questions.push({
         type: 'true_false',
         displayType: 'True/False',
-        question: `True or False: ${selectedQuestion.question.replace('?', '')}`,
+        question: `True or False: ${baseQuestion.question.replace('?', '')}`,
         options: ['True', 'False'],
         answer: Math.random() > 0.5 ? 'True' : 'False'
       });
@@ -196,9 +208,9 @@ const generateFallbackQuiz = (count, moduleText, quizType) => {
       questions.push({
         type: 'identification',
         displayType: 'Identification',
-        question: selectedQuestion.question,
+        question: baseQuestion.question,
         options: [],
-        answer: selectedQuestion.answer
+        answer: baseQuestion.answer
       });
     }
   }
@@ -207,17 +219,25 @@ const generateFallbackQuiz = (count, moduleText, quizType) => {
 };
 
 // Create quiz prompt for Gemini
-const createQuizPrompt = (count, moduleText, difficulty, quizType) => {
+const createQuizPrompt = (count, moduleText, difficulty, quizType, existingQuestions = []) => {
   let typePrompt = '';
   if (quizType === 'mcq') typePrompt = 'multiple choice';
   else if (quizType === 'true_false') typePrompt = 'true or false';
   else if (quizType === 'identification') typePrompt = 'identification';
   else typePrompt = 'mixed types';
 
+  let existingContext = '';
+  if (existingQuestions.length > 0) {
+    const existingList = existingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n');
+    existingContext = `\n\nIMPORTANT: The following questions have already been generated. Do NOT repeat or rephrase any of them. Each new question must be completely different:\n${existingList}\n`;
+  }
+
+  const uniqueRule = `\nIMPORTANT RULES:\n- Every question MUST be unique and different from each other.\n- Do NOT repeat, rephrase, or paraphrase any question.\n- Each question should test a different concept or fact.\n- Generate exactly ${count} questions, no more, no less.\n`;
+
   if (moduleText && moduleText.trim()) {
-    return `Generate ${count} quiz questions (${typePrompt}) based on this text. Respond as a JSON array of objects with: type, question, options (array), answer.\nText:\n${moduleText}`;
+    return `Generate exactly ${count} UNIQUE quiz questions (${typePrompt}) based on this text. Each question must cover a DIFFERENT concept or fact from the text. Respond as a JSON array of objects with: type, question, options (array), answer.${uniqueRule}${existingContext}\nText:\n${moduleText}`;
   } else {
-    return `Generate ${count} quiz questions (${typePrompt}) for a general subject. Respond as a JSON array of objects with: type, question, options (array), answer.`;
+    return `Generate exactly ${count} UNIQUE quiz questions (${typePrompt}) for a general subject. Each question must be completely different from the others. Respond as a JSON array of objects with: type, question, options (array), answer.${uniqueRule}${existingContext}`;
   }
 };
 
@@ -266,7 +286,7 @@ const parseQuizResponse = (text, quizType) => {
 // Generate quiz questions from module text using Gemini AI
 exports.generateQuiz = async (req, res) => {
   try {
-    const { count = 3, moduleText, difficulty = 'medium', quizType = 'mcq' } = req.body;
+    const { count = 3, moduleText, difficulty = 'medium', quizType = 'mcq', existingQuestions = [] } = req.body;
 
     console.log(`[INFO] Quiz generation request received:`, { count, moduleText, quizType });
     
@@ -320,7 +340,7 @@ exports.generateQuiz = async (req, res) => {
     console.log(`[INFO] Using working model: ${workingModelName}`);
 
     // Continue with quiz generation...
-    const prompt = createQuizPrompt(count, moduleText, difficulty, quizType);
+    const prompt = createQuizPrompt(count, moduleText, difficulty, quizType, existingQuestions);
     console.log(`[INFO] Generated prompt for Gemini API`);
 
     try {
