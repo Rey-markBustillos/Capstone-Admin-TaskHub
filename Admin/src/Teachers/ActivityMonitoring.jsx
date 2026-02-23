@@ -21,6 +21,7 @@ import {
   FaTimesCircle,
   FaSpinner,
   FaSearch,
+  FaEye,
 } from "react-icons/fa";
 
 // Ensure API_BASE_URL ends with a slash
@@ -120,17 +121,59 @@ export default function ActivityMonitoring() {
     }
   };
 
-  const handleSubmitScore = async (submissionId, score) => {
+  const handleSubmitScore = async (submissionId, score, activityId) => {
     try {
       const scoreNumber = Number(score);
       if (isNaN(scoreNumber)) {
         alert("Please enter a valid number");
         return;
       }
-      await axios.put(`${API_BASE_URL}activities/submissions/score/${submissionId}`, { score: scoreNumber });
+      const res = await axios.put(`${API_BASE_URL}activities/submissions/score/${submissionId}`, { score: scoreNumber });
+      // Update local state to reflect "Graded" status
+      const updatedStatus = res.data?.status || 'Graded';
+      setActivities(prevActivities =>
+        prevActivities.map(activity => {
+          if (activity._id === activityId) {
+            return {
+              ...activity,
+              submissions: activity.submissions.map(sub =>
+                sub._id === submissionId ? { ...sub, score: scoreNumber, status: updatedStatus } : sub
+              ),
+            };
+          }
+          return activity;
+        })
+      );
+      if (selectedActivity?._id === activityId) {
+        setSelectedActivity(prev => ({
+          ...prev,
+          submissions: prev.submissions.map(sub =>
+            sub._id === submissionId ? { ...sub, score: scoreNumber, status: updatedStatus } : sub
+          ),
+        }));
+      }
       alert("Score updated successfully!");
     } catch (err) {
       alert(`Failed to update score: ${err.response?.data?.message || err.message}`);
+    }
+  };
+
+  const handleDownloadFile = async (url, fileName) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName || 'download';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download failed:', err);
+      // Fallback: open in new tab
+      window.open(url, '_blank');
     }
   };
 
@@ -496,11 +539,11 @@ export default function ActivityMonitoring() {
 
                               {/* Attachment */}
                               <td className="px-6 py-4">
-                                {sub.fileName && isValidUrl ? (
+                                {sub.fileName ? (
                                   <div className="flex flex-col gap-2">
                                     <span className="text-xs text-gray-600 truncate max-w-xs">{sub.fileName}</span>
-                                    {/* Only show image preview if it's a recent Cloudinary upload (has public_id) */}
-                                    {canShowImage && sub.cloudinaryPublicId && (
+                                    {/* Image preview for Cloudinary uploads */}
+                                    {canShowImage && sub.cloudinaryPublicId && isValidUrl && (
                                       <img
                                         src={fileUrl}
                                         alt={sub.fileName}
@@ -512,20 +555,34 @@ export default function ActivityMonitoring() {
                                         loading="lazy"
                                       />
                                     )}
-                                    <a
-                                      href={fileUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium w-fit"
-                                    >
-                                      {fileTypeIcon}
-                                      <span>Download</span>
-                                      <FaDownload size={12} />
-                                    </a>
+                                    <div className="flex flex-wrap gap-2">
+                                      {/* View button */}
+                                      <a
+                                        href={isValidUrl ? fileUrl : `${API_BASE_URL}activities/submission/${sub._id}/download`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
+                                      >
+                                        <FaEye size={12} />
+                                        <span>View</span>
+                                      </a>
+                                      {/* Download button */}
+                                      <button
+                                        onClick={() => handleDownloadFile(
+                                          isValidUrl ? fileUrl : `${API_BASE_URL}activities/submission/${sub._id}/download`,
+                                          sub.fileName
+                                        )}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium cursor-pointer"
+                                      >
+                                        {fileTypeIcon}
+                                        <span>Download</span>
+                                        <FaDownload size={12} />
+                                      </button>
+                                    </div>
                                   </div>
-                                ) : sub.fileName ? (
-                                  <span className="text-amber-600 italic flex items-center gap-2 text-sm">
-                                    <FaFile /> {sub.fileName} (Legacy file - URL unavailable)
+                                ) : sub.content ? (
+                                  <span className="text-gray-700 text-sm">
+                                    {sub.content.length > 80 ? sub.content.substring(0, 80) + '...' : sub.content}
                                   </span>
                                 ) : (
                                   <span className="text-gray-400 italic flex items-center gap-2">
@@ -550,14 +607,25 @@ export default function ActivityMonitoring() {
 
                               {/* Status */}
                               <td className="px-6 py-4">
-                                <div className="flex justify-center">
-                                  {isLate ? (
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
-                                      <FaTimesCircle /> Late
+                                <div className="flex flex-col items-center gap-1">
+                                  {/* Submission status */}
+                                  {sub.status === 'Graded' ? (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
+                                      <FaCheckCircle /> Graded
+                                    </span>
+                                  ) : sub.status === 'Resubmitted' ? (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">
+                                      <FaClock /> Resubmitted
                                     </span>
                                   ) : (
-                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
-                                      <FaCheckCircle /> On Time
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                                      <FaClipboardList /> Submitted
+                                    </span>
+                                  )}
+                                  {/* Late indicator */}
+                                  {isLate && sub.status !== 'Graded' && (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
+                                      <FaTimesCircle /> Late
                                     </span>
                                   )}
                                 </div>
@@ -567,7 +635,7 @@ export default function ActivityMonitoring() {
                               <td className="px-6 py-4">
                                 <div className="flex justify-center">
                                   <button
-                                    onClick={() => handleSubmitScore(sub._id, sub.score)}
+                                    onClick={() => handleSubmitScore(sub._id, sub.score, selectedActivity._id)}
                                     className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium shadow-sm"
                                   >
                                     <FaCheckCircle /> Save
