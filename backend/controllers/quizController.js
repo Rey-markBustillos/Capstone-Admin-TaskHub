@@ -171,22 +171,12 @@ const generateFallbackQuiz = (count, moduleText, quizType) => {
     ];
   }
 
-  // Generate questions based on available topic questions (no repeats)
+  // Generate questions based on available topic questions (minimize repeats)
+  // If count > available unique questions, we must allow reuse
   const shuffled = [...topicQuestions].sort(() => Math.random() - 0.5);
-  const usedQuestions = new Set();
   
   for (let i = 0; i < count; i++) {
-    // Pick from shuffled list, but don't repeat
     const baseQuestion = shuffled[i % shuffled.length];
-    const questionText = baseQuestion.question;
-    
-    // If we've already used all unique questions, modify to create variation
-    let finalQuestion = questionText;
-    if (usedQuestions.has(questionText) && i >= shuffled.length) {
-      // Skip duplicates - only generate up to available unique questions
-      continue;
-    }
-    usedQuestions.add(questionText);
     
     if (quizType === 'mcq' || quizType === 'multiple_choice') {
       questions.push({
@@ -350,14 +340,37 @@ exports.generateQuiz = async (req, res) => {
       
       console.log(`[INFO] Received response from Gemini API`);
       
-      const questions = parseQuizResponse(text, quizType);
-      console.log(`[INFO] Successfully parsed ${questions.length} questions`);
+      let questions = parseQuizResponse(text, quizType);
+      console.log(`[INFO] Successfully parsed ${questions.length} questions (requested ${count})`);
       
       if (questions.length === 0) {
         throw new Error('No valid questions could be parsed from Gemini response');
       }
 
-      res.json({ questions });
+      // If AI returned fewer questions than requested, retry once for the remaining
+      if (questions.length < count) {
+        console.log(`[INFO] AI returned ${questions.length}/${count}, requesting ${count - questions.length} more...`);
+        try {
+          const alreadyGenerated = questions.map(q => q.question);
+          const retryPrompt = createQuizPrompt(count - questions.length, moduleText, difficulty, quizType, [...existingQuestions, ...alreadyGenerated]);
+          const retryResult = await model.generateContent(retryPrompt);
+          const retryText = (await retryResult.response).text();
+          const moreQuestions = parseQuizResponse(retryText, quizType);
+          if (moreQuestions.length > 0) {
+            questions = [...questions, ...moreQuestions].slice(0, count);
+          }
+        } catch (retryErr) {
+          console.warn('[WARN] Retry for more questions failed:', retryErr.message);
+        }
+
+        // If still not enough, supplement with fallback
+        if (questions.length < count) {
+          const supplement = generateFallbackQuiz(count - questions.length, moduleText, quizType);
+          questions = [...questions, ...supplement].slice(0, count);
+        }
+      }
+
+      res.json({ questions: questions.slice(0, count) });
 
     } catch (error) {
       console.error(`[ERROR] Gemini SDK error:`, error);
