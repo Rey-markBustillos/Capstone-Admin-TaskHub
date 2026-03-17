@@ -205,9 +205,11 @@ export default function CreateQuizz() {
       if (totalMixed === 0) {
         return alert('Please specify at least one question for mixed type quiz.');
       }
-      if (totalMixed !== count) {
-        setCount(totalMixed); // Auto-sync the total count
+      if (totalMixed > count) {
+        return alert('Mixed type counts exceed the number of questions. Increase total questions or reduce per-type counts.');
       }
+      // For mixed quizzes we no longer auto-sync `count` to the sum of per-type values.
+      // Teachers can type the desired `count` manually; generation relies on per-type counts.
     }
     
     setLoading(true);
@@ -215,42 +217,68 @@ export default function CreateQuizz() {
       let allQuestions = [];
       
       if (quizType === 'mixed') {
+        const requestedTotal = count;
+        const baseCounts = {
+          mcq: mcqCount,
+          true_false: trueFalseCount,
+          identification: identificationCount,
+        };
+        const selectedTypes = Object.entries(baseCounts)
+          .filter(([, value]) => value > 0)
+          .map(([type]) => type);
+
+        // Expand mixed distribution up to requested total while preserving teacher-defined base counts.
+        const targetCounts = { ...baseCounts };
+        let remaining = requestedTotal - (mcqCount + trueFalseCount + identificationCount);
+        if (remaining > 0 && selectedTypes.length > 0) {
+          let pointer = 0;
+          while (remaining > 0) {
+            const typeKey = selectedTypes[pointer % selectedTypes.length];
+            targetCounts[typeKey] += 1;
+            remaining -= 1;
+            pointer += 1;
+          }
+        }
+
         // Generate questions for each type sequentially to avoid duplicates
         let collectedQuestions = [];
         
-        if (mcqCount > 0) {
+        if (targetCounts.mcq > 0) {
           const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
-            count: mcqCount,
+            count: targetCounts.mcq,
             moduleText: moduleText.trim() ? moduleText : undefined,
             quizType: 'mcq',
             existingQuestions: collectedQuestions.map(q => q.question),
           });
-          if (res.data && Array.isArray(res.data.questions)) {
-            collectedQuestions = [...collectedQuestions, ...res.data.questions];
+          const generated = Array.isArray(res.data) ? res.data : res.data?.questions;
+          if (Array.isArray(generated)) {
+            collectedQuestions = [...collectedQuestions, ...generated];
           }
         }
         
-        if (trueFalseCount > 0) {
+        if (targetCounts.true_false > 0) {
           const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
-            count: trueFalseCount,
+            count: targetCounts.true_false,
             moduleText: moduleText.trim() ? moduleText : undefined,
             quizType: 'true_false',
             existingQuestions: collectedQuestions.map(q => q.question),
           });
-          if (res.data && Array.isArray(res.data.questions)) {
-            collectedQuestions = [...collectedQuestions, ...res.data.questions];
+          const generated = Array.isArray(res.data) ? res.data : res.data?.questions;
+          if (Array.isArray(generated)) {
+            collectedQuestions = [...collectedQuestions, ...generated];
           }
         }
         
-        if (identificationCount > 0) {
+        if (targetCounts.identification > 0) {
           const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
-            count: identificationCount,
+            count: targetCounts.identification,
             moduleText: moduleText.trim() ? moduleText : undefined,
             quizType: 'identification',
             existingQuestions: collectedQuestions.map(q => q.question),
           });
-          if (res.data && Array.isArray(res.data.questions)) {
-            collectedQuestions = [...collectedQuestions, ...res.data.questions];
+          const generated = Array.isArray(res.data) ? res.data : res.data?.questions;
+          if (Array.isArray(generated)) {
+            collectedQuestions = [...collectedQuestions, ...generated];
           }
         }
         
@@ -274,8 +302,9 @@ export default function CreateQuizz() {
           quizType: quizType,
         });
         
-        if (response.data && Array.isArray(response.data.questions)) {
-          allQuestions = response.data.questions;
+        const generated = Array.isArray(response.data) ? response.data : response.data?.questions;
+        if (Array.isArray(generated)) {
+          allQuestions = generated;
           
           // If quizType is 'mcq', force all generated questions with options to type 'mcq'
           if (quizType === 'mcq') {
@@ -299,6 +328,51 @@ export default function CreateQuizz() {
           return true;
         });
         setQuestions(uniqueQuestions);
+
+        // Auto-save generated quiz to make it permanent
+        if (classId && teacherId) {
+          try {
+            setLoading(true);
+            // create a timestamped title
+            const generatedTitle = `Generated Quiz ${new Date().toLocaleString()}`;
+            // Normalize question types similar to manual save
+            const normalizedQuestions = uniqueQuestions.map(q => {
+              let type = q.type;
+              if (Array.isArray(q.options) && q.options.length > 0) {
+                type = 'mcq';
+              } else if (type === 'multiple' || type === 'mcq') {
+                type = 'mcq';
+              } else if (type === 'truefalse' || type === 'true_false') {
+                type = 'true_false';
+              } else if (type === 'identification') {
+                type = 'identification';
+              } else if (type === 'numeric') {
+                type = 'identification';
+              }
+              return { ...q, type };
+            });
+
+            const saveRes = await axios.post(`${API_BASE_URL}/quizzes`, {
+              classId,
+              title: generatedTitle,
+              questions: normalizedQuestions,
+              createdBy: teacherId,
+              dueDate: dueDate || null,
+              questionTime,
+            });
+
+            if (saveRes && saveRes.data) {
+              // prepend to created quizzes
+              setCreatedQuizzes(prev => [saveRes.data, ...prev]);
+              alert('Generated quiz saved permanently as "' + generatedTitle + '"');
+            }
+          } catch (e) {
+            console.warn('Auto-save generated quiz failed', e);
+            // don't block user flow; they can save manually
+          } finally {
+            setLoading(false);
+          }
+        }
       } else {
         alert('No questions generated.');
       }
@@ -1004,17 +1078,11 @@ export default function CreateQuizz() {
               type="number"
               min={1}
               max={100}
-              className={`w-20 border border-blue-300 rounded bg-white text-gray-900 p-1 focus:ring-2 focus:ring-blue-500 ${
-                quizType === 'mixed' ? 'opacity-60 cursor-not-allowed' : ''
-              }`}
+              className="w-20 border border-blue-300 rounded bg-white text-gray-900 p-1 focus:ring-2 focus:ring-blue-500"
               value={count}
               onChange={e => setCount(Math.max(1, Number(e.target.value)))}
-              disabled={quizType === 'mixed'}
               required
             />
-            {quizType === 'mixed' && (
-              <span className="text-gray-600 text-xs">(Auto-calculated)</span>
-            )}
           </div>
           <div className="flex items-center gap-2 bg-white border-2 border-blue-300 rounded-lg px-4 py-2 shadow">
             <label className="text-blue-900 font-semibold">Quiz Type:</label>
@@ -1046,7 +1114,6 @@ export default function CreateQuizz() {
                     onChange={e => {
                       const value = Math.max(0, Number(e.target.value));
                       setMcqCount(value);
-                      setCount(value + trueFalseCount + identificationCount);
                     }}
                   />
                 </div>
@@ -1061,7 +1128,6 @@ export default function CreateQuizz() {
                     onChange={e => {
                       const value = Math.max(0, Number(e.target.value));
                       setTrueFalseCount(value);
-                      setCount(mcqCount + value + identificationCount);
                     }}
                   />
                 </div>
@@ -1076,7 +1142,6 @@ export default function CreateQuizz() {
                     onChange={e => {
                       const value = Math.max(0, Number(e.target.value));
                       setIdentificationCount(value);
-                      setCount(mcqCount + trueFalseCount + value);
                     }}
                   />
                 </div>

@@ -32,12 +32,27 @@ import TeacherClassView from './Teachers/TeacherClassView'; // AYOS: Import ng b
 import LandingPage from './LandingPage/LandingPage';
 import Login from './LandingPage/Login';
 
+const normalizeRole = (role) => {
+  if (typeof role !== 'string') return null;
+  const normalized = role.trim().toLowerCase();
+  return ['admin', 'teacher', 'student'].includes(normalized) ? normalized : null;
+};
+
+const normalizeUser = (user) => {
+  if (!user || typeof user !== 'object') return null;
+  const role = normalizeRole(user.role);
+  if (!role) return null;
+  return { ...user, role };
+};
+
 // HOC for Protected Routes
 const ProtectedRoute = ({ user, requiredRole, children }) => {
-  if (!user) {
+  const safeUser = normalizeUser(user);
+
+  if (!safeUser) {
     return <Navigate to="/login" replace />;
   }
-  if (requiredRole && user.role !== requiredRole) {
+  if (requiredRole && safeUser.role !== requiredRole) {
     return <Navigate to="/unauthorized" replace />;
   }
   return children;
@@ -45,10 +60,12 @@ const ProtectedRoute = ({ user, requiredRole, children }) => {
 
 // Component to redirect logged-in users
 const RedirectIfLoggedIn = ({ user, children }) => {
-  if (user) {
+  const safeUser = normalizeUser(user);
+
+  if (safeUser) {
     const dashboardPath =
-      user.role === 'admin' ? '/admindashboard' :
-      user.role === 'teacher' ? '/teacherdashboard' :
+      safeUser.role === 'admin' ? '/admindashboard' :
+      safeUser.role === 'teacher' ? '/teacherdashboard' :
       '/studentdashboard';
     return <Navigate to={dashboardPath} replace />;
   }
@@ -138,22 +155,39 @@ export default function App() {
     try {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        const safeUser = normalizeUser(parsedUser);
+        if (safeUser) {
+          setUser(safeUser);
+        } else {
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+        }
       }
     } catch (error) {
       console.error("Failed to parse user from localStorage", error);
       localStorage.removeItem('user');
+      localStorage.removeItem('token');
     } finally {
       setLoading(false);
     }
   }, []);
 
   const handleLoginSuccess = (loggedInUser) => {
-    localStorage.setItem('user', JSON.stringify(loggedInUser));
-    setUser(loggedInUser);
+    const safeUser = normalizeUser(loggedInUser);
+    if (!safeUser) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      setUser(null);
+      navigate('/login');
+      return;
+    }
+
+    localStorage.setItem('user', JSON.stringify(safeUser));
+    setUser(safeUser);
     const dashboardPath =
-      loggedInUser.role === 'admin' ? '/admindashboard' :
-      loggedInUser.role === 'teacher' ? '/teacherdashboard' :
+      safeUser.role === 'admin' ? '/admindashboard' :
+      safeUser.role === 'teacher' ? '/teacherdashboard' :
       '/studentdashboard';
     navigate(dashboardPath);
   };

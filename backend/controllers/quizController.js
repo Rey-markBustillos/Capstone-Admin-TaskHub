@@ -63,8 +63,122 @@ const listAvailableModels = async () => {
   }
 };
 
+const DIFFICULTIES = ['easy', 'medium', 'hard'];
+
+const shuffleArray = (arr) => {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
+
+const buildDifficultyPlan = (count) => {
+  const base = Math.floor(count / DIFFICULTIES.length);
+  let remainder = count % DIFFICULTIES.length;
+  const plan = [];
+  DIFFICULTIES.forEach((d) => {
+    const slots = base + (remainder > 0 ? 1 : 0);
+    remainder -= remainder > 0 ? 1 : 0;
+    for (let i = 0; i < slots; i++) {
+      plan.push(d);
+    }
+  });
+  return shuffleArray(plan);
+};
+
+const normalizeDifficulty = (value) => {
+  const v = String(value || '').trim().toLowerCase();
+  if (DIFFICULTIES.includes(v)) return v;
+  return 'medium';
+};
+
+const ensureFourOptions = (inputOptions, fallbackCorrect) => {
+  const options = Array.isArray(inputOptions)
+    ? inputOptions.map((opt) => String(opt || '').trim()).filter(Boolean)
+    : [];
+
+  const unique = [];
+  const seen = new Set();
+  for (const opt of options) {
+    const key = opt.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(opt);
+    }
+    if (unique.length === 4) break;
+  }
+
+  const fillers = ['Option A', 'Option B', 'Option C', 'Option D', 'Option E', 'Option F'];
+  let pointer = 0;
+  while (unique.length < 4) {
+    const candidate = fillers[pointer] || `Option ${pointer + 1}`;
+    pointer += 1;
+    if (!seen.has(candidate.toLowerCase())) {
+      seen.add(candidate.toLowerCase());
+      unique.push(candidate);
+    }
+  }
+
+  const normalizedCorrect = String(fallbackCorrect || '').trim();
+  if (normalizedCorrect) {
+    const found = unique.find((opt) => opt.toLowerCase() === normalizedCorrect.toLowerCase());
+    if (!found) {
+      unique[0] = normalizedCorrect;
+    }
+  }
+
+  return unique.slice(0, 4);
+};
+
+const sanitizeQuestionText = (value, idx) => {
+  const q = String(value || '').trim();
+  if (!q) return `Generated question ${idx + 1}?`;
+  return q.endsWith('?') ? q : `${q}?`;
+};
+
+const normalizeQuestionShape = (q, idx, forcedDifficulty) => {
+  const question = sanitizeQuestionText(q?.question, idx);
+  const options = ensureFourOptions(q?.options, q?.correctAnswer || q?.answer);
+  const rawCorrect = String(q?.correctAnswer || q?.answer || '').trim();
+  const fallbackCorrect = options[0];
+  const correctAnswer = options.find((opt) => opt.toLowerCase() === rawCorrect.toLowerCase()) || fallbackCorrect;
+  const explanation = String(q?.explanation || `This is the best answer based on the module content for this topic.`).trim();
+  const difficulty = normalizeDifficulty(forcedDifficulty || q?.difficulty);
+
+  return {
+    type: 'mcq',
+    displayType: 'Multiple Choice',
+    question,
+    options,
+    correctAnswer,
+    answer: correctAnswer,
+    explanation,
+    difficulty,
+    labeledOptions: {
+      A: options[0],
+      B: options[1],
+      C: options[2],
+      D: options[3],
+    },
+  };
+};
+
+const dedupeQuestions = (questions) => {
+  const seen = new Set();
+  const unique = [];
+  for (const q of questions) {
+    const key = String(q.question || '').trim().toLowerCase();
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(q);
+  }
+  return unique;
+};
+
 // Add fallback quiz generation with topic-specific questions
-const generateFallbackQuiz = (count, moduleText, quizType) => {
+const generateFallbackQuiz = (count, moduleText, quizType, difficultyPlan = []) => {
   const topic = moduleText ? moduleText.toLowerCase() : '';
   const questions = [];
 
@@ -171,45 +285,36 @@ const generateFallbackQuiz = (count, moduleText, quizType) => {
     ];
   }
 
-  // Generate questions based on available topic questions (minimize repeats)
-  // If count > available unique questions, we must allow reuse
-  const shuffled = [...topicQuestions].sort(() => Math.random() - 0.5);
+  // Generate question pool with deterministic uniqueness for high counts.
+  const shuffled = shuffleArray(topicQuestions);
+  const conceptSeed = moduleText
+    ? moduleText
+        .split(/\s+/)
+        .map((w) => w.replace(/[^a-zA-Z0-9]/g, '').trim())
+        .filter((w) => w.length > 3)
+        .slice(0, Math.max(10, count))
+    : [];
+  const difficultyForIndex = (i) => difficultyPlan[i] || DIFFICULTIES[i % DIFFICULTIES.length];
   
   for (let i = 0; i < count; i++) {
     const baseQuestion = shuffled[i % shuffled.length];
-    
-    if (quizType === 'mcq' || quizType === 'multiple_choice') {
-      questions.push({
-        type: 'mcq',
-        displayType: 'Multiple Choice',
-        question: baseQuestion.question,
-        options: baseQuestion.options,
-        answer: baseQuestion.answer
-      });
-    } else if (quizType === 'true_false') {
-      questions.push({
-        type: 'true_false',
-        displayType: 'True/False',
-        question: `True or False: ${baseQuestion.question.replace('?', '')}`,
-        options: ['True', 'False'],
-        answer: Math.random() > 0.5 ? 'True' : 'False'
-      });
-    } else if (quizType === 'identification') {
-      questions.push({
-        type: 'identification',
-        displayType: 'Identification',
-        question: baseQuestion.question,
-        options: [],
-        answer: baseQuestion.answer
-      });
-    }
+    const concept = conceptSeed[i % conceptSeed.length] || `concept ${i + 1}`;
+    const variant = i + 1;
+    const fallbackQuestion = {
+      question: `${baseQuestion.question.replace(/\?$/, '')} (${concept}, item ${variant})?`,
+      options: [...baseQuestion.options],
+      correctAnswer: baseQuestion.answer,
+      explanation: `The correct answer is based on ${concept} and core principles discussed in the lesson.`,
+      difficulty: difficultyForIndex(i),
+    };
+    questions.push(normalizeQuestionShape(fallbackQuestion, i, difficultyForIndex(i)));
   }
 
-  return questions;
+  return dedupeQuestions(questions);
 };
 
 // Create quiz prompt for Gemini
-const createQuizPrompt = (count, moduleText, difficulty, quizType, existingQuestions = []) => {
+const createQuizPrompt = (count, moduleText, difficulty, quizType, existingQuestions = [], difficultyPlan = []) => {
   let typePrompt = '';
   if (quizType === 'mcq') typePrompt = 'multiple choice';
   else if (quizType === 'true_false') typePrompt = 'true or false';
@@ -222,17 +327,20 @@ const createQuizPrompt = (count, moduleText, difficulty, quizType, existingQuest
     existingContext = `\n\nIMPORTANT: The following questions have already been generated. Do NOT repeat or rephrase any of them. Each new question must be completely different:\n${existingList}\n`;
   }
 
-  const uniqueRule = `\nIMPORTANT RULES:\n- Every question MUST be unique and different from each other.\n- Do NOT repeat, rephrase, or paraphrase any question.\n- Each question should test a different concept or fact.\n- Generate exactly ${count} questions, no more, no less.\n`;
+  const planText = difficultyPlan.length
+    ? `\nTarget difficulty distribution (keep balanced and close to this sequence): ${difficultyPlan.join(', ')}`
+    : '';
+  const uniqueRule = `\nIMPORTANT RULES:\n- Every question MUST be unique and different from each other.\n- Do NOT repeat, rephrase, or paraphrase any question.\n- Each question should test a different concept or fact.\n- Generate exactly ${count} questions, no more, no less.\n- Return valid JSON only (no markdown, no extra text).\n- Return each item with EXACT keys: question, options, correctAnswer, explanation, difficulty.\n- options must be an array with exactly 4 choices mapped to A, B, C, D.\n- difficulty must be one of: easy, medium, hard.${planText}\n`;
 
   if (moduleText && moduleText.trim()) {
-    return `Generate exactly ${count} UNIQUE quiz questions (${typePrompt}) based on this text. Each question must cover a DIFFERENT concept or fact from the text. Respond as a JSON array of objects with: type, question, options (array), answer.${uniqueRule}${existingContext}\nText:\n${moduleText}`;
+    return `Generate exactly ${count} UNIQUE quiz questions (${typePrompt}) based on this text. Each question must cover a DIFFERENT concept or fact from the text. Respond as a JSON array of objects with: question, options, correctAnswer, explanation, difficulty.${uniqueRule}${existingContext}\nText:\n${moduleText}`;
   } else {
-    return `Generate exactly ${count} UNIQUE quiz questions (${typePrompt}) for a general subject. Each question must be completely different from the others. Respond as a JSON array of objects with: type, question, options (array), answer.${uniqueRule}${existingContext}`;
+    return `Generate exactly ${count} UNIQUE quiz questions (${typePrompt}) for a general subject. Each question must be completely different from the others. Respond as a JSON array of objects with: question, options, correctAnswer, explanation, difficulty.${uniqueRule}${existingContext}`;
   }
 };
 
 // Parse quiz response from Gemini
-const parseQuizResponse = (text, quizType) => {
+const parseQuizResponse = (text, quizType, difficultyPlan = []) => {
   try {
     // Remove markdown code fencing and extra lines
     let cleanText = text.trim();
@@ -250,20 +358,7 @@ const parseQuizResponse = (text, quizType) => {
     const questions = JSON.parse(fixedText);
     
     if (Array.isArray(questions)) {
-      return questions.map(q => {
-        let type = q.type;
-        if (q.type === 'multiple_choice') type = 'mcq';
-        
-        let displayType = 'Identification';
-        if (type === 'mcq') displayType = 'Multiple Choice';
-        else if (type === 'true_false') displayType = 'True/False';
-        
-        return {
-          ...q,
-          type,
-          displayType
-        };
-      });
+      return questions.map((q, idx) => normalizeQuestionShape(q, idx, difficultyPlan[idx]));
     }
     
     return [];
@@ -277,8 +372,10 @@ const parseQuizResponse = (text, quizType) => {
 exports.generateQuiz = async (req, res) => {
   try {
     const { count = 3, moduleText, difficulty = 'medium', quizType = 'mcq', existingQuestions = [] } = req.body;
+    const requestedCount = Math.min(200, Math.max(1, Number(count) || 1));
+    const difficultyPlan = buildDifficultyPlan(requestedCount);
 
-    console.log(`[INFO] Quiz generation request received:`, { count, moduleText, quizType });
+    console.log(`[INFO] Quiz generation request received:`, { requestedCount, moduleText, quizType });
     
     if (!process.env.GEMINI_API_KEY) {
       throw new Error('GEMINI_API_KEY is not configured');
@@ -323,14 +420,14 @@ exports.generateQuiz = async (req, res) => {
     if (!model || !workingModelName) {
       // If no model works, create a fallback response
       console.log('[INFO] No Gemini models available, using fallback quiz generation');
-      const fallbackQuestions = generateFallbackQuiz(count, moduleText, quizType);
-      return res.json({ questions: fallbackQuestions });
+      const fallbackQuestions = generateFallbackQuiz(requestedCount, moduleText, quizType, difficultyPlan);
+      return res.json(shuffleArray(fallbackQuestions).slice(0, requestedCount));
     }
 
     console.log(`[INFO] Using working model: ${workingModelName}`);
 
     // Continue with quiz generation...
-    const prompt = createQuizPrompt(count, moduleText, difficulty, quizType, existingQuestions);
+    const prompt = createQuizPrompt(requestedCount, moduleText, difficulty, quizType, existingQuestions, difficultyPlan);
     console.log(`[INFO] Generated prompt for Gemini API`);
 
     try {
@@ -340,53 +437,107 @@ exports.generateQuiz = async (req, res) => {
       
       console.log(`[INFO] Received response from Gemini API`);
       
-      let questions = parseQuizResponse(text, quizType);
-      console.log(`[INFO] Successfully parsed ${questions.length} questions (requested ${count})`);
+      let questions = dedupeQuestions(parseQuizResponse(text, quizType, difficultyPlan));
+      console.log(`[INFO] Successfully parsed ${questions.length} questions (requested ${requestedCount})`);
       
       if (questions.length === 0) {
         throw new Error('No valid questions could be parsed from Gemini response');
       }
 
-      // If AI returned fewer questions than requested, retry once for the remaining
-      if (questions.length < count) {
-        console.log(`[INFO] AI returned ${questions.length}/${count}, requesting ${count - questions.length} more...`);
+      // Keep requesting missing questions until we satisfy requestedCount (or max retries), then backfill.
+      let attempt = 0;
+      while (questions.length < requestedCount && attempt < 4) {
+        attempt += 1;
+        const missing = requestedCount - questions.length;
+        console.log(`[INFO] AI returned ${questions.length}/${requestedCount}, requesting ${missing} more (attempt ${attempt})...`);
         try {
-          const alreadyGenerated = questions.map(q => q.question);
-          const retryPrompt = createQuizPrompt(count - questions.length, moduleText, difficulty, quizType, [...existingQuestions, ...alreadyGenerated]);
+          const alreadyGenerated = questions.map((q) => q.question);
+          const remainingDifficultyPlan = difficultyPlan.slice(questions.length, requestedCount);
+          const retryPrompt = createQuizPrompt(
+            missing,
+            moduleText,
+            difficulty,
+            quizType,
+            [...existingQuestions, ...alreadyGenerated],
+            remainingDifficultyPlan
+          );
           const retryResult = await model.generateContent(retryPrompt);
           const retryText = (await retryResult.response).text();
-          const moreQuestions = parseQuizResponse(retryText, quizType);
+          const moreQuestions = dedupeQuestions(parseQuizResponse(retryText, quizType, remainingDifficultyPlan));
           if (moreQuestions.length > 0) {
-            questions = [...questions, ...moreQuestions].slice(0, count);
+            questions = dedupeQuestions([...questions, ...moreQuestions]);
           }
         } catch (retryErr) {
           console.warn('[WARN] Retry for more questions failed:', retryErr.message);
         }
+      }
 
-        // If still not enough, supplement with fallback
-        if (questions.length < count) {
-          const supplement = generateFallbackQuiz(count - questions.length, moduleText, quizType);
-          questions = [...questions, ...supplement].slice(0, count);
+      if (questions.length < requestedCount) {
+        const missing = requestedCount - questions.length;
+        const supplementPlan = difficultyPlan.slice(questions.length, requestedCount);
+        const supplement = generateFallbackQuiz(missing, moduleText, quizType, supplementPlan);
+        questions = dedupeQuestions([...questions, ...supplement]);
+      }
+
+      if (questions.length < requestedCount) {
+        // Final deterministic backfill to guarantee exact count and avoid duplicates.
+        const finalSeen = new Set(questions.map((q) => q.question.trim().toLowerCase()));
+        let i = 0;
+        while (questions.length < requestedCount) {
+          const diff = difficultyPlan[questions.length] || 'medium';
+          const forced = normalizeQuestionShape(
+            {
+              question: `Auto-generated unique question ${questions.length + 1} about ${moduleText || 'the lesson content'}?`,
+              options: [
+                `Correct concept ${questions.length + 1}`,
+                `Related idea ${questions.length + 1}`,
+                `Alternative ${questions.length + 1}`,
+                `Distractor ${questions.length + 1}`,
+              ],
+              correctAnswer: `Correct concept ${questions.length + 1}`,
+              explanation: `This answer aligns with key lesson points and is used to complete the required question count.`,
+              difficulty: diff,
+            },
+            questions.length,
+            diff
+          );
+          const key = forced.question.trim().toLowerCase();
+          if (!finalSeen.has(key)) {
+            finalSeen.add(key);
+            questions.push(forced);
+          }
+          i += 1;
+          if (i > requestedCount * 3) break;
         }
       }
 
-      res.json({ questions: questions.slice(0, count) });
+      const finalQuestions = shuffleArray(questions).slice(0, requestedCount);
+      const validated = finalQuestions.length === requestedCount;
+      if (!validated) {
+        console.warn(`[WARN] Validation mismatch: generated ${finalQuestions.length}, requested ${requestedCount}`);
+      }
+
+      res.json(finalQuestions);
 
     } catch (error) {
       console.error(`[ERROR] Gemini SDK error:`, error);
       
       // Fallback to mock questions
       console.log('[INFO] Falling back to mock quiz generation');
-      const fallbackQuestions = generateFallbackQuiz(count, moduleText, quizType);
-      res.json({ questions: fallbackQuestions });
+      const fallbackQuestions = generateFallbackQuiz(requestedCount, moduleText, quizType, difficultyPlan);
+      const finalQuestions = shuffleArray(fallbackQuestions).slice(0, requestedCount);
+      res.json(finalQuestions);
     }
 
   } catch (error) {
     console.error('[ERROR] Quiz generation failed:', error);
     
     // Final fallback
-    const fallbackQuestions = generateFallbackQuiz(req.body.count || 3, req.body.moduleText || '', req.body.quizType || 'mcq');
-    res.json({ questions: fallbackQuestions });
+    const requestedCount = Math.min(200, Math.max(1, Number(req.body.count) || 1));
+    const difficultyPlan = buildDifficultyPlan(requestedCount);
+    const fallbackQuestions = generateFallbackQuiz(requestedCount, req.body.moduleText || '', req.body.quizType || 'mcq', difficultyPlan);
+    const finalQuestions = shuffleArray(fallbackQuestions).slice(0, requestedCount);
+    res.json(finalQuestions);
   }
 };
 

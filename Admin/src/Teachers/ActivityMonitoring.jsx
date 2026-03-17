@@ -81,7 +81,14 @@ export default function ActivityMonitoring() {
                 { params: { activityId: activity._id } }
               );
               console.log('✅ [FRONTEND] Got', submissionsRes.data.submissions?.length || 0, 'submissions for activity:', activity.title);
-              return { ...activity, submissions: submissionsRes.data.submissions || [] };
+              // Ensure submissions are ordered newest (present) to oldest (past)
+              const subs = submissionsRes.data.submissions || [];
+              subs.sort((a, b) => {
+                const da = a.submissionDate ? new Date(a.submissionDate) : new Date(0);
+                const db = b.submissionDate ? new Date(b.submissionDate) : new Date(0);
+                return db - da; // newest first
+              });
+              return { ...activity, submissions: subs };
             } catch {
               return { ...activity, submissions: [] };
             }
@@ -210,11 +217,65 @@ export default function ActivityMonitoring() {
       });
       const { exportData, activityTitles } = res.data;
 
+      // Build a nicely formatted sheet: title row, header row, and data rows
       const columns = ["Name", "Email", ...activityTitles];
-      const worksheet = XLSX.utils.json_to_sheet(exportData, { header: columns });
+
+      // Build rows as array-of-arrays so we can control header and title placement
+      const rows = [];
+      // Title row
+      rows.push([`Scores - ${selectedClass.className}`]);
+      // Header row
+      rows.push(columns);
+      // Data rows
+      for (const rowObj of exportData) {
+        const row = columns.map((col) => {
+          // Prefer actual values; fall back to empty string
+          let val = rowObj[col];
+          if (val === undefined || val === null) return "";
+          // Convert numeric-like strings to numbers (for scores)
+          if (typeof val === "string" && /^-?\d+(\.\d+)?$/.test(val)) {
+            return Number(val);
+          }
+          // Keep Date objects or ISO date strings as-is (SheetJS will try to interpret)
+          return val;
+        });
+        rows.push(row);
+      }
+
+      const worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+      // Merge title across all columns
+      worksheet["!merges"] = worksheet["!merges"] || [];
+      worksheet["!merges"].push({ s: { r: 0, c: 0 }, e: { r: 0, c: columns.length - 1 } });
+
+      // Set column widths
+      worksheet["!cols"] = columns.map((col) => ({ wch: Math.min(Math.max(col.length + 8, 14), 40) }));
+
+      // Apply basic styling to header row (row index 1)
+      for (let c = 0; c < columns.length; c++) {
+        const addr = XLSX.utils.encode_cell({ r: 1, c });
+        if (!worksheet[addr]) worksheet[addr] = { t: 's', v: columns[c] };
+        // Cell style: bold + center alignment (note: some style features may be limited by SheetJS edition)
+        worksheet[addr].s = Object.assign({}, worksheet[addr].s, {
+          font: { bold: true, sz: 11 },
+          alignment: { horizontal: 'center', vertical: 'center' }
+        });
+      }
+
+      // Title styling
+      const titleAddr = XLSX.utils.encode_cell({ r: 0, c: 0 });
+      if (!worksheet[titleAddr]) worksheet[titleAddr] = { t: 's', v: `Scores - ${selectedClass.className}` };
+      worksheet[titleAddr].s = Object.assign({}, worksheet[titleAddr].s, {
+        font: { bold: true, sz: 14 },
+        alignment: { horizontal: 'left', vertical: 'center' }
+      });
+
+      // Freeze header (leave title visible, freeze header/data at row 2)
       const workbook = XLSX.utils.book_new();
+      workbook.Workbook = { Views: [{ xSplit: 0, ySplit: 2, topLeftCell: 'A3', activeTab: 0 }] };
       XLSX.utils.book_append_sheet(workbook, worksheet, "Scores");
 
+      // Write file
       XLSX.writeFile(workbook, `Scores_${selectedClass.className}.xlsx`);
     } catch (err) {
       alert("Failed to export scores: " + (err.response?.data?.message || err.message));

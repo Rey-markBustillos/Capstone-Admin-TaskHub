@@ -125,115 +125,133 @@ export default function Login({ onBack, onLoginSuccess }) {
       <div aria-hidden="true" className="absolute bottom-1/4 right-1/2 translate-x-1/2 pointer-events-none select-none">
         <div className="w-64 h-64 rounded-full bg-indigo-100 opacity-15"></div>
       </div>
-      {/* LOGIN BOX */}
-      <div className="relative bg-white p-6 sm:p-10 rounded-xl shadow-lg max-w-md w-full mx-auto border border-gray-200">
-        <div className="flex flex-col items-center mb-8">
-          <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 via-indigo-400 to-blue-600 shadow-lg border-4 border-white mb-2 overflow-hidden">
-            <img
-              src="/taskhublogos.png"
-              alt="TaskHub Logo"
-              className="w-20 h-20 object-cover rounded-full"
-              style={{ imageRendering: 'crisp-edges' }}
-            />
-          </span>
-          <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2 drop-shadow">
-            TaskHub
-          </h1>
-          <p className="text-gray-500 mt-2 text-lg font-medium">Sign in to continue</p>
+      {/* Centered container that becomes two-column on xl screens */}
+      <div className="relative z-40 w-full max-w-6xl mx-auto grid grid-cols-1 xl:grid-cols-2 gap-12 items-center px-4">
+        {/* Left column: illustration & intro (visible on xl and up) */}
+        <div className="hidden xl:flex flex-col items-start gap-6 pl-6">
+          <div className="w-full max-w-md">
+            <div className="relative w-full h-72 flex items-center justify-center">
+              <div className="w-full h-full rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-50 border border-blue-200/40 shadow-xl flex items-center justify-center">
+                <img src="/studying.png" alt="Studying" className="w-40 h-40 object-contain" />
+              </div>
+            </div>
+            <h2 className="mt-6 text-3xl font-bold text-blue-900">Welcome to TaskHub</h2>
+            <p className="mt-2 text-lg text-gray-600">Manage classes, announcements and submissions from a single dashboard.</p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-6">
-          <div>
-            <label
-              htmlFor="email"
-              className="block mb-2 text-sm font-semibold text-gray-700"
-            >
-              Email Address
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400">
-                <FaUserCircle size={22} />
+        {/* Right column: login form */}
+        <div className="flex justify-center">
+          <div className="relative bg-white p-8 sm:p-10 rounded-xl shadow-lg w-full max-w-md border border-gray-200 z-50">
+            <div className="flex flex-col items-center mb-8">
+              <span className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 via-indigo-400 to-blue-600 shadow-lg border-4 border-white mb-2 overflow-hidden">
+                <img
+                  src="/taskhublogos.png"
+                  alt="TaskHub Logo"
+                  className="w-20 h-20 object-cover rounded-full"
+                  style={{ imageRendering: 'crisp-edges' }}
+                />
               </span>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="you@gmail.com"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                autoComplete="username"
-                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900 placeholder:text-gray-400 hover:border-blue-300"
-              />
+              <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight flex items-center gap-2 drop-shadow">
+                TaskHub
+              </h1>
+              <p className="text-gray-500 mt-2 text-lg font-medium">Sign in to continue</p>
+            </div>
+
+            <form onSubmit={handleSubmit} noValidate className="space-y-6">
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block mb-2 text-sm font-semibold text-gray-700"
+                >
+                  Email Address
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400">
+                    <FaUserCircle size={22} />
+                  </span>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="you@gmail.com"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    autoComplete="username"
+                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900 placeholder:text-gray-400 hover:border-blue-300"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block mb-2 text-sm font-semibold text-gray-700"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400">
+                    <FaLock size={20} />
+                  </span>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    autoComplete="current-password"
+                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900 placeholder:text-gray-400 hover:border-blue-300"
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-300 text-red-700 text-sm flex items-center gap-2">
+                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center items-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-lg font-semibold shadow-md hover:shadow-lg"
+                aria-busy={loading}
+              >
+                {loading ? (
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <>
+                    <FaSignInAlt className="mr-2" /> Sign In
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="text-center mt-8">
+              <button
+                onClick={onBack}
+                tabIndex={0}
+                type="button"
+                className="inline-flex items-center gap-2 text-base font-medium text-blue-600 hover:text-blue-800 cursor-pointer transition-all duration-200 px-4 py-2 rounded-lg hover:bg-blue-50"
+                aria-label="Back to Welcome"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") onBack();
+                }}
+              >
+                <FaArrowLeft /> Back to Welcome
+              </button>
             </div>
           </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block mb-2 text-sm font-semibold text-gray-700"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400">
-                <FaLock size={20} />
-              </span>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                autoComplete="current-password"
-                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all bg-white text-gray-900 placeholder:text-gray-400 hover:border-blue-300"
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-300 text-red-700 text-sm flex items-center gap-2">
-              <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center items-center gap-2 bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-lg font-semibold shadow-md hover:shadow-lg"
-            aria-busy={loading}
-          >
-            {loading ? (
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            ) : (
-              <>
-                <FaSignInAlt className="mr-2" /> Sign In
-              </>
-            )}
-          </button>
-        </form>
-
-        <div className="text-center mt-8">
-          <button
-            onClick={onBack}
-            tabIndex={0}
-            type="button"
-            className="inline-flex items-center gap-2 text-base font-medium text-blue-600 hover:text-blue-800 cursor-pointer transition-all duration-200 px-4 py-2 rounded-lg hover:bg-blue-50"
-            aria-label="Back to Welcome"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") onBack();
-            }}
-          >
-            <FaArrowLeft /> Back to Welcome
-          </button>
         </div>
       </div>
     </div>
