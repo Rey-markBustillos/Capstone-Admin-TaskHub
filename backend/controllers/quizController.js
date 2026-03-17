@@ -94,6 +94,34 @@ const normalizeDifficulty = (value) => {
   return 'medium';
 };
 
+const TOPIC_STOP_WORDS = new Set([
+  'create', 'make', 'generate', 'quiz', 'quizzes', 'question', 'questions', 'about', 'the', 'a', 'an',
+  'of', 'for', 'in', 'on', 'to', 'and', 'or', 'please', 'item', 'items', 'test', 'exam', 'module', 'lesson'
+]);
+
+const extractFocusTopic = (moduleText = '') => {
+  const raw = String(moduleText || '').trim().toLowerCase();
+  if (!raw) return 'general lesson';
+
+  if (/(fraction|fractions)/.test(raw)) return 'fractions';
+  if (/(algebra|equation|variable|polynomial)/.test(raw)) return 'algebra';
+  if (/(geometry|triangle|angle|circle)/.test(raw)) return 'geometry';
+  if (/(mathematics|math|arithmetic)/.test(raw)) return 'mathematics';
+  if (/(biology|chemistry|physics|science)/.test(raw)) return 'science';
+
+  const words = raw
+    .split(/[^a-z0-9]+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length >= 3 && !TOPIC_STOP_WORDS.has(w));
+
+  if (!words.length) return 'general lesson';
+
+  const counts = new Map();
+  for (const w of words) counts.set(w, (counts.get(w) || 0) + 1);
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  return ranked[0]?.[0] || 'general lesson';
+};
+
 const normalizeQuizType = (value) => {
   const t = String(value || '').trim().toLowerCase();
   if (t === 'true_false' || t === 'tf' || t === 'truefalse') return 'true_false';
@@ -227,137 +255,187 @@ const dedupeQuestions = (questions) => {
   return unique;
 };
 
+const generateFractionMcq = (i) => {
+  const index = i + 1;
+  const type = i % 6;
+  if (type === 0) {
+    const num = 2 + (i % 7);
+    const den = num + 2;
+    const proper = num < den ? 'proper fraction' : 'improper fraction';
+    return {
+      question: `What kind of fraction is ${num}/${den}?`,
+      options: ['Proper fraction', 'Improper fraction', 'Mixed number', 'Whole number'],
+      correctAnswer: proper.replace(/^./, (c) => c.toUpperCase()),
+    };
+  }
+  if (type === 1) {
+    const den = 4 + (i % 5);
+    const left = 1 + (i % (den - 1));
+    const right = den - left;
+    return {
+      question: `What is ${left}/${den} + ${right}/${den}?`,
+      options: ['1', `${den}/${den}`, `${left + right}/${den + 1}`, `${left + right}/${den * 2}`],
+      correctAnswer: '1',
+    };
+  }
+  if (type === 2) {
+    const whole = 1 + (i % 4);
+    const num = 1 + (i % 3);
+    const den = num + 2;
+    return {
+      question: `Convert the mixed number ${whole} ${num}/${den} to an improper fraction.`,
+      options: [
+        `${whole * den + num}/${den}`,
+        `${whole + num}/${den}`,
+        `${whole * den - num}/${den}`,
+        `${num}/${whole * den}`,
+      ],
+      correctAnswer: `${whole * den + num}/${den}`,
+    };
+  }
+  if (type === 3) {
+    const a = 1 + (i % 4);
+    const b = a + 1;
+    return {
+      question: `Which is greater: ${a}/${b} or ${b}/${b + 1}?`,
+      options: [`${a}/${b}`, `${b}/${b + 1}`, 'They are equal', 'Cannot be determined'],
+      correctAnswer: `${b}/${b + 1}`,
+    };
+  }
+  if (type === 4) {
+    const num = 2 + (i % 6);
+    const den = 4 + (i % 6);
+    return {
+      question: `What is the equivalent fraction of ${num}/${den} when both numerator and denominator are multiplied by 2?`,
+      options: [`${num * 2}/${den * 2}`, `${num + 2}/${den + 2}`, `${num * 2}/${den}`, `${num}/${den * 2}`],
+      correctAnswer: `${num * 2}/${den * 2}`,
+    };
+  }
+  const num = 1 + (i % 5);
+  const den = num + 3;
+  return {
+    question: `What is the decimal value of ${num}/${den} (nearest hundredth)?`,
+    options: [
+      (num / den).toFixed(2),
+      (num / (den + 1)).toFixed(2),
+      ((num + 1) / den).toFixed(2),
+      (num / (den - 1)).toFixed(2),
+    ],
+    correctAnswer: (num / den).toFixed(2),
+  };
+};
+
+const generateFractionTrueFalse = (i) => {
+  const type = i % 5;
+  if (type === 0) {
+    return { question: 'A fraction with the same numerator and denominator is always equal to 1.', correctAnswer: 'True' };
+  }
+  if (type === 1) {
+    return { question: 'In a proper fraction, the numerator is greater than the denominator.', correctAnswer: 'False' };
+  }
+  if (type === 2) {
+    return { question: 'Equivalent fractions represent the same value.', correctAnswer: 'True' };
+  }
+  if (type === 3) {
+    return { question: 'To add fractions, you always add denominators directly.', correctAnswer: 'False' };
+  }
+  return { question: 'A mixed number can be converted into an improper fraction.', correctAnswer: 'True' };
+};
+
+const generateFractionIdentification = (i) => {
+  const type = i % 5;
+  if (type === 0) {
+    const num = 1 + (i % 4);
+    const den = num + 2;
+    return { question: `Write ${num}/${den} as a percentage.`, correctAnswer: `${Math.round((num / den) * 100)}%` };
+  }
+  if (type === 1) {
+    const whole = 1 + (i % 3);
+    const num = 1 + (i % 2);
+    const den = 4;
+    return { question: `Convert ${whole} ${num}/${den} to an improper fraction.`, correctAnswer: `${whole * den + num}/${den}` };
+  }
+  if (type === 2) {
+    return { question: 'What do you call a fraction where the numerator is less than the denominator?', correctAnswer: 'Proper fraction' };
+  }
+  if (type === 3) {
+    return { question: 'Name the fraction equivalent to 1/2 with denominator 10.', correctAnswer: '5/10' };
+  }
+  return { question: 'What is the numerator in the fraction 7/9?', correctAnswer: '7' };
+};
+
 // Add fallback quiz generation with topic-specific questions
 const generateFallbackQuiz = (count, moduleText, quizType, difficultyPlan = []) => {
-  const topic = moduleText ? moduleText.toLowerCase() : '';
+  const normalizedType = normalizeQuizType(quizType);
+  const topic = extractFocusTopic(moduleText);
   const questions = [];
-
-  // Determine topic-specific questions
-  let topicQuestions = [];
-  
-  if (topic.includes('guitar') || topic.includes('chord')) {
-    topicQuestions = [
-      {
-        question: "What is a major chord typically composed of?",
-        options: ["Root, major third, perfect fifth", "Root, minor third, perfect fifth", "Root, major third, minor seventh", "Root, perfect fourth, perfect fifth"],
-        answer: "Root, major third, perfect fifth"
-      },
-      {
-        question: "Which chord is often called the 'happy' sounding chord?",
-        options: ["Major chord", "Minor chord", "Diminished chord", "Augmented chord"],
-        answer: "Major chord"
-      },
-      {
-        question: "What does the 'C' in C major chord represent?",
-        options: ["The root note", "The chord type", "The finger position", "The string number"],
-        answer: "The root note"
-      },
-      {
-        question: "How many strings does a standard acoustic guitar have?",
-        options: ["6 strings", "4 strings", "5 strings", "7 strings"],
-        answer: "6 strings"
-      },
-      {
-        question: "What is the most common strumming pattern for beginners?",
-        options: ["Down-Down-Up-Up-Down-Up", "Up-Down-Up-Down", "Down-Up-Down-Up", "All down strums"],
-        answer: "Down-Down-Up-Up-Down-Up"
-      },
-      {
-        question: "Which chord is typically learned first by guitar beginners?",
-        options: ["G major", "C major", "F major", "B major"],
-        answer: "G major"
-      },
-      {
-        question: "What does 'barre chord' mean in guitar playing?",
-        options: ["Using one finger to press multiple strings", "Playing one string at a time", "Using a pick", "Playing without looking"],
-        answer: "Using one finger to press multiple strings"
-      },
-      {
-        question: "What is the difference between major and minor chords?",
-        options: ["The third interval (major vs minor third)", "The number of strings used", "The strumming pattern", "The guitar position"],
-        answer: "The third interval (major vs minor third)"
-      }
-    ];
-  } else if (topic.includes('math') || topic.includes('mathematics')) {
-    topicQuestions = [
-      {
-        question: "What is the result of 5 + 3 × 2?",
-        options: ["11", "16", "13", "10"],
-        answer: "11"
-      },
-      {
-        question: "What is the square root of 64?",
-        options: ["8", "6", "7", "9"],
-        answer: "8"
-      },
-      {
-        question: "What is 25% of 80?",
-        options: ["20", "15", "25", "30"],
-        answer: "20"
-      }
-    ];
-  } else if (topic.includes('science') || topic.includes('biology') || topic.includes('chemistry')) {
-    topicQuestions = [
-      {
-        question: "What is the chemical symbol for water?",
-        options: ["H2O", "CO2", "NaCl", "O2"],
-        answer: "H2O"
-      },
-      {
-        question: "How many chambers does a human heart have?",
-        options: ["4", "2", "3", "5"],
-        answer: "4"
-      },
-      {
-        question: "What gas do plants absorb from the atmosphere during photosynthesis?",
-        options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"],
-        answer: "Carbon dioxide"
-      }
-    ];
-  } else {
-    // Generic educational questions
-    topicQuestions = [
-      {
-        question: `What is the main topic of "${moduleText || 'this subject'}"?`,
-        options: ["Educational content", "Entertainment", "Sports", "Technology"],
-        answer: "Educational content"
-      },
-      {
-        question: "Which learning method is most effective for understanding new concepts?",
-        options: ["Practice and repetition", "Reading only", "Watching videos only", "Memorization only"],
-        answer: "Practice and repetition"
-      },
-      {
-        question: "What is the best way to retain information from studying?",
-        options: ["Regular review and practice", "Cramming before tests", "Reading once", "Highlighting text"],
-        answer: "Regular review and practice"
-      }
-    ];
-  }
-
-  // Generate question pool with deterministic uniqueness for high counts.
-  const shuffled = shuffleArray(topicQuestions);
-  const conceptSeed = moduleText
-    ? moduleText
-        .split(/\s+/)
-        .map((w) => w.replace(/[^a-zA-Z0-9]/g, '').trim())
-        .filter((w) => w.length > 3)
-        .slice(0, Math.max(10, count))
-    : [];
   const difficultyForIndex = (i) => difficultyPlan[i] || DIFFICULTIES[i % DIFFICULTIES.length];
-  
+
   for (let i = 0; i < count; i++) {
-    const baseQuestion = shuffled[i % shuffled.length];
-    const concept = conceptSeed[i % conceptSeed.length] || `concept ${i + 1}`;
-    const variant = i + 1;
-    const fallbackQuestion = {
-      question: `${baseQuestion.question.replace(/\?$/, '')} (${concept}, item ${variant})?`,
-      options: [...baseQuestion.options],
-      correctAnswer: baseQuestion.answer,
-      explanation: `The correct answer is based on ${concept} and core principles discussed in the lesson.`,
-      difficulty: difficultyForIndex(i),
-    };
-    questions.push(normalizeQuestionShape(fallbackQuestion, i, difficultyForIndex(i), quizType));
+    let generated;
+
+    if (topic === 'fractions') {
+      if (normalizedType === 'true_false') generated = generateFractionTrueFalse(i);
+      else if (normalizedType === 'identification') generated = generateFractionIdentification(i);
+      else generated = generateFractionMcq(i);
+    } else if (topic === 'mathematics' || topic === 'algebra' || topic === 'geometry') {
+      const seed = i + 2;
+      if (normalizedType === 'true_false') {
+        generated = {
+          question: `${seed} + ${seed} is equal to ${seed * 2}.`,
+          correctAnswer: 'True',
+        };
+      } else if (normalizedType === 'identification') {
+        generated = {
+          question: `Solve: ${seed} x ${seed + 1}`,
+          correctAnswer: String(seed * (seed + 1)),
+        };
+      } else {
+        generated = {
+          question: `What is ${seed} x ${seed + 1}?`,
+          options: [
+            String(seed * (seed + 1)),
+            String(seed + (seed + 1)),
+            String(seed * seed),
+            String((seed + 1) * (seed + 1)),
+          ],
+          correctAnswer: String(seed * (seed + 1)),
+        };
+      }
+    } else {
+      const label = topic === 'general lesson' ? 'the lesson topic' : topic;
+      if (normalizedType === 'true_false') {
+        generated = {
+          question: `The statement is related to ${label}.`,
+          correctAnswer: 'True',
+        };
+      } else if (normalizedType === 'identification') {
+        generated = {
+          question: `Write one key term related to ${label}.`,
+          correctAnswer: label,
+        };
+      } else {
+        generated = {
+          question: `Which option is directly related to ${label}?`,
+          options: [label, 'Sports', 'Entertainment', 'Cooking'],
+          correctAnswer: label,
+        };
+      }
+    }
+
+    questions.push(
+      normalizeQuestionShape(
+        {
+          ...generated,
+          explanation: `This answer is aligned with the quiz focus on ${topic}.`,
+          difficulty: difficultyForIndex(i),
+          type: normalizedType,
+        },
+        i,
+        difficultyForIndex(i),
+        normalizedType
+      )
+    );
   }
 
   return dedupeQuestions(questions);
@@ -380,12 +458,14 @@ const createQuizPrompt = (count, moduleText, difficulty, quizType, existingQuest
   const planText = difficultyPlan.length
     ? `\nTarget difficulty distribution (keep balanced and close to this sequence): ${difficultyPlan.join(', ')}`
     : '';
+  const focusTopic = extractFocusTopic(moduleText);
   const uniqueRule = `\nIMPORTANT RULES:\n- Every question MUST be unique and different from each other.\n- Do NOT repeat, rephrase, or paraphrase any question.\n- Each question should test a different concept or fact.\n- Generate exactly ${count} questions, no more, no less.\n- Return valid JSON only (no markdown, no extra text).\n- Return each item with EXACT keys: question, options, correctAnswer, explanation, difficulty.\n- options must be an array with exactly 4 choices mapped to A, B, C, D.\n- difficulty must be one of: easy, medium, hard.${planText}\n`;
+  const topicalRule = `\nTOPIC FOCUS RULES:\n- Focus strictly on this lesson topic: ${focusTopic}.\n- Do NOT create meta-questions about prompts such as \"create a quiz\" or words like \"about\", \"item\", \"quiz\" in the question text.\n- If topic is fractions/math, questions must be about mathematical operations, concepts, or problem-solving for that topic.`;
 
   if (moduleText && moduleText.trim()) {
-    return `Generate exactly ${count} UNIQUE quiz questions (${typePrompt}) based on this text. Each question must cover a DIFFERENT concept or fact from the text. Respond as a JSON array of objects with: question, options, correctAnswer, explanation, difficulty.${uniqueRule}${existingContext}\nText:\n${moduleText}`;
+    return `Generate exactly ${count} UNIQUE quiz questions (${typePrompt}) based on this text. Each question must cover a DIFFERENT concept or fact from the text. Respond as a JSON array of objects with: question, options, correctAnswer, explanation, difficulty.${uniqueRule}${topicalRule}${existingContext}\nText:\n${moduleText}`;
   } else {
-    return `Generate exactly ${count} UNIQUE quiz questions (${typePrompt}) for a general subject. Each question must be completely different from the others. Respond as a JSON array of objects with: question, options, correctAnswer, explanation, difficulty.${uniqueRule}${existingContext}`;
+    return `Generate exactly ${count} UNIQUE quiz questions (${typePrompt}) for the topic: ${focusTopic}. Each question must be completely different from the others. Respond as a JSON array of objects with: question, options, correctAnswer, explanation, difficulty.${uniqueRule}${topicalRule}${existingContext}`;
   }
 };
 
