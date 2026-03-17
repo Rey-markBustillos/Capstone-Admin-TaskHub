@@ -20,7 +20,7 @@ import {
 import { recordApplicationVisit, recordPageVisit } from "../utils/visitTracker";
 
 // ─── Header Component ───────────────────────────────────────────────
-const Header = ({ onContinue }) => {
+const Header = ({ onContinue, onInstallApp, isInstallable }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -86,6 +86,20 @@ const Header = ({ onContinue }) => {
 
           {/* Right side buttons */}
           <div className="flex items-center gap-3">
+            {/* Install Button */}
+            <button
+              onClick={onInstallApp}
+              disabled={!isInstallable}
+              className={`hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                isInstallable
+                  ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105"
+                  : "bg-gray-600/60 text-gray-300 cursor-not-allowed"
+              }`}
+              title={isInstallable ? "Install ALS Portal" : "Install not available on this browser yet"}
+            >
+              Install App
+            </button>
+
             {/* CTA Button */}
             <button
               onClick={onContinue}
@@ -115,6 +129,20 @@ const Header = ({ onContinue }) => {
           }`}
         >
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 p-2 mt-1">
+            <button
+              onClick={() => {
+                onInstallApp();
+                setMobileMenuOpen(false);
+              }}
+              disabled={!isInstallable}
+              className={`w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                isInstallable
+                  ? "text-emerald-300 hover:text-emerald-200 hover:bg-gray-700/50"
+                  : "text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              Install App
+            </button>
             {["Home", "About", "Programs", "Contact"].map((item) => (
               <a
                 key={item}
@@ -392,7 +420,7 @@ const StatsSection = () => {
 };
 
 // ─── WelcomeScreen Component ────────────────────────────────────────
-const WelcomeScreen = ({ onContinue }) => {
+const WelcomeScreen = ({ onContinue, onInstallApp, isInstallable }) => {
   const [activeTab, setActiveTab] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -538,7 +566,11 @@ const WelcomeScreen = ({ onContinue }) => {
   return (
     <div className="relative min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-x-hidden">
       {/* Header */}
-      <Header onContinue={onContinue} />
+      <Header
+        onContinue={onContinue}
+        onInstallApp={onInstallApp}
+        isInstallable={isInstallable}
+      />
 
       {/* ─── Hero Section ──────────────────────────────────── */}
       <section
@@ -777,6 +809,9 @@ const WelcomeScreen = ({ onContinue }) => {
 // ─── Main LandingPage Component ─────────────────────────────────────
 export default function LandingPage() {
   const [view, setView] = useState("welcome");
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
     recordApplicationVisit();
@@ -793,6 +828,48 @@ export default function LandingPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+      setIsInstallable(false);
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      setDeferredPrompt(event);
+      setIsInstallable(true);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt || isInstalled) return;
+
+    try {
+      const result = await deferredPrompt.prompt();
+      if (result.outcome === 'accepted') {
+        setIsInstallable(false);
+      }
+      setDeferredPrompt(null);
+    } catch (error) {
+      console.error('PWA install failed:', error);
+    }
+  };
+
   const handleLoginSuccess = () => {
     window.location.reload();
   };
@@ -808,5 +885,11 @@ export default function LandingPage() {
     );
   }
 
-  return <WelcomeScreen onContinue={() => setView("login")} />;
+  return (
+    <WelcomeScreen
+      onContinue={() => setView("login")}
+      onInstallApp={handleInstallApp}
+      isInstallable={isInstallable && !isInstalled}
+    />
+  );
 }
