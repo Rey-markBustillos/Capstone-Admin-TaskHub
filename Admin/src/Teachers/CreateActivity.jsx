@@ -3,6 +3,7 @@ import axios from 'axios';
 import moment from 'moment-timezone';
 import { useParams } from 'react-router-dom';
 import { FaPaperclip, FaListOl, FaPlusCircle, FaBook, FaTimes, FaTasks, FaEdit, FaTrashAlt, FaLock, FaUnlock } from 'react-icons/fa';
+import { showConfirm } from '../utils/swal';
 
 const CreateActivity = () => {
   const { classId } = useParams();
@@ -122,16 +123,17 @@ const CreateActivity = () => {
   };
 
   const handleDelete = async (activityId, activityTitle) => {
-    if (window.confirm(`Are you sure you want to delete "${activityTitle}"? This action cannot be undone.`)) {
-      try {
-        await axios.delete(`${API_BASE_URL}/activities/${activityId}`);
-        setSuccess('Activity deleted successfully!');
-        fetchClassData();
-        setTimeout(() => setSuccess(''), 3000);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Failed to delete activity.');
-        setTimeout(() => setError(''), 3000);
-      }
+    const confirmed = await showConfirm('Delete Activity?', `Are you sure you want to delete "${activityTitle}"? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(`${API_BASE_URL}/activities/${activityId}`);
+      setSuccess('Activity deleted successfully!');
+      fetchClassData();
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete activity.');
+      setTimeout(() => setError(''), 3000);
     }
   };
 

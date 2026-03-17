@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
+import { showAlert } from '../utils/swal';
 import {
   FaFile,
   FaFilePdf,
@@ -132,7 +133,7 @@ export default function ActivityMonitoring() {
     try {
       const scoreNumber = Number(score);
       if (isNaN(scoreNumber)) {
-        alert("Please enter a valid number");
+        await showAlert('warning', 'Invalid Score', 'Please enter a valid number');
         return;
       }
       const res = await axios.put(`${API_BASE_URL}activities/submissions/score/${submissionId}`, { score: scoreNumber });
@@ -159,9 +160,9 @@ export default function ActivityMonitoring() {
           ),
         }));
       }
-      alert("Score updated successfully!");
+      await showAlert('success', 'Score Updated', 'Score updated successfully!');
     } catch (err) {
-      alert(`Failed to update score: ${err.response?.data?.message || err.message}`);
+      await showAlert('error', 'Update Failed', `Failed to update score: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -278,7 +279,7 @@ export default function ActivityMonitoring() {
       // Write file
       XLSX.writeFile(workbook, `Scores_${selectedClass.className}.xlsx`);
     } catch (err) {
-      alert("Failed to export scores: " + (err.response?.data?.message || err.message));
+      await showAlert('error', 'Export Failed', 'Failed to export scores: ' + (err.response?.data?.message || err.message));
     }
   };
 

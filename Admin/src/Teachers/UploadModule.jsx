@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { showConfirm } from '../utils/swal';
 import { 
   FaUpload, 
   FaFileAlt, 
@@ -129,7 +130,8 @@ const UploadModule = () => {
   };
 
   const handleDelete = async (moduleId) => {
-    if (!window.confirm('Are you sure you want to delete this module?')) {
+    const confirmed = await showConfirm('Delete Module?', 'Are you sure you want to delete this module?');
+    if (!confirmed) {
       return;
     }
 

@@ -21,6 +21,7 @@
   };
 import React, { useState } from "react";
 import { Mic, Loader2 } from "lucide-react";
+import { showAlert } from '../utils/swal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -33,7 +34,10 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
 
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return alert("Speech Recognition not supported");
+    if (!SpeechRecognition) {
+      showAlert('warning', 'Not Supported', 'Speech Recognition not supported');
+      return;
+    }
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
     recognition.start();

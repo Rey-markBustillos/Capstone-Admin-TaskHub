@@ -2,9 +2,32 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { FaUpload, FaPaste, FaTrash, FaEdit, FaPlus, FaSave, FaTimes, FaFileWord, FaDownload } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+
+const showAlert = (icon, title, text) =>
+  Swal.fire({
+    icon,
+    title,
+    text,
+    confirmButtonColor: '#2563eb',
+  });
+
+const showConfirm = async (title, text) => {
+  const result = await Swal.fire({
+    icon: 'warning',
+    title,
+    text,
+    showCancelButton: true,
+    confirmButtonText: 'Yes',
+    cancelButtonText: 'Cancel',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6b7280',
+  });
+  return result.isConfirmed;
+};
 
 export default function CreateQuizz() {
   // Always initialize params and user info first
@@ -135,13 +158,13 @@ export default function CreateQuizz() {
     const allowedExtensions = ['txt', 'pdf', 'jpg', 'jpeg', 'png', 'docx', 'doc', 'pptx', 'ppt'];
 
     if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
-      alert(`File type not supported. Please upload: ${allowedExtensions.join(', ')} files`);
+      showAlert('warning', 'Unsupported File Type', `Please upload: ${allowedExtensions.join(', ')} files`);
       e.target.value = '';
       return;
     }
 
     if (file.size > 50 * 1024 * 1024) { // 50MB limit for all file types
-      alert('File size too large. Maximum size is 50MB.');
+      showAlert('warning', 'File Too Large', 'Maximum file size is 50MB.');
       e.target.value = '';
       return;
     }
@@ -153,7 +176,7 @@ export default function CreateQuizz() {
         // Handle text files directly
         const text = await file.text();
         setModuleText(text);
-        alert(`Text file loaded successfully! ${text.length} characters imported.`);
+        showAlert('success', 'Text Loaded', `${text.length} characters imported successfully.`);
       } else {
         // Handle other file types using backend AI processing
         const formData = new FormData();
@@ -168,7 +191,7 @@ export default function CreateQuizz() {
 
         if (response.data && response.data.text) {
           setModuleText(response.data.text);
-          alert(`File content extracted successfully! Extracted ${response.data.text.length} characters from your ${response.data.originalFileName}.`);
+          showAlert('success', 'Extraction Complete', `Extracted ${response.data.text.length} characters from ${response.data.originalFileName}.`);
         } else {
           throw new Error('Failed to extract text from file');
         }
@@ -188,7 +211,7 @@ export default function CreateQuizz() {
         errorMessage = `Error: ${error.message}`;
       }
       
-      alert(errorMessage);
+      showAlert('error', 'File Processing Failed', errorMessage);
     } finally {
       // setIsProcessingFile(false);
       e.target.value = ''; // Reset file input
@@ -197,16 +220,21 @@ export default function CreateQuizz() {
 
   // Generate quiz questions from module text using backend AI
   const handleGenerate = async () => {
-    if (count < 1) return alert('Enter a valid number of questions.');
+    if (count < 1) {
+      await showAlert('warning', 'Invalid Number', 'Enter a valid number of questions.');
+      return;
+    }
     
     // Validate mixed type counts
     if (quizType === 'mixed') {
       const totalMixed = mcqCount + trueFalseCount + identificationCount;
       if (totalMixed === 0) {
-        return alert('Please specify at least one question for mixed type quiz.');
+        await showAlert('warning', 'No Mixed Questions Set', 'Please specify at least one question for mixed type quiz.');
+        return;
       }
       if (totalMixed > count) {
-        return alert('Mixed type counts exceed the number of questions. Increase total questions or reduce per-type counts.');
+        await showAlert('warning', 'Mixed Count Exceeds Total', 'Increase total questions or reduce per-type counts.');
+        return;
       }
       // For mixed quizzes we no longer auto-sync `count` to the sum of per-type values.
       // Teachers can type the desired `count` manually; generation relies on per-type counts.
@@ -364,7 +392,7 @@ export default function CreateQuizz() {
             if (saveRes && saveRes.data) {
               // prepend to created quizzes
               setCreatedQuizzes(prev => [saveRes.data, ...prev]);
-              alert('Generated quiz saved permanently as "' + generatedTitle + '"');
+              showAlert('success', 'Quiz Saved', `Generated quiz saved permanently as "${generatedTitle}"`);
             }
           } catch (e) {
             console.warn('Auto-save generated quiz failed', e);
@@ -374,10 +402,10 @@ export default function CreateQuizz() {
           }
         }
       } else {
-        alert('No questions generated.');
+        showAlert('info', 'No Questions Generated', 'Try adding more module content or adjusting your settings.');
       }
     } catch {
-      alert('Failed to generate quiz.');
+      showAlert('error', 'Generation Failed', 'Failed to generate quiz. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -402,7 +430,10 @@ export default function CreateQuizz() {
 
   // Save quiz to class
   const handleSaveQuiz = async () => {
-    if (!title) return alert('Quiz title required');
+    if (!title) {
+      await showAlert('warning', 'Title Required', 'Quiz title is required.');
+      return;
+    }
     setLoading(true);
     try {
       // Normalize question types for backend
@@ -430,11 +461,11 @@ export default function CreateQuizz() {
         dueDate,
         questionTime,
       });
-      alert('Quiz saved!');
+      showAlert('success', 'Quiz Saved', 'Quiz saved successfully.');
       setQuestions([]); setTitle(''); setModuleText('');
       // Created quizzes refresh removed
     } catch {
-      alert('Failed to save quiz.');
+      showAlert('error', 'Save Failed', 'Failed to save quiz.');
     } finally {
       setLoading(false);
     }
@@ -442,7 +473,8 @@ export default function CreateQuizz() {
 
   // Delete quiz function
   const handleDeleteQuiz = async (quizId) => {
-    if (!confirm('Are you sure you want to delete this quiz? This action cannot be undone.')) {
+    const confirmed = await showConfirm('Delete Quiz?', 'This action cannot be undone.');
+    if (!confirmed) {
       return;
     }
     
@@ -456,16 +488,16 @@ export default function CreateQuizz() {
         delete newSubs[quizId];
         return newSubs;
       });
-      alert('Quiz deleted successfully!');
+      showAlert('success', 'Quiz Deleted', 'Quiz deleted successfully.');
     } catch {
-      alert('Failed to delete quiz. Please try again.');
+      showAlert('error', 'Delete Failed', 'Failed to delete quiz. Please try again.');
     }
   };
 
   // Export quiz to Word document
   const handleExportToWord = () => {
     if (!questions || questions.length === 0) {
-      alert('No questions available to export. Please generate or create questions first.');
+      showAlert('info', 'No Questions Available', 'Please generate or create questions first.');
       return;
     }
 
@@ -641,7 +673,7 @@ export default function CreateQuizz() {
   const handleExportAnalyticsToExcel = () => {
     const analytics = calculateQuizAnalytics();
     if (analytics.length === 0) {
-      alert('No quiz data available for export. Students need to submit quizzes first.');
+      showAlert('info', 'No Quiz Data', 'Students need to submit quizzes first.');
       return;
     }
 
@@ -749,14 +781,14 @@ export default function CreateQuizz() {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
     
-    alert('Quiz analytics exported to Excel file successfully!');
+    showAlert('success', 'Export Complete', 'Quiz analytics exported to Excel file successfully.');
   };
 
   // Export detailed analytics with question breakdown (Proper Excel file)
   const handleExportDetailedAnalytics = () => {
     const analytics = calculateQuizAnalytics();
     if (analytics.length === 0) {
-      alert('No quiz data available for export.');
+      showAlert('info', 'No Quiz Data', 'No quiz data available for export.');
       return;
     }
 
@@ -875,7 +907,7 @@ export default function CreateQuizz() {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
     
-    alert('Detailed quiz analytics exported to Excel file successfully!');
+    showAlert('success', 'Export Complete', 'Detailed quiz analytics exported to Excel file successfully.');
   };
 
   // Calculate quiz analytics

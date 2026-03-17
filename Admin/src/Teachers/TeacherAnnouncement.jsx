@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn, FaFileUpload, FaDownload, FaTimes } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
+import { showAlert, showConfirm } from '../utils/swal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -85,7 +86,7 @@ export default function TeacherAnnouncement() {
       updateAnnouncementInState(res.data);
       setCommentInputs(prev => ({ ...prev, [announcementId]: '' }));
     } catch {
-      alert("Could not post comment.");
+      await showAlert('error', 'Comment Failed', 'Could not post comment.');
     }
   };
 
@@ -94,7 +95,7 @@ export default function TeacherAnnouncement() {
       const res = await axios.post(`${API_BASE_URL}/announcements/${announcementId}/reactions`, { emoji, userId });
       updateAnnouncementInState(res.data);
     } catch {
-      alert("Could not react.");
+      await showAlert('error', 'Reaction Failed', 'Could not react.');
     }
   };
 
@@ -178,7 +179,8 @@ export default function TeacherAnnouncement() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure?')) return;
+    const confirmed = await showConfirm('Delete Announcement?', 'Are you sure?');
+    if (!confirmed) return;
     try {
       await axios.delete(`${API_BASE_URL}/announcements/${id}`);
       fetchData();

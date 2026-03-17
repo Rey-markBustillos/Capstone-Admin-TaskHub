@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
+import { showAlert, showConfirm } from '../utils/swal';
 import '../Css/usermanagement.css'
 
 const UserManagement = () => {
@@ -52,7 +53,7 @@ const UserManagement = () => {
 
   const handleAddUser = async () => {
     if (!newUser.name || !newUser.email || !newUser.password) {
-      alert("Please enter name, email, and password");
+      await showAlert('warning', 'Missing Fields', 'Please enter name, email, and password');
       return;
     }
     setLoading(true);
@@ -78,7 +79,7 @@ const UserManagement = () => {
       fetchUsers();
       setError(null);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to add user");
+      await showAlert('error', 'Add User Failed', err.response?.data?.message || 'Failed to add user');
     } finally {
       setLoading(false);
     }
@@ -216,14 +217,15 @@ const UserManagement = () => {
   };
 
   const handleDeleteUser = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    const confirmed = await showConfirm('Delete User?', 'Are you sure you want to delete this user?');
+    if (!confirmed) return;
     setLoading(true);
     try {
       await axios.delete(`${API_BASE_URL}/users/${id}`);
       fetchUsers();
       setError(null);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete user");
+      await showAlert('error', 'Delete Failed', err.response?.data?.message || 'Failed to delete user');
     } finally {
       setLoading(false);
     }

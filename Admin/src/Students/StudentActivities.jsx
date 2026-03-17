@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate, NavLink } from 'react-router-dom';
 import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf, FaLock } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
+import { showAlert, showPrompt } from '../utils/swal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -25,10 +26,10 @@ const submitActivity = async ({ activityId, studentId, content }) => {
       { activityId, studentId, content, submittedAt: new Date() },
       { headers: { 'Content-Type': 'application/json' } }
     );
-    alert(response.data.message || 'Submission successful!');
+    await showAlert('success', 'Submission Successful', response.data.message || 'Submission successful!');
     return response.data;
   } catch (error) {
-    alert(error.response?.data?.message || 'Submission failed!');
+    await showAlert('error', 'Submission Failed', error.response?.data?.message || 'Submission failed!');
     throw error;
   }
 };
@@ -211,10 +212,14 @@ const StudentActivities = () => {
 
                         {!activity.isLocked && ((statusInfo.text !== 'Missing' && new Date() < new Date(activity.date)) || statusInfo.text === 'Needs Resubmission') && (
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
-                              const answer = window.prompt('Enter your answer (quick submit):', '');
-                              if (!answer || answer.trim() === '') { alert("Answer is required!"); return; }
+                              const answer = await showPrompt('Quick Submit', 'Enter your answer:', {
+                                inputPlaceholder: 'Type your answer here',
+                                required: true,
+                                requiredMessage: 'Answer is required!',
+                              });
+                              if (!answer || answer.trim() === '') return;
 
                               console.log('QuickSubmit payload:', {
                                 activityId: activity._id,

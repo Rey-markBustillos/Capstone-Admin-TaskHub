@@ -4,6 +4,7 @@ import { useParams, NavLink } from 'react-router-dom';
 import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, FaRegSmile, FaRegSadTear, FaRegLaughBeam, FaRegHeart, FaRegSurprise, FaArrowLeft, FaFileUpload, FaDownload } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
 import SidebarContext from '../contexts/SidebarContext';
+import { showAlert } from '../utils/swal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -98,7 +99,7 @@ export default function StudentAnnouncements() {
       setCommentInputs(prev => ({ ...prev, [announcementId]: '' }));
     } catch (err) {
       console.error("Failed to post comment:", err);
-      alert("Could not post comment.");
+      await showAlert('error', 'Comment Failed', 'Could not post comment.');
     }
   };
 
@@ -119,7 +120,7 @@ export default function StudentAnnouncements() {
       updateAnnouncementInState(res.data);
     } catch (err) {
       console.error("Failed to toggle reaction:", err);
-      alert("Could not react.");
+      await showAlert('error', 'Reaction Failed', 'Could not react.');
     }
   };
 

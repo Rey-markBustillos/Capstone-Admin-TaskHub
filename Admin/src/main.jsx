@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import axios from 'axios'
+import { showConfirm } from './utils/swal'
 
 // Setup axios request interceptor to add JWT token to all requests
 axios.interceptors.request.use(
@@ -47,13 +48,18 @@ if ('serviceWorker' in navigator) {
         // Check for updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
-          newWorker.addEventListener('statechange', () => {
+          newWorker.addEventListener('statechange', async () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               // New content is available, notify user
               console.log('PWA: New content available, please refresh');
               
               // Auto-update or show notification to user
-              if (confirm('New version available! Click OK to update.')) {
+              const shouldUpdate = await showConfirm('Update Available', 'New version available! Update now?', {
+                confirmButtonText: 'Update',
+                cancelButtonText: 'Later',
+                confirmButtonColor: '#2563eb',
+              });
+              if (shouldUpdate) {
                 newWorker.postMessage({ type: 'SKIP_WAITING' });
                 window.location.reload();
               }

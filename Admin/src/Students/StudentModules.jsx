@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
 import axios from 'axios';
+import { showAlert } from '../utils/swal';
 import { 
   FaBook, 
   FaDownload, 
@@ -100,7 +101,7 @@ const StudentModules = () => {
       });
       
       if (!module || !module._id) {
-        alert('Invalid module');
+        await showAlert('warning', 'Invalid Module', 'Invalid module');
         return;
       }
       
@@ -151,7 +152,7 @@ const StudentModules = () => {
       
     } catch (err) {
       console.error('❌ View error:', err);
-      alert(`Failed to open module: ${err.message}`);
+      await showAlert('error', 'Open Failed', `Failed to open module: ${err.message}`);
     }
   };
 
@@ -202,7 +203,7 @@ const StudentModules = () => {
       
     } catch (err) {
       console.error('❌ Download error:', err);
-      alert(`Failed to download module: ${err.message}`);
+      await showAlert('error', 'Download Failed', `Failed to download module: ${err.message}`);
     }
   };
 

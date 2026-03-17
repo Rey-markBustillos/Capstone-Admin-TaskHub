@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter, NavLink } from 'react-router-dom';
+import { showAlert } from './utils/swal';
 
 const menuItemsByRole = {
   admin: [
@@ -20,7 +21,7 @@ export default function TestSidebar() {
   const [role, setRole] = useState('admin');
 
   const handleLogout = () => {
-    alert('Logout clicked');
+    showAlert('info', 'Logout', 'Logout clicked');
   };
 
   const menuItems = menuItemsByRole[role] || [];

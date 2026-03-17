@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { fetchTotalVisits, recordPageVisit } from '../utils/visitTracker';
 import ActiveUsersChart from '../components/ActiveUsersChart';
+import { showAlert } from '../utils/swal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -182,7 +183,7 @@ const AdminDashboard = () => {
   // Add new user
   const handleAddUser = async () => {
     if (!newUserName.trim()) {
-      alert("Please enter a name.");
+      await showAlert('warning', 'Missing Name', 'Please enter a name.');
       return;
     }
     try {
@@ -197,7 +198,7 @@ const AdminDashboard = () => {
       setNewUserRole("Student");
       setModalOpen(false);
     } catch (err) {
-      alert(err.message);
+      await showAlert('error', 'Add User Failed', err.message);
     }
   };
 

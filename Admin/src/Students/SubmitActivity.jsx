@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaFileUpload, FaArrowLeft, FaPaperclip, FaCalendarAlt, FaStar, FaFileAlt, FaTimesCircle, FaTrash, FaDownload } from 'react-icons/fa';
+import { showConfirm } from '../utils/swal';
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
@@ -195,7 +196,8 @@ const SubmitActivity = () => {
   const handleDelete = async () => {
     if (!previousSubmission) return;
 
-    if (!window.confirm('Are you sure you want to delete your submission? This action cannot be undone.')) {
+    const confirmed = await showConfirm('Delete Submission?', 'Are you sure you want to delete your submission? This action cannot be undone.');
+    if (!confirmed) {
       return;
     }
 

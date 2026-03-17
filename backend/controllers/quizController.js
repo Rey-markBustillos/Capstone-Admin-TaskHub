@@ -94,6 +94,13 @@ const normalizeDifficulty = (value) => {
   return 'medium';
 };
 
+const normalizeQuizType = (value) => {
+  const t = String(value || '').trim().toLowerCase();
+  if (t === 'true_false' || t === 'tf' || t === 'truefalse') return 'true_false';
+  if (t === 'identification' || t === 'numeric' || t === 'fill_in_the_blank') return 'identification';
+  return 'mcq';
+};
+
 const ensureFourOptions = (inputOptions, fallbackCorrect) => {
   const options = Array.isArray(inputOptions)
     ? inputOptions.map((opt) => String(opt || '').trim()).filter(Boolean)
@@ -138,14 +145,57 @@ const sanitizeQuestionText = (value, idx) => {
   return q.endsWith('?') ? q : `${q}?`;
 };
 
-const normalizeQuestionShape = (q, idx, forcedDifficulty) => {
+const normalizeQuestionShape = (q, idx, forcedDifficulty, requestedQuizType = 'mcq') => {
+  const resolvedType = normalizeQuizType(q?.type || requestedQuizType);
   const question = sanitizeQuestionText(q?.question, idx);
+  const explanation = String(q?.explanation || `This is the best answer based on the module content for this topic.`).trim();
+  const difficulty = normalizeDifficulty(forcedDifficulty || q?.difficulty);
+
+  if (resolvedType === 'true_false') {
+    const tfRaw = String(q?.correctAnswer || q?.answer || '').trim().toLowerCase();
+    const correctAnswer = tfRaw === 'false' ? 'False' : 'True';
+    return {
+      type: 'true_false',
+      displayType: 'True/False',
+      question,
+      options: ['True', 'False'],
+      correctAnswer,
+      answer: correctAnswer,
+      explanation,
+      difficulty,
+      labeledOptions: {
+        A: 'True',
+        B: 'False',
+        C: '',
+        D: '',
+      },
+    };
+  }
+
+  if (resolvedType === 'identification') {
+    const identificationAnswer = String(q?.correctAnswer || q?.answer || '').trim() || `Answer ${idx + 1}`;
+    return {
+      type: 'identification',
+      displayType: 'Identification',
+      question,
+      options: [],
+      correctAnswer: identificationAnswer,
+      answer: identificationAnswer,
+      explanation,
+      difficulty,
+      labeledOptions: {
+        A: '',
+        B: '',
+        C: '',
+        D: '',
+      },
+    };
+  }
+
   const options = ensureFourOptions(q?.options, q?.correctAnswer || q?.answer);
   const rawCorrect = String(q?.correctAnswer || q?.answer || '').trim();
   const fallbackCorrect = options[0];
   const correctAnswer = options.find((opt) => opt.toLowerCase() === rawCorrect.toLowerCase()) || fallbackCorrect;
-  const explanation = String(q?.explanation || `This is the best answer based on the module content for this topic.`).trim();
-  const difficulty = normalizeDifficulty(forcedDifficulty || q?.difficulty);
 
   return {
     type: 'mcq',
@@ -307,7 +357,7 @@ const generateFallbackQuiz = (count, moduleText, quizType, difficultyPlan = []) 
       explanation: `The correct answer is based on ${concept} and core principles discussed in the lesson.`,
       difficulty: difficultyForIndex(i),
     };
-    questions.push(normalizeQuestionShape(fallbackQuestion, i, difficultyForIndex(i)));
+    questions.push(normalizeQuestionShape(fallbackQuestion, i, difficultyForIndex(i), quizType));
   }
 
   return dedupeQuestions(questions);
@@ -358,7 +408,10 @@ const parseQuizResponse = (text, quizType, difficultyPlan = []) => {
     const questions = JSON.parse(fixedText);
     
     if (Array.isArray(questions)) {
-      return questions.map((q, idx) => normalizeQuestionShape(q, idx, difficultyPlan[idx]));
+      return questions.map((q, idx) => {
+        const targetType = quizType === 'mixed' ? q?.type : quizType;
+        return normalizeQuestionShape(q, idx, difficultyPlan[idx], targetType);
+      });
     }
     
     return [];
@@ -497,9 +550,11 @@ exports.generateQuiz = async (req, res) => {
               correctAnswer: `Correct concept ${questions.length + 1}`,
               explanation: `This answer aligns with key lesson points and is used to complete the required question count.`,
               difficulty: diff,
+              type: quizType,
             },
             questions.length,
-            diff
+            diff,
+            quizType
           );
           const key = forced.question.trim().toLowerCase();
           if (!finalSeen.has(key)) {
@@ -549,6 +604,7 @@ exports.createQuiz = async (req, res) => {
     const typeMap = {
       'multiple_choice': 'mcq',
       'true_false': 'tf',
+      'identification': 'numeric',
       'fill_in_the_blank': 'numeric',
       'numeric': 'numeric',
       'mcq': 'mcq',
@@ -558,7 +614,7 @@ exports.createQuiz = async (req, res) => {
       type: typeMap[q.type] || 'mcq',
       question: q.question,
       options: q.options || [],
-      answer: q.answer
+      answer: q.answer ?? q.correctAnswer
     }));
     const quiz = await Quiz.create({ classId, title, questions: mappedQuestions, createdBy, dueDate, questionTime });
     res.status(201).json(quiz);
