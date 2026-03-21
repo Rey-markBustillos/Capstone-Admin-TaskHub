@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Login from "./Login";
+import Register from "./Register";
 import {
   FaEye,
   FaBullseye,
@@ -20,7 +21,7 @@ import {
 import { recordApplicationVisit, recordPageVisit } from "../utils/visitTracker";
 
 // ─── Header Component ───────────────────────────────────────────────
-const Header = ({ onContinue, onInstallApp, isInstallable }) => {
+const Header = ({ onContinue, onCreateAccount, onInstallApp, isInstallable }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -112,6 +113,13 @@ const Header = ({ onContinue, onInstallApp, isInstallable }) => {
               </span>
             </button>
 
+            <button
+              onClick={onCreateAccount}
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-indigo-100 bg-indigo-500/25 border border-indigo-400/40 hover:bg-indigo-500/35 hover:text-white transition-all duration-300"
+            >
+              Create Account
+            </button>
+
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -142,6 +150,15 @@ const Header = ({ onContinue, onInstallApp, isInstallable }) => {
               }`}
             >
               Install App
+            </button>
+            <button
+              onClick={() => {
+                onCreateAccount();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 text-indigo-300 hover:text-indigo-200 hover:bg-gray-700/50"
+            >
+              Create Account
             </button>
             {["Home", "About", "Programs", "Contact"].map((item) => (
               <a
@@ -420,7 +437,7 @@ const StatsSection = () => {
 };
 
 // ─── WelcomeScreen Component ────────────────────────────────────────
-const WelcomeScreen = ({ onContinue, onInstallApp, isInstallable }) => {
+const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallable }) => {
   const [activeTab, setActiveTab] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -568,6 +585,7 @@ const WelcomeScreen = ({ onContinue, onInstallApp, isInstallable }) => {
       {/* Header */}
       <Header
         onContinue={onContinue}
+        onCreateAccount={onCreateAccount}
         onInstallApp={onInstallApp}
         isInstallable={isInstallable}
       />
@@ -880,14 +898,24 @@ export default function LandingPage() {
         <Login
           onBack={() => setView("welcome")}
           onLoginSuccess={handleLoginSuccess}
+          onRegister={() => setView("register")}
         />
       </div>
+    );
+  }
+
+  if (view === "register") {
+    return (
+      <Register
+        onBackToLogin={() => setView("login")}
+      />
     );
   }
 
   return (
     <WelcomeScreen
       onContinue={() => setView("login")}
+      onCreateAccount={() => setView("register")}
       onInstallApp={handleInstallApp}
       isInstallable={isInstallable && !isInstalled}
     />
