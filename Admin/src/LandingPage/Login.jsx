@@ -5,9 +5,9 @@ import { recordApplicationVisit, recordPageVisit, recordUserLogin } from '../uti
 
 // Switch between local and deployed backend here:
 // For Vite:
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/+$/, "");
 
-export default function Login({ onBack, onLoginSuccess }) {
+export default function Login({ onBack, onLoginSuccess, onRegister }) {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function Login({ onBack, onLoginSuccess }) {
         password: formData.password.trim(),
       };
 
-  const res = await fetch(`${API_BASE_URL}/users/login`, {
+      const res = await fetch(`${API_BASE_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -239,6 +239,18 @@ export default function Login({ onBack, onLoginSuccess }) {
 
             <div className="text-center mt-8">
               <button
+                onClick={onRegister}
+                tabIndex={0}
+                type="button"
+                className="inline-flex items-center gap-2 text-base font-medium text-indigo-600 hover:text-indigo-800 cursor-pointer transition-all duration-200 px-4 py-2 rounded-lg hover:bg-indigo-50"
+                aria-label="Register Account"
+              >
+                Register Account
+              </button>
+            </div>
+
+            <div className="text-center mt-2">
+              <button
                 onClick={onBack}
                 tabIndex={0}
                 type="button"
@@ -261,4 +273,5 @@ export default function Login({ onBack, onLoginSuccess }) {
 Login.propTypes = {
   onBack: PropTypes.func.isRequired,
   onLoginSuccess: PropTypes.func.isRequired,
+  onRegister: PropTypes.func.isRequired,
 };

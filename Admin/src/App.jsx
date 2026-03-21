@@ -31,6 +31,7 @@ import UploadModule from './Teachers/UploadModule';
 import TeacherClassView from './Teachers/TeacherClassView'; // AYOS: Import ng bagong layout
 import LandingPage from './LandingPage/LandingPage';
 import Login from './LandingPage/Login';
+import Register from './LandingPage/Register';
 
 const normalizeRole = (role) => {
   if (typeof role !== 'string') return null;
@@ -194,6 +195,7 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     setUser(null);
     navigate('/login');
   };
@@ -212,7 +214,8 @@ export default function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<RedirectIfLoggedIn user={user}><LandingPage onContinue={() => navigate('/login')} /></RedirectIfLoggedIn>} />
-        <Route path="/login" element={<RedirectIfLoggedIn user={user}><Login onLoginSuccess={handleLoginSuccess} onBack={() => navigate('/')} /></RedirectIfLoggedIn>} />
+        <Route path="/login" element={<RedirectIfLoggedIn user={user}><Login onLoginSuccess={handleLoginSuccess} onBack={() => navigate('/')} onRegister={() => navigate('/register')} /></RedirectIfLoggedIn>} />
+        <Route path="/register" element={<RedirectIfLoggedIn user={user}><Register onBackToLogin={() => navigate('/login')} /></RedirectIfLoggedIn>} />
         <Route path="/unauthorized" element={<div className="flex justify-center items-center h-screen"><h1 className="text-2xl">Unauthorized Access</h1></div>} />
 
         {/* Admin Routes */}
