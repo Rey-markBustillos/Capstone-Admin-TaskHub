@@ -123,11 +123,13 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
   };
 
   const handleMenuItemClick = () => {
-    // Close sidebar when menu item is clicked (both mobile and desktop)
-    if (typeof setIsOpenProp === 'function') {
-      setIsOpenProp(false);
-    } else {
-      setIsOpen(false);
+    // Keep desktop navigation stable and only auto-close on mobile.
+    if (isMobile) {
+      if (typeof setIsOpenProp === 'function') {
+        setIsOpenProp(false);
+      } else {
+        setIsOpen(false);
+      }
     }
   };
 

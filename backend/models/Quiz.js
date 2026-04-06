@@ -5,6 +5,8 @@ const QuestionSchema = new mongoose.Schema({
   question: { type: String, required: true },
   options: [String], // for MCQ
   answer: { type: mongoose.Schema.Types.Mixed, required: true },
+  difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
+  explanation: { type: String, default: '' },
 });
 
 const QuizSchema = new mongoose.Schema({

@@ -5,6 +5,9 @@ import { BrowserRouter } from 'react-router-dom'
 import axios from 'axios'
 import { showConfirm } from './utils/swal'
 
+const UPDATE_AVAILABLE_EVENT = 'taskhub:update-available';
+const isProductionBuild = import.meta.env.PROD;
+
 // Setup axios request interceptor to add JWT token to all requests
 axios.interceptors.request.use(
   config => {
@@ -40,7 +43,28 @@ axios.interceptors.response.use(
 
 // Service Worker Registration
 if ('serviceWorker' in navigator) {
+  const notifyUpdateAvailable = () => {
+    window.dispatchEvent(new CustomEvent(UPDATE_AVAILABLE_EVENT));
+  };
+
+  const cleanupDevelopmentServiceWorkers = async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+    }
+  };
+
   window.addEventListener('load', () => {
+    if (!isProductionBuild) {
+      cleanupDevelopmentServiceWorkers().catch((error) => {
+        console.error('PWA: Failed to clean up development service workers', error);
+      });
+      return;
+    }
+
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
         console.log('PWA: Service Worker registered successfully', registration);
@@ -48,10 +72,13 @@ if ('serviceWorker' in navigator) {
         // Check for updates
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
+          if (!newWorker) return;
+
           newWorker.addEventListener('statechange', async () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               // New content is available, notify user
               console.log('PWA: New content available, please refresh');
+              notifyUpdateAvailable();
               
               // Auto-update or show notification to user
               const shouldUpdate = await showConfirm('Update Available', 'New version available! Update now?', {
@@ -60,8 +87,7 @@ if ('serviceWorker' in navigator) {
                 confirmButtonColor: '#2563eb',
               });
               if (shouldUpdate) {
-                newWorker.postMessage({ type: 'SKIP_WAITING' });
-                window.location.reload();
+                (registration.waiting || newWorker).postMessage({ type: 'SKIP_WAITING' });
               }
             }
           });
@@ -74,8 +100,7 @@ if ('serviceWorker' in navigator) {
 
   // Listen for service worker updates
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    console.log('PWA: Service Worker updated, reloading page');
-    window.location.reload();
+    console.log('PWA: Service Worker updated');
   });
 }
 
@@ -86,4 +111,3 @@ createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </StrictMode>,
 )
-

@@ -1,8 +1,253 @@
 const fs = require('fs').promises;
-const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { createCanvas, DOMMatrix, ImageData, Path2D } = require('@napi-rs/canvas');
+const { createWorker } = require('tesseract.js');
 
-// Extract text from various file types using AI
+const OCR_LANGUAGE = 'eng';
+const PDF_OCR_MAX_PAGES = 20;
+
+let pdfjsLibPromise = null;
+
+const normalizeExtractedText = (value = '') =>
+  String(value || '')
+    .replace(/\r/g, '')
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+const hasMeaningfulText = (value, minCharacters = 80, minWords = 12) => {
+  const normalized = normalizeExtractedText(value);
+  const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+  const alphanumericCount = normalized.replace(/[^a-z0-9]/gi, '').length;
+  return normalized.length >= minCharacters && wordCount >= minWords && alphanumericCount >= 40;
+};
+
+const cleanupTempFile = async (filePath) => {
+  if (!filePath) return;
+
+  try {
+    await fs.unlink(filePath);
+  } catch (cleanupError) {
+    if (cleanupError.code !== 'ENOENT') {
+      console.warn(`[WARN] Failed to cleanup temp file: ${cleanupError.message}`);
+    }
+  }
+};
+
+const createUserFacingError = (message, statusCode = 422) =>
+  Object.assign(new Error(message), { statusCode, expose: true });
+
+const getGeminiModel = () => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  return genAI.getGenerativeModel({ model: 'models/gemini-2.0-flash' });
+};
+
+const extractTextWithGemini = async ({ prompt, mimeType, data }) => {
+  const model = getGeminiModel();
+  if (!model) {
+    const error = new Error('AI service not configured');
+    error.code = 'AI_NOT_CONFIGURED';
+    throw error;
+  }
+
+  const result = await model.generateContent([
+    prompt,
+    {
+      inlineData: {
+        mimeType,
+        data,
+      },
+    },
+  ]);
+
+  const response = await result.response;
+  const text = normalizeExtractedText(response.text());
+  if (!text) {
+    throw new Error('No text extracted by Gemini');
+  }
+
+  return text;
+};
+
+const ensurePdfJsGlobals = () => {
+  if (!global.DOMMatrix) global.DOMMatrix = DOMMatrix;
+  if (!global.ImageData) global.ImageData = ImageData;
+  if (!global.Path2D) global.Path2D = Path2D;
+};
+
+const getPdfJsLib = async () => {
+  if (!pdfjsLibPromise) {
+    ensurePdfJsGlobals();
+    pdfjsLibPromise = import('pdfjs-dist/legacy/build/pdf.mjs');
+  }
+
+  return pdfjsLibPromise;
+};
+
+class NodeCanvasFactory {
+  create(width, height) {
+    const canvas = createCanvas(Math.ceil(width), Math.ceil(height));
+    const context = canvas.getContext('2d');
+    return { canvas, context };
+  }
+
+  reset(canvasAndContext, width, height) {
+    canvasAndContext.canvas.width = Math.ceil(width);
+    canvasAndContext.canvas.height = Math.ceil(height);
+  }
+
+  destroy(canvasAndContext) {
+    canvasAndContext.canvas.width = 0;
+    canvasAndContext.canvas.height = 0;
+    canvasAndContext.canvas = null;
+    canvasAndContext.context = null;
+  }
+}
+
+const loadPdfDocument = async (fileBuffer) => {
+  const pdfjsLib = await getPdfJsLib();
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(fileBuffer),
+    disableWorker: true,
+    useSystemFonts: true,
+    isEvalSupported: false,
+    stopAtErrors: false,
+    verbosity: 0,
+  });
+
+  return loadingTask.promise;
+};
+
+const extractTextFromPdfDocument = async (pdfDocument) => {
+  const pageTexts = [];
+
+  for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
+    const page = await pdfDocument.getPage(pageNumber);
+    const textContent = await page.getTextContent();
+    const pageText = normalizeExtractedText(
+      textContent.items
+        .map((item) => ('str' in item ? item.str : ''))
+        .join(' ')
+    );
+
+    if (pageText) {
+      pageTexts.push(`Page ${pageNumber}\n${pageText}`);
+    }
+  }
+
+  return normalizeExtractedText(pageTexts.join('\n\n'));
+};
+
+const ocrImageBuffer = async (imageBuffer) => {
+  const worker = await createWorker(OCR_LANGUAGE);
+
+  try {
+    const { data } = await worker.recognize(imageBuffer);
+    return normalizeExtractedText(data.text);
+  } finally {
+    await worker.terminate();
+  }
+};
+
+const ocrPdfDocument = async (pdfDocument, maxPages = PDF_OCR_MAX_PAGES) => {
+  const pageLimit = Math.min(pdfDocument.numPages, maxPages);
+  const canvasFactory = new NodeCanvasFactory();
+  const worker = await createWorker(OCR_LANGUAGE);
+  const pageTexts = [];
+
+  try {
+    for (let pageNumber = 1; pageNumber <= pageLimit; pageNumber += 1) {
+      const page = await pdfDocument.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvasAndContext = canvasFactory.create(viewport.width, viewport.height);
+
+      try {
+        await page.render({
+          canvasContext: canvasAndContext.context,
+          viewport,
+          canvasFactory,
+        }).promise;
+
+        const imageBuffer = canvasAndContext.canvas.toBuffer('image/png');
+        const { data } = await worker.recognize(imageBuffer);
+        const pageText = normalizeExtractedText(data.text);
+
+        if (pageText) {
+          pageTexts.push(`Page ${pageNumber}\n${pageText}`);
+        }
+      } finally {
+        canvasFactory.destroy(canvasAndContext);
+      }
+    }
+  } finally {
+    await worker.terminate();
+  }
+
+  return {
+    text: normalizeExtractedText(pageTexts.join('\n\n')),
+    pagesProcessed: pageLimit,
+    truncated: pdfDocument.numPages > pageLimit,
+    totalPages: pdfDocument.numPages,
+  };
+};
+
+const extractTextFromPdf = async (fileBuffer, originalFileName, fileType) => {
+  const pdfDocument = await loadPdfDocument(fileBuffer);
+
+  try {
+    const parsedText = await extractTextFromPdfDocument(pdfDocument);
+    if (hasMeaningfulText(parsedText, 80, 12)) {
+      console.log('[DEBUG] PDF text extracted using pdfjs text parser');
+      return {
+        text: parsedText,
+        extractionMethod: 'pdfjs-text',
+      };
+    }
+
+    console.log('[DEBUG] PDF has little/no embedded text; starting OCR fallback');
+    const ocrResult = await ocrPdfDocument(pdfDocument);
+    if (hasMeaningfulText(ocrResult.text, 60, 10)) {
+      console.log(`[DEBUG] PDF text extracted using OCR (${ocrResult.pagesProcessed}/${ocrResult.totalPages} pages)`);
+      return {
+        text: ocrResult.text,
+        extractionMethod: ocrResult.truncated ? `pdf-ocr-first-${ocrResult.pagesProcessed}-pages` : 'pdf-ocr',
+      };
+    }
+
+    console.log('[DEBUG] OCR did not recover enough text; trying Gemini fallback');
+    const geminiText = await extractTextWithGemini({
+      prompt: 'This is a PDF document. Extract all readable text in logical reading order. Include headings, paragraphs, bullet points, code snippets, labels, and table text when visible.',
+      mimeType: fileType,
+      data: fileBuffer.toString('base64'),
+    });
+
+    if (hasMeaningfulText(geminiText, 40, 8)) {
+      console.log('[DEBUG] PDF text extracted using Gemini fallback');
+      return {
+        text: geminiText,
+        extractionMethod: 'gemini-pdf-fallback',
+      };
+    }
+
+    throw createUserFacingError(
+      `Unable to automatically extract text from this PDF file (${originalFileName}). We tried PDF parsing and OCR but could not recover enough readable text.`
+    );
+  } finally {
+    if (typeof pdfDocument.cleanup === 'function') {
+      pdfDocument.cleanup();
+    }
+    if (typeof pdfDocument.destroy === 'function') {
+      await pdfDocument.destroy();
+    }
+  }
+};
+
+// Extract text from various file types
 exports.extractTextFromFile = async (req, res) => {
   try {
     if (!req.file) {
@@ -12,242 +257,118 @@ exports.extractTextFromFile = async (req, res) => {
     const filePath = req.file.path;
     const fileType = req.file.mimetype;
     const fileName = req.file.filename;
+    const originalFileName = req.file.originalname;
 
     let extractedText = '';
-
-    // Load Gemini API key
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-    if (!GEMINI_API_KEY) {
-      return res.status(500).json({ message: 'AI service not configured' });
-    }
-
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'models/gemini-2.0-flash' });
+    let extractionMethod = '';
 
     try {
-      // Handle different file types with appropriate processing
       if (fileType === 'text/plain' || filePath.endsWith('.txt')) {
-        extractedText = await fs.readFile(filePath, 'utf8');
-        
+        extractedText = normalizeExtractedText(await fs.readFile(filePath, 'utf8'));
+        extractionMethod = 'plain-text';
       } else if (fileType.startsWith('image/')) {
-        // Handle image files (JPG, PNG) using Gemini Vision
         const imageData = await fs.readFile(filePath);
-        const base64Image = imageData.toString('base64');
-        
-        const prompt = "Extract ALL text content from this image. This could be from documents, presentations, handwritten notes, textbooks, worksheets, or any educational material. Include:\n- All headings, titles, and subtitles\n- All paragraphs and body text\n- Bullet points and numbered lists\n- Captions and labels\n- Any formulas, equations, or technical content\n- Table content if present\n- Any handwritten text\n\nOrganize the text in logical reading order and preserve the structure. If there are multiple sections or pages visible, clearly separate them.";
-        
-        const result = await model.generateContent([
-          prompt,
-          {
-            inlineData: {
-              mimeType: fileType,
-              data: base64Image
-            }
-          }
-        ]);
-        
-        const response = await result.response;
-        extractedText = response.text();
-        
-        console.log(`[DEBUG] Extracted text from image: ${extractedText.substring(0, 100)}...`);
-        
+
+        try {
+          extractedText = await extractTextWithGemini({
+            prompt: 'Extract all text from this image in logical reading order. Include headings, paragraphs, lists, labels, formulas, and handwritten text when visible.',
+            mimeType: fileType,
+            data: imageData.toString('base64'),
+          });
+          extractionMethod = 'gemini-image';
+        } catch (imageAiError) {
+          console.warn(`[WARN] Gemini image extraction failed: ${imageAiError.message}. Falling back to OCR.`);
+          extractedText = await ocrImageBuffer(imageData);
+          extractionMethod = 'ocr-image';
+        }
+
+        console.log(`[DEBUG] Extracted text from image via ${extractionMethod}: ${extractedText.substring(0, 100)}...`);
       } else if (fileType.includes('pdf')) {
-        // For PDF files, use AI to attempt text extraction
         console.log(`[DEBUG] PDF file detected: ${fileName}`);
-        
-        try {
-          const fileBuffer = await fs.readFile(filePath);
-          const base64File = fileBuffer.toString('base64');
-          
-          const prompt = "This is a PDF document. Extract ALL text content from it. Include:\n- All headings, titles, and subtitles\n- All paragraphs and body text\n- Bullet points and numbered lists\n- Any tables or structured content\n- Page numbers and headers/footers if relevant\n\nOrganize the text in logical reading order and preserve the document structure. If there are multiple pages, separate them clearly.";
-          
-          // Try to process with Gemini AI
-          const result = await model.generateContent([
-            prompt,
-            {
-              inlineData: {
-                mimeType: fileType,
-                data: base64File
-              }
-            }
-          ]);
-          
-          const response = await result.response;
-          extractedText = response.text();
-          
-          if (!extractedText || extractedText.trim().length === 0) {
-            throw new Error('No text extracted from PDF');
-          }
-          
-          console.log(`[DEBUG] Successfully extracted text from PDF: ${extractedText.substring(0, 100)}...`);
-          
-        } catch (pdfError) {
-          console.warn(`[WARN] PDF processing failed: ${pdfError.message}`);
-          extractedText = `Unable to automatically extract text from this PDF file (${req.file.originalname}). 
-
-For best results, please:
-1. Copy text directly from the PDF and paste it below
-2. Take screenshots of PDF pages and upload as images (JPG/PNG)
-3. Use a PDF to text converter tool
-
-The AI can read text from images of PDF pages very accurately.`;
-        }
-        
-      } else if (fileType.includes('presentation') || fileType.includes('powerpoint') || filePath.toLowerCase().endsWith('.ppt') || filePath.toLowerCase().endsWith('.pptx')) {
-        // For PPT/PPTX files, use AI to attempt text extraction - CHECK THIS FIRST
+        const fileBuffer = await fs.readFile(filePath);
+        const pdfResult = await extractTextFromPdf(fileBuffer, originalFileName, fileType);
+        extractedText = pdfResult.text;
+        extractionMethod = pdfResult.extractionMethod;
+      } else if (
+        fileType.includes('presentation') ||
+        fileType.includes('powerpoint') ||
+        filePath.toLowerCase().endsWith('.ppt') ||
+        filePath.toLowerCase().endsWith('.pptx')
+      ) {
         console.log(`[DEBUG] PowerPoint file detected: ${fileName} (${fileType})`);
-        
-        try {
-          const fileBuffer = await fs.readFile(filePath);
-          const base64File = fileBuffer.toString('base64');
-          
-          const prompt = "This is a Microsoft PowerPoint presentation. Extract ALL text content from all slides. Include:\n- Slide titles and headings\n- All bullet points and text content\n- Speaker notes if present\n- Any text from charts or diagrams\n- Slide numbers if relevant\n\nOrganize by slide and preserve the presentation structure. Clearly separate each slide's content.";
-          
-          // Try to process with Gemini AI
-          const result = await model.generateContent([
-            prompt,
-            {
-              inlineData: {
-                mimeType: fileType,
-                data: base64File
-              }
-            }
-          ]);
-          
-          const response = await result.response;
-          extractedText = response.text();
-          
-          if (!extractedText || extractedText.trim().length === 0) {
-            throw new Error('No text extracted from PowerPoint');
-          }
-          
-          console.log(`[DEBUG] Successfully extracted text from PowerPoint: ${extractedText.substring(0, 100)}...`);
-          
-        } catch (pptError) {
-          console.warn(`[WARN] PowerPoint processing failed: ${pptError.message}`);
-          extractedText = `Unable to automatically extract text from this PowerPoint presentation (${req.file.originalname}). 
+        const fileBuffer = await fs.readFile(filePath);
 
-For best results, please:
-1. Convert your slides to images (JPG/PNG) and upload them
-2. Copy and paste the text content directly below
-3. Export individual slides as images and upload them one by one
-
-The AI excels at extracting text from images of slides, including titles, bullet points, and any text content.`;
-        }
-        
-      } else if ((fileType.includes('word') || fileType.includes('wordprocessingml')) && !fileType.includes('presentation') || filePath.toLowerCase().endsWith('.doc') || filePath.toLowerCase().endsWith('.docx')) {
-        // For DOCX files, use AI to attempt text extraction  
+        extractedText = await extractTextWithGemini({
+          prompt: 'This is a Microsoft PowerPoint presentation. Extract all text content from all slides, keeping slide order and structure.',
+          mimeType: fileType,
+          data: fileBuffer.toString('base64'),
+        });
+        extractionMethod = 'gemini-powerpoint';
+      } else if (
+        ((fileType.includes('word') || fileType.includes('wordprocessingml')) && !fileType.includes('presentation')) ||
+        filePath.toLowerCase().endsWith('.doc') ||
+        filePath.toLowerCase().endsWith('.docx')
+      ) {
         console.log(`[DEBUG] Word document detected: ${fileName} (${fileType})`);
-        
-        try {
-          const fileBuffer = await fs.readFile(filePath);
-          const base64File = fileBuffer.toString('base64');
-          
-          const prompt = "This is a Microsoft Word document. Extract ALL text content from it. Include:\n- All headings, titles, and subtitles\n- All paragraphs and body text\n- Bullet points and numbered lists\n- Any tables or structured content\n- Headers and footers if present\n\nOrganize the text in logical reading order and preserve the document structure.";
-          
-          // Try to process with Gemini AI
-          const result = await model.generateContent([
-            prompt,
-            {
-              inlineData: {
-                mimeType: fileType,
-                data: base64File
-              }
-            }
-          ]);
-          
-          const response = await result.response;
-          extractedText = response.text();
-          
-          if (!extractedText || extractedText.trim().length === 0) {
-            throw new Error('No text extracted from Word document');
-          }
-          
-          console.log(`[DEBUG] Successfully extracted text from Word document: ${extractedText.substring(0, 100)}...`);
-          
-        } catch (docError) {
-          console.warn(`[WARN] Word document processing failed: ${docError.message}`);
-          extractedText = `Unable to automatically extract text from this Word document (${req.file.originalname}). 
+        const fileBuffer = await fs.readFile(filePath);
 
-For best results, please:
-1. Copy and paste the text content directly below
-2. Take screenshots of document pages and upload as images (JPG/PNG)
-3. Export the document as PDF and try uploading that
-
-The AI works excellently with plain text or images of document pages.`;
-        }
-        
+        extractedText = await extractTextWithGemini({
+          prompt: 'This is a Microsoft Word document. Extract all text content in logical reading order, including headings, paragraphs, lists, and tables.',
+          mimeType: fileType,
+          data: fileBuffer.toString('base64'),
+        });
+        extractionMethod = 'gemini-word';
       } else {
         throw new Error('Unsupported file type for text extraction');
       }
 
-      // Clean up temporary file
-      try {
-        await fs.unlink(filePath);
-      } catch (cleanupError) {
-        console.warn(`[WARN] Failed to cleanup temp file: ${cleanupError.message}`);
+      if (!normalizeExtractedText(extractedText)) {
+        throw createUserFacingError('No text could be extracted from the file.');
       }
 
-      if (!extractedText || extractedText.trim().length === 0) {
-        return res.status(400).json({ message: 'No text could be extracted from the file' });
-      }
-
-      console.log(`[DEBUG] Successfully extracted ${extractedText.length} characters from ${fileName}`);
+      console.log(`[DEBUG] Successfully extracted ${extractedText.length} characters from ${fileName} using ${extractionMethod}`);
 
       res.json({
         message: 'Text extracted successfully',
-        text: extractedText.trim(),
-        originalFileName: req.file.originalname,
-        fileType: fileType
+        text: normalizeExtractedText(extractedText),
+        originalFileName,
+        fileType,
+        extractionMethod,
       });
-
-    } catch (aiError) {
-      console.error('[ERROR] AI processing failed:', aiError);
-      
-      // Cleanup file on error
-      try {
-        await fs.unlink(filePath);
-      } catch (cleanupError) {
-        console.warn(`[WARN] Failed to cleanup temp file after error: ${cleanupError.message}`);
-      }
-      
-      res.status(500).json({ 
-        message: 'Failed to extract text from file using AI',
-        error: aiError.message 
-      });
+    } finally {
+      await cleanupTempFile(filePath);
     }
-
   } catch (error) {
     console.error('[ERROR] File processing failed:', error);
-    
-    // Cleanup file on error
+
     if (req.file && req.file.path) {
-      try {
-        await fs.unlink(req.file.path);
-      } catch (cleanupError) {
-        console.warn(`[WARN] Failed to cleanup temp file: ${cleanupError.message}`);
-      }
+      await cleanupTempFile(req.file.path);
     }
-    
-    // Check if response was already sent to prevent ERR_HTTP_HEADERS_SENT
+
     if (!res.headersSent) {
-      // Provide different error messages based on error type
-      if (error.code === 'ECONNRESET' || error.message.includes('connection')) {
-        res.status(502).json({ 
-          message: 'Connection was reset during file processing. This often happens with large files. Please try uploading a smaller file or convert to image format.',
-          error: 'Connection Reset'
-        });
-      } else if (error.code === 'ETIMEDOUT' || error.message.includes('timeout')) {
-        res.status(504).json({ 
-          message: 'File processing timed out. Please try uploading a smaller file or convert to image format.',
-          error: 'Processing Timeout'
-        });
-      } else {
-        res.status(500).json({ 
-          message: 'File processing failed',
-          error: error.message 
-        });
-      }
+      const statusCode =
+        error.statusCode ||
+        (error.code === 'ECONNRESET' || String(error.message || '').includes('connection')
+          ? 502
+          : error.code === 'ETIMEDOUT' || String(error.message || '').includes('timeout')
+            ? 504
+            : error.code === 'AI_NOT_CONFIGURED'
+              ? 500
+              : 500);
+
+      res.status(statusCode).json({
+        message:
+          error.expose
+            ? error.message
+            : statusCode === 502
+              ? 'Connection was reset during file processing. Please try again with a smaller file.'
+              : statusCode === 504
+                ? 'File processing timed out. Please try again with a smaller file.'
+                : statusCode === 500 && error.code === 'AI_NOT_CONFIGURED'
+                  ? 'AI service not configured'
+                  : 'File processing failed',
+        error: error.message,
+      });
     }
   }
 };

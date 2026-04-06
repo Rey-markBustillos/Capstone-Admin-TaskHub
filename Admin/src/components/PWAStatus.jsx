@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import '../Css/pwa.css';
 
+const UPDATE_AVAILABLE_EVENT = 'taskhub:update-available';
+
 const PWAStatus = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -9,16 +11,13 @@ const PWAStatus = () => {
     // Online/Offline status
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
+    const handleUpdateAvailable = () => setUpdateAvailable(true);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    window.addEventListener(UPDATE_AVAILABLE_EVENT, handleUpdateAvailable);
 
-    // Service Worker update detection
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        setUpdateAvailable(true);
-      });
-
       // Check for updates periodically
       const checkForUpdates = () => {
         navigator.serviceWorker.getRegistrations().then((registrations) => {
@@ -35,23 +34,24 @@ const PWAStatus = () => {
         clearInterval(updateInterval);
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
+        window.removeEventListener(UPDATE_AVAILABLE_EVENT, handleUpdateAvailable);
       };
     }
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener(UPDATE_AVAILABLE_EVENT, handleUpdateAvailable);
     };
   }, []);
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then((registrations) => {
-        registrations.forEach((registration) => {
-          if (registration.waiting) {
-            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-          }
-        });
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      registrations.forEach((registration) => {
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
       });
       window.location.reload();
     }

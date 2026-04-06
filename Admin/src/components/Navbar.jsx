@@ -37,7 +37,7 @@ const Navbar = ({ selectedClass }) => {
     { to: `/class/${classId}/attendance`, icon: FaCalendarAlt, label: 'Attendance', color: 'green' },
     { to: `/class/${classId}/announcements`, icon: FaBullhorn, label: 'Announcement', color: 'yellow' },
     { to: `/class/${classId}/createactivity`, icon: FaPlusSquare, label: 'Create Activity', color: 'orange' },
-    { to: `/class/${classId}/createquiz`, icon: FaQuestionCircle, label: 'Create Quiz', color: 'blue' },
+    { to: `/class/${classId}/createquiz`, icon: FaQuestionCircle, label: 'Quiz Generator', color: 'blue' },
     { to: `/class/${classId}/uploadmodule`, icon: FaUpload, label: 'Upload Module', color: 'purple' },
     { to: `/class/${classId}/studentlist`, icon: FaUsers, label: 'Student List', color: 'indigo' },
   ];

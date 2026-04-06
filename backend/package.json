@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@napi-rs/canvas": "^0.1.97",
     "axios": "^1.13.3",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
@@ -17,6 +18,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.4",
     "multer": "^2.0.2",
-    "multer-storage-cloudinary": "^4.0.0"
+    "multer-storage-cloudinary": "^4.0.0",
+    "pdfjs-dist": "^5.6.205",
+    "tesseract.js": "^7.0.0"
   }
 }

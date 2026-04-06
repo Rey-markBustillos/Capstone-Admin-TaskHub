@@ -22,8 +22,6 @@ const QuizzHub = () => {
   const [score, setScore] = useState(null);
   const [studentAnswers, setStudentAnswers] = useState({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [questionTimers, setQuestionTimers] = useState([]); // seconds left per question
-  const timerRef = useRef();
   const activeQuizRef = useRef(null);
   const [activeQuizId, setActiveQuizId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -52,9 +50,6 @@ const QuizzHub = () => {
       const quiz = quizzes.find(qz => qz._id === activeQuizId);
       if (quiz && quiz.questions) {
         setCurrentQuestion(0);
-        // Use the quiz's questionTime if available, otherwise default to 30 seconds
-        const timePerQuestion = quiz.questionTime || 30;
-        setQuestionTimers(Array(quiz.questions.length).fill(timePerQuestion));
         // Auto-scroll to quiz after a short delay
         setTimeout(() => {
           if (activeQuizRef.current) {
@@ -64,37 +59,6 @@ const QuizzHub = () => {
       }
     }
   }, [activeQuizId, quizzes]);
-
-  // Timer effect for current question
-  useEffect(() => {
-    if (!activeQuizId) return;
-    const quiz = quizzes.find(qz => qz._id === activeQuizId);
-    if (!quiz || !quiz.questions || quiz.questions.length === 0) return;
-    if (currentQuestion >= quiz.questions.length) return;
-    if (questionTimers[currentQuestion] <= 0) return;
-    timerRef.current && clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setQuestionTimers(prev => {
-        if (prev[currentQuestion] <= 0) return prev;
-        const updated = [...prev];
-        updated[currentQuestion] = Math.max(0, updated[currentQuestion] - 1);
-        return updated;
-      });
-    }, 1000);
-    return () => clearInterval(timerRef.current);
-  }, [currentQuestion, activeQuizId, quizzes, questionTimers]);
-
-  // Auto-advance when timer hits 0
-  useEffect(() => {
-    if (!activeQuizId) return;
-    const quiz = quizzes.find(qz => qz._id === activeQuizId);
-    if (!quiz || !quiz.questions) return;
-    if (questionTimers[currentQuestion] === 0) {
-      if (currentQuestion < quiz.questions.length - 1) {
-        setTimeout(() => setCurrentQuestion(currentQuestion + 1), 1000);
-      }
-    }
-  }, [questionTimers, currentQuestion, activeQuizId, quizzes]);
 
   // Scroll to quiz when question changes
   useEffect(() => {
@@ -189,7 +153,6 @@ const QuizzHub = () => {
   // Render quiz list and take quiz
   const renderQuizList = () => (
     <div>
-  <h2 className="text-sm sm:text-lg md:text-xl font-bold mb-2 sm:mb-3 md:mb-4 flex items-center gap-1 sm:gap-2 text-blue-900"><FaListOl className="text-sm sm:text-base" /> <span className="hidden sm:inline">Available Quizzes</span><span className="sm:hidden">Quizzes</span></h2>
       {loading && <div className="text-blue-700">Loading quizzes...</div>}
   {error && <div className="text-red-600">{error}</div>}
       {quizzes.length === 0 && !loading ? (
@@ -265,12 +228,6 @@ const QuizzHub = () => {
                           <span className="font-semibold text-sm sm:text-base md:text-lg text-amber-900 drop-shadow leading-relaxed" style={{textShadow:'0 1px 4px rgba(0,0,0,0.3)'}}>
                             {currentQuestion+1}. {qz.questions[currentQuestion].question}
                           </span>
-                          <span className="text-red-700 font-bold text-xs sm:text-base md:text-lg bg-amber-200 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg shadow self-start flex items-center gap-1">
-                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
-                            </svg>
-                            Time: {questionTimers[currentQuestion]}s
-                          </span>
                         </div>
                       {/* Render answer input for current question only */}
                       {(() => {
@@ -323,7 +280,6 @@ const QuizzHub = () => {
                                     checked={studentAnswers[i]==='True'} 
                                     onChange={()=>handleAnswer(i,'True')} 
                                     className="accent-green-400 w-4 h-4 sm:w-5 sm:h-5" 
-                                    disabled={questionTimers[i]===0} 
                                   />
                                   <span className="font-bold text-sm sm:text-base">True</span>
                                 </label>
@@ -335,7 +291,6 @@ const QuizzHub = () => {
                                     checked={studentAnswers[i]==='False'} 
                                     onChange={()=>handleAnswer(i,'False')} 
                                     className="accent-red-400 w-4 h-4 sm:w-5 sm:h-5" 
-                                    disabled={questionTimers[i]===0} 
                                   />
                                   <span className="font-bold text-sm sm:text-base">False</span>
                                 </label>
@@ -358,7 +313,6 @@ const QuizzHub = () => {
                                       checked={studentAnswers[i]===choice} 
                                       onChange={()=>handleAnswer(i,choice)} 
                                       className="accent-green-400 mt-1 w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" 
-                                      disabled={questionTimers[i]===0} 
                                     />
                                     <span className="font-medium text-xs sm:text-sm md:text-base leading-snug flex-1">{choice}</span>
                                   </label>
@@ -380,20 +334,15 @@ const QuizzHub = () => {
                                   value={studentAnswers[i]||''} 
                                   onChange={e=>handleAnswer(i,e.target.value)} 
                                   placeholder="Type your answer here..." 
-                                  disabled={questionTimers[i]===0}
                                   maxLength="200"
                                   title="Case doesn't matter - EDEN, eden, and Eden are all correct"
                                 />
                                 <div className="flex justify-between items-center mt-2 text-[10px] sm:text-xs text-amber-700">
-                                  <span>
-                                    {questionTimers[i] === 0 ? 'Time expired' : (
-                                      <span className="flex items-center gap-1">
+                                  <span className="flex items-center gap-1">
                                         <span className="text-amber-600">💡</span>
                                         <span className="hidden sm:inline">Case insensitive - Capital/lowercase doesn't matter</span>
                                         <span className="sm:hidden">Case insensitive</span>
                                       </span>
-                                    )}
-                                  </span>
                                   <span>{(studentAnswers[i]||'').length}/200</span>
                                 </div>
                               </div>

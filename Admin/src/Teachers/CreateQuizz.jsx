@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { FaUpload, FaPaste, FaTrash, FaEdit, FaPlus, FaSave, FaTimes, FaFileWord, FaDownload } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import * as XLSX from 'xlsx';
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
@@ -29,6 +30,157 @@ const showConfirm = async (title, text) => {
   return result.isConfirmed;
 };
 
+const QUIZ_TYPE_LABELS = {
+  mixed: 'Mixed Type',
+  mcq: 'Multiple Choice',
+  true_false: 'True/False',
+  identification: 'Identification',
+};
+
+const DIFFICULTY_LABELS = {
+  easy: 'Easy',
+  medium: 'Medium',
+  hard: 'Hard',
+};
+
+const normalizeQuestionType = (value) => {
+  const type = String(value || '').trim().toLowerCase();
+  if (type === 'true_false' || type === 'tf' || type === 'truefalse') return 'true_false';
+  if (type === 'identification' || type === 'numeric' || type === 'fill_in_the_blank') return 'identification';
+  return 'mcq';
+};
+
+const shuffleItems = (items) => {
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+const createBlankQuestion = (type = 'mcq', difficulty = 'medium') => {
+  const normalizedType = normalizeQuestionType(type);
+
+  if (normalizedType === 'true_false') {
+    return {
+      type: 'true_false',
+      displayType: 'True/False',
+      question: '',
+      options: ['True', 'False'],
+      answer: 'True',
+      correctAnswer: 'True',
+      explanation: '',
+      difficulty,
+    };
+  }
+
+  if (normalizedType === 'identification') {
+    return {
+      type: 'identification',
+      displayType: 'Identification',
+      question: '',
+      options: [],
+      answer: '',
+      correctAnswer: '',
+      explanation: '',
+      difficulty,
+    };
+  }
+
+  return {
+    type: 'mcq',
+    displayType: 'Multiple Choice',
+    question: '',
+    options: ['', '', '', ''],
+    answer: '',
+    correctAnswer: '',
+    explanation: '',
+    difficulty,
+  };
+};
+
+const normalizeEditableQuestion = (question, fallbackDifficulty = 'medium') => {
+  const normalizedType = normalizeQuestionType(question?.type);
+  const difficulty = String(question?.difficulty || fallbackDifficulty || 'medium').trim().toLowerCase() || 'medium';
+  const explanation = String(question?.explanation || '').trim();
+  const prompt = String(question?.question || '').trim();
+
+  if (normalizedType === 'true_false') {
+    const answer = String(question?.answer || question?.correctAnswer || 'True').trim().toLowerCase() === 'false' ? 'False' : 'True';
+    return {
+      ...question,
+      type: 'true_false',
+      displayType: 'True/False',
+      question: prompt,
+      options: ['True', 'False'],
+      answer,
+      correctAnswer: answer,
+      explanation,
+      difficulty,
+    };
+  }
+
+  if (normalizedType === 'identification') {
+    const answer = String(question?.answer || question?.correctAnswer || '').trim();
+    return {
+      ...question,
+      type: 'identification',
+      displayType: 'Identification',
+      question: prompt,
+      options: [],
+      answer,
+      correctAnswer: answer,
+      explanation,
+      difficulty,
+    };
+  }
+
+  const rawOptions = Array.isArray(question?.options)
+    ? question.options
+    : String(question?.options || '').split('\n');
+  const cleanedOptions = rawOptions
+    .map((option) => String(option || '').trim())
+    .filter(Boolean);
+
+  const uniqueOptions = [];
+  const seen = new Set();
+  cleanedOptions.forEach((option) => {
+    const key = option.toLowerCase();
+    if (!seen.has(key) && uniqueOptions.length < 4) {
+      seen.add(key);
+      uniqueOptions.push(option);
+    }
+  });
+
+  while (uniqueOptions.length < 4) {
+    uniqueOptions.push(`Option ${String.fromCharCode(65 + uniqueOptions.length)}`);
+  }
+
+  const answerCandidate = String(question?.answer || question?.correctAnswer || '').trim();
+  const answer = uniqueOptions.find((option) => option.toLowerCase() === answerCandidate.toLowerCase()) || uniqueOptions[0];
+
+  return {
+    ...question,
+    type: 'mcq',
+    displayType: 'Multiple Choice',
+    question: prompt,
+    options: uniqueOptions.slice(0, 4),
+    answer,
+    correctAnswer: answer,
+    explanation,
+    difficulty,
+  };
+};
+
+const createSafeFilename = (value) =>
+  String(value || 'Quiz')
+    .trim()
+    .split('')
+    .filter((character) => character >= ' ' && !/[<>:"/\\|?*]/.test(character))
+    .join('')
+    .replace(/\s+/g, '_') || 'Quiz';
+
 export default function CreateQuizz() {
   // Always initialize params and user info first
   const { classId } = useParams();
@@ -43,7 +195,6 @@ export default function CreateQuizz() {
   const [showSubModal, setShowSubModal] = useState(false);
   const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
   const [expandedQuestions, setExpandedQuestions] = useState({});
-  const [showDropdown, setShowDropdown] = useState(false);
 
   // Fetch quizzes created by this teacher for this class
   useEffect(() => {
@@ -81,24 +232,12 @@ export default function CreateQuizz() {
     fetchAll();
   }, [createdQuizzes]);
 
-  // Handle clicks outside dropdown to close it
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
+  const [topic, setTopic] = useState('');
+  const [focusDescription, setFocusDescription] = useState('');
   const [moduleText, setModuleText] = useState('');
   const [count, setCount] = useState(5);
+  const [difficulty, setDifficulty] = useState('medium');
   const [questions, setQuestions] = useState([]);
-  // const [createdQuizzes, setCreatedQuizzes] = useState([]);
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [editingIdx, setEditingIdx] = useState(null);
@@ -107,6 +246,8 @@ export default function CreateQuizz() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [dueDate, setDueDate] = useState("");
   const [questionTime, setQuestionTime] = useState(30);
+  const [shuffleQuestions, setShuffleQuestions] = useState(false);
+  const [includeExplanations, setIncludeExplanations] = useState(true);
   // Mixed quiz type counts
   const [mcqCount, setMcqCount] = useState(2);
   const [trueFalseCount, setTrueFalseCount] = useState(2);
@@ -115,9 +256,6 @@ export default function CreateQuizz() {
   // const [selectedQuizId, setSelectedQuizId] = useState(null);
   // const [showCreatedQuizzes, setShowCreatedQuizzes] = useState(false);
   // const [showSubmissions, setShowSubmissions] = useState(false);
-  const bounceRef = useRef();
-  const dropdownRef = useRef();
-
   // Fetch quizzes created by this teacher for this class
   // useEffect(() => {
   //   const fetchCreatedQuizzes = async () => {
@@ -182,7 +320,7 @@ export default function CreateQuizz() {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await axios.post(`${API_BASE_URL}/files/extract-text`, formData, {
+        const response = await axios.post(`${API_BASE_URL}/file/extract-text`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
@@ -218,14 +356,18 @@ export default function CreateQuizz() {
     }
   };
 
-  // Generate quiz questions from module text using backend AI
+  // Generate quiz questions from topic, focus, and optional reference material
   const handleGenerate = async () => {
+    if (!topic.trim()) {
+      await showAlert('warning', 'Topic Required', 'Enter a topic or subject before generating a quiz.');
+      return;
+    }
+
     if (count < 1) {
       await showAlert('warning', 'Invalid Number', 'Enter a valid number of questions.');
       return;
     }
-    
-    // Validate mixed type counts
+
     if (quizType === 'mixed') {
       const totalMixed = mcqCount + trueFalseCount + identificationCount;
       if (totalMixed === 0) {
@@ -236,14 +378,19 @@ export default function CreateQuizz() {
         await showAlert('warning', 'Mixed Count Exceeds Total', 'Increase total questions or reduce per-type counts.');
         return;
       }
-      // For mixed quizzes we no longer auto-sync `count` to the sum of per-type values.
-      // Teachers can type the desired `count` manually; generation relies on per-type counts.
     }
-    
+
     setLoading(true);
     try {
       let allQuestions = [];
-      
+      const generationPayload = {
+        topic: topic.trim(),
+        focusDescription: focusDescription.trim() || undefined,
+        moduleText: moduleText.trim() || undefined,
+        difficulty,
+        includeExplanations,
+      };
+
       if (quizType === 'mixed') {
         const requestedTotal = count;
         const baseCounts = {
@@ -255,7 +402,6 @@ export default function CreateQuizz() {
           .filter(([, value]) => value > 0)
           .map(([type]) => type);
 
-        // Expand mixed distribution up to requested total while preserving teacher-defined base counts.
         const targetCounts = { ...baseCounts };
         let remaining = requestedTotal - (mcqCount + trueFalseCount + identificationCount);
         if (remaining > 0 && selectedTypes.length > 0) {
@@ -268,147 +414,112 @@ export default function CreateQuizz() {
           }
         }
 
-        // Generate questions for each type sequentially to avoid duplicates
         let collectedQuestions = [];
-        
+
         if (targetCounts.mcq > 0) {
           const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
             count: targetCounts.mcq,
-            moduleText: moduleText.trim() ? moduleText : undefined,
+            ...generationPayload,
             quizType: 'mcq',
-            existingQuestions: collectedQuestions.map(q => q.question),
+            shuffleQuestions: false,
+            existingQuestions: collectedQuestions.map((q) => q.question),
           });
           const generated = Array.isArray(res.data) ? res.data : res.data?.questions;
           if (Array.isArray(generated)) {
             collectedQuestions = [...collectedQuestions, ...generated];
           }
         }
-        
+
         if (targetCounts.true_false > 0) {
           const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
             count: targetCounts.true_false,
-            moduleText: moduleText.trim() ? moduleText : undefined,
+            ...generationPayload,
             quizType: 'true_false',
-            existingQuestions: collectedQuestions.map(q => q.question),
+            shuffleQuestions: false,
+            existingQuestions: collectedQuestions.map((q) => q.question),
           });
           const generated = Array.isArray(res.data) ? res.data : res.data?.questions;
           if (Array.isArray(generated)) {
             collectedQuestions = [...collectedQuestions, ...generated];
           }
         }
-        
+
         if (targetCounts.identification > 0) {
           const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
             count: targetCounts.identification,
-            moduleText: moduleText.trim() ? moduleText : undefined,
+            ...generationPayload,
             quizType: 'identification',
-            existingQuestions: collectedQuestions.map(q => q.question),
+            shuffleQuestions: false,
+            existingQuestions: collectedQuestions.map((q) => q.question),
           });
           const generated = Array.isArray(res.data) ? res.data : res.data?.questions;
           if (Array.isArray(generated)) {
             collectedQuestions = [...collectedQuestions, ...generated];
           }
         }
-        
-        // Deduplicate by question text (safety net)
+
         const seen = new Set();
-        allQuestions = collectedQuestions.filter(q => {
-          const key = q.question.toLowerCase().trim();
-          if (seen.has(key)) return false;
+        allQuestions = collectedQuestions.filter((q) => {
+          const key = String(q.question || '').toLowerCase().trim();
+          if (!key || seen.has(key)) return false;
           seen.add(key);
           return true;
         });
-        
-        // Shuffle the mixed questions for variety
-        allQuestions = allQuestions.sort(() => Math.random() - 0.5);
-        
       } else {
-        // Single type quiz generation
         const response = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
           count,
-          moduleText: moduleText.trim() ? moduleText : undefined,
-          quizType: quizType,
+          ...generationPayload,
+          quizType,
+          shuffleQuestions,
         });
-        
+
         const generated = Array.isArray(response.data) ? response.data : response.data?.questions;
         if (Array.isArray(generated)) {
           allQuestions = generated;
-          
-          // If quizType is 'mcq', force all generated questions with options to type 'mcq'
-          if (quizType === 'mcq') {
-            allQuestions = allQuestions.map(q => {
-              if (Array.isArray(q.options) && q.options.length > 0) {
-                return { ...q, type: 'mcq', displayType: 'Multiple Choice' };
-              }
-              return q;
-            });
-          }
         }
       }
-      
+
       if (allQuestions.length > 0) {
-        // Final deduplication safety net
         const seen = new Set();
-        const uniqueQuestions = allQuestions.filter(q => {
-          const key = q.question.toLowerCase().trim();
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-        setQuestions(uniqueQuestions);
+        const uniqueQuestions = allQuestions
+          .map((question) => normalizeEditableQuestion(question, difficulty))
+          .filter((question) => String(question.question || '').trim())
+          .filter((question) => {
+            const key = question.question.toLowerCase().trim();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .slice(0, count);
 
-        // Auto-save generated quiz to make it permanent
-        if (classId && teacherId) {
-          try {
-            setLoading(true);
-            // create a timestamped title
-            const generatedTitle = `Generated Quiz ${new Date().toLocaleString()}`;
-            // Normalize question types similar to manual save
-            const normalizedQuestions = uniqueQuestions.map(q => {
-              let type = q.type;
-              if (Array.isArray(q.options) && q.options.length > 0) {
-                type = 'mcq';
-              } else if (type === 'multiple' || type === 'mcq') {
-                type = 'mcq';
-              } else if (type === 'truefalse' || type === 'true_false') {
-                type = 'true_false';
-              } else if (type === 'identification') {
-                type = 'identification';
-              } else if (type === 'numeric') {
-                type = 'identification';
-              }
-              return { ...q, type };
-            });
-
-            const saveRes = await axios.post(`${API_BASE_URL}/quizzes`, {
-              classId,
-              title: generatedTitle,
-              questions: normalizedQuestions,
-              createdBy: teacherId,
-              dueDate: dueDate || null,
-              questionTime,
-            });
-
-            if (saveRes && saveRes.data) {
-              // prepend to created quizzes
-              setCreatedQuizzes(prev => [saveRes.data, ...prev]);
-              showAlert('success', 'Quiz Saved', `Generated quiz saved permanently as "${generatedTitle}"`);
-            }
-          } catch (e) {
-            console.warn('Auto-save generated quiz failed', e);
-            // don't block user flow; they can save manually
-          } finally {
-            setLoading(false);
-          }
+        if (uniqueQuestions.length !== count) {
+          await showAlert('warning', 'Generation Incomplete', `The generator returned ${uniqueQuestions.length} of ${count} requested questions. Please regenerate for a complete set.`);
         }
+
+        setQuestions(shuffleQuestions ? shuffleItems(uniqueQuestions) : uniqueQuestions);
+        setEditingIdx(null);
+        setEditQ({});
+        setTitle((currentTitle) => currentTitle || `${topic.trim()} Quiz`);
       } else {
-        showAlert('info', 'No Questions Generated', 'Try adding more module content or adjusting your settings.');
+        showAlert('info', 'No Questions Generated', 'Try refining the topic, adding a focus description, or pasting reference material.');
       }
-    } catch {
-      showAlert('error', 'Generation Failed', 'Failed to generate quiz. Please try again.');
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to generate quiz. Please try again.';
+      showAlert('error', 'Generation Failed', message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRegenerate = async () => {
+    if (questions.length > 0) {
+      const confirmed = await showConfirm('Regenerate Quiz?', 'Your current generated questions will be replaced.');
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    await handleGenerate();
   };
 
   // Edit, delete, save question
@@ -416,54 +527,79 @@ export default function CreateQuizz() {
     setEditingIdx(idx);
     setEditQ({ ...questions[idx] });
   };
+
   const handleEditChange = (field, value) => {
     setEditQ((q) => ({ ...q, [field]: value }));
   };
+
   const handleSaveEdit = () => {
-    setQuestions((qs) => qs.map((q, i) => (i === editingIdx ? editQ : q)));
+    const normalizedQuestion = normalizeEditableQuestion(editQ, difficulty);
+    if (!normalizedQuestion.question) {
+      showAlert('warning', 'Question Required', 'Question text cannot be empty.');
+      return;
+    }
+
+    setQuestions((qs) => qs.map((q, i) => (i === editingIdx ? normalizedQuestion : q)));
     setEditingIdx(null);
     setEditQ({});
   };
+
   const handleDelete = (idx) => {
     setQuestions((qs) => qs.filter((_, i) => i !== idx));
+    if (editingIdx === idx) {
+      setEditingIdx(null);
+      setEditQ({});
+    }
+  };
+
+  const handleAddQuestion = () => {
+    const typeForNewQuestion = quizType === 'mixed' ? 'mcq' : quizType;
+    const blankQuestion = createBlankQuestion(typeForNewQuestion, difficulty);
+    setQuestions((current) => [...current, blankQuestion]);
+    setEditingIdx(questions.length);
+    setEditQ(blankQuestion);
   };
 
   // Save quiz to class
   const handleSaveQuiz = async () => {
-    if (!title) {
+    if (!title.trim()) {
       await showAlert('warning', 'Title Required', 'Quiz title is required.');
       return;
     }
+
+    if (questions.length === 0) {
+      await showAlert('warning', 'No Questions Available', 'Generate or add at least one question before saving.');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Normalize question types for backend
-      const normalizedQuestions = questions.map(q => {
-        let type = q.type;
-        // If options exist and length > 0, always treat as MCQ
-        if (Array.isArray(q.options) && q.options.length > 0) {
-          type = 'mcq';
-        } else if (type === 'multiple' || type === 'mcq') {
-          type = 'mcq';
-        } else if (type === 'truefalse' || type === 'true_false') {
-          type = 'true_false';
-        } else if (type === 'identification') {
-          type = 'identification';
-        } else if (type === 'numeric') {
-          type = 'identification';
-        }
-        return { ...q, type };
+      const normalizedQuestions = questions.map((q) => {
+        const normalizedQuestion = normalizeEditableQuestion(q, difficulty);
+        let type = normalizedQuestion.type;
+        if (type === 'true_false') type = 'true_false';
+        else if (type === 'identification') type = 'identification';
+        else type = 'mcq';
+
+        return { ...normalizedQuestion, type };
       });
-      await axios.post(`${API_BASE_URL}/quizzes`, {
+
+      const response = await axios.post(`${API_BASE_URL}/quizzes`, {
         classId,
-        title,
+        title: title.trim(),
         questions: normalizedQuestions,
         createdBy: teacherId,
         dueDate,
         questionTime,
       });
+
       showAlert('success', 'Quiz Saved', 'Quiz saved successfully.');
-      setQuestions([]); setTitle(''); setModuleText('');
-      // Created quizzes refresh removed
+      setCreatedQuizzes((current) => [response.data, ...current.filter((quiz) => quiz._id !== response.data._id)]);
+      setQuestions([]);
+      setEditingIdx(null);
+      setEditQ({});
+      setTitle('');
+      setShowSaveModal(false);
     } catch {
       showAlert('error', 'Save Failed', 'Failed to save quiz.');
     } finally {
@@ -494,6 +630,150 @@ export default function CreateQuizz() {
     }
   };
 
+  const buildQuestionExportRows = () =>
+    questions.map((question, index) => {
+      const normalizedQuestion = normalizeEditableQuestion(question, difficulty);
+      const normalizedType = normalizeQuestionType(normalizedQuestion.type);
+      const options = normalizedType === 'mcq'
+        ? normalizedQuestion.options
+        : normalizedType === 'true_false'
+          ? ['True', 'False']
+          : [];
+      const answer = normalizedQuestion.answer || normalizedQuestion.correctAnswer || '';
+
+      return {
+        'Question Number': index + 1,
+        Type: QUIZ_TYPE_LABELS[normalizedType] || normalizedType,
+        Difficulty: DIFFICULTY_LABELS[normalizedQuestion.difficulty] || normalizedQuestion.difficulty || '',
+        Question: normalizedQuestion.question,
+        'Choice A': options[0] || '',
+        'Choice B': options[1] || '',
+        'Choice C': options[2] || '',
+        'Choice D': options[3] || '',
+        'Correct Answer': answer,
+        Explanation: normalizedQuestion.explanation || '',
+      };
+    });
+
+  const handleExportToExcel = () => {
+    if (!questions || questions.length === 0) {
+      showAlert('info', 'No Questions Available', 'Please generate or create questions first.');
+      return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(buildQuestionExportRows());
+    worksheet['!cols'] = [
+      { wch: 14 },
+      { wch: 18 },
+      { wch: 12 },
+      { wch: 52 },
+      { wch: 24 },
+      { wch: 24 },
+      { wch: 24 },
+      { wch: 24 },
+      { wch: 24 },
+      { wch: 42 },
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Quiz');
+    XLSX.writeFile(workbook, `${createSafeFilename(title || topic || 'Quiz')}_Questions.xlsx`);
+  };
+
+  const handleExportToPdf = () => {
+    if (!questions || questions.length === 0) {
+      showAlert('info', 'No Questions Available', 'Please generate or create questions first.');
+      return;
+    }
+
+    const printableWindow = window.open('', '_blank', 'width=1000,height=1200');
+    if (!printableWindow) {
+      showAlert('warning', 'Popup Blocked', 'Please allow popups to export the quiz as PDF.');
+      return;
+    }
+
+    const exportRows = buildQuestionExportRows();
+    const printableHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>${title || topic || 'Quiz'} PDF</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 32px;
+            color: #0f172a;
+            line-height: 1.45;
+          }
+          h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+          }
+          .meta {
+            margin-bottom: 24px;
+            color: #334155;
+            font-size: 14px;
+          }
+          .card {
+            border: 1px solid #cbd5e1;
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            page-break-inside: avoid;
+          }
+          .badges {
+            margin: 8px 0 12px;
+            font-size: 12px;
+            color: #1d4ed8;
+            font-weight: 700;
+          }
+          .option {
+            margin: 6px 0;
+          }
+          .answer {
+            margin-top: 12px;
+            font-weight: 700;
+          }
+          .explanation {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #475569;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${title || topic || 'Quiz'}</h1>
+        <div class="meta">
+          Topic: ${topic || 'N/A'}<br />
+          Focus: ${focusDescription || 'General coverage'}<br />
+          Total Questions: ${questions.length}<br />
+          Difficulty: ${DIFFICULTY_LABELS[difficulty] || difficulty}
+        </div>
+        ${exportRows.map((row) => `
+          <div class="card">
+            <div><strong>${row['Question Number']}.</strong> ${row.Question}</div>
+            <div class="badges">${row.Type} | ${row.Difficulty}</div>
+            ${['Choice A', 'Choice B', 'Choice C', 'Choice D'].filter((key) => row[key]).map((key, optionIndex) => `
+              <div class="option">${String.fromCharCode(65 + optionIndex)}. ${row[key]}</div>
+            `).join('')}
+            <div class="answer">Correct Answer: ${row['Correct Answer']}</div>
+            ${row.Explanation ? `<div class="explanation">Explanation: ${row.Explanation}</div>` : ''}
+          </div>
+        `).join('')}
+      </body>
+      </html>
+    `;
+
+    printableWindow.document.open();
+    printableWindow.document.write(printableHtml);
+    printableWindow.document.close();
+    printableWindow.focus();
+    window.setTimeout(() => {
+      printableWindow.print();
+    }, 250);
+  };
+
   // Export quiz to Word document
   const handleExportToWord = () => {
     if (!questions || questions.length === 0) {
@@ -513,7 +793,7 @@ export default function CreateQuizz() {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>${title || 'Quiz'} - Test Paper</title>
+        <title>${title || topic || 'Quiz'} - Test Paper</title>
         <style>
           body { 
             font-family: 'Times New Roman', serif; 
@@ -593,7 +873,7 @@ export default function CreateQuizz() {
         <div class="header">
           <div class="school-name">ALTERNATIVE LEARNING SYSTEM (ALS)</div>
           <div class="als-info">Department of Education</div>
-          <div class="quiz-title">${title || 'QUIZ'}</div>
+          <div class="quiz-title">${title || topic || 'QUIZ'}</div>
         </div>
 
         <div class="score-box">
@@ -627,7 +907,8 @@ export default function CreateQuizz() {
       htmlContent += `<div class="question">`;
       htmlContent += `<span class="question-number">${index + 1}.</span> ${q.question}`;
       
-      if (q.type === 'mcq' && q.options && q.options.length > 0) {
+      const normalizedType = normalizeQuestionType(q.type);
+      if (normalizedType === 'mcq' && q.options && q.options.length > 0) {
         htmlContent += `<div class="options">`;
         q.options.forEach((option, optIndex) => {
           const letter = String.fromCharCode(65 + optIndex); // A, B, C, D
@@ -635,7 +916,7 @@ export default function CreateQuizz() {
         });
         htmlContent += `</div>`;
         htmlContent += `<div><strong>Answer:</strong> <span class="answer-space"></span></div>`;
-      } else if (q.type === 'true_false') {
+      } else if (normalizedType === 'true_false') {
         htmlContent += `<div class="options">`;
         htmlContent += `<div class="option">A. TRUE</div>`;
         htmlContent += `<div class="option">B. FALSE</div>`;
@@ -662,7 +943,7 @@ export default function CreateQuizz() {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${title || 'Quiz'}_TestPaper_${currentDate.replace(/\s+/g, '_')}.doc`;
+    link.download = `${createSafeFilename(title || topic || 'Quiz')}_TestPaper_${currentDate.replace(/\s+/g, '_')}.doc`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1010,333 +1291,432 @@ export default function CreateQuizz() {
     return analytics;
   };
 
-  // Save Quiz Button outside main box, only visible if questions.length > 0, with bounce animation (force re-trigger on questions change)
-  useEffect(() => {
-    if (questions.length > 0 && bounceRef.current) {
-      bounceRef.current.classList.remove('animate-bounceOnce');
-      // Force reflow
-      void bounceRef.current.offsetWidth;
-      bounceRef.current.classList.add('animate-bounceOnce');
-    }
-  }, [questions.length]);
-
   // Wrap the whole return in a single centered div
   return (
     <div className="flex flex-col items-center justify-start min-h-full bg-white py-4 sm:py-6 lg:py-10 px-2 sm:px-4">{/* Improved responsive padding */}
-      {/* Quiz Actions Dropdown at the top */}
-      <div className="w-full flex justify-center sm:justify-end max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] mb-4 sm:mb-6 relative">
-        <div className="relative" ref={dropdownRef}>
-          <button
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 sm:px-8 py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg border-2 border-blue-400 hover:border-indigo-500 transition-all duration-200 flex items-center gap-2 text-sm sm:text-base"
-            onClick={() => setShowDropdown(!showDropdown)}
-          >
-            Quiz Actions
-            <svg className={`w-5 h-5 transition-transform ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-          
-          {showDropdown && (
-            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto mt-2 w-full sm:w-64 bg-white rounded-xl shadow-2xl border-2 border-blue-300 z-50">
-              <div className="py-2">
-                <button
-                  className="w-full px-4 sm:px-6 py-3 text-left text-gray-900 hover:bg-blue-50 transition-colors flex items-center gap-3 text-sm sm:text-base"
-                  onClick={() => {
-                    setShowAnalyticsModal(true);
-                    setShowDropdown(false);
-                  }}
-                >
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                  </svg>
-                  <div>
-                    <div className="font-semibold">Quiz Analytics</div>
-                    <div className="text-sm text-blue-700">View performance insights</div>
-                  </div>
-                </button>
-                <button
-                  className="w-full px-4 sm:px-6 py-3 text-left text-gray-900 hover:bg-indigo-50 transition-colors flex items-center gap-3 text-sm sm:text-base"
-                  onClick={() => {
-                    setShowSubModal(true);
-                    setShowDropdown(false);
-                  }}
-                >
-                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                  </svg>
-                  <div>
-                    <div className="font-semibold">View All Submissions</div>
-                    <div className="text-sm text-indigo-700">Student quiz responses</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
       <div className="w-full max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] p-2 sm:p-6 lg:p-10 bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-xl sm:rounded-3xl shadow-lg border-l-4 border-blue-400 overflow-hidden max-h-[85vh] sm:max-h-[88vh] lg:max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-500 hover:scrollbar-thumb-blue-600 scrollbar-track-blue-100 relative scroll-smooth">
-        <div className="bg-gradient-to-r from-blue-50 via-white to-indigo-50 px-4 sm:px-8 py-4 sm:py-6 flex flex-col sm:flex-row sm:items-center gap-4 border-b-2 sm:border-b-4 border-blue-200 shadow-md justify-center sticky top-0 z-10">{/* Made header sticky */}
+        <div className="bg-gradient-to-r from-blue-50 via-white to-indigo-50 px-4 sm:px-8 py-4 sm:py-6 flex flex-col gap-4 border-b-2 sm:border-b-4 border-blue-200 shadow-md sticky top-0 z-10">{/* Made header sticky */}
           <h2 className="text-2xl sm:text-3xl font-extrabold text-blue-900 drop-shadow tracking-wide flex items-center gap-3 justify-center">
             <svg className="w-10 h-10 text-blue-500 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v1.5m9 0v1.5m0-1.5h-9m9 0a2.25 2.25 0 012.25 2.25v8.25A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V9a2.25 2.25 0 012.25-2.25h9z" /></svg>
             Quiz Generator
           </h2>
-        </div>
-        <div className="px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-20 sm:pb-24 min-h-full">{/* Enhanced responsive padding with more bottom space */}
-        <h3 className="text-xl font-bold mb-2 text-blue-900 flex items-center gap-2">
-          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-          Module Upload / Paste
-        </h3>
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <label className="flex items-center gap-2 cursor-pointer bg-white hover:bg-blue-50 border-2 border-blue-300 px-4 py-2 rounded-lg shadow-md transition group">
-            <FaUpload className="text-blue-600 group-hover:text-blue-700 transition" />
-            <input type="file" accept=".txt,.pdf,.jpg,.jpeg,.png,.docx,.doc,.pptx,.ppt" className="hidden" onChange={handleFileChange} />
-            <span className="font-medium text-blue-700 group-hover:text-blue-800 transition">Upload file</span>
-          </label>
-          <label className="flex-1 flex items-start gap-2">
-            <FaPaste className="mt-2 text-blue-600" />
-            <textarea
-              className="border-2 border-blue-300 bg-white text-gray-900 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 shadow-md"
-              rows={5}
-              placeholder="Paste module text here..."
-              value={moduleText}
-              onChange={e => setModuleText(e.target.value)}
-            />
-          </label>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex items-center gap-2 bg-white border-2 border-blue-300 rounded-lg px-4 py-2 shadow">
-            <label className="text-blue-900 font-semibold">Number of Questions:</label>
-            <input
-              type="number"
-              min={1}
-              max={100}
-              className="w-20 border border-blue-300 rounded bg-white text-gray-900 p-1 focus:ring-2 focus:ring-blue-500"
-              value={count}
-              onChange={e => setCount(Math.max(1, Number(e.target.value)))}
-              required
-            />
-          </div>
-          <div className="flex items-center gap-2 bg-white border-2 border-blue-300 rounded-lg px-4 py-2 shadow">
-            <label className="text-blue-900 font-semibold">Quiz Type:</label>
-            <select
-              className="border border-blue-300 rounded bg-white text-gray-900 p-1 focus:ring-2 focus:ring-blue-500"
-              value={quizType}
-              onChange={e => setQuizType(e.target.value)}
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+            <button
+              className="w-full sm:w-auto rounded-xl border-2 border-blue-300 bg-white px-4 py-3 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
+              onClick={() => setShowAnalyticsModal(true)}
             >
-              <option value="mixed">Mixed</option>
-              <option value="mcq">Multiple Choice</option>
-              <option value="true_false">True or False</option>
-              <option value="identification">Identification</option>
-            </select>
+              Quiz Analytics
+            </button>
+            <button
+              className="w-full sm:w-auto rounded-xl border-2 border-indigo-300 bg-white px-4 py-3 text-sm font-semibold text-indigo-900 shadow-sm transition hover:bg-indigo-50"
+              onClick={() => setShowSubModal(true)}
+            >
+              View Submissions
+            </button>
+          </div>
+        </div>
+        <div className="px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-20 sm:pb-24 min-h-full">
+          <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6 mb-6">
+            <div className="bg-white rounded-3xl border border-blue-200 shadow-lg p-5 sm:p-6">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-5">
+                <div>
+                  <h3 className="text-xl font-bold text-blue-900">Quiz Setup</h3>
+                  <p className="text-sm text-gray-600">Topic is required. Focus details and reference material help the generator stay accurate and relevant.</p>
+                </div>
+                <div className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                  Exact-count generation
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-blue-900">Topic / Subject</span>
+                  <input
+                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Example: Computer Fundamentals"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    required
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-blue-900">Number of Questions</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={count}
+                    onChange={(e) => setCount(Math.max(1, Number(e.target.value) || 1))}
+                    required
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-blue-900">Difficulty Level</span>
+                  <select
+                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={difficulty}
+                    onChange={(e) => setDifficulty(e.target.value)}
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-blue-900">Type of Quiz</span>
+                  <select
+                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={quizType}
+                    onChange={(e) => setQuizType(e.target.value)}
+                  >
+                    <option value="mixed">Mixed Type</option>
+                    <option value="mcq">Multiple Choice</option>
+                    <option value="true_false">True/False</option>
+                    <option value="identification">Identification</option>
+                  </select>
+                </label>
+
+                <label className="md:col-span-2 flex flex-col gap-2">
+                  <span className="text-sm font-semibold text-blue-900">Description / Focus</span>
+                  <textarea
+                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-2xl px-4 py-3 min-h-[110px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Optional: add the exact competencies, subtopics, or lesson focus you want the quiz to cover."
+                    value={focusDescription}
+                    onChange={(e) => setFocusDescription(e.target.value)}
+                  />
+                </label>
+              </div>
+
+              {quizType === 'mixed' && (
+                <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <h4 className="text-sm font-bold text-blue-900">Mixed Type Distribution</h4>
+                    <span className="text-sm text-blue-700">Current total: {mcqCount + trueFalseCount + identificationCount} / {count}</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <label className="flex items-center justify-between gap-3 rounded-xl bg-white border border-blue-200 px-4 py-3">
+                      <span className="text-sm font-medium text-blue-900">Multiple Choice</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={50}
+                        className="w-20 border border-blue-200 rounded-lg px-2 py-1 text-gray-900 focus:ring-2 focus:ring-blue-500"
+                        value={mcqCount}
+                        onChange={(e) => setMcqCount(Math.max(0, Number(e.target.value) || 0))}
+                      />
+                    </label>
+                    <label className="flex items-center justify-between gap-3 rounded-xl bg-white border border-blue-200 px-4 py-3">
+                      <span className="text-sm font-medium text-blue-900">True/False</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={50}
+                        className="w-20 border border-blue-200 rounded-lg px-2 py-1 text-gray-900 focus:ring-2 focus:ring-blue-500"
+                        value={trueFalseCount}
+                        onChange={(e) => setTrueFalseCount(Math.max(0, Number(e.target.value) || 0))}
+                      />
+                    </label>
+                    <label className="flex items-center justify-between gap-3 rounded-xl bg-white border border-blue-200 px-4 py-3">
+                      <span className="text-sm font-medium text-blue-900">Identification</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={50}
+                        className="w-20 border border-blue-200 rounded-lg px-2 py-1 text-gray-900 focus:ring-2 focus:ring-blue-500"
+                        value={identificationCount}
+                        onChange={(e) => setIdentificationCount(Math.max(0, Number(e.target.value) || 0))}
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-3xl border border-blue-200 shadow-lg p-5 sm:p-6">
+              <div className="mb-5">
+                <h3 className="text-xl font-bold text-blue-900">Reference Material</h3>
+                <p className="text-sm text-gray-600 mt-1">Optional, but strongly recommended when you want questions based on a module, handout, reviewer, or extracted file text.</p>
+              </div>
+
+              <div className="flex flex-col gap-3 mb-4">
+                <label className="inline-flex items-center justify-center gap-2 cursor-pointer bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 px-4 py-3 rounded-2xl shadow-sm transition group">
+                  <FaUpload className="text-blue-600 group-hover:text-blue-700 transition" />
+                  <input type="file" accept=".txt,.pdf,.jpg,.jpeg,.png,.docx,.doc,.pptx,.ppt" className="hidden" onChange={handleFileChange} />
+                  <span className="font-medium text-blue-800">Upload source file</span>
+                </label>
+
+                <label className="flex items-start gap-3">
+                  <FaPaste className="mt-3 text-blue-600 shrink-0" />
+                  <textarea
+                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-2xl p-3 w-full min-h-[210px] focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 shadow-sm"
+                    placeholder="Paste lesson notes, reviewer content, or source text here..."
+                    value={moduleText}
+                    onChange={(e) => setModuleText(e.target.value)}
+                  />
+                </label>
+              </div>
+
+              <div className="space-y-3 rounded-2xl border border-blue-200 bg-slate-50 p-4">
+                <h4 className="text-sm font-bold text-slate-900">Optional Generation Controls</h4>
+                <label className="flex items-center justify-between gap-4 rounded-xl bg-white px-4 py-3 border border-slate-200">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">Shuffle generated questions</div>
+                    <div className="text-xs text-slate-600">Mix the final order after generation.</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5 accent-blue-600"
+                    checked={shuffleQuestions}
+                    onChange={(e) => setShuffleQuestions(e.target.checked)}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-4 rounded-xl bg-white px-4 py-3 border border-slate-200">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">Include answer explanations</div>
+                    <div className="text-xs text-slate-600">Show a short explanation under each generated answer.</div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5 accent-blue-600"
+                    checked={includeExplanations}
+                    onChange={(e) => setIncludeExplanations(e.target.checked)}
+                  />
+                </label>
+              </div>
+            </div>
           </div>
 
-          {/* Mixed Type Question Count Inputs */}
-          {quizType === 'mixed' && (
-            <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 space-y-3">
-              <h3 className="text-blue-900 font-semibold text-sm mb-3">Question Type Distribution:</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="flex items-center gap-2 bg-white border border-blue-300 rounded-lg px-3 py-2">
-                  <label className="text-blue-900 text-sm font-medium">Multiple Choice:</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={50}
-                    className="w-16 border border-blue-300 rounded bg-white text-gray-900 p-1 text-sm focus:ring-2 focus:ring-blue-500"
-                    value={mcqCount}
-                    onChange={e => {
-                      const value = Math.max(0, Number(e.target.value));
-                      setMcqCount(value);
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 bg-white border border-blue-300 rounded-lg px-3 py-2">
-                  <label className="text-blue-900 text-sm font-medium">True/False:</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={50}
-                    className="w-16 border border-blue-300 rounded bg-white text-gray-900 p-1 text-sm focus:ring-2 focus:ring-blue-500"
-                    value={trueFalseCount}
-                    onChange={e => {
-                      const value = Math.max(0, Number(e.target.value));
-                      setTrueFalseCount(value);
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 bg-white border border-blue-300 rounded-lg px-3 py-2">
-                  <label className="text-blue-900 text-sm font-medium">Identification:</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={50}
-                    className="w-16 border border-blue-300 rounded bg-white text-gray-900 p-1 text-sm focus:ring-2 focus:ring-blue-500"
-                    value={identificationCount}
-                    onChange={e => {
-                      const value = Math.max(0, Number(e.target.value));
-                      setIdentificationCount(value);
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="text-blue-900 text-sm text-center mt-2">
-                Total Questions: <span className="font-bold text-blue-600">{mcqCount + trueFalseCount + identificationCount}</span>
-              </div>
-            </div>
-          )}
-        </div>
-        <button
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:from-blue-700 hover:to-indigo-700 transition mb-8 w-full text-lg disabled:opacity-60 tracking-wider focus:ring-4 focus:ring-blue-400"
-          onClick={handleGenerate}
-          disabled={loading || !moduleText}
-        >
-          {loading ? (
-            <span className="flex items-center gap-2 justify-center">
-              <svg className="w-6 h-6 animate-spin text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /></svg>
-              Generating...
-            </span>
-          ) : (
-            <span className="flex items-center gap-2 justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-              Generate Quiz
-            </span>
-          )}
-        </button>
+          <button
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:from-blue-700 hover:to-indigo-700 transition mb-4 w-full text-lg disabled:opacity-60 tracking-wider focus:ring-4 focus:ring-blue-400"
+            onClick={questions.length > 0 ? handleRegenerate : handleGenerate}
+            disabled={loading || !topic.trim()}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2 justify-center">
+                <svg className="w-6 h-6 animate-spin text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /></svg>
+                Generating Quiz...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2 justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                {questions.length > 0 ? 'Regenerate Quiz' : 'Generate Quiz'}
+              </span>
+            )}
+          </button>
 
-        {questions.length > 0 && (
-          <>
-            <div className="border-b-2 border-blue-200 mb-6"></div>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-2xl font-bold text-blue-900 flex items-center gap-2">Quiz Questions</h3>
-              <button
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition flex items-center gap-2"
-                onClick={handleExportToWord}
-                title="Export as Word Test Paper for ALS"
-              >
-                <FaFileWord className="w-4 h-4" />
-                Export Test Paper
-              </button>
+          {loading && (
+            <div className="mb-8 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-900 shadow-sm">
+              Creating exactly {count} {DIFFICULTY_LABELS[difficulty]?.toLowerCase() || difficulty} {count === 1 ? 'question' : 'questions'} for <span className="font-bold">{topic.trim()}</span>{focusDescription.trim() ? ` with focus on ${focusDescription.trim()}.` : '.'}
             </div>
-            <div className="flex flex-col gap-4 mb-8">
-              {questions.map((q, idx) => {
-                // Ensure MCQ always has a correct answer
-                let correctAnswer = q.answer;
-                if (q.type === 'mcq' && (!correctAnswer || !q.options?.includes(correctAnswer))) {
-                  // Default to first option if answer is missing or invalid
-                  correctAnswer = q.options && q.options.length > 0 ? q.options[0] : '';
-                }
-                return (
-                  <div key={idx} className="border-2 border-blue-200 rounded-xl bg-white p-4 shadow flex flex-col gap-2 relative">
-                    {editingIdx === idx ? (
-                      <>
-                        <input
-                          className="border-2 border-blue-300 bg-white text-gray-900 rounded p-2 mb-2 w-full text-lg"
-                          value={editQ.question}
-                          onChange={e => handleEditChange('question', e.target.value)}
-                        />
-                        {q.type === 'mcq' && (
-                          <>
-                            <textarea
-                              className="border-2 border-blue-300 bg-white text-gray-900 rounded p-2 mb-2 w-full"
-                              value={editQ.options?.join('\n')}
-                              onChange={e => handleEditChange('options', e.target.value.split('\n'))}
-                              placeholder="Options (one per line)"
-                            />
-                            <label className="block text-blue-900 font-semibold mb-2">Correct Answer</label>
-                            <select
-                              className="border-2 border-blue-300 bg-white text-gray-900 rounded p-2 mb-2 w-full"
-                              value={editQ.answer || (editQ.options && editQ.options[0]) || ''}
-                              onChange={e => handleEditChange('answer', e.target.value)}
-                            >
-                              {editQ.options && editQ.options.map((opt, i) => (
-                                <option key={i} value={opt}>{opt}</option>
-                              ))}
-                            </select>
-                          </>
-                        )}
-                        {q.type === 'true_false' && (
-                          <div className="flex gap-4 mb-2">
-                            <label className="flex items-center gap-2">
-                              <input type="radio" name={`editQ${idx}`} value="True" checked={editQ.answer === 'True'} onChange={()=>handleEditChange('answer', 'True')} /> True
+          )}
+
+          {questions.length > 0 && (
+            <>
+              <div className="border-b-2 border-blue-200 mb-6"></div>
+
+              <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-5">
+                <div>
+                  <h3 className="text-2xl font-bold text-blue-900">Generated Quiz</h3>
+                  <p className="text-sm text-gray-600 mt-1">Review the questions below, edit anything manually, then export or save the final version to class.</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">{questions.length} Questions</span>
+                  <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-800">{QUIZ_TYPE_LABELS[quizType] || QUIZ_TYPE_LABELS[normalizeQuestionType(quizType)]}</span>
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800">{DIFFICULTY_LABELS[difficulty] || difficulty}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 mb-6">
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold shadow transition"
+                  onClick={handleRegenerate}
+                  disabled={loading}
+                >
+                  Regenerate Quiz
+                </button>
+                <button
+                  className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition"
+                  onClick={handleExportToPdf}
+                  disabled={loading}
+                >
+                  Download PDF
+                </button>
+                <button
+                  className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition"
+                  onClick={handleExportToExcel}
+                  disabled={loading}
+                >
+                  Download Excel
+                </button>
+                <button
+                  className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition flex items-center gap-2"
+                  onClick={handleExportToWord}
+                  disabled={loading}
+                >
+                  <FaFileWord className="w-4 h-4" />
+                  Export Test Paper
+                </button>
+                <button
+                  className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition flex items-center gap-2"
+                  onClick={handleAddQuestion}
+                >
+                  <FaPlus className="w-4 h-4" />
+                  Add Manual Question
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-4 mb-8">
+                {questions.map((question, idx) => {
+                  const normalizedQuestion = normalizeEditableQuestion(question, difficulty);
+                  const resolvedType = normalizeQuestionType(normalizedQuestion.type);
+                  const correctAnswer = normalizedQuestion.answer || normalizedQuestion.correctAnswer || '';
+                  const optionList = resolvedType === 'mcq'
+                    ? normalizedQuestion.options
+                    : resolvedType === 'true_false'
+                      ? ['True', 'False']
+                      : [];
+
+                  return (
+                    <div key={idx} className="border border-blue-200 rounded-3xl bg-white p-5 shadow-md flex flex-col gap-4">
+                      {editingIdx === idx ? (
+                        <>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">Question {idx + 1}</span>
+                            <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-800">{QUIZ_TYPE_LABELS[resolvedType] || normalizedQuestion.displayType || resolvedType}</span>
+                          </div>
+
+                          <textarea
+                            className="border-2 border-blue-200 bg-white text-gray-900 rounded-2xl p-3 w-full min-h-[92px] text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={editQ.question || ''}
+                            onChange={(e) => handleEditChange('question', e.target.value)}
+                            placeholder="Question text"
+                          />
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label className="flex flex-col gap-2">
+                              <span className="text-sm font-semibold text-blue-900">Difficulty</span>
+                              <select
+                                className="border border-blue-200 rounded-xl px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500"
+                                value={editQ.difficulty || difficulty}
+                                onChange={(e) => handleEditChange('difficulty', e.target.value)}
+                              >
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                              </select>
                             </label>
-                            <label className="flex items-center gap-2">
-                              <input type="radio" name={`editQ${idx}`} value="False" checked={editQ.answer === 'False'} onChange={()=>handleEditChange('answer', 'False')} /> False
+                            <label className="flex flex-col gap-2">
+                              <span className="text-sm font-semibold text-blue-900">Explanation</span>
+                              <textarea
+                                className="border border-blue-200 rounded-xl px-3 py-2 text-gray-900 min-h-[90px] focus:ring-2 focus:ring-blue-500"
+                                value={editQ.explanation || ''}
+                                onChange={(e) => handleEditChange('explanation', e.target.value)}
+                                placeholder="Short explanation"
+                              />
                             </label>
                           </div>
-                        )}
-                        {q.type === 'identification' && (
-                          <input
-                            className="border-2 border-blue-300 bg-white text-gray-900 rounded p-2 mb-2 w-full"
-                            value={editQ.answer}
-                            onChange={e => handleEditChange('answer', e.target.value)}
-                            placeholder="Type the correct answer here"
-                          />
-                        )}
-                        {/* fallback for other types */}
-                        {q.type !== 'mcq' && q.type !== 'true_false' && q.type !== 'identification' && (
-                          <input
-                            className="border-2 border-blue-300 bg-white text-gray-900 rounded p-2 mb-2 w-full"
-                            value={editQ.answer}
-                            onChange={e => handleEditChange('answer', e.target.value)}
-                            placeholder="Answer"
-                          />
-                        )}
-                        <div className="flex gap-2 mt-2">
-                          <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow" onClick={handleSaveEdit}><FaSave /></button>
-                          <button className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded shadow" onClick={() => setEditingIdx(null)}><FaTimes /></button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="font-semibold text-lg text-gray-900"> {q.question} </div>
-                        <div className="text-sm italic text-blue-700 font-bold tracking-wide mb-1">Type: {q.displayType || q.type.toUpperCase()}</div>
-                        {q.type === 'mcq' && (
-                          <>
-                            <ul className="list-disc ml-6 text-gray-700 text-base font-semibold">
-                              {q.options.map((opt, i) => <li key={i} className="mb-1">{opt}</li>)}
-                            </ul>
-                            <div className="flex items-center gap-2 bg-blue-50 border-2 border-blue-300 rounded-lg px-4 py-2 shadow-md w-fit mt-2">
-                              <span className="font-semibold text-blue-900 mr-2">Correct Answer:</span>
-                              <span className="bg-blue-600 text-white px-3 py-1 rounded-lg font-bold tracking-wide shadow" style={{letterSpacing:'1px'}}>{correctAnswer || ''}</span>
+
+                          {resolvedType === 'mcq' && (
+                            <>
+                              <textarea
+                                className="border-2 border-blue-200 bg-white text-gray-900 rounded-2xl p-3 w-full min-h-[120px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                value={Array.isArray(editQ.options) ? editQ.options.join('\n') : ''}
+                                onChange={(e) => handleEditChange('options', e.target.value.split('\n'))}
+                                placeholder="Choices, one per line"
+                              />
+                              <label className="flex flex-col gap-2">
+                                <span className="text-sm font-semibold text-blue-900">Correct Answer</span>
+                                <select
+                                  className="border border-blue-200 rounded-xl px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500"
+                                  value={editQ.answer || (editQ.options && editQ.options[0]) || ''}
+                                  onChange={(e) => handleEditChange('answer', e.target.value)}
+                                >
+                                  {(editQ.options || []).filter(Boolean).map((option, optionIndex) => (
+                                    <option key={optionIndex} value={option}>{option}</option>
+                                  ))}
+                                </select>
+                              </label>
+                            </>
+                          )}
+
+                          {resolvedType === 'true_false' && (
+                            <div className="flex gap-4">
+                              <label className="flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-3">
+                                <input type="radio" name={`editQ${idx}`} value="True" checked={editQ.answer === 'True'} onChange={() => handleEditChange('answer', 'True')} />
+                                True
+                              </label>
+                              <label className="flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-3">
+                                <input type="radio" name={`editQ${idx}`} value="False" checked={editQ.answer === 'False'} onChange={() => handleEditChange('answer', 'False')} />
+                                False
+                              </label>
                             </div>
-                          </>
-                        )}
-                        {q.type === 'true_false' && (
-                          <div className="flex gap-4 mb-2">
-                            <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${q.answer === 'True' ? 'bg-green-600 text-white border-green-400' : 'bg-blue-50 text-gray-700 border-blue-300'}` }>
-                              <input type="radio" name={`viewQ${idx}`} value="True" checked={q.answer === 'True'} readOnly className="accent-green-400" />
-                              <span className="font-bold">True</span>
-                            </label>
-                            <label className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md cursor-pointer transition-all border-2 ${q.answer === 'False' ? 'bg-red-600 text-white border-red-400' : 'bg-blue-50 text-gray-700 border-blue-300'}` }>
-                              <input type="radio" name={`viewQ${idx}`} value="False" checked={q.answer === 'False'} readOnly className="accent-red-400" />
-                              <span className="font-bold">False</span>
-                            </label>
+                          )}
+
+                          {resolvedType === 'identification' && (
+                            <input
+                              className="border-2 border-blue-200 bg-white text-gray-900 rounded-2xl p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              value={editQ.answer || ''}
+                              onChange={(e) => handleEditChange('answer', e.target.value)}
+                              placeholder="Correct answer"
+                            />
+                          )}
+
+                          <div className="flex gap-2 mt-2">
+                            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl shadow" onClick={handleSaveEdit}><FaSave /></button>
+                            <button className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-xl shadow" onClick={() => { setEditingIdx(null); setEditQ({}); }}><FaTimes /></button>
                           </div>
-                        )}
-                        {q.type === 'identification' && (
-                          <div className="flex items-center gap-2 bg-blue-50 border-2 border-blue-300 rounded-lg px-4 py-2 shadow-md w-fit">
-                            <span className="font-semibold text-blue-900 mr-2">Correct Answer:</span>
-                            <span className="bg-blue-600 text-white px-3 py-1 rounded-lg font-bold tracking-wide shadow" style={{letterSpacing:'1px'}}>{q.answer || ''}</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">Question {idx + 1}</span>
+                              <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-800">{QUIZ_TYPE_LABELS[resolvedType] || normalizedQuestion.displayType || resolvedType}</span>
+                              <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800">{DIFFICULTY_LABELS[normalizedQuestion.difficulty] || normalizedQuestion.difficulty || difficulty}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl shadow" onClick={() => handleEdit(idx)}><FaEdit /></button>
+                              <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl shadow" onClick={() => handleDelete(idx)}><FaTrash /></button>
+                            </div>
                           </div>
-                        )}
-                        {q.type !== 'mcq' && q.type !== 'true_false' && q.type !== 'identification' && (
-                          <div className="text-sm">Answer: <span className="font-bold text-blue-700">{q.answer?.toString()}</span></div>
-                        )}
-                        <div className="flex gap-2 mt-2">
-                          <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow" onClick={() => handleEdit(idx)}><FaEdit /></button>
-                          <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow" onClick={() => handleDelete(idx)}><FaTrash /></button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-        {/* Action Buttons - Save Quiz and Export to Word */}
+
+                          <div className="text-lg font-semibold text-slate-900">{normalizedQuestion.question}</div>
+
+                          {optionList.length > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {optionList.map((option, optionIndex) => (
+                                <div key={optionIndex} className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-slate-800">
+                                  <span className="mr-2 font-bold text-blue-700">{String.fromCharCode(65 + optionIndex)}.</span>
+                                  {option}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="rounded-2xl border border-blue-200 bg-white px-4 py-3">
+                            <span className="text-sm font-semibold text-blue-900">Correct Answer:</span>
+                            <div className="mt-1 text-base font-bold text-slate-900">{correctAnswer}</div>
+                          </div>
+
+                          {includeExplanations && normalizedQuestion.explanation && (
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                              <span className="font-semibold text-slate-900">Explanation:</span> {normalizedQuestion.explanation}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         {questions.length > 0 && (
           <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
-            {/* Export to Word Button */}
             <button
               className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white px-8 py-3 rounded-2xl font-bold shadow-2xl hover:from-blue-800 hover:to-indigo-900 transition text-lg border-4 border-blue-400 hover:border-indigo-500 focus:ring-4 focus:ring-blue-300 focus:outline-none group overflow-hidden"
               onClick={handleExportToWord}
@@ -1349,10 +1729,8 @@ export default function CreateQuizz() {
                 Export Test Paper
               </span>
             </button>
-            
-            {/* Save Quiz Button */}
             <button
-              className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 text-white px-10 py-4 rounded-3xl font-extrabold shadow-2xl hover:from-blue-700 hover:to-indigo-800 transition text-xl animate-slideInRight animate-bounceOnce border-4 border-blue-400 hover:border-indigo-500 focus:ring-4 focus:ring-blue-300 focus:outline-none group overflow-hidden"
+              className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 text-white px-10 py-4 rounded-3xl font-extrabold shadow-2xl hover:from-blue-700 hover:to-indigo-800 transition text-xl border-4 border-blue-400 hover:border-indigo-500 focus:ring-4 focus:ring-blue-300 focus:outline-none group overflow-hidden"
               onClick={() => setShowSaveModal(true)}
               disabled={loading}
             >
@@ -1365,11 +1743,18 @@ export default function CreateQuizz() {
           </div>
         )}
         {showSaveModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-            <div className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl p-8 shadow-2xl w-full max-w-md border-4 border-indigo-500 animate-fadeIn pointer-events-auto relative">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setShowSaveModal(false)}
+          >
+            <div
+              className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl p-8 shadow-2xl w-full max-w-md border-4 border-indigo-500 animate-fadeIn relative"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 className="absolute top-4 right-4 text-indigo-200 hover:text-white text-2xl font-bold focus:outline-none"
                 onClick={() => setShowSaveModal(false)}
+                aria-label="Close save quiz modal"
               >
                 ×
               </button>
@@ -1408,8 +1793,8 @@ export default function CreateQuizz() {
                 </button>
                 <button
                   className="bg-gradient-to-r from-green-700 to-green-800 text-white px-6 py-2 rounded-xl font-bold shadow hover:from-green-800 hover:to-green-900 transition disabled:opacity-60"
-                  onClick={async () => { await handleSaveQuiz(); setShowSaveModal(false); }}
-                  disabled={loading || !title || questions.length === 0}
+                  onClick={handleSaveQuiz}
+                  disabled={loading || !title.trim() || questions.length === 0}
                 >
                   {loading ? 'Saving...' : 'Save'}
                 </button>
@@ -1418,14 +1803,13 @@ export default function CreateQuizz() {
           </div>
         )}
         {/* Created Quizzes and Student Submissions Section */}
-        {questions.length === 0 && (
           <div className="mt-6 sm:mt-8 mb-12 sm:mb-16">{/* Enhanced responsive margins */}
             <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-blue-900">Your Quizzes</h2>
             {subLoading ? (
               <div className="text-blue-700 p-4 bg-blue-100 rounded-lg animate-pulse">Loading quizzes and submissions...</div>
             ) : createdQuizzes.length === 0 ? (
               <div className="bg-white rounded-lg p-6 sm:p-8 shadow-lg border border-blue-200">
-                <p className="text-gray-700 text-center">No quizzes created yet. Generate a quiz using the module text.</p>
+                <p className="text-gray-700 text-center">No quizzes created yet. Generate a quiz from the topic and save it to class when you are ready.</p>
               </div>
             ) : (
               <div className="space-y-4 sm:space-y-6">{/* Improved spacing using space-y */}
@@ -1472,15 +1856,21 @@ export default function CreateQuizz() {
             )}
             {subError && <div className="text-red-400 mt-2">{subError}</div>}
           </div>
-        )}
 
         {/* Submissions Modal - all quizzes */}
         {showSubModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-4xl border-4 border-blue-400 animate-fadeIn pointer-events-auto relative">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            onClick={() => setShowSubModal(false)}
+          >
+            <div
+              className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-4xl border-4 border-blue-400 animate-fadeIn relative"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold focus:outline-none"
                 onClick={() => setShowSubModal(false)}
+                aria-label="Close submissions modal"
               >
                 ×
               </button>
@@ -1526,11 +1916,18 @@ export default function CreateQuizz() {
 
         {/* Analytics Modal */}
         {showAnalyticsModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-6xl border-4 border-blue-400 animate-fadeIn pointer-events-auto relative max-h-[90vh] overflow-y-auto">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            onClick={() => setShowAnalyticsModal(false)}
+          >
+            <div
+              className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-6xl border-4 border-blue-400 animate-fadeIn relative max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold focus:outline-none"
                 onClick={() => setShowAnalyticsModal(false)}
+                aria-label="Close analytics modal"
               >
                 ×
               </button>
@@ -1748,103 +2145,7 @@ export default function CreateQuizz() {
         )}
       </div>
     </div>
-    {/* Save Quiz Button outside main box, only visible if questions.length > 0, with bounce animation */}
-    {questions.length > 0 && (
-      <div ref={bounceRef} className="fixed bottom-8 right-8 z-50">
-        <button
-          className="relative bg-gradient-to-br from-green-600 via-green-700 to-blue-800 text-white px-10 py-4 rounded-3xl font-extrabold shadow-2xl hover:from-green-800 hover:to-blue-900 transition text-xl animate-slideInRight animate-bounceOnce border-4 border-green-400 hover:border-blue-500 focus:ring-4 focus:ring-green-300 focus:outline-none group overflow-hidden"
-          onClick={() => setShowSaveModal(true)}
-          disabled={loading}
-        >
-          <span className="absolute left-0 top-0 w-full h-full bg-green-400 opacity-0 group-hover:opacity-10 transition-all rounded-3xl"></span>
-          <span className="flex items-center gap-2">
-            <svg className="w-7 h-7 text-white drop-shadow-lg" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-            Save Quiz to Class
-          </span>
-        </button>
-      </div>
-    )}
-    {showSaveModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-        <div className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-md border-4 border-blue-400 animate-fadeIn pointer-events-auto relative">
-          <button
-            className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-2xl font-bold focus:outline-none"
-            onClick={() => setShowSaveModal(false)}
-          >
-            ×
-          </button>
-          <h2 className="text-2xl font-extrabold text-blue-900 mb-4">Save Quiz</h2>
-          <input
-            className="border-2 border-blue-300 bg-white text-gray-900 rounded-lg p-3 w-full mb-4 text-lg focus:ring-2 focus:ring-blue-500"
-            placeholder="Quiz Title"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-          />
-          <label className="block text-blue-900 font-semibold mb-2">Due Date</label>
-          <input
-            type="datetime-local"
-            className="border-2 border-blue-300 bg-white text-gray-900 rounded-lg p-2 w-full mb-4 focus:ring-2 focus:ring-blue-500"
-            value={dueDate}
-            onChange={e => setDueDate(e.target.value)}
-          />
-          <label className="block text-blue-900 font-semibold mb-2">Time Limit per Question (seconds)</label>
-          <input
-            type="number"
-            min={5}
-            max={600}
-            className="border-2 border-blue-300 bg-white text-gray-900 rounded-lg p-2 w-full mb-4 focus:ring-2 focus:ring-blue-500"
-            value={questionTime}
-            onChange={e => setQuestionTime(Number(e.target.value))}
-          />
-          <div className="flex gap-4 justify-end">
-            <button
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded shadow"
-              onClick={() => setShowSaveModal(false)}
-            >
-              Cancel
-            </button>
-            <button
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-xl font-bold shadow hover:from-blue-700 hover:to-indigo-700 transition disabled:opacity-60"
-              onClick={async () => { await handleSaveQuiz(); setShowSaveModal(false); }}
-              disabled={loading || !title || questions.length === 0}
-            >
-              {loading ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-  {/* Top Save Quiz button removed; only floating Save Quiz button remains */}
-
-  {/* Created Quizzes Modal removed */}
-    {/* Quiz Submissions Modal - only visible when showSubmissions is true */}
-
   </div>
 );
 }
 
-/* Add animation styles to your Admin/src/index.css or a global CSS file:
-@keyframes slideInRight {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-.animate-slideInRight {
-  animation: slideInRight 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease;
-}
-@keyframes bounceOnce {
-  0% { transform: translateY(100px); opacity: 0; }
-  60% { transform: translateY(-20px); opacity: 1; }
-  80% { transform: translateY(10px); }
-  100% { transform: translateY(0); }
-}
-.animate-bounceOnce {
-  animation: bounceOnce 0.7s cubic-bezier(0.4,0,0.2,1);
-}
-*/

@@ -136,6 +136,7 @@ app.use('/api/modules', moduleRoutes);
 // mount fileRoutes if it exposes upload endpoints
 if (fileRoutes) {
   app.use('/api/file', fileRoutes);
+  app.use('/api/files', fileRoutes);
 }
 
 // submission and visits
