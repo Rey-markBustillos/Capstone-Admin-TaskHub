@@ -173,8 +173,36 @@ const createQuizGenerativeModel = (genAI, modelName) =>
     systemInstruction: QUIZ_SYSTEM_INSTRUCTION,
   });
 
+const isGeminiProviderError = (error) => {
+  const message = cleanText(error?.message || '');
+  if (!message) return false;
+
+  return /(403|401|429)\b/i.test(message) ||
+    /permission denied/i.test(message) ||
+    /consumer[_ ]suspended/i.test(message) ||
+    /api key/i.test(message) ||
+    /quota/i.test(message) ||
+    /rate limit/i.test(message) ||
+    /resource exhausted/i.test(message);
+};
+
+const buildGeminiFailureMessage = (error) => {
+  const message = cleanText(error?.message || '');
+
+  if (/consumer[_ ]suspended/i.test(message) || /permission denied/i.test(message) || /api key/i.test(message)) {
+    return 'AI quiz generation is unavailable because the configured Gemini API key was rejected by Google. Update GEMINI_API_KEY with an active key, then restart the backend.';
+  }
+
+  if (/quota|resource exhausted|rate limit|429/i.test(message)) {
+    return 'AI quiz generation is temporarily unavailable because the Gemini quota for this key has been reached. Try again later or use another active API key.';
+  }
+
+  return 'AI quiz generation is currently unavailable. Please verify the Gemini API key and model access, then try again.';
+};
+
 const resolveWorkingQuizModel = async (genAI) => {
   const modelCandidates = buildQuizModelCandidates();
+  let lastError = null;
 
   for (const modelName of modelCandidates) {
     try {
@@ -189,11 +217,15 @@ const resolveWorkingQuizModel = async (genAI) => {
         return { model, workingModelName: modelName };
       }
     } catch (error) {
+      lastError = error;
       console.log(`[WARN] Model ${modelName} failed: ${error.message}`);
+      if (isGeminiProviderError(error)) {
+        return { model: null, workingModelName: null, lastError: error };
+      }
     }
   }
 
-  return { model: null, workingModelName: null };
+  return { model: null, workingModelName: null, lastError };
 };
 
 const extractFocusTopic = (moduleText = '') => {
@@ -1452,7 +1484,9 @@ exports.generateQuiz = async (req, res) => {
     });
     
     if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not configured');
+      return res.status(503).json({
+        message: 'AI quiz generation is unavailable because GEMINI_API_KEY is not configured on the backend.',
+      });
     }
 
     console.log(`[INFO] GEMINI_API_KEY exists: ${!!process.env.GEMINI_API_KEY}`);
@@ -1462,19 +1496,18 @@ exports.generateQuiz = async (req, res) => {
 
     // First, let's see what models are available
     await listAvailableModels(genAI);
-    const { model, workingModelName } = await resolveWorkingQuizModel(genAI);
+    const { model, workingModelName, lastError } = await resolveWorkingQuizModel(genAI);
 
     if (!model || !workingModelName) {
-      // If no model works, create a fallback response
-      console.log('[INFO] No Gemini models available, using fallback quiz generation');
-      const fallbackQuestions = generateFallbackQuiz(
-        requestedCount,
-        context,
-        normalizedQuizType,
-        difficultyPlan,
-        existingQuestionDetails
-      );
-      return res.json(applyFinalOrdering(fallbackQuestions).slice(0, requestedCount));
+      if (isGeminiProviderError(lastError)) {
+        return res.status(503).json({
+          message: buildGeminiFailureMessage(lastError),
+        });
+      }
+
+      return res.status(503).json({
+        message: 'AI quiz generation is unavailable because no supported Gemini model could be initialized for this backend.',
+      });
     }
 
     console.log(`[INFO] Using working model: ${workingModelName}`);
@@ -1708,6 +1741,12 @@ exports.generateQuiz = async (req, res) => {
 
     } catch (error) {
       console.error(`[ERROR] Gemini SDK error:`, error);
+
+      if (isGeminiProviderError(error)) {
+        return res.status(503).json({
+          message: buildGeminiFailureMessage(error),
+        });
+      }
       
       // Fallback to mock questions
       console.log('[INFO] Falling back to mock quiz generation');
@@ -1724,6 +1763,12 @@ exports.generateQuiz = async (req, res) => {
 
   } catch (error) {
     console.error('[ERROR] Quiz generation failed:', error);
+
+    if (isGeminiProviderError(error)) {
+      return res.status(503).json({
+        message: buildGeminiFailureMessage(error),
+      });
+    }
     
     // Final fallback
     const requestedCount = Math.min(200, Math.max(1, Number(req.body.count) || 1));
