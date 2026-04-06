@@ -5,6 +5,15 @@ import { useParams } from 'react-router-dom';
 import { FaPaperclip, FaListOl, FaPlusCircle, FaBook, FaTimes, FaTasks, FaEdit, FaTrashAlt, FaLock, FaUnlock } from 'react-icons/fa';
 import { showConfirm } from '../utils/swal';
 
+const getActivitySortTime = (activity) => {
+  const candidate = activity?.date || activity?.createdAt || activity?.updatedAt;
+  const parsed = candidate ? new Date(candidate).getTime() : 0;
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
+const sortActivitiesNewestFirst = (activities = []) =>
+  [...activities].sort((a, b) => getActivitySortTime(b) - getActivitySortTime(a));
+
 const CreateActivity = () => {
   const { classId } = useParams();
   const [activityData, setActivityData] = useState({ title: '', description: '', date: '', score: '', attachment: null });
@@ -37,7 +46,7 @@ const CreateActivity = () => {
         axios.get(`${API_BASE_URL}/activities?classId=${classId}`)
       ]);
       setClassName(classRes.data.className);
-      setActivitiesList(activitiesRes.data || []);
+      setActivitiesList(sortActivitiesNewestFirst(activitiesRes.data || []));
     } catch (err) {
       if (err.response?.status === 401) {
         setActivitiesError('Your session has expired. Please login again.');

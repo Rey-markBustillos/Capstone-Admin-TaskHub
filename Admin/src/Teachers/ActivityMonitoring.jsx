@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import { showAlert } from '../utils/swal';
 import {
   FaFile,
@@ -28,6 +28,192 @@ import {
 // Ensure API_BASE_URL ends with a slash
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/$/, '') + '/';
 
+const getActivitySortTime = (activity) => {
+  const candidate = activity?.date || activity?.createdAt || activity?.updatedAt;
+  const parsed = candidate ? new Date(candidate).getTime() : 0;
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
+const sortActivitiesNewestFirst = (activities = []) =>
+  [...activities].sort((a, b) => getActivitySortTime(b) - getActivitySortTime(a));
+
+const getSubmissionSortTime = (submission) => {
+  const candidate = submission?.submissionDate || submission?.submittedAt || submission?.createdAt || submission?.updatedAt;
+  const parsed = candidate ? new Date(candidate).getTime() : 0;
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
+const sortSubmissionsNewestFirst = (submissions = []) =>
+  [...submissions].sort((a, b) => getSubmissionSortTime(b) - getSubmissionSortTime(a));
+
+const EXCEL_THEME = {
+  primary: "1E3A8A", // Dark Blue
+  secondary: "3B82F6", // Soft Blue
+  title: "0F172A", // Slate 900
+  subtitle: "334155", // Slate 700
+  background: "F8FAFC",
+  subHeaderBg: "E0F2FE",
+  subHeaderText: "1F2937",
+  headerBg: "0F766E",
+  headerText: "111827", // Gray 900
+  headerLabel: "FFFFFF",
+  sectionBg: "DBEAFE", // Light Blue
+  labelBg: "F1F5F9", // Very light gray
+  rowAlt: "F1F5F9", // Very light gray
+  rowBase: "FFFFFF",
+  border: "E5E7EB", // Light gray
+  scoreGood: "DCFCE7", // Green 100
+  scoreWarn: "FEF3C7", // Amber 100
+  scoreLow: "FEE2E2", // Red 100
+  blank: "E2E8F0", // Slate 200
+  statusGood: "16A34A", // Soft Green text
+  statusWarn: "92400E", // Amber text
+  statusLow: "991B1B", // Soft red text
+  statusNone: "64748B", // Gray text
+  infoSoft: "F8FAFC",
+  chartBlue: "DBEAFE", // Light blue
+  chartTeal: "E0F2FE", // very soft blue
+  white: "FFFFFF",
+  lightText: "F9FAFB",
+};
+
+const buildExcelBorder = (weight = "thin", color = EXCEL_THEME.border) => ({
+  top: { style: weight, color: { rgb: color } },
+  bottom: { style: weight, color: { rgb: color } },
+  left: { style: weight, color: { rgb: color } },
+  right: { style: weight, color: { rgb: color } },
+});
+
+const buildExcelStyle = ({
+  font = {},
+  fillColor,
+  align = "left",
+  vertical = "center",
+  bold = false,
+  size = 11,
+  color = EXCEL_THEME.headerText,
+  wrapText = false,
+  border,
+  numFmt,
+} = {}) => {
+  const style = {
+    font: { name: "Calibri", sz: size, bold, color: { rgb: color }, ...font },
+    alignment: { horizontal: align, vertical, wrapText },
+  };
+
+  if (border) {
+    style.border = border;
+  }
+
+  if (fillColor) {
+    style.fill = {
+      patternType: "solid",
+      fgColor: { rgb: fillColor },
+    };
+  }
+
+  if (numFmt) {
+    style.numFmt = numFmt;
+  }
+
+  return style;
+};
+
+const setWorksheetCellStyle = (worksheet, rowIndex, columnIndex, style) => {
+  const address = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
+  if (!worksheet[address]) {
+    // Create cell if it doesn't exist
+    XLSX.utils.sheet_add_aoa(worksheet, [[null]], { origin: address });
+  }
+  worksheet[address].s = style;
+  if (style?.numFmt) {
+    worksheet[address].z = style.numFmt;
+  }
+};
+
+const parseScoreValue = (value) => {
+  if (value === "" || value === null || value === undefined) return null;
+  const numeric = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+};
+
+const formatStatusLabel = (average, completionRate) => {
+  if (completionRate === 0) return "No Submission";
+  if (average >= 85) return "On Track";
+  if (average >= 70) return "Needs Review";
+  return "At Risk";
+};
+
+const formatStatusDisplay = (status) => {
+  if (status === "On Track") return `[OK] ${status}`;
+  if (status === "Needs Review") return `[WARN] ${status}`;
+  if (status === "At Risk") return `[RISK] ${status}`;
+  if (status === "No Submission") return `[NONE] ${status}`;
+  return status;
+};
+
+const getStatusColor = (status) => {
+  if (String(status).includes("On Track")) return EXCEL_THEME.statusGood;
+  if (String(status).includes("Needs Review")) return EXCEL_THEME.statusWarn;
+  if (String(status).includes("No Submission")) return EXCEL_THEME.statusNone;
+  return EXCEL_THEME.statusLow;
+};
+
+const applyOuterBorderToRange = (worksheet, startRow, endRow, startColumn, endColumn, color = EXCEL_THEME.border) => {
+  for (let row = startRow; row <= endRow; row++) {
+    for (let column = startColumn; column <= endColumn; column++) {
+      const address = XLSX.utils.encode_cell({ r: row, c: column });
+      const cell = worksheet[address];
+      if (!cell) continue;
+
+      const border = { ...(cell.s?.border || {}) };
+
+      if (row === startRow) border.top = { style: "medium", color: { rgb: color } };
+      if (row === endRow) border.bottom = { style: "medium", color: { rgb: color } };
+      if (column === startColumn) border.left = { style: "medium", color: { rgb: color } };
+      if (column === endColumn) border.right = { style: "medium", color: { rgb: color } };
+
+      cell.s = {
+        ...(cell.s || {}),
+        border,
+      };
+    }
+  }
+};
+
+const buildWorksheetColumns = (rows = [], columns = [], options = {}) =>
+  columns.map((column, columnIndex) => {
+    const columnLabel = String(column || "");
+    const maxLength = rows.reduce((longest, row) => {
+      const cellValue = row?.[columnIndex];
+      return Math.max(longest, String(cellValue ?? "").length);
+    }, columnLabel.length);
+
+    const overrideWidth = options.overrides?.[columnLabel];
+    if (overrideWidth) {
+      return { wch: overrideWidth };
+    }
+
+    const basePadding = options.padding ?? 4;
+    const minWidth = options.minWidth ?? 14;
+    const maxWidth = options.maxWidth ?? 32;
+
+    if (/email/i.test(columnLabel)) return { wch: 30 };
+    if (/name/i.test(columnLabel)) return { wch: 22 };
+    if (/status/i.test(columnLabel)) return { wch: 24 };
+    if (/completion/i.test(columnLabel)) return { wch: 18 };
+    if (/average|highest|lowest/i.test(columnLabel)) return { wch: 14 };
+    if (/submitted|missing|count|students|activities/i.test(columnLabel)) return { wch: 14 };
+    if (columnIndex >= 2 && columnIndex <= columns.length - 5) {
+      return { wch: Math.min(Math.max(maxLength + 3, 16), 20) };
+    }
+
+    return { wch: Math.min(Math.max(maxLength + basePadding, minWidth), maxWidth) };
+  });
+
+const buildReportFilename = (className = "Class") =>
+  `Activity_Report_${String(className).trim().replace(/\s+/g, "_") || "Class"}.xlsx`;
+
 export default function ActivityMonitoring() {
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
@@ -37,6 +223,7 @@ export default function ActivityMonitoring() {
   const [error, setError] = useState(null);
   const [classSearchTerm, setClassSearchTerm] = useState("");
   const [submissionSearchTerm, setSubmissionSearchTerm] = useState("");
+  const reportFileHandlesRef = useRef({});
 
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
@@ -71,7 +258,7 @@ export default function ActivityMonitoring() {
         const activitiesRes = await axios.get(`${API_BASE_URL}activities`, {
           params: { classId: selectedClass._id },
         });
-        const activitiesData = activitiesRes.data || [];
+        const activitiesData = sortActivitiesNewestFirst(activitiesRes.data || []);
 
         const activitiesWithSubmissions = await Promise.all(
           activitiesData.map(async (activity) => {
@@ -82,13 +269,7 @@ export default function ActivityMonitoring() {
                 { params: { activityId: activity._id } }
               );
               console.log('✅ [FRONTEND] Got', submissionsRes.data.submissions?.length || 0, 'submissions for activity:', activity.title);
-              // Ensure submissions are ordered newest (present) to oldest (past)
-              const subs = submissionsRes.data.submissions || [];
-              subs.sort((a, b) => {
-                const da = a.submissionDate ? new Date(a.submissionDate) : new Date(0);
-                const db = b.submissionDate ? new Date(b.submissionDate) : new Date(0);
-                return db - da; // newest first
-              });
+              const subs = sortSubmissionsNewestFirst(submissionsRes.data.submissions || []);
               return { ...activity, submissions: subs };
             } catch {
               return { ...activity, submissions: [] };
@@ -96,7 +277,7 @@ export default function ActivityMonitoring() {
           })
         );
 
-        setActivities(activitiesWithSubmissions);
+        setActivities(sortActivitiesNewestFirst(activitiesWithSubmissions));
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load activities");
       } finally {
@@ -210,6 +391,74 @@ export default function ActivityMonitoring() {
     setSubmissionSearchTerm("");
   };
 
+  const saveWorkbookToFile = async (workbook, fileName, classId) => {
+    const workbookBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const canUseFilePicker =
+      typeof window !== "undefined" && typeof window.showSaveFilePicker === "function";
+
+    if (!canUseFilePicker) {
+      XLSX.writeFile(workbook, fileName);
+      return "downloaded";
+    }
+
+    const handleKey = classId || fileName;
+    let fileHandle = reportFileHandlesRef.current[handleKey];
+
+    const ensureWritableHandle = async () => {
+      if (fileHandle) {
+        const currentPermission = await fileHandle.queryPermission?.({ mode: "readwrite" });
+        if (currentPermission === "granted") return fileHandle;
+
+        const nextPermission = await fileHandle.requestPermission?.({ mode: "readwrite" });
+        if (nextPermission === "granted") return fileHandle;
+      }
+
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: fileName,
+        types: [
+          {
+            description: "Excel Workbook",
+            accept: {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+            },
+          },
+        ],
+      });
+
+      reportFileHandlesRef.current[handleKey] = fileHandle;
+      return fileHandle;
+    };
+
+    try {
+      const writableHandle = await ensureWritableHandle();
+      const writableStream = await writableHandle.createWritable();
+      await writableStream.write(workbookBuffer);
+      await writableStream.close();
+      return "updated";
+    } catch (saveError) {
+      if (saveError?.name === "AbortError") {
+        return "cancelled";
+      }
+
+      delete reportFileHandlesRef.current[handleKey];
+      fileHandle = null;
+
+      if (
+        saveError?.name === "NotAllowedError" ||
+        saveError?.name === "NotFoundError" ||
+        saveError?.name === "SecurityError"
+      ) {
+        const writableHandle = await ensureWritableHandle();
+        const writableStream = await writableHandle.createWritable();
+        await writableStream.write(workbookBuffer);
+        await writableStream.close();
+        return "updated";
+      }
+
+      throw saveError;
+    }
+  };
+
   const handleExportExcel = async () => {
     if (!selectedClass) return;
     try {
@@ -217,68 +466,614 @@ export default function ActivityMonitoring() {
         params: { classId: selectedClass._id }
       });
       const { exportData, activityTitles } = res.data;
+      const normalizedRows = exportData.map((rowObj) => {
+        const scores = activityTitles.map((title) => parseScoreValue(rowObj[title]));
+        const submittedScores = scores.filter((score) => score !== null);
+        const submittedCount = submittedScores.length;
+        const averageScore = submittedCount
+          ? submittedScores.reduce((total, score) => total + score, 0) / submittedCount
+          : 0;
+        const completionRate = activityTitles.length ? submittedCount / activityTitles.length : 0;
+        const status = formatStatusLabel(averageScore, completionRate);
 
-      // Build a nicely formatted sheet: title row, header row, and data rows
-      const columns = ["Name", "Email", ...activityTitles];
-
-      // Build rows as array-of-arrays so we can control header and title placement
-      const rows = [];
-      // Title row
-      rows.push([`Scores - ${selectedClass.className}`]);
-      // Header row
-      rows.push(columns);
-      // Data rows
-      for (const rowObj of exportData) {
-        const row = columns.map((col) => {
-          // Prefer actual values; fall back to empty string
-          let val = rowObj[col];
-          if (val === undefined || val === null) return "";
-          // Convert numeric-like strings to numbers (for scores)
-          if (typeof val === "string" && /^-?\d+(\.\d+)?$/.test(val)) {
-            return Number(val);
-          }
-          // Keep Date objects or ISO date strings as-is (SheetJS will try to interpret)
-          return val;
-        });
-        rows.push(row);
-      }
-
-      const worksheet = XLSX.utils.aoa_to_sheet(rows);
-
-      // Merge title across all columns
-      worksheet["!merges"] = worksheet["!merges"] || [];
-      worksheet["!merges"].push({ s: { r: 0, c: 0 }, e: { r: 0, c: columns.length - 1 } });
-
-      // Set column widths
-      worksheet["!cols"] = columns.map((col) => ({ wch: Math.min(Math.max(col.length + 8, 14), 40) }));
-
-      // Apply basic styling to header row (row index 1)
-      for (let c = 0; c < columns.length; c++) {
-        const addr = XLSX.utils.encode_cell({ r: 1, c });
-        if (!worksheet[addr]) worksheet[addr] = { t: 's', v: columns[c] };
-        // Cell style: bold + center alignment (note: some style features may be limited by SheetJS edition)
-        worksheet[addr].s = Object.assign({}, worksheet[addr].s, {
-          font: { bold: true, sz: 11 },
-          alignment: { horizontal: 'center', vertical: 'center' }
-        });
-      }
-
-      // Title styling
-      const titleAddr = XLSX.utils.encode_cell({ r: 0, c: 0 });
-      if (!worksheet[titleAddr]) worksheet[titleAddr] = { t: 's', v: `Scores - ${selectedClass.className}` };
-      worksheet[titleAddr].s = Object.assign({}, worksheet[titleAddr].s, {
-        font: { bold: true, sz: 14 },
-        alignment: { horizontal: 'left', vertical: 'center' }
+        return {
+          name: rowObj.Name || "",
+          email: rowObj.Email || "",
+          scores,
+          submittedCount,
+          averageScore,
+          completionRate,
+          status,
+          statusDisplay: formatStatusDisplay(status),
+        };
       });
 
-      // Freeze header (leave title visible, freeze header/data at row 2)
-      const workbook = XLSX.utils.book_new();
-      workbook.Workbook = { Views: [{ xSplit: 0, ySplit: 2, topLeftCell: 'A3', activeTab: 0 }] };
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Scores");
+      const overallSubmittedScores = normalizedRows.flatMap((row) => row.scores.filter((score) => score !== null));
+      const overallAverage = overallSubmittedScores.length
+        ? overallSubmittedScores.reduce((total, score) => total + score, 0) / overallSubmittedScores.length
+        : 0;
+      const overallCompletion = normalizedRows.length && activityTitles.length
+        ? overallSubmittedScores.length / (normalizedRows.length * activityTitles.length)
+        : 0;
+      const topStudent = [...normalizedRows]
+        .filter((row) => row.submittedCount > 0)
+        .sort((a, b) => b.averageScore - a.averageScore)[0];
+      const onTrackCount = normalizedRows.filter((row) => row.status === "On Track").length;
+      const needsReviewCount = normalizedRows.filter((row) => row.status === "Needs Review").length;
+      const atRiskCount = normalizedRows.filter((row) => row.status === "At Risk").length;
+      const noSubmissionCount = normalizedRows.filter((row) => row.status === "No Submission").length;
 
-      // Write file
-      XLSX.writeFile(workbook, `Scores_${selectedClass.className}.xlsx`);
+      const summaryRows = activityTitles.map((title, index) => {
+        const scores = normalizedRows
+          .map((row) => row.scores[index])
+          .filter((score) => score !== null);
+        const submitted = scores.length;
+        const missing = Math.max(normalizedRows.length - submitted, 0);
+        const average = submitted ? scores.reduce((total, score) => total + score, 0) / submitted : 0;
+        const highest = submitted ? Math.max(...scores) : null;
+        const lowest = submitted ? Math.min(...scores) : null;
+        const completionRate = normalizedRows.length ? submitted / normalizedRows.length : 0;
+        const status = formatStatusLabel(average, completionRate);
+
+        return {
+          activity: title,
+          average,
+          highest,
+          lowest,
+          submitted,
+          missing,
+          completionRate,
+          status,
+          statusDisplay: formatStatusDisplay(status),
+        };
+      });
+
+      const columns = [
+        "Name",
+        "Email",
+        ...activityTitles,
+        "Submitted",
+        "Average",
+        "Completion Rate",
+        "Status",
+      ];
+      const topActivity = [...summaryRows]
+        .filter((row) => row.submitted > 0)
+        .sort((a, b) => b.average - a.average)[0];
+      const highlightRows = [
+        ["Class Performance Highlights"],
+        ["[OK] On Track", onTrackCount, "[WARN] Needs Review", needsReviewCount, "[RISK] At Risk", atRiskCount, "[NONE] No Submission", noSubmissionCount],
+      ];
+      const statusDistributionRows = [
+        ["On Track", onTrackCount, normalizedRows.length ? onTrackCount / normalizedRows.length : 0],
+        ["Needs Review", needsReviewCount, normalizedRows.length ? needsReviewCount / normalizedRows.length : 0],
+        ["At Risk", atRiskCount, normalizedRows.length ? atRiskCount / normalizedRows.length : 0],
+        ["No Submission", noSubmissionCount, normalizedRows.length ? noSubmissionCount / normalizedRows.length : 0],
+      ];
+      const generatedAt = new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const rows = [
+        [`Activity Report: ${selectedClass.className}`],
+        ['Performance Dashboard Export'],
+        [],
+        ['Generated On', generatedAt],
+        ['Class', selectedClass.className || 'N/A'],
+        ['Total Students', normalizedRows.length],
+        ['Total Activities', activityTitles.length],
+        ['Overall Average', overallAverage],
+        ['Completion Rate', overallCompletion],
+        ['Top Student', topStudent ? `${topStudent.name} (${topStudent.averageScore.toFixed(2)})` : 'N/A'],
+        [],
+        ...highlightRows,
+        [],
+        columns,
+      ];
+
+      normalizedRows.forEach((row) => {
+        rows.push([
+          row.name,
+          row.email,
+          ...row.scores.map((score) => (score === null ? "" : score)),
+          row.submittedCount,
+          row.submittedCount ? row.averageScore : "",
+          row.completionRate,
+          row.statusDisplay,
+        ]);
+      });
+
+      const worksheet = XLSX.utils.aoa_to_sheet(rows);
+      const tableHeaderRow = 14;
+      const dataStartRow = tableHeaderRow + 1;
+      const dataEndRow = dataStartRow + normalizedRows.length - 1;
+      const firstNumericColumn = 2;
+      const lastNumericColumn = firstNumericColumn + activityTitles.length - 1;
+      worksheet["!merges"] = worksheet["!merges"] || [];
+      worksheet["!merges"].push({ s: { r: 0, c: 0 }, e: { r: 0, c: columns.length - 1 } });
+      worksheet["!merges"].push({ s: { r: 1, c: 0 }, e: { r: 1, c: columns.length - 1 } });
+      worksheet["!merges"].push({ s: { r: 11, c: 0 }, e: { r: 11, c: columns.length - 1 } });
+      worksheet["!cols"] = buildWorksheetColumns(rows.slice(tableHeaderRow), columns, {
+        minWidth: 14,
+        maxWidth: 30,
+        overrides: {
+          Name: 22,
+          Email: 30,
+          Submitted: 12,
+          Average: 14,
+          "Completion Rate": 18,
+          Status: 24,
+        },
+      });
+      worksheet["!rows"] = rows.map((_, rowIndex) => {
+        if (rowIndex === 0) return { hpt: 36 };
+        if (rowIndex === 1) return { hpt: 26 };
+        if (rowIndex >= 3 && rowIndex <= 9) return { hpt: 23 };
+        if (rowIndex === 11) return { hpt: 26 };
+        if (rowIndex === 12) return { hpt: 28 };
+        if (rowIndex === tableHeaderRow) return { hpt: 30 };
+        if (rowIndex > tableHeaderRow) return { hpt: 22 };
+        return { hpt: 22 };
+      });
+
+      // Main Title
+      setWorksheetCellStyle(worksheet, 0, 0, buildExcelStyle({
+        bold: true, size: 20, color: EXCEL_THEME.white, fillColor: EXCEL_THEME.primary,
+        align: "center", border: buildExcelBorder("medium", EXCEL_THEME.primary)
+      }));
+
+      // Subtitle
+      setWorksheetCellStyle(worksheet, 1, 0, buildExcelStyle({
+        bold: true, size: 12, color: EXCEL_THEME.subHeaderText, fillColor: EXCEL_THEME.subHeaderBg,
+        align: "center", border: buildExcelBorder("medium", EXCEL_THEME.chartBlue)
+      }));
+
+      // Dashboard Section (rows 3-9)
+      const dashboardRowFills = [
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase },
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase },
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase },
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase },
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.scoreGood },
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.chartBlue },
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase },
+      ];
+      for (let r = 3; r <= 9; r++) {
+        const rowTheme = dashboardRowFills[r - 3] || { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase };
+        setWorksheetCellStyle(worksheet, r, 0, buildExcelStyle({
+          bold: true, fillColor: rowTheme.label, align: "left",
+          border: buildExcelBorder("thin")
+        }));
+        const numFmt = r === 7 ? "0.00" : r === 8 ? "0.0%" : undefined;
+        setWorksheetCellStyle(worksheet, r, 1, buildExcelStyle({
+          bold: true,
+          fillColor: rowTheme.value,
+          align: typeof rows[r][1] === "number" ? "right" : "left",
+          border: buildExcelBorder("thin"), numFmt
+        }));
+      }
+
+      // Highlights Section Title
+      setWorksheetCellStyle(worksheet, 11, 0, buildExcelStyle({
+        bold: true, size: 14, color: EXCEL_THEME.title, fillColor: EXCEL_THEME.sectionBg,
+        align: "center", border: buildExcelBorder("medium", EXCEL_THEME.secondary)
+      }));
+
+      // Highlight Statuses
+      const highlightStyles = [
+        { color: EXCEL_THEME.statusGood, fill: EXCEL_THEME.scoreGood },
+        { color: EXCEL_THEME.statusWarn, fill: EXCEL_THEME.scoreWarn },
+        { color: EXCEL_THEME.statusLow, fill: EXCEL_THEME.scoreLow },
+        { color: EXCEL_THEME.statusNone, fill: EXCEL_THEME.blank },
+      ];
+      for (let c = 0; c < 8; c++) {
+        const style = highlightStyles[Math.floor(c / 2)];
+        setWorksheetCellStyle(worksheet, 12, c, buildExcelStyle({
+          bold: true, size: 12, color: style.color, fillColor: style.fill,
+          align: 'center', border: buildExcelBorder("medium", style.color)
+        }));
+      }
+
+      // Main Table Header
+      for (let c = 0; c < columns.length; c++) {
+        setWorksheetCellStyle(worksheet, 14, c, buildExcelStyle({
+          bold: true, size: 12, color: EXCEL_THEME.headerLabel, fillColor: EXCEL_THEME.headerBg,
+          align: "center", border: buildExcelBorder("medium", EXCEL_THEME.primary), wrapText: true
+        }));
+      }
+
+      for (let r = dataStartRow; r <= dataEndRow; r++) {
+        const isEvenRow = (r - dataStartRow) % 2 === 0;
+        const rowFill = isEvenRow ? EXCEL_THEME.rowBase : EXCEL_THEME.rowAlt;
+
+        for (let c = 0; c < columns.length; c++) {
+          const cell = worksheet[XLSX.utils.encode_cell({ r, c })];
+          if (!cell) continue;
+
+          let fillColor = rowFill;
+          let align = "left";
+          let numFmt;
+          let fontColor = EXCEL_THEME.headerText;
+
+          if (c >= firstNumericColumn && c <= lastNumericColumn) {
+            align = "right";
+            numFmt = "0.00";
+            const score = parseScoreValue(cell.v);
+            if (score === null) fillColor = EXCEL_THEME.blank;
+            else if (score >= 85) fillColor = EXCEL_THEME.scoreGood;
+            else if (score >= 70) fillColor = EXCEL_THEME.scoreWarn;
+            else fillColor = EXCEL_THEME.scoreLow;
+          } else if (columns[c] === "Submitted") {
+            align = "center";
+            numFmt = "0";
+          } else if (columns[c] === "Average") {
+            align = "right";
+            numFmt = "0.00";
+            const average = parseScoreValue(cell.v);
+            if (average !== null) {
+              fillColor = average >= 85 ? EXCEL_THEME.scoreGood : average >= 70 ? EXCEL_THEME.scoreWarn : EXCEL_THEME.scoreLow;
+            }
+          } else if (columns[c] === "Completion Rate") {
+            align = "right";
+            numFmt = "0.0%";
+          } else if (columns[c] === "Status") {
+            align = "center";
+            fontColor = getStatusColor(String(cell.v || ""));
+          }
+
+          setWorksheetCellStyle(worksheet, r, c, buildExcelStyle({
+            fillColor, align, color: fontColor, border: buildExcelBorder("thin"), numFmt,
+          }));
+        }
+      }
+
+      worksheet["!autofilter"] = {
+        ref: XLSX.utils.encode_range({
+          s: { r: tableHeaderRow, c: 0 },
+          e: { r: Math.max(dataEndRow, tableHeaderRow), c: columns.length - 1 }
+        })
+      };
+      applyOuterBorderToRange(worksheet, 3, 9, 0, 1, EXCEL_THEME.secondary);
+      applyOuterBorderToRange(worksheet, 12, 12, 0, 7, EXCEL_THEME.secondary);
+      applyOuterBorderToRange(worksheet, tableHeaderRow, Math.max(dataEndRow, tableHeaderRow), 0, columns.length - 1, EXCEL_THEME.secondary);
+
+      const summarySheetRows = [
+        [`Activity Summary: ${selectedClass.className}`],
+        ["Performance Snapshot"],
+        [],
+        ["Generated On", generatedAt],
+        ["Top Performer", topStudent ? `${topStudent.name} (${topStudent.averageScore.toFixed(2)})` : "N/A"],
+        ["Top Activity", topActivity ? `${topActivity.activity} (${topActivity.average.toFixed(2)})` : "N/A"],
+        ["Legend", "[OK] On Track | [WARN] Needs Review | [RISK] At Risk | [NONE] No Submission"],
+        [],
+        ["Dashboard Metrics"],
+        ["Overall Average", overallAverage, "Completion Rate", overallCompletion, "Students", normalizedRows.length, "Activities", activityTitles.length],
+        [],
+        ["Activity", "Average", "Highest", "Lowest", "Submitted", "Missing", "Completion Rate", "Status"],
+        ...summaryRows.map((row) => [
+          row.activity,
+          row.submitted ? row.average : "",
+          row.highest ?? "",
+          row.lowest ?? "",
+          row.submitted,
+          row.missing,
+          row.completionRate,
+          row.statusDisplay,
+        ]),
+      ];
+
+      const summarySheet = XLSX.utils.aoa_to_sheet(summarySheetRows);
+      summarySheet["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 7 } },
+        { s: { r: 8, c: 0 }, e: { r: 8, c: 7 } }
+      ];
+      summarySheet["!cols"] = buildWorksheetColumns(summarySheetRows.slice(11), summarySheetRows[11], {
+        minWidth: 14,
+        maxWidth: 28,
+        overrides: {
+          Activity: 24,
+          Average: 14,
+          Highest: 14,
+          Lowest: 14,
+          Submitted: 12,
+          Missing: 12,
+          "Completion Rate": 18,
+          Status: 24,
+        },
+      });
+      summarySheet["!autofilter"] = {
+        ref: XLSX.utils.encode_range({
+          s: { r: 11, c: 0 },
+          e: { r: Math.max(summarySheetRows.length - 1, 11), c: 7 }
+        })
+      };
+      summarySheet["!rows"] = summarySheetRows.map((_, rowIndex) => {
+        if (rowIndex === 0) return { hpt: 34 };
+        if (rowIndex === 1) return { hpt: 24 };
+        if (rowIndex >= 3 && rowIndex <= 6) return { hpt: 23 };
+        if (rowIndex === 8) return { hpt: 26 };
+        if (rowIndex === 9) return { hpt: 24 };
+        if (rowIndex === 11) return { hpt: 28 };
+        if (rowIndex > 11) return { hpt: 22 };
+        return { hpt: 22 };
+      });
+
+      setWorksheetCellStyle(summarySheet, 0, 0, buildExcelStyle({
+        bold: true, size: 18, color: EXCEL_THEME.white, fillColor: EXCEL_THEME.primary,
+        align: "center", border: buildExcelBorder("medium", EXCEL_THEME.primary)
+      }));
+      setWorksheetCellStyle(summarySheet, 1, 0, buildExcelStyle({
+        bold: true, size: 12, color: EXCEL_THEME.subHeaderText, fillColor: EXCEL_THEME.subHeaderBg,
+        align: "center", border: buildExcelBorder("medium", EXCEL_THEME.chartBlue)
+      }));
+
+      const summaryInfoFills = [
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase },
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase },
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase },
+        { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase },
+      ];
+      for (let r = 3; r <= 6; r++) {
+        const rowTheme = summaryInfoFills[r - 3] || { label: EXCEL_THEME.labelBg, value: EXCEL_THEME.rowBase };
+        setWorksheetCellStyle(summarySheet, r, 0, buildExcelStyle({ bold: true, fillColor: rowTheme.label, border: buildExcelBorder("thin") }));
+        setWorksheetCellStyle(summarySheet, r, 1, buildExcelStyle({ bold: true, align: "left", fillColor: rowTheme.value, border: buildExcelBorder("thin") }));
+      }
+      setWorksheetCellStyle(summarySheet, 4, 1, buildExcelStyle({ bold: true, align: "left", fillColor: EXCEL_THEME.scoreGood, border: buildExcelBorder("thin") }));
+      setWorksheetCellStyle(summarySheet, 5, 1, buildExcelStyle({ bold: true, align: "left", fillColor: EXCEL_THEME.chartBlue, border: buildExcelBorder("thin") }));
+      setWorksheetCellStyle(summarySheet, 6, 1, buildExcelStyle({ align: "left", fillColor: EXCEL_THEME.rowBase, border: buildExcelBorder("thin") }));
+
+      setWorksheetCellStyle(summarySheet, 8, 0, buildExcelStyle({
+        bold: true, size: 13, color: EXCEL_THEME.title, fillColor: EXCEL_THEME.sectionBg,
+        align: "center", border: buildExcelBorder("medium", EXCEL_THEME.secondary)
+      }));
+
+      const metricRowStyles = [
+        EXCEL_THEME.infoSoft,
+        EXCEL_THEME.chartBlue,
+        EXCEL_THEME.infoSoft,
+        EXCEL_THEME.chartTeal,
+      ];
+      for (let c = 0; c < 8; c++) {
+        setWorksheetCellStyle(summarySheet, 9, c, buildExcelStyle({
+          bold: c % 2 === 0,
+          size: 11,
+          fillColor: metricRowStyles[Math.floor(c / 2)],
+          align: c % 2 === 0 ? "left" : "right",
+          border: buildExcelBorder("medium", EXCEL_THEME.secondary),
+          numFmt: c === 1 ? "0.00" : c === 3 ? "0.0%" : c === 5 || c === 7 ? "0" : undefined,
+        }));
+      }
+
+
+      for (let c = 0; c < 8; c++) {
+        setWorksheetCellStyle(summarySheet, 11, c, buildExcelStyle({
+          bold: true, size: 12, color: EXCEL_THEME.headerLabel, fillColor: EXCEL_THEME.headerBg,
+          align: "center", border: buildExcelBorder("medium", EXCEL_THEME.primary), wrapText: true
+        }));
+      }
+
+      for (let r = 12; r < summarySheetRows.length; r++) {
+        const isEvenRow = (r - 12) % 2 === 0;
+        const rowFill = isEvenRow ? EXCEL_THEME.rowBase : EXCEL_THEME.rowAlt;
+
+        for (let c = 0; c < 8; c++) {
+          const value = summarySheetRows[r][c];
+          let fillColor = rowFill;
+          let align = c === 0 ? "left" : c === 7 ? "center" : "right";
+          let numFmt = undefined;
+          let fontColor = EXCEL_THEME.headerText;
+
+          if (c >= 1 && c <= 3 && value !== '') {
+            numFmt = "0.00";
+            const numeric = parseScoreValue(value);
+            if (numeric !== null) {
+              fillColor = numeric >= 85 ? EXCEL_THEME.scoreGood : numeric >= 70 ? EXCEL_THEME.scoreWarn : EXCEL_THEME.scoreLow;
+            }
+          } else if (c === 6) {
+            numFmt = "0.0%";
+          } else if (c === 7) {
+            fontColor = getStatusColor(String(value || ""));
+          } else if (c === 4 || c === 5) {
+            numFmt = "0";
+          }
+
+          setWorksheetCellStyle(summarySheet, r, c, buildExcelStyle({
+            fillColor, align, color: fontColor, border: buildExcelBorder("thin"), numFmt,
+          }));
+        }
+      }
+      applyOuterBorderToRange(summarySheet, 3, 6, 0, 1, EXCEL_THEME.secondary);
+      applyOuterBorderToRange(summarySheet, 9, 9, 0, 7, EXCEL_THEME.secondary);
+      applyOuterBorderToRange(summarySheet, 11, Math.max(summarySheetRows.length - 1, 11), 0, 7, EXCEL_THEME.secondary);
+
+      const chartSheetRows = [
+        [`Dashboard Data: ${selectedClass.className}`],
+        ["Presentation-ready chart inputs for comparison and distribution"],
+        [],
+        ["Status Distribution"],
+        ["Status", "Count", "Share"],
+        ...statusDistributionRows,
+        [],
+        ["Activity Comparison"],
+        ["Activity", "Average Score", "Submission Count", "Completion Rate", "Score Band", "Completion Band"],
+        ...summaryRows.map((row) => [
+          row.activity,
+          row.submitted ? row.average : 0,
+          row.submitted,
+          row.completionRate,
+          row.submitted ? "|".repeat(Math.max(1, Math.round(row.average / 10))) : "",
+          row.submitted ? "|".repeat(Math.max(1, Math.round(row.completionRate * 10))) : "",
+        ]),
+      ];
+
+      const chartSheet = XLSX.utils.aoa_to_sheet(chartSheetRows);
+      chartSheet["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
+        { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
+        { s: { r: 10, c: 0 }, e: { r: 10, c: 5 } },
+      ];
+      chartSheet["!cols"] = [
+        { wch: 24 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 18 },
+        { wch: 20 },
+        { wch: 20 },
+      ];
+      chartSheet["!rows"] = chartSheetRows.map((_, rowIndex) => {
+        if (rowIndex === 0) return { hpt: 34 };
+        if (rowIndex === 1) return { hpt: 24 };
+        if (rowIndex === 3 || rowIndex === 10) return { hpt: 24 };
+        if (rowIndex === 4 || rowIndex === 11) return { hpt: 28 };
+        if (rowIndex > 11) return { hpt: 22 };
+        return { hpt: 22 };
+      });
+      chartSheet["!autofilter"] = {
+        ref: XLSX.utils.encode_range({
+          s: { r: 11, c: 0 },
+          e: { r: Math.max(chartSheetRows.length - 1, 11), c: 5 }
+        })
+      };
+
+      setWorksheetCellStyle(chartSheet, 0, 0, buildExcelStyle({
+        bold: true, size: 18, color: EXCEL_THEME.white, fillColor: EXCEL_THEME.primary,
+        align: "center", border: buildExcelBorder("medium", EXCEL_THEME.primary)
+      }));
+      setWorksheetCellStyle(chartSheet, 1, 0, buildExcelStyle({
+        bold: true, size: 12, color: EXCEL_THEME.subHeaderText, fillColor: EXCEL_THEME.subHeaderBg,
+        align: "center", border: buildExcelBorder("medium", EXCEL_THEME.chartBlue)
+      }));
+      setWorksheetCellStyle(chartSheet, 3, 0, buildExcelStyle({
+        bold: true, size: 13, color: EXCEL_THEME.title, fillColor: EXCEL_THEME.sectionBg,
+        align: "center", border: buildExcelBorder("medium", EXCEL_THEME.secondary)
+      }));
+      setWorksheetCellStyle(chartSheet, 10, 0, buildExcelStyle({
+        bold: true, size: 13, color: EXCEL_THEME.title, fillColor: EXCEL_THEME.sectionBg,
+        align: "center", border: buildExcelBorder("medium", EXCEL_THEME.secondary)
+      }));
+
+      for (const headerRow of [4, 11]) {
+        const endColumn = headerRow === 4 ? 2 : 5;
+        for (let c = 0; c <= endColumn; c++) {
+          setWorksheetCellStyle(chartSheet, headerRow, c, buildExcelStyle({
+            bold: true, size: 12, color: EXCEL_THEME.headerLabel, fillColor: EXCEL_THEME.headerBg,
+            align: "center", border: buildExcelBorder("medium", EXCEL_THEME.primary)
+          }));
+        }
+      }
+
+      for (let r = 5; r <= 8; r++) {
+        const rowFill = (r - 5) % 2 === 0 ? EXCEL_THEME.rowBase : EXCEL_THEME.rowAlt;
+        const currentStatus = statusDistributionRows[r - 5]?.[0];
+
+        for (let c = 0; c <= 2; c++) {
+          const statusFill = currentStatus === "On Track"
+            ? EXCEL_THEME.scoreGood
+            : currentStatus === "Needs Review"
+              ? EXCEL_THEME.scoreWarn
+              : currentStatus === "No Submission"
+                ? EXCEL_THEME.blank
+                : EXCEL_THEME.scoreLow;
+          const fillColor = c === 0 || c === 1 ? statusFill : rowFill;
+          const fontColor = c === 0
+            ? currentStatus === "On Track"
+              ? EXCEL_THEME.statusGood
+              : currentStatus === "Needs Review"
+                ? EXCEL_THEME.statusWarn
+                : currentStatus === "No Submission"
+                  ? EXCEL_THEME.statusNone
+                : EXCEL_THEME.statusLow
+            : EXCEL_THEME.headerText;
+
+          setWorksheetCellStyle(chartSheet, r, c, buildExcelStyle({
+            fillColor,
+            align: c === 0 ? "left" : "right",
+            border: buildExcelBorder("thin"),
+            color: fontColor,
+            bold: c === 0,
+            numFmt: c === 2 ? "0.0%" : c === 1 ? "0" : undefined,
+          }));
+        }
+      }
+
+      for (let r = 12; r < chartSheetRows.length; r++) {
+        const isEvenRow = (r - 12) % 2 === 0;
+        const rowFill = isEvenRow ? EXCEL_THEME.rowBase : EXCEL_THEME.rowAlt;
+
+        for (let c = 0; c <= 5; c++) {
+          const value = chartSheetRows[r][c];
+          const numeric = parseScoreValue(value);
+          let fillColor = rowFill;
+
+          if (c === 1 && numeric !== null) {
+            fillColor = numeric >= 85 ? EXCEL_THEME.scoreGood : numeric >= 70 ? EXCEL_THEME.scoreWarn : EXCEL_THEME.scoreLow;
+          } else if (c === 3) {
+            fillColor = EXCEL_THEME.chartTeal;
+          }
+
+          setWorksheetCellStyle(chartSheet, r, c, buildExcelStyle({
+            fillColor,
+            align: c === 0 || c >= 4 ? "left" : "right",
+            border: buildExcelBorder("thin"),
+            numFmt: c === 1 ? "0.00" : c === 2 ? "0" : c === 3 ? "0.0%" : undefined,
+          }));
+        }
+      }
+
+      applyOuterBorderToRange(chartSheet, 4, 8, 0, 2, EXCEL_THEME.secondary);
+      applyOuterBorderToRange(chartSheet, 11, Math.max(chartSheetRows.length - 1, 11), 0, 5, EXCEL_THEME.secondary);
+
+      const workbook = XLSX.utils.book_new();
+      const mainSheetView = {
+        showGridLines: false,
+        view: "pageLayout",
+        zoomScale: 85,
+        state: 'frozen',
+        ySplit: 15,
+        topLeftCell: 'A16',
+        activeTab: 0
+      };
+      worksheet['!views'] = [mainSheetView];
+
+      const summarySheetView = {
+        showGridLines: false,
+        view: "pageLayout",
+        zoomScale: 90,
+        state: 'frozen',
+        ySplit: 12,
+        topLeftCell: 'A13',
+      };
+      summarySheet['!views'] = [summarySheetView];
+      const chartSheetView = {
+        showGridLines: false,
+        view: "pageLayout",
+        zoomScale: 90,
+        state: "frozen",
+        ySplit: 12,
+        topLeftCell: "A13",
+      };
+      chartSheet["!views"] = [chartSheetView];
+
+      const reportFileName = buildReportFilename(selectedClass.className);
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Student Scores");
+      XLSX.utils.book_append_sheet(workbook, summarySheet, "Activity Summary");
+      XLSX.utils.book_append_sheet(workbook, chartSheet, "Dashboard Data");
+      const saveMode = await saveWorkbookToFile(workbook, reportFileName, selectedClass._id);
+
+      if (saveMode === "updated") {
+        await showAlert("success", "Excel Updated", "The report was saved to the same Excel file.");
+      } else if (saveMode === "downloaded") {
+        await showAlert("success", "Excel Downloaded", "The report was downloaded as a new Excel file.");
+      }
     } catch (err) {
+      if (err?.name === "AbortError") {
+        return;
+      }
       await showAlert('error', 'Export Failed', 'Failed to export scores: ' + (err.response?.data?.message || err.message));
     }
   };

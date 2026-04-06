@@ -181,6 +181,68 @@ const createSafeFilename = (value) =>
     .join('')
     .replace(/\s+/g, '_') || 'Quiz';
 
+const EXCEL_THEME = {
+  primary: "4F46E5", // Indigo
+  secondary: "10B981", // Emerald
+  title: "2C3E50", // Midnight Blue
+  headerBg: "F3F4F6", // Cool Gray 100
+  headerText: "111827", // Cool Gray 900
+  rowAlt: "F9FAFB", // Gray 50
+  rowBase: "FFFFFF",
+  border: "BDC3C7", // Silver
+  white: "FFFFFF",
+};
+
+const buildExcelBorder = (weight = "thin", color = EXCEL_THEME.border) => ({
+  top: { style: weight, color: { rgb: color } },
+  bottom: { style: weight, color: { rgb: color } },
+  left: { style: weight, color: { rgb: color } },
+  right: { style: weight, color: { rgb: color } },
+});
+
+const buildExcelStyle = ({
+  font = {},
+  fillColor,
+  align = "left",
+  vertical = "center",
+  bold = false,
+  size = 11,
+  color = EXCEL_THEME.headerText,
+  wrapText = false,
+  border,
+  numFmt,
+} = {}) => {
+  const style = {
+    font: { name: "Calibri", sz: size, bold, color: { rgb: color }, ...font },
+    alignment: { horizontal: align, vertical, wrapText },
+  };
+
+  if (border) {
+    style.border = border;
+  }
+
+  if (fillColor) {
+    style.fill = {
+      patternType: "solid",
+      fgColor: { rgb: fillColor },
+    };
+  }
+
+  if (numFmt) {
+    style.numFmt = numFmt;
+  }
+
+  return style;
+};
+
+const setWorksheetCellStyle = (worksheet, rowIndex, columnIndex, style) => {
+  const address = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
+  if (!worksheet[address]) {
+    XLSX.utils.sheet_add_aoa(worksheet, [[null]], { origin: address });
+  }
+  worksheet[address].s = style;
+};
+
 export default function CreateQuizz() {
   // Always initialize params and user info first
   const { classId } = useParams();
@@ -672,23 +734,91 @@ export default function CreateQuizz() {
       return;
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(buildQuestionExportRows());
-    worksheet['!cols'] = [
-      { wch: 14 },
-      { wch: 18 },
-      { wch: 12 },
-      { wch: 52 },
-      { wch: 24 },
-      { wch: 24 },
-      { wch: 24 },
-      { wch: 24 },
-      { wch: 24 },
-      { wch: 42 },
+    const safeTitle = createSafeFilename(title || topic || 'Quiz');
+    const exportTitle = `Quiz Questions: ${title || topic || 'Untitled Quiz'}`;
+    const generatedAt = new Date().toLocaleString('en-US', {
+      year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
+
+    const rows = [
+      [exportTitle],
+      [`Generated on: ${generatedAt}`],
+      [],
+      ['#', 'Type', 'Difficulty', 'Question', 'Choice A', 'Choice B', 'Choice C', 'Choice D', 'Correct Answer', 'Explanation']
     ];
 
+    const questionRows = buildQuestionExportRows();
+    questionRows.forEach(q => {
+      rows.push([
+        q['Question Number'],
+        q.Type,
+        q.Difficulty,
+        q.Question,
+        q['Choice A'],
+        q['Choice B'],
+        q['Choice C'],
+        q['Choice D'],
+        q['Correct Answer'],
+        q.Explanation,
+      ]);
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+
+    worksheet['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
+    ];
+
+    worksheet['!cols'] = [
+      { wch: 5 }, { wch: 15 }, { wch: 12 }, { wch: 60 },
+      { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 25 },
+      { wch: 30 }, { wch: 60 },
+    ];
+    
+    worksheet['!rows'] = [
+      { hpt: 30 }, { hpt: 20 }
+    ];
+
+    // Title Style
+    setWorksheetCellStyle(worksheet, 0, 0, buildExcelStyle({
+      bold: true, size: 20, color: EXCEL_THEME.white, fillColor: EXCEL_THEME.primary,
+      align: "center", border: buildExcelBorder("medium", EXCEL_THEME.primary)
+    }));
+
+    // Subtitle Style
+    setWorksheetCellStyle(worksheet, 1, 0, buildExcelStyle({
+      size: 12, color: EXCEL_THEME.lightText, fillColor: EXCEL_THEME.secondary,
+      align: "center", border: buildExcelBorder("medium", EXCEL_THEME.secondary)
+    }));
+
+    // Header Row Style
+    for (let c = 0; c < 10; c++) {
+      setWorksheetCellStyle(worksheet, 3, c, buildExcelStyle({
+        bold: true, size: 12, fillColor: EXCEL_THEME.headerBg, align: "center",
+        wrapText: true, border: buildExcelBorder("medium", EXCEL_THEME.headerText)
+      }));
+    }
+
+    // Data Rows Style
+    for (let r = 4; r < rows.length; r++) {
+      const isEvenRow = (r - 4) % 2 === 0;
+      const rowFill = isEvenRow ? EXCEL_THEME.rowBase : EXCEL_THEME.rowAlt;
+      for (let c = 0; c < 10; c++) {
+        setWorksheetCellStyle(worksheet, r, c, buildExcelStyle({
+          fillColor: rowFill,
+          align: c === 0 || c === 1 || c === 2 ? "center" : "left",
+          wrapText: true,
+          border: buildExcelBorder("thin"),
+        }));
+      }
+    }
+    
+    worksheet['!autofilter'] = { ref: 'A4:J4' };
+    
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Quiz');
-    XLSX.writeFile(workbook, `${createSafeFilename(title || topic || 'Quiz')}_Questions.xlsx`);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Quiz Questions');
+    XLSX.writeFile(workbook, `${safeTitle}_Questions.xlsx`);
   };
 
   const handleExportToPdf = () => {
