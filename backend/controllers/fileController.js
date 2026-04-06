@@ -1,12 +1,14 @@
 const fs = require('fs').promises;
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { createCanvas, DOMMatrix, ImageData, Path2D } = require('@napi-rs/canvas');
 const { createWorker } = require('tesseract.js');
 
 const OCR_LANGUAGE = 'eng';
 const PDF_OCR_MAX_PAGES = 20;
 
 let pdfjsLibPromise = null;
+let canvasBindings = null;
+let canvasBindingsLoadAttempted = false;
+let canvasBindingsError = null;
 
 const normalizeExtractedText = (value = '') =>
   String(value || '')
@@ -38,6 +40,26 @@ const cleanupTempFile = async (filePath) => {
 
 const createUserFacingError = (message, statusCode = 422) =>
   Object.assign(new Error(message), { statusCode, expose: true });
+
+const getCanvasBindings = () => {
+  if (canvasBindingsLoadAttempted) {
+    return canvasBindings;
+  }
+
+  canvasBindingsLoadAttempted = true;
+
+  try {
+    canvasBindings = require('@napi-rs/canvas');
+  } catch (error) {
+    canvasBindingsError = error;
+    canvasBindings = null;
+    console.warn(`[WARN] Optional canvas bindings are unavailable: ${error.message}`);
+  }
+
+  return canvasBindings;
+};
+
+const isPdfOcrAvailable = () => Boolean(getCanvasBindings());
 
 const getGeminiModel = () => {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -75,9 +97,13 @@ const extractTextWithGemini = async ({ prompt, mimeType, data }) => {
 };
 
 const ensurePdfJsGlobals = () => {
-  if (!global.DOMMatrix) global.DOMMatrix = DOMMatrix;
-  if (!global.ImageData) global.ImageData = ImageData;
-  if (!global.Path2D) global.Path2D = Path2D;
+  const bindings = getCanvasBindings();
+  if (!bindings) return;
+
+  const { DOMMatrix, ImageData, Path2D } = bindings;
+  if (DOMMatrix && !global.DOMMatrix) global.DOMMatrix = DOMMatrix;
+  if (ImageData && !global.ImageData) global.ImageData = ImageData;
+  if (Path2D && !global.Path2D) global.Path2D = Path2D;
 };
 
 const getPdfJsLib = async () => {
@@ -90,8 +116,12 @@ const getPdfJsLib = async () => {
 };
 
 class NodeCanvasFactory {
+  constructor(bindings) {
+    this.bindings = bindings;
+  }
+
   create(width, height) {
-    const canvas = createCanvas(Math.ceil(width), Math.ceil(height));
+    const canvas = this.bindings.createCanvas(Math.ceil(width), Math.ceil(height));
     const context = canvas.getContext('2d');
     return { canvas, context };
   }
@@ -156,7 +186,15 @@ const ocrImageBuffer = async (imageBuffer) => {
 
 const ocrPdfDocument = async (pdfDocument, maxPages = PDF_OCR_MAX_PAGES) => {
   const pageLimit = Math.min(pdfDocument.numPages, maxPages);
-  const canvasFactory = new NodeCanvasFactory();
+  const bindings = getCanvasBindings();
+  if (!bindings) {
+    const error = new Error('PDF OCR is unavailable because canvas bindings could not be loaded');
+    error.code = 'PDF_OCR_UNAVAILABLE';
+    error.cause = canvasBindingsError;
+    throw error;
+  }
+
+  const canvasFactory = new NodeCanvasFactory(bindings);
   const worker = await createWorker(OCR_LANGUAGE);
   const pageTexts = [];
 
@@ -209,14 +247,22 @@ const extractTextFromPdf = async (fileBuffer, originalFileName, fileType) => {
       };
     }
 
-    console.log('[DEBUG] PDF has little/no embedded text; starting OCR fallback');
-    const ocrResult = await ocrPdfDocument(pdfDocument);
-    if (hasMeaningfulText(ocrResult.text, 60, 10)) {
-      console.log(`[DEBUG] PDF text extracted using OCR (${ocrResult.pagesProcessed}/${ocrResult.totalPages} pages)`);
-      return {
-        text: ocrResult.text,
-        extractionMethod: ocrResult.truncated ? `pdf-ocr-first-${ocrResult.pagesProcessed}-pages` : 'pdf-ocr',
-      };
+    if (isPdfOcrAvailable()) {
+      console.log('[DEBUG] PDF has little/no embedded text; starting OCR fallback');
+      try {
+        const ocrResult = await ocrPdfDocument(pdfDocument);
+        if (hasMeaningfulText(ocrResult.text, 60, 10)) {
+          console.log(`[DEBUG] PDF text extracted using OCR (${ocrResult.pagesProcessed}/${ocrResult.totalPages} pages)`);
+          return {
+            text: ocrResult.text,
+            extractionMethod: ocrResult.truncated ? `pdf-ocr-first-${ocrResult.pagesProcessed}-pages` : 'pdf-ocr',
+          };
+        }
+      } catch (ocrError) {
+        console.warn(`[WARN] PDF OCR fallback failed: ${ocrError.message}`);
+      }
+    } else {
+      console.warn('[WARN] Skipping PDF OCR fallback because canvas bindings are unavailable');
     }
 
     console.log('[DEBUG] OCR did not recover enough text; trying Gemini fallback');
