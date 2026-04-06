@@ -85,6 +85,8 @@ Return JSON only.
 Create student-friendly quizzes that test real understanding, not topic repetition.
 Never write placeholder questions, never echo the topic as the answer unless it is genuinely correct, and never use nonsense distractors.`;
 let cachedWorkingModelName = '';
+let cachedWorkingModelResolvedAt = 0;
+const WORKING_MODEL_CACHE_TTL_MS = 1000 * 60 * 15;
 
 const shuffleArray = (arr) => {
   const copy = [...arr];
@@ -201,6 +203,21 @@ const buildGeminiFailureMessage = (error) => {
 };
 
 const resolveWorkingQuizModel = async (genAI) => {
+  if (
+    cachedWorkingModelName &&
+    Date.now() - cachedWorkingModelResolvedAt < WORKING_MODEL_CACHE_TTL_MS
+  ) {
+    try {
+      return {
+        model: createQuizGenerativeModel(genAI, cachedWorkingModelName),
+        workingModelName: cachedWorkingModelName,
+        lastError: null,
+      };
+    } catch (error) {
+      console.log(`[WARN] Cached model ${cachedWorkingModelName} could not be recreated: ${error.message}`);
+    }
+  }
+
   const modelCandidates = buildQuizModelCandidates();
   let lastError = null;
 
@@ -214,6 +231,7 @@ const resolveWorkingQuizModel = async (genAI) => {
       if (testText.includes('"ok"')) {
         console.log(`[SUCCESS] Model ${modelName} is working!`);
         cachedWorkingModelName = modelName;
+        cachedWorkingModelResolvedAt = Date.now();
         return { model, workingModelName: modelName };
       }
     } catch (error) {
@@ -1494,8 +1512,6 @@ exports.generateQuiz = async (req, res) => {
     console.log(`[INFO] Initializing Gemini SDK...`);
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-    // First, let's see what models are available
-    await listAvailableModels(genAI);
     const { model, workingModelName, lastError } = await resolveWorkingQuizModel(genAI);
 
     if (!model || !workingModelName) {
