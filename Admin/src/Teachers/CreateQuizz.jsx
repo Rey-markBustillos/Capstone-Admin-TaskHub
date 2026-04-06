@@ -415,6 +415,14 @@ export default function CreateQuizz() {
         }
 
         let collectedQuestions = [];
+        const buildExistingQuestionDetails = () =>
+          collectedQuestions.map((question) => ({
+            question: question.question,
+            answer: question.correctAnswer || question.answer,
+            correctAnswer: question.correctAnswer || question.answer,
+            explanation: question.explanation,
+            type: question.type,
+          }));
 
         if (targetCounts.mcq > 0) {
           const res = await axios.post(`${API_BASE_URL}/quizzes/generate`, {
@@ -423,6 +431,7 @@ export default function CreateQuizz() {
             quizType: 'mcq',
             shuffleQuestions: false,
             existingQuestions: collectedQuestions.map((q) => q.question),
+            existingQuestionDetails: buildExistingQuestionDetails(),
           });
           const generated = Array.isArray(res.data) ? res.data : res.data?.questions;
           if (Array.isArray(generated)) {
@@ -437,6 +446,7 @@ export default function CreateQuizz() {
             quizType: 'true_false',
             shuffleQuestions: false,
             existingQuestions: collectedQuestions.map((q) => q.question),
+            existingQuestionDetails: buildExistingQuestionDetails(),
           });
           const generated = Array.isArray(res.data) ? res.data : res.data?.questions;
           if (Array.isArray(generated)) {
@@ -451,6 +461,7 @@ export default function CreateQuizz() {
             quizType: 'identification',
             shuffleQuestions: false,
             existingQuestions: collectedQuestions.map((q) => q.question),
+            existingQuestionDetails: buildExistingQuestionDetails(),
           });
           const generated = Array.isArray(res.data) ? res.data : res.data?.questions;
           if (Array.isArray(generated)) {

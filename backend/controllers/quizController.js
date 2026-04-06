@@ -48,9 +48,11 @@ const { ObjectId } = require('mongoose').Types;
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Add this function to list available models
-const listAvailableModels = async () => {
+const listAvailableModels = async (genAI) => {
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    if (!genAI || typeof genAI.listModels !== 'function') {
+      return [];
+    }
     const models = await genAI.listModels();
     console.log('[INFO] Available Gemini models:');
     models.forEach(model => {
@@ -64,6 +66,25 @@ const listAvailableModels = async () => {
 };
 
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
+const QUIZ_MODEL_CANDIDATES = [
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+];
+const QUIZ_GENERATION_CONFIG = {
+  responseMimeType: 'application/json',
+  temperature: 0.35,
+  topP: 0.9,
+  topK: 32,
+  maxOutputTokens: 8192,
+};
+const QUIZ_SYSTEM_INSTRUCTION = `You are an expert teacher and assessment writer.
+Return JSON only.
+Create student-friendly quizzes that test real understanding, not topic repetition.
+Never write placeholder questions, never echo the topic as the answer unless it is genuinely correct, and never use nonsense distractors.`;
+let cachedWorkingModelName = '';
 
 const shuffleArray = (arr) => {
   const copy = [...arr];
@@ -88,7 +109,7 @@ const normalizeDifficulty = (value) => {
 const cleanText = (value = '') => String(value || '').replace(/\s+/g, ' ').trim();
 
 const QUESTION_META_PATTERN = /(create|generate)\s+(a\s+)?quiz|module text|text above|prompt|lesson topic|based on this text|based on the provided/i;
-const GENERIC_QUESTION_PATTERN = /which (?:term|concept|option) is most directly connected to|identify one key term connected to|is the central focus of this lesson|topic being assessed in this quiz|key term related to|statement is related to/i;
+const GENERIC_QUESTION_PATTERN = /which (?:term|concept|option) is most directly connected to|identify one key term connected to|is the central focus of this lesson|topic being assessed in this quiz|key term related to|statement is related to|which is related to|write something about|write one key term related to|which option is directly related to|something about\s+[a-z0-9 _-]+/i;
 const BAD_DISTRACTOR_PATTERN = /^(option [a-z0-9]+|unrelated topic|unrelated subject|different subject area|different lesson area|all of the above|none of the above)$/i;
 const COMMON_QUESTION_OPENERS = new Set([
   'what is',
@@ -99,6 +120,12 @@ const COMMON_QUESTION_OPENERS = new Set([
   'identify the',
   'select the',
 ]);
+const QUESTION_INTENT_PATTERNS = {
+  application: /(scenario|during|while|real[- ]world|in practice|appl(?:y|ied|ies|ication)|best fits|most appropriate|task|situation)/i,
+  usage: /(used to|used for|how do you use|when should|syntax|example|write the|tag|attribute|command)/i,
+  function: /(purpose|function|role|responsible for|allows|helps|does|serves to)/i,
+  definition: /(define|definition|means|stands for|refers to|described as|what term|which term)/i,
+};
 
 const TOPIC_STOP_WORDS = new Set([
   'create', 'make', 'generate', 'quiz', 'quizzes', 'question', 'questions', 'about', 'the', 'a', 'an',
@@ -121,6 +148,53 @@ const normalizeConceptLabel = (value = '') =>
   cleanText(value)
     .replace(/^[\d.)\-\s]+/, '')
     .replace(/[:;,.!?]+$/, '');
+
+const uniqueValues = (values = []) => {
+  const seen = new Set();
+  return values.filter((value) => {
+    const key = String(value || '').trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
+const buildQuizModelCandidates = () =>
+  uniqueValues([
+    cachedWorkingModelName,
+    process.env.GEMINI_MODEL,
+    ...QUIZ_MODEL_CANDIDATES,
+  ]);
+
+const createQuizGenerativeModel = (genAI, modelName) =>
+  genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: QUIZ_GENERATION_CONFIG,
+    systemInstruction: QUIZ_SYSTEM_INSTRUCTION,
+  });
+
+const resolveWorkingQuizModel = async (genAI) => {
+  const modelCandidates = buildQuizModelCandidates();
+
+  for (const modelName of modelCandidates) {
+    try {
+      console.log(`[INFO] Trying model: ${modelName}`);
+      const model = createQuizGenerativeModel(genAI, modelName);
+      const testResult = await model.generateContent('Return exactly this JSON array: ["ok"]');
+      const testText = (await testResult.response).text().trim();
+
+      if (testText.includes('"ok"')) {
+        console.log(`[SUCCESS] Model ${modelName} is working!`);
+        cachedWorkingModelName = modelName;
+        return { model, workingModelName: modelName };
+      }
+    } catch (error) {
+      console.log(`[WARN] Model ${modelName} failed: ${error.message}`);
+    }
+  }
+
+  return { model: null, workingModelName: null };
+};
 
 const extractFocusTopic = (moduleText = '') => {
   const raw = String(moduleText || '').trim().toLowerCase();
@@ -182,7 +256,7 @@ const extractLessonSentences = (value = '') => {
       seen.add(key);
       return true;
     })
-    .slice(0, 30);
+    .slice(0, 80);
 };
 
 const extractDefinitionPairs = (value = '') => {
@@ -230,7 +304,7 @@ const extractDefinitionPairs = (value = '') => {
     });
   });
 
-  return pairs.slice(0, 18);
+  return pairs.slice(0, 40);
 };
 
 const extractConceptTerms = (value = '', definitionPairs = [], keywords = []) => {
@@ -259,7 +333,173 @@ const extractConceptTerms = (value = '', definitionPairs = [], keywords = []) =>
 
   keywords.forEach((keyword) => addTerm(keyword));
 
-  return terms.slice(0, 16);
+  return terms.slice(0, 40);
+};
+
+const STATIC_TOPIC_FACT_BANK = [
+  {
+    patterns: [/\bhtml\b/i, /hypertext markup language/i],
+    facts: [
+      ['HTML', 'structures the content of a webpage using elements and tags'],
+      ['Anchor tag', 'creates hyperlinks to another page, file, or section using the <a> element'],
+      ['Paragraph tag', 'displays a paragraph of text using the <p> element'],
+      ['Heading tag', 'defines headings from <h1> to <h6> to organize content'],
+      ['Image tag', 'embeds an image in a webpage using the <img> element'],
+      ['Attribute', 'adds extra information to an element such as href, src, alt, or class'],
+      ['Form', 'collects user input using controls such as text boxes, buttons, and checkboxes'],
+      ['Semantic HTML', 'uses meaningful tags like <header>, <main>, and <footer> to describe page structure'],
+    ],
+  },
+  {
+    patterns: [/\bcss\b/i, /cascading style sheets/i],
+    facts: [
+      ['CSS', 'controls the presentation of a webpage such as color, spacing, layout, and fonts'],
+      ['Selector', 'targets the HTML element that a style rule should affect'],
+      ['Property', 'names the style feature being changed such as color or margin'],
+      ['Value', 'sets the chosen property such as blue, 20px, or flex'],
+      ['Class selector', 'styles elements that share the same class name'],
+      ['Box model', 'describes content, padding, border, and margin around an element'],
+      ['Flexbox', 'arranges items in a flexible row or column layout'],
+      ['Media query', 'applies styles based on screen size or device conditions'],
+    ],
+  },
+  {
+    patterns: [/\bjavascript\b/i, /\bjs\b/i, /programming/i],
+    facts: [
+      ['Variable', 'stores data that a program can use or change'],
+      ['Function', 'groups instructions that perform a specific task when called'],
+      ['Conditional statement', 'makes decisions in code based on whether a condition is true or false'],
+      ['Loop', 'repeats a block of code while a condition is met'],
+      ['Array', 'stores multiple values in a single ordered structure'],
+      ['Object', 'stores related data as key-value pairs'],
+      ['Event', 'represents an action such as a click, input, or key press'],
+      ['DOM', 'lets JavaScript read and change webpage content and structure'],
+    ],
+  },
+  {
+    patterns: [/\bmath\b/i, /mathematics/i, /arithmetic/i],
+    facts: [
+      ['Addition', 'combines two or more numbers to find their total'],
+      ['Subtraction', 'finds the difference between numbers'],
+      ['Multiplication', 'shows repeated addition of equal groups'],
+      ['Division', 'splits a quantity into equal groups or finds how many groups fit'],
+      ['Place value', 'tells the value of a digit based on its position in a number'],
+      ['Equation', 'shows that two expressions are equal'],
+      ['Fraction', 'represents a part of a whole or a division of quantities'],
+      ['Operation', 'is a mathematical process such as addition, subtraction, multiplication, or division'],
+    ],
+  },
+  {
+    patterns: [/\balgebra\b/i],
+    facts: [
+      ['Variable', 'represents an unknown or changing value'],
+      ['Expression', 'combines numbers, variables, and operations without an equal sign'],
+      ['Equation', 'states that two expressions are equal'],
+      ['Coefficient', 'is the number multiplied by a variable'],
+      ['Like terms', 'have the same variable part and can be combined'],
+      ['Inequality', 'compares two expressions using symbols such as >, <, >=, or <='],
+      ['Solution', 'is the value that makes an equation true'],
+      ['Distributive property', 'multiplies a number across terms inside parentheses'],
+    ],
+  },
+  {
+    patterns: [/\bgeometry\b/i],
+    facts: [
+      ['Point', 'shows an exact location in space'],
+      ['Line segment', 'is a part of a line with two endpoints'],
+      ['Angle', 'is formed by two rays sharing a common endpoint'],
+      ['Triangle', 'is a polygon with three sides and three angles'],
+      ['Perimeter', 'is the total distance around a figure'],
+      ['Area', 'measures the surface inside a two-dimensional shape'],
+      ['Radius', 'is the distance from the center of a circle to its edge'],
+      ['Diameter', 'is a line segment that passes through the center of a circle and touches both sides'],
+    ],
+  },
+  {
+    patterns: [/\benglish\b/i, /grammar/i, /parts of speech/i],
+    facts: [
+      ['Noun', 'names a person, place, thing, or idea'],
+      ['Verb', 'shows an action or state of being'],
+      ['Adjective', 'describes or modifies a noun or pronoun'],
+      ['Adverb', 'modifies a verb, adjective, or another adverb'],
+      ['Pronoun', 'takes the place of a noun'],
+      ['Subject-verb agreement', 'requires the verb form to match the subject in number and person'],
+      ['Synonym', 'is a word with a similar meaning to another word'],
+      ['Context clue', 'helps a reader infer the meaning of an unfamiliar word from surrounding text'],
+    ],
+  },
+  {
+    patterns: [/\bfilipino\b/i, /\bwika\b/i, /pangngalan/i, /pandiwa/i, /pang-uri/i],
+    facts: [
+      ['Pangngalan', 'tumutukoy sa tao, hayop, bagay, lugar, o pangyayari'],
+      ['Pandiwa', 'nagsasaad ng kilos o galaw'],
+      ['Pang-uri', 'naglalarawan sa pangngalan o panghalip'],
+      ['Panghalip', 'pumapalit sa pangngalan sa pangungusap'],
+      ['Pangatnig', 'nag-uugnay ng salita, parirala, o sugnay'],
+      ['Paksa', 'ang pinag-uusapan sa pangungusap'],
+      ['Panaguri', 'ang bahagi ng pangungusap na nagsasabi tungkol sa paksa'],
+      ['Kasingkahulugan', 'salitang may magkatulad o halos magkatulad na kahulugan'],
+    ],
+  },
+  {
+    patterns: [/\bscience\b/i, /biology/i, /chemistry/i, /physics/i],
+    facts: [
+      ['Cell', 'is the basic unit of life'],
+      ['Photosynthesis', 'is the process plants use to make food using sunlight, water, and carbon dioxide'],
+      ['Evaporation', 'changes liquid into gas due to heat'],
+      ['Force', 'is a push or pull that can change an object’s motion'],
+      ['Ecosystem', 'is a community of living things interacting with their environment'],
+      ['Atom', 'is the basic unit of matter'],
+      ['Energy', 'is the ability to do work or cause change'],
+      ['Gravity', 'pulls objects toward each other, especially toward Earth'],
+    ],
+  },
+  {
+    patterns: [/\bcomputer\b/i, /\bict\b/i, /\bcpu\b/i, /\bram\b/i],
+    facts: [
+      ['CPU', 'processes instructions and performs calculations for the computer'],
+      ['RAM', 'temporarily stores data that active programs need quickly'],
+      ['Operating system', 'manages hardware resources and provides services for software'],
+      ['Input device', 'sends data to the computer such as a keyboard or mouse'],
+      ['Output device', 'shows processed information such as a monitor or printer'],
+      ['Browser', 'opens and displays websites on the internet'],
+      ['Storage device', 'keeps files and data for later use'],
+      ['File', 'is a named collection of saved data'],
+    ],
+  },
+];
+
+const buildFactRecord = (term = '', description = '') => {
+  const normalizedTerm = normalizeConceptLabel(term);
+  const normalizedDescription = cleanText(description).replace(/[.?!]+$/, '');
+
+  if (!normalizedTerm || !normalizedDescription) return null;
+
+  return {
+    term: normalizedTerm,
+    description: normalizedDescription,
+    sentence: `${normalizedTerm} ${lowerFirst(normalizedDescription)}.`,
+  };
+};
+
+const getStaticTopicFacts = (context = {}) => {
+  const haystack = [context?.topic, context?.focusDescription, context?.moduleText]
+    .map((value) => cleanText(value).toLowerCase())
+    .filter(Boolean)
+    .join(' ');
+
+  if (!haystack) return [];
+
+  const matchedEntry = STATIC_TOPIC_FACT_BANK.find((entry) =>
+    entry.patterns.some((pattern) => pattern.test(haystack))
+  );
+
+  if (!matchedEntry) return [];
+
+  return matchedEntry.facts
+    .map(([term, description]) => buildFactRecord(term, description))
+    .filter(Boolean)
+    .slice(0, 40);
 };
 
 const buildLessonFacts = (context) => {
@@ -269,6 +509,7 @@ const buildLessonFacts = (context) => {
 
   const sentences = context?.lessonSentences || [];
   const conceptTerms = context?.conceptTerms || [];
+  const primaryConcept = getPrimaryLessonConcept(context);
   const facts = [];
   const seen = new Set();
 
@@ -276,7 +517,7 @@ const buildLessonFacts = (context) => {
     const matchingTerm =
       conceptTerms.find((term) => sentence.toLowerCase().includes(term.toLowerCase())) ||
       conceptTerms[index % Math.max(conceptTerms.length, 1)] ||
-      context?.topic;
+      primaryConcept;
 
     if (!matchingTerm) return;
     const termPattern = new RegExp(`^${escapeRegExp(cleanText(matchingTerm))}\\s+(?:is|are|refers to|means|stands for|describes|explains)\\s+`, 'i');
@@ -297,7 +538,11 @@ const buildLessonFacts = (context) => {
     }
   });
 
-  return facts.slice(0, 18);
+  if (facts.length > 0) {
+    return facts.slice(0, 60);
+  }
+
+  return getStaticTopicFacts(context);
 };
 
 const buildQuizContext = ({ topic = '', focusDescription = '', moduleText = '' } = {}) => {
@@ -309,7 +554,15 @@ const buildQuizContext = ({ topic = '', focusDescription = '', moduleText = '' }
   const lessonSentences = extractLessonSentences(combinedLessonText);
   const definitionPairs = extractDefinitionPairs(combinedLessonText);
   const keywords = buildKeywordPool(resolvedTopic, cleanedFocusDescription, cleanedModuleText);
-  const conceptTerms = extractConceptTerms([cleanedTopic, cleanedFocusDescription, cleanedModuleText].join('\n'), definitionPairs, keywords);
+  const staticTopicFacts = getStaticTopicFacts({
+    topic: resolvedTopic,
+    focusDescription: cleanedFocusDescription,
+    moduleText: cleanedModuleText,
+  });
+  const conceptTerms = uniqueValues([
+    ...extractConceptTerms([cleanedTopic, cleanedFocusDescription, cleanedModuleText].join('\n'), definitionPairs, keywords),
+    ...staticTopicFacts.map((fact) => fact.term),
+  ]).slice(0, 16);
 
   return {
     topic: resolvedTopic,
@@ -322,12 +575,76 @@ const buildQuizContext = ({ topic = '', focusDescription = '', moduleText = '' }
   };
 };
 
+const getPrimaryLessonConcept = (context = {}) => {
+  const normalizedTopic = cleanText(context?.topic).toLowerCase();
+  const candidateTerms = uniqueValues([
+    ...(context?.conceptTerms || []),
+    ...getStaticTopicFacts(context).map((fact) => fact.term),
+  ]);
+  const preferred = candidateTerms.find((term) => cleanText(term).toLowerCase() !== normalizedTopic);
+  return normalizeConceptLabel(preferred || candidateTerms[0] || context?.topic || 'Lesson concept');
+};
+
+const getAnswerIntent = (question = {}) => {
+  const prompt = cleanText(question?.question).toLowerCase();
+  return Object.entries(QUESTION_INTENT_PATTERNS).find(([, pattern]) => pattern.test(prompt))?.[0] || 'general';
+};
+
+const getQuestionConceptKey = (question = {}, context = {}) => {
+  const resolvedType = normalizeQuizType(question?.type);
+  const answer = normalizeConceptLabel(question?.answer || question?.correctAnswer || '').toLowerCase();
+
+  if (resolvedType !== 'true_false' && answer) {
+    return answer;
+  }
+
+  const searchableText = [
+    question?.question,
+    question?.explanation,
+    ...(Array.isArray(question?.options) ? question.options : []),
+  ]
+    .map((value) => cleanText(value).toLowerCase())
+    .join(' ');
+
+  const conceptCandidates = uniqueValues([
+    ...buildLessonFacts(context).map((fact) => fact.term),
+    ...(context?.conceptTerms || []),
+  ])
+    .map((term) => normalizeConceptLabel(term))
+    .filter(Boolean)
+    .sort((left, right) => right.length - left.length);
+
+  const matchedConcept = conceptCandidates.find((term) => searchableText.includes(term.toLowerCase()));
+  return matchedConcept ? matchedConcept.toLowerCase() : '';
+};
+
+const isTopicEchoAnswer = (question, context = {}) => {
+  const answer = cleanText(question?.answer || question?.correctAnswer).toLowerCase();
+  const topic = cleanText(context?.topic).toLowerCase();
+  const prompt = cleanText(question?.question).toLowerCase();
+
+  if (!answer || !topic || answer !== topic) return false;
+  if (!prompt) return true;
+
+  const promptWithoutTopic = prompt.replace(new RegExp(`\\b${escapeRegExp(topic)}\\b`, 'g'), ' ').replace(/\s+/g, ' ').trim();
+  const promptWordCount = promptWithoutTopic.split(/\s+/).filter(Boolean).length;
+  const lowSignalPromptPattern = /related to|something about|key term|main topic|central focus|about the topic/i;
+
+  return lowSignalPromptPattern.test(prompt) || promptWordCount < 5;
+};
+
 const normalizeQuizType = (value) => {
   const t = String(value || '').trim().toLowerCase();
   if (t === 'mixed') return 'mixed';
   if (t === 'true_false' || t === 'tf' || t === 'truefalse') return 'true_false';
   if (t === 'identification' || t === 'numeric' || t === 'fill_in_the_blank') return 'identification';
   return 'mcq';
+};
+
+const resolveQuestionTypeForIndex = (requestedType, index = 0) => {
+  const normalizedType = normalizeQuizType(requestedType);
+  if (normalizedType !== 'mixed') return normalizedType;
+  return ['mcq', 'true_false', 'identification'][index % 3];
 };
 
 const ensureFourOptions = (inputOptions, fallbackCorrect) => {
@@ -489,12 +806,13 @@ const buildQuestionPatternSignature = (prompt = '', context = {}) => {
   return signature.split(/\s+/).slice(0, 14).join(' ');
 };
 
-const isQuestionStructureValid = (question, requestedQuizType = 'mcq') => {
+const isQuestionStructureValid = (question, requestedQuizType = 'mcq', context = {}) => {
   const resolvedType = normalizeQuizType(question?.type || requestedQuizType);
   const prompt = cleanText(question?.question);
   const answer = cleanText(question?.answer || question?.correctAnswer);
 
   if (!prompt || QUESTION_META_PATTERN.test(prompt) || GENERIC_QUESTION_PATTERN.test(prompt)) return false;
+  if (isTopicEchoAnswer(question, context)) return false;
 
   if (resolvedType === 'true_false') {
     return answer === 'True' || answer === 'False';
@@ -542,14 +860,40 @@ const isQuestionRelevantToContext = (question, context) => {
   return keywordMatches >= 1 || content.includes(cleanText(context?.topic).toLowerCase());
 };
 
-const filterQuestionsForContext = (questions, context, requestedQuizType, expectedCount = questions.length) => {
+const filterQuestionsForContext = (
+  questions,
+  context,
+  requestedQuizType,
+  expectedCount = questions.length,
+  selectedDifficulty = 'medium',
+  existingQuestionDetails = []
+) => {
   const signatureSeen = new Set();
   const openerCounts = new Map();
+  const intentCounts = new Map();
+  const conceptCounts = new Map();
   const accepted = [];
   const commonOpenerLimit = Math.max(1, Math.ceil(expectedCount / 4));
+  const intentLimit = selectedDifficulty === 'hard'
+    ? Math.max(1, Math.ceil(expectedCount / 2))
+    : Math.max(1, Math.ceil((expectedCount + 1) / 2));
+  const availableConceptCount = uniqueValues([
+    ...buildLessonFacts(context).map((fact) => fact.term),
+    ...(context?.conceptTerms || []),
+  ]).length;
+  const conceptLimit = availableConceptCount >= expectedCount
+    ? 1
+    : Math.max(1, Math.ceil(expectedCount / Math.max(availableConceptCount, 1)));
+
+  (existingQuestionDetails || []).forEach((existingQuestion) => {
+    const conceptKey = getQuestionConceptKey(existingQuestion, context);
+    if (conceptKey) {
+      conceptCounts.set(conceptKey, (conceptCounts.get(conceptKey) || 0) + 1);
+    }
+  });
 
   dedupeQuestions(questions).forEach((question) => {
-    if (!isQuestionStructureValid(question, requestedQuizType) || !isQuestionRelevantToContext(question, context)) {
+    if (!isQuestionStructureValid(question, requestedQuizType, context) || !isQuestionRelevantToContext(question, context)) {
       return;
     }
 
@@ -562,8 +906,24 @@ const filterQuestionsForContext = (questions, context, requestedQuizType, expect
       return;
     }
 
+    const intent = getAnswerIntent(question);
+    const currentIntentCount = intentCounts.get(intent) || 0;
+    if (intent !== 'general' && currentIntentCount >= intentLimit) {
+      return;
+    }
+
+    const conceptKey = getQuestionConceptKey(question, context);
+    const currentConceptCount = conceptKey ? (conceptCounts.get(conceptKey) || 0) : 0;
+    if (conceptKey && availableConceptCount > 1 && currentConceptCount >= conceptLimit) {
+      return;
+    }
+
     signatureSeen.add(signature);
     openerCounts.set(opener, openerCount + 1);
+    intentCounts.set(intent, currentIntentCount + 1);
+    if (conceptKey) {
+      conceptCounts.set(conceptKey, currentConceptCount + 1);
+    }
     accepted.push(question);
   });
 
@@ -732,23 +1092,52 @@ const buildPlausibleDistractors = (context, correctTerm, count = 3) => {
   return distractors.slice(0, count);
 };
 
+const buildFactExplanation = (fact, fallbackAnswer = '') => {
+  const normalizedFallbackAnswer = cleanText(fallbackAnswer);
+  const answerLabel = /^(true|false)$/i.test(normalizedFallbackAnswer)
+    ? normalizeConceptLabel(fact?.term || '')
+    : normalizeConceptLabel(fallbackAnswer || fact?.term || '');
+  const description = cleanText(fact?.description || '').replace(/[.?!]+$/, '');
+
+  if (answerLabel && description) {
+    return `${answerLabel} ${lowerFirst(description)}.`;
+  }
+
+  if (description) {
+    return `${upperFirst(description)}.`;
+  }
+
+  return 'This answer matches the lesson concept being assessed.';
+};
+
+const PREDICATE_START_PATTERN = /^(adds|allows|arranges|changes|collects|combines|compares|controls|creates|defines|describes|displays|embeds|explains|finds|groups|helps|keeps|lets|links|manages|measures|modifies|moves|names|opens|organizes|processes|provides|pulls|repeats|represents|requires|sends|shows|splits|stores|structures|styles|targets|tells|uses|writes|tumutukoy|nagsasaad|naglalarawan|pumapalit|nag-uugnay|is|are|means|refers to|stands for)\b/i;
+
+const buildPredicateClause = (description = '') => {
+  const cleanedDescription = cleanText(description).replace(/[.?!]+$/, '');
+  if (!cleanedDescription) return 'is part of the lesson';
+  return PREDICATE_START_PATTERN.test(cleanedDescription)
+    ? lowerFirst(cleanedDescription)
+    : `is ${lowerFirst(cleanedDescription)}`;
+};
+
 const buildLessonBasedQuestion = (fact, alternateFact, context, questionType, difficulty, index) => {
   const cleanDescription = cleanText(fact.description).replace(/[.?!]+$/, '');
-  const scenarioDescription = lowerFirst(cleanDescription);
-  const correctTerm = fact.term;
+  const predicateClause = buildPredicateClause(cleanDescription);
+  const correctTerm = normalizeConceptLabel(fact.term);
 
   if (questionType === 'true_false') {
     if (alternateFact && index % 2 === 1) {
       return {
-        question: `The lesson states that ${correctTerm} is ${lowerFirst(alternateFact.description).replace(/[.?!]+$/, '')}.`,
+        question: `The lesson states that ${correctTerm} ${buildPredicateClause(alternateFact.description)}.`,
         correctAnswer: 'False',
       };
     }
 
     const hardTemplate = [
-      `${correctTerm} is ${lowerFirst(cleanDescription)}.`,
-      `A learner applying ${correctTerm} would be working with ${lowerFirst(cleanDescription)}.`,
-      `The lesson explains ${correctTerm} as ${lowerFirst(cleanDescription)}.`,
+      `${correctTerm} ${predicateClause}.`,
+      `The lesson explains that ${correctTerm} ${predicateClause}.`,
+      `A student is working with a concept that ${predicateClause}. That concept is ${correctTerm}.`,
+      `${correctTerm} is one lesson concept that ${predicateClause}.`,
     ];
 
     return {
@@ -760,20 +1149,23 @@ const buildLessonBasedQuestion = (fact, alternateFact, context, questionType, di
   if (questionType === 'identification') {
     const identificationTemplates = difficulty === 'hard'
       ? [
-          `A learner needs to ${scenarioDescription}. Write the concept that should be applied.`,
-          `During a class activity, students are asked to ${scenarioDescription}. Name the correct concept.`,
-          `The lesson describes a process that ${scenarioDescription}. Identify the term being referred to.`,
+          `A learner needs a concept that ${predicateClause}. Write the correct term.`,
+          `During a class activity, students use a concept that ${predicateClause}. Name that concept.`,
+          `The lesson describes a term that ${predicateClause}. Identify it.`,
+          `In a real classroom task, what lesson term ${predicateClause}?`,
         ]
       : difficulty === 'medium'
         ? [
-            `Name the concept that ${scenarioDescription}.`,
-            `Identify the term described as ${scenarioDescription}.`,
-            `Write the lesson concept used to ${scenarioDescription}.`,
+            `Name the concept that ${predicateClause}.`,
+            `Identify the term that ${predicateClause}.`,
+            `Write the lesson term that ${predicateClause}.`,
+            `Which lesson concept ${predicateClause}?`,
           ]
         : [
-            `Give the term that means ${scenarioDescription}.`,
-            `Name the concept described as ${scenarioDescription}.`,
-            `Identify the lesson term for ${scenarioDescription}.`,
+            `Give the term that ${predicateClause}.`,
+            `Name the concept that ${predicateClause}.`,
+            `Identify the lesson term that ${predicateClause}.`,
+            `What term ${predicateClause}?`,
           ];
 
     return {
@@ -785,20 +1177,23 @@ const buildLessonBasedQuestion = (fact, alternateFact, context, questionType, di
   const distractors = buildPlausibleDistractors(context, correctTerm, 3);
   const mcqTemplates = difficulty === 'hard'
     ? [
-        `A learner is asked to ${scenarioDescription}. Which concept should be applied?`,
-        `During a performance task, students must ${scenarioDescription}. Select the most appropriate concept.`,
-        `A teacher presents a scenario focused on how to ${scenarioDescription}. Which concept best fits the situation?`,
+        `A learner needs a concept that ${predicateClause}. Which concept should be applied?`,
+        `During a performance task, students use something that ${predicateClause}. Select the most appropriate concept.`,
+        `A teacher presents a situation involving a concept that ${predicateClause}. Which concept best fits?`,
+        `In a real-world use case, which concept ${predicateClause}?`,
       ]
     : difficulty === 'medium'
       ? [
-          `The lesson explains a concept used to ${scenarioDescription}. What is that concept?`,
-          `A student wants to ${scenarioDescription}. Which concept from the lesson should the student use?`,
-          `Choose the concept that best matches this function: ${scenarioDescription}.`,
+          `The lesson explains a concept that ${predicateClause}. What is that concept?`,
+          `A student is looking for a concept that ${predicateClause}. Which lesson concept should the student use?`,
+          `Choose the concept that best matches this function: ${cleanDescription}.`,
+          `Which lesson concept ${predicateClause}?`,
         ]
       : [
-          `Choose the term best described as ${scenarioDescription}.`,
-          `The lesson defines a concept as ${scenarioDescription}. Which term matches that definition?`,
-          `From the lesson definitions, ${scenarioDescription}. What concept is being described?`,
+          `Choose the term that ${predicateClause}.`,
+          `The lesson defines a concept that ${predicateClause}. Which term matches that definition?`,
+          `From the lesson definitions, which concept ${predicateClause}?`,
+          `Which term in the lesson ${predicateClause}?`,
         ];
 
   return {
@@ -809,29 +1204,42 @@ const buildLessonBasedQuestion = (fact, alternateFact, context, questionType, di
 };
 
 // Add fallback quiz generation with topic-specific questions
-const generateFallbackQuiz = (count, context, quizType, difficultyPlan = []) => {
+const generateFallbackQuiz = (count, context, quizType, difficultyPlan = [], existingQuestionDetails = []) => {
   const normalizedType = normalizeQuizType(quizType);
   const topic = context?.topic || extractFocusTopic(context?.moduleText || '');
   const focusLabel = context?.focusDescription || topic;
-  const lessonFacts = buildLessonFacts(context);
+  const usedConcepts = new Set(
+    (existingQuestionDetails || [])
+      .map((question) => getQuestionConceptKey(question, context))
+      .filter(Boolean)
+  );
+  const lessonFacts = (() => {
+    const facts = buildLessonFacts(context);
+    if (!usedConcepts.size) return facts;
+    const unusedFacts = facts.filter((fact) => !usedConcepts.has(normalizeConceptLabel(fact.term).toLowerCase()));
+    const usedFacts = facts.filter((fact) => usedConcepts.has(normalizeConceptLabel(fact.term).toLowerCase()));
+    return [...unusedFacts, ...usedFacts];
+  })();
   const questions = [];
   const difficultyForIndex = (i) => difficultyPlan[i] || 'medium';
 
   for (let i = 0; i < count; i++) {
     let generated;
+    const questionTypeForIndex = resolveQuestionTypeForIndex(normalizedType, i);
+    let supportingFact = lessonFacts[i % Math.max(lessonFacts.length, 1)] || null;
 
     if (topic === 'fractions') {
-      if (normalizedType === 'true_false') generated = generateFractionTrueFalse(i);
-      else if (normalizedType === 'identification') generated = generateFractionIdentification(i);
+      if (questionTypeForIndex === 'true_false') generated = generateFractionTrueFalse(i);
+      else if (questionTypeForIndex === 'identification') generated = generateFractionIdentification(i);
       else generated = generateFractionMcq(i);
     } else if (topic === 'mathematics' || topic === 'algebra' || topic === 'geometry') {
       const seed = i + 2;
-      if (normalizedType === 'true_false') {
+      if (questionTypeForIndex === 'true_false') {
         generated = {
           question: `${seed} + ${seed} is equal to ${seed * 2}.`,
           correctAnswer: 'True',
         };
-      } else if (normalizedType === 'identification') {
+      } else if (questionTypeForIndex === 'identification') {
         generated = {
           question: `Solve: ${seed} x ${seed + 1}`,
           correctAnswer: String(seed * (seed + 1)),
@@ -850,34 +1258,38 @@ const generateFallbackQuiz = (count, context, quizType, difficultyPlan = []) => 
       }
     } else {
       const lessonFact = lessonFacts[i % Math.max(lessonFacts.length, 1)] || {
-        term: context?.conceptTerms?.[0] || upperFirst(topic || 'Lesson concept'),
+        term: getPrimaryLessonConcept(context) || upperFirst(topic || 'Lesson concept'),
         description: cleanText(focusLabel || topic || 'the core concept discussed in the lesson'),
         sentence: cleanText(focusLabel || topic || 'The lesson introduces a core concept.'),
       };
+      supportingFact = lessonFact;
       const alternateFact = lessonFacts.length > 1
         ? lessonFacts[(i + 1) % lessonFacts.length]
         : null;
-      generated = buildLessonBasedQuestion(
-        lessonFact,
-        alternateFact,
-        context,
-        normalizedType,
-        difficultyForIndex(i),
-        i
-      );
+        generated = buildLessonBasedQuestion(
+          lessonFact,
+          alternateFact,
+          context,
+          questionTypeForIndex,
+          difficultyForIndex(i),
+          i
+        );
     }
 
     questions.push(
       normalizeQuestionShape(
         {
           ...generated,
-          explanation: `This answer is aligned with the quiz focus on ${focusLabel}.`,
+          explanation: buildFactExplanation(
+            supportingFact || buildFactRecord(generated?.correctAnswer || generated?.answer || focusLabel, focusLabel || topic),
+            generated?.correctAnswer || generated?.answer
+          ),
           difficulty: difficultyForIndex(i),
-          type: normalizedType,
+          type: questionTypeForIndex,
         },
         i,
         difficultyForIndex(i),
-        normalizedType
+        questionTypeForIndex
       )
     );
   }
@@ -892,6 +1304,7 @@ const createQuizPrompt = (
   difficulty,
   quizType,
   existingQuestions = [],
+  existingQuestionDetails = [],
   difficultyPlan = [],
   includeExplanations = true
 ) => {
@@ -906,6 +1319,14 @@ const createQuizPrompt = (
 
   const existingContext = existingQuestions.length > 0
     ? `\nALREADY GENERATED QUESTIONS (avoid duplicates or close paraphrases):\n${existingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}\n`
+    : '';
+  const existingConcepts = uniqueValues(
+    (existingQuestionDetails || [])
+      .map((question) => getQuestionConceptKey(question, context) || cleanText(question?.answer || question?.correctAnswer))
+      .filter(Boolean)
+  );
+  const usedConceptContext = existingConcepts.length > 0
+    ? `\nALREADY USED LESSON CONCEPTS / ANSWERS (do not reuse these unless the lesson is too short):\n${existingConcepts.map((concept, index) => `${index + 1}. ${concept}`).join('\n')}\n`
     : '';
 
   const typeRules = quizType === 'mcq'
@@ -922,7 +1343,7 @@ const createQuizPrompt = (
 
   const difficultySequence = difficultyPlan.length ? difficultyPlan.join(', ') : normalizedDifficulty;
   const lessonFactsPreview = buildLessonFacts(context)
-    .slice(0, 8)
+    .slice(0, 12)
     .map((fact, index) => `${index + 1}. ${fact.term}: ${fact.description}`)
     .join('\n');
 
@@ -950,14 +1371,17 @@ OUTPUT RULES:
 - Keep every question directly relevant to the topic and focus.
 - Avoid vague, generic, or meta questions about the prompt, quiz creation, or source text itself.
 - NEVER write weak questions like "Which is related to [topic]?" or "The statement is about [topic]."
+- NEVER use the main topic word by itself as the answer unless the lesson truly requires that exact term and there is no narrower concept available.
 - Do not repeat or paraphrase another question.
+- Do not reuse the same lesson concept or same correct answer in multiple questions when there are enough other concepts in the lesson.
 - Do not overuse the same question opener or structure. Mix definition, interpretation, comparison, scenario, and application styles.
 - Use real lesson knowledge. Questions should test understanding, not just mention the topic.
+- When the question count allows it, include a healthy mix of: definition, function, usage, and real-world application.
 - Multiple-choice distractors must be plausible, lesson-related, and academically realistic.
 - Easy questions should focus on basic definitions or recognition.
 - Medium questions should test understanding, function, and usage.
 - Hard questions should use application, analysis, or short scenario-based reasoning.
-- difficulty must always be "${normalizedDifficulty}".${explanationRule}${typeRules}${existingContext}`;
+- difficulty must always be "${normalizedDifficulty}".${explanationRule}${typeRules}${existingContext}${usedConceptContext}`;
 };
 
 // Parse quiz response from Gemini
@@ -1004,6 +1428,7 @@ exports.generateQuiz = async (req, res) => {
       difficulty = 'medium',
       quizType = 'mcq',
       existingQuestions = [],
+      existingQuestionDetails = [],
       includeExplanations = true,
       shuffleQuestions = false,
     } = req.body;
@@ -1013,6 +1438,10 @@ exports.generateQuiz = async (req, res) => {
     const difficultyPlan = buildDifficultyPlan(requestedCount, normalizedDifficulty);
     const context = buildQuizContext({ topic, focusDescription, moduleText });
     const applyFinalOrdering = (items) => (shuffleQuestions ? shuffleArray(items) : items);
+    const existingQuestionPrompts = uniqueValues([
+      ...(Array.isArray(existingQuestions) ? existingQuestions : []),
+      ...(Array.isArray(existingQuestionDetails) ? existingQuestionDetails.map((question) => question?.question) : []),
+    ].filter(Boolean));
 
     console.log('[INFO] Quiz generation request received:', {
       requestedCount,
@@ -1032,40 +1461,19 @@ exports.generateQuiz = async (req, res) => {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
     // First, let's see what models are available
-    await listAvailableModels();
-
-    // Try the most common model names
-    const modelNames = [
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro-latest', 
-      'gemini-pro',
-      'text-bison-001',
-      'gemini-1.0-pro'
-    ];
-
-    let model = null;
-    let workingModelName = null;
-
-    for (const modelName of modelNames) {
-      try {
-        console.log(`[INFO] Trying model: ${modelName}`);
-        model = genAI.getGenerativeModel({ model: modelName });
-        
-        // Test the model with a simple prompt
-        const testResult = await model.generateContent("Say 'test' if you can hear me");
-        console.log(`[SUCCESS] Model ${modelName} is working!`);
-        workingModelName = modelName;
-        break;
-      } catch (error) {
-        console.log(`[WARN] Model ${modelName} failed: ${error.message}`);
-        continue;
-      }
-    }
+    await listAvailableModels(genAI);
+    const { model, workingModelName } = await resolveWorkingQuizModel(genAI);
 
     if (!model || !workingModelName) {
       // If no model works, create a fallback response
       console.log('[INFO] No Gemini models available, using fallback quiz generation');
-      const fallbackQuestions = generateFallbackQuiz(requestedCount, context, normalizedQuizType, difficultyPlan);
+      const fallbackQuestions = generateFallbackQuiz(
+        requestedCount,
+        context,
+        normalizedQuizType,
+        difficultyPlan,
+        existingQuestionDetails
+      );
       return res.json(applyFinalOrdering(fallbackQuestions).slice(0, requestedCount));
     }
 
@@ -1077,7 +1485,8 @@ exports.generateQuiz = async (req, res) => {
       context,
       normalizedDifficulty,
       normalizedQuizType,
-      existingQuestions,
+      existingQuestionPrompts,
+      existingQuestionDetails,
       difficultyPlan,
       includeExplanations
     );
@@ -1094,7 +1503,9 @@ exports.generateQuiz = async (req, res) => {
         parseQuizResponse(text, normalizedQuizType, difficultyPlan),
         context,
         normalizedQuizType,
-        requestedCount
+        requestedCount,
+        normalizedDifficulty,
+        existingQuestionDetails
       );
       console.log(`[INFO] Successfully parsed ${questions.length} questions (requested ${requestedCount})`);
       
@@ -1110,13 +1521,21 @@ exports.generateQuiz = async (req, res) => {
         console.log(`[INFO] AI returned ${questions.length}/${requestedCount}, requesting ${missing} more (attempt ${attempt})...`);
         try {
           const alreadyGenerated = questions.map((q) => q.question);
+          const generatedQuestionDetails = questions.map((question) => ({
+            question: question.question,
+            answer: question.answer,
+            correctAnswer: question.correctAnswer,
+            explanation: question.explanation,
+            type: question.type,
+          }));
           const remainingDifficultyPlan = difficultyPlan.slice(questions.length, requestedCount);
           const retryPrompt = createQuizPrompt(
             missing,
             context,
             normalizedDifficulty,
             normalizedQuizType,
-            [...existingQuestions, ...alreadyGenerated],
+            [...existingQuestionPrompts, ...alreadyGenerated],
+            [...existingQuestionDetails, ...generatedQuestionDetails],
             remainingDifficultyPlan,
             includeExplanations
           );
@@ -1126,7 +1545,9 @@ exports.generateQuiz = async (req, res) => {
             parseQuizResponse(retryText, normalizedQuizType, remainingDifficultyPlan),
             context,
             normalizedQuizType,
-            requestedCount
+            requestedCount,
+            normalizedDifficulty,
+            [...existingQuestionDetails, ...generatedQuestionDetails]
           );
           if (moreQuestions.length > 0) {
             questions = dedupeQuestions([...questions, ...moreQuestions]);
@@ -1139,8 +1560,30 @@ exports.generateQuiz = async (req, res) => {
       if (questions.length < requestedCount) {
         const missing = requestedCount - questions.length;
         const supplementPlan = difficultyPlan.slice(questions.length, requestedCount);
-        const supplement = generateFallbackQuiz(missing, context, normalizedQuizType, supplementPlan);
-        questions = filterQuestionsForContext([...questions, ...supplement], context, normalizedQuizType, requestedCount);
+        const supplement = generateFallbackQuiz(
+          missing,
+          context,
+          normalizedQuizType,
+          supplementPlan,
+          [
+            ...existingQuestionDetails,
+            ...questions.map((question) => ({
+              question: question.question,
+              answer: question.answer,
+              correctAnswer: question.correctAnswer,
+              explanation: question.explanation,
+              type: question.type,
+            })),
+          ]
+        );
+        questions = filterQuestionsForContext(
+          [...questions, ...supplement],
+          context,
+          normalizedQuizType,
+          requestedCount,
+          normalizedDifficulty,
+          existingQuestionDetails
+        );
       }
 
       if (questions.length < requestedCount) {
@@ -1150,8 +1593,9 @@ exports.generateQuiz = async (req, res) => {
         let i = 0;
         while (questions.length < requestedCount) {
           const diff = difficultyPlan[questions.length] || normalizedDifficulty;
+          const questionTypeForIndex = resolveQuestionTypeForIndex(normalizedQuizType, questions.length + i);
           const fact = lessonFacts[i % Math.max(lessonFacts.length, 1)] || {
-            term: context.conceptTerms?.[0] || upperFirst(context.topic || 'Lesson concept'),
+            term: getPrimaryLessonConcept(context) || upperFirst(context.topic || 'Lesson concept'),
             description: cleanText(context.focusDescription || context.topic || 'the key lesson concept'),
             sentence: cleanText(context.focusDescription || context.topic || 'The lesson introduces a key concept.'),
           };
@@ -1164,22 +1608,22 @@ exports.generateQuiz = async (req, res) => {
                 fact,
                 alternateFact,
                 context,
-                normalizedQuizType,
+                questionTypeForIndex,
                 diff,
                 questions.length + i
               ),
               explanation: includeExplanations
-                ? `This answer is based on the lesson content and is used to complete the required question count without repeating earlier questions.`
+                ? buildFactExplanation(fact)
                 : '',
               difficulty: diff,
-              type: normalizedQuizType,
+              type: questionTypeForIndex,
             },
             questions.length,
             diff,
-            normalizedQuizType
+            questionTypeForIndex
           );
           const key = forced.question.trim().toLowerCase();
-          if (!finalSeen.has(key) && isQuestionStructureValid(forced, normalizedQuizType)) {
+          if (!finalSeen.has(key) && isQuestionStructureValid(forced, normalizedQuizType, context)) {
             finalSeen.add(key);
             questions.push(forced);
           }
@@ -1188,7 +1632,14 @@ exports.generateQuiz = async (req, res) => {
         }
       }
 
-      questions = filterQuestionsForContext(questions, context, normalizedQuizType, requestedCount);
+      questions = filterQuestionsForContext(
+        questions,
+        context,
+        normalizedQuizType,
+        requestedCount,
+        normalizedDifficulty,
+        existingQuestionDetails
+      );
 
       if (questions.length < requestedCount) {
         const lessonFacts = buildLessonFacts(context);
@@ -1197,8 +1648,9 @@ exports.generateQuiz = async (req, res) => {
 
         while (questions.length < requestedCount && safety < requestedCount * 6) {
           const diff = difficultyPlan[questions.length] || normalizedDifficulty;
+          const questionTypeForIndex = resolveQuestionTypeForIndex(normalizedQuizType, questions.length + safety);
           const fact = lessonFacts[safety % Math.max(lessonFacts.length, 1)] || {
-            term: context.conceptTerms?.[0] || upperFirst(context.topic || 'Lesson concept'),
+            term: getPrimaryLessonConcept(context) || upperFirst(context.topic || 'Lesson concept'),
             description: cleanText(context.focusDescription || context.topic || 'the key lesson concept'),
             sentence: cleanText(context.focusDescription || context.topic || 'The lesson introduces a key concept.'),
           };
@@ -1211,19 +1663,19 @@ exports.generateQuiz = async (req, res) => {
                 fact,
                 alternateFact,
                 context,
-                normalizedQuizType,
+                questionTypeForIndex,
                 diff,
                 questions.length + safety + requestedCount
               ),
               explanation: includeExplanations
-                ? `This answer is based on the lesson content and preserves the requested question count.`
+                ? buildFactExplanation(fact)
                 : '',
               difficulty: diff,
-              type: normalizedQuizType,
+              type: questionTypeForIndex,
             },
             questions.length,
             diff,
-            normalizedQuizType
+            questionTypeForIndex
           );
           const key = candidate.question.trim().toLowerCase();
 
@@ -1232,7 +1684,9 @@ exports.generateQuiz = async (req, res) => {
               [...questions, candidate],
               context,
               normalizedQuizType,
-              requestedCount
+              requestedCount,
+              normalizedDifficulty,
+              existingQuestionDetails
             );
             if (candidateSet.length > questions.length) {
               finalSeen.add(key);
@@ -1257,7 +1711,13 @@ exports.generateQuiz = async (req, res) => {
       
       // Fallback to mock questions
       console.log('[INFO] Falling back to mock quiz generation');
-      const fallbackQuestions = generateFallbackQuiz(requestedCount, context, normalizedQuizType, difficultyPlan);
+      const fallbackQuestions = generateFallbackQuiz(
+        requestedCount,
+        context,
+        normalizedQuizType,
+        difficultyPlan,
+        existingQuestionDetails
+      );
       const finalQuestions = applyFinalOrdering(fallbackQuestions).slice(0, requestedCount);
       res.json(finalQuestions);
     }
@@ -1278,7 +1738,8 @@ exports.generateQuiz = async (req, res) => {
       requestedCount,
       context,
       normalizeQuizType(req.body.quizType || 'mcq'),
-      difficultyPlan
+      difficultyPlan,
+      req.body.existingQuestionDetails || []
     );
     const finalQuestions = (req.body.shuffleQuestions ? shuffleArray(fallbackQuestions) : fallbackQuestions).slice(0, requestedCount);
     res.json(finalQuestions);
