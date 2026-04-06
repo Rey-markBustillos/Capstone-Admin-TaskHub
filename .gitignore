@@ -1,0 +1,13 @@
+node_modules/
+Admin/node_modules/
+backend/node_modules/
+Admin/dist/
+backend/backend-runtime.log
+
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
