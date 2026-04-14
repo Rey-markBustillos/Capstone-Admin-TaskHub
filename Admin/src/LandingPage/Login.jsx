@@ -2,10 +2,7 @@ import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { FaUserCircle, FaLock, FaSignInAlt, FaArrowLeft } from "react-icons/fa";
 import { recordApplicationVisit, recordPageVisit, recordUserLogin } from '../utils/visitTracker';
-
-// Switch between local and deployed backend here:
-// For Vite:
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+import { buildApiUrl } from '../config/api';
 
 export default function Login({ onBack, onLoginSuccess, onRegister }) {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -34,7 +31,7 @@ export default function Login({ onBack, onLoginSuccess, onRegister }) {
         password: formData.password.trim(),
       };
 
-  const res = await fetch(`${API_BASE_URL}/users/login`, {
+  const res = await fetch(buildApiUrl('/users/login'), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

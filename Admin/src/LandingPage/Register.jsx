@@ -10,10 +10,7 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
 } from "react-icons/fa";
-
-const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"
-).replace(/\/+$/, "");
+import { buildApiUrl } from "../config/api";
 
 function Register({ onBackToLogin }) {
   const [formData, setFormData] = useState({
@@ -62,7 +59,7 @@ function Register({ onBackToLogin }) {
         role: "student",
       };
 
-      const res = await fetch(`${API_BASE_URL}/users`, {
+      const res = await fetch(buildApiUrl('/users'), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

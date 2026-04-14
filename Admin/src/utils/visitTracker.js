@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+import { buildApiUrl } from '../config/api';
 
 // Generate a unique session ID for this browser session
 const generateSessionId = () => {
@@ -42,9 +41,9 @@ export const recordApplicationVisit = async () => {
   try {
     const sessionId = getSessionId();
     console.log('📝 Recording visit with sessionId:', sessionId);
-    console.log('🌐 API URL:', `${API_BASE_URL}/visits`);
+    console.log('🌐 API URL:', buildApiUrl('/visits'));
     
-    const response = await axios.post(`${API_BASE_URL}/visits`, {
+    const response = await axios.post(buildApiUrl('/visits'), {
       page: 'application-access',
       userId: null,
       sessionId: sessionId
@@ -69,8 +68,8 @@ export const recordApplicationVisit = async () => {
 // Get total visits count
 export const fetchTotalVisits = async () => {
   try {
-    console.log('📊 Fetching total visits from:', `${API_BASE_URL}/visits/total`);
-    const response = await axios.get(`${API_BASE_URL}/visits/total`);
+    console.log('📊 Fetching total visits from:', buildApiUrl('/visits/total'));
+    const response = await axios.get(buildApiUrl('/visits/total'));
     console.log('📊 Total visits response:', response.data);
     return response.data.totalVisits;
   } catch (error) {
@@ -89,7 +88,7 @@ export const recordPageVisit = async (pageName, userId = null) => {
     const sessionId = getSessionId();
     console.log('📝 Recording page visit:', { pageName, userId, sessionId });
     
-    await axios.post(`${API_BASE_URL}/visits`, {
+    await axios.post(buildApiUrl('/visits'), {
       page: pageName,
       userId: userId,
       sessionId: sessionId
@@ -107,7 +106,7 @@ export const recordUserLogin = async (userId, userRole) => {
     const sessionId = getSessionId();
     console.log('🔑 Recording user login:', { userId, userRole, sessionId });
     
-    await axios.post(`${API_BASE_URL}/visits`, {
+    await axios.post(buildApiUrl('/visits'), {
       page: `${userRole}-login`,
       userId: userId,
       sessionId: sessionId
