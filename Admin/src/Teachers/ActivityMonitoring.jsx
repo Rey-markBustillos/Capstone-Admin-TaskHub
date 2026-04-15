@@ -223,6 +223,7 @@ export default function ActivityMonitoring() {
   const [error, setError] = useState(null);
   const [classSearchTerm, setClassSearchTerm] = useState("");
   const [submissionSearchTerm, setSubmissionSearchTerm] = useState("");
+  const [submissionStatusFilter, setSubmissionStatusFilter] = useState("all");
   const reportFileHandlesRef = useRef({});
 
   const storedUser = localStorage.getItem("user");
@@ -380,6 +381,42 @@ export default function ActivityMonitoring() {
     cls.className.toLowerCase().includes(classSearchTerm.toLowerCase())
   );
 
+  const parseSubmissionScore = (score) => {
+    if (score === "" || score === null || score === undefined) return null;
+    const parsed = Number(score);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const hasSubmissionScore = (submission) => parseSubmissionScore(submission?.score) !== null;
+
+  const isNewSubmission = (submission) => {
+    const candidate = submission?.submissionDate || submission?.submittedAt || submission?.createdAt;
+    if (!candidate) return false;
+
+    const submittedTime = new Date(candidate).getTime();
+    if (Number.isNaN(submittedTime)) return false;
+
+    const NEW_SUBMISSION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+    return Date.now() - submittedTime <= NEW_SUBMISSION_WINDOW_MS;
+  };
+
+  const matchesSubmissionFilter = (submission) => {
+    const hasScore = hasSubmissionScore(submission);
+    const isNew = isNewSubmission(submission);
+
+    if (submissionStatusFilter === "graded") return hasScore || submission?.status === "Graded";
+    if (submissionStatusFilter === "no_score") return !hasScore;
+    if (submissionStatusFilter === "new") return !hasScore && isNew;
+    if (submissionStatusFilter === "old") return !hasScore && !isNew;
+    return true;
+  };
+
+  const filteredSubmissions = (selectedActivity?.submissions || []).filter((sub) => {
+    const studentName = sub.studentId?.name || "";
+    const matchesSearch = studentName.toLowerCase().includes(submissionSearchTerm.toLowerCase());
+    return matchesSearch && matchesSubmissionFilter(sub);
+  });
+
   const handleBackToClasses = () => {
     setSelectedClass(null);
     setActivities([]);
@@ -389,6 +426,7 @@ export default function ActivityMonitoring() {
   const handleBackToActivities = () => {
     setSelectedActivity(null);
     setSubmissionSearchTerm("");
+    setSubmissionStatusFilter("all");
   };
 
   const saveWorkbookToFile = async (workbook, fileName, classId) => {
@@ -1308,9 +1346,9 @@ export default function ActivityMonitoring() {
               </div>
             </div>
 
-            {/* Search Bar */}
-            <div className="mb-6">
-              <div className="relative max-w-md">
+            {/* Search and Filter Controls */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-3 sm:items-center">
+              <div className="relative max-w-md w-full">
                 <input
                   type="text"
                   placeholder="Search by student name..."
@@ -1320,10 +1358,22 @@ export default function ActivityMonitoring() {
                 />
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               </div>
+
+              <select
+                className="w-full sm:w-56 p-3 border-2 border-blue-200 rounded-xl bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={submissionStatusFilter}
+                onChange={(e) => setSubmissionStatusFilter(e.target.value)}
+              >
+                <option value="all">All</option>
+                <option value="new">New</option>
+                <option value="old">Old</option>
+                <option value="graded">Graded</option>
+                <option value="no_score">No Score</option>
+              </select>
             </div>
 
             {/* Submissions Table */}
-            {selectedActivity.submissions.filter(sub => sub.studentId?.name.toLowerCase().includes(submissionSearchTerm.toLowerCase())).length === 0 ? (
+            {filteredSubmissions.length === 0 ? (
               <div className="text-center py-16">
                 <div className="bg-white rounded-xl shadow-md p-12 max-w-md mx-auto">
                   <FaUsers className="text-6xl text-gray-300 mx-auto mb-4" />
@@ -1346,10 +1396,11 @@ export default function ActivityMonitoring() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {selectedActivity.submissions
-                        .filter(sub => sub.studentId?.name.toLowerCase().includes(submissionSearchTerm.toLowerCase()))
+                      {filteredSubmissions
                         .map((sub, index) => {
                           const fileTypeIcon = getFileIcon(sub.fileName);
+                          const hasScore = hasSubmissionScore(sub);
+                          const isGraded = hasScore || sub.status === 'Graded';
                           
                           // Build proper fileUrl
                           let fileUrl = null;
@@ -1368,6 +1419,7 @@ export default function ActivityMonitoring() {
                           const dueDate = selectedActivity.date ? new Date(selectedActivity.date) : null;
                           const submissionDate = sub.submissionDate ? new Date(sub.submissionDate) : null;
                           const isLate = submissionDate && dueDate && submissionDate > dueDate;
+                          const isNew = !isGraded && isNewSubmission(sub);
 
                           return (
                             <tr key={sub._id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-blue-50/50'} hover:bg-blue-50 transition-colors`}>
@@ -1454,7 +1506,7 @@ export default function ActivityMonitoring() {
                                   <FaTasks className="text-blue-600" />
                                   <input
                                     type="number"
-                                    value={sub.score || ""}
+                                    value={sub.score ?? ""}
                                     onChange={(e) => handleScoreChange(selectedActivity._id, sub._id, e.target.value)}
                                     className="w-20 p-2 border-2 border-blue-200 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     placeholder="0"
@@ -1466,7 +1518,7 @@ export default function ActivityMonitoring() {
                               <td className="px-6 py-4">
                                 <div className="flex flex-col items-center gap-1">
                                   {/* Submission status */}
-                                  {sub.status === 'Graded' ? (
+                                  {isGraded ? (
                                     <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
                                       <FaCheckCircle /> Graded
                                     </span>
@@ -1479,8 +1531,17 @@ export default function ActivityMonitoring() {
                                       <FaClipboardList /> Submitted
                                     </span>
                                   )}
+                                  {!isGraded && (isNew ? (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs font-semibold">
+                                      <FaClock /> New
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">
+                                      <FaClock /> Old
+                                    </span>
+                                  ))}
                                   {/* Late indicator */}
-                                  {isLate && sub.status !== 'Graded' && (
+                                  {isLate && !isGraded && (
                                     <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
                                       <FaTimesCircle /> Late
                                     </span>
