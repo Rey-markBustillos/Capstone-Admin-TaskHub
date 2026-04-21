@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import PWAInstallPrompt from './PWAInstallPrompt';
+import { formatClassTimeRange } from '../utils/dateTime';
 import {
   FaBullhorn,
   FaPlusSquare,
@@ -59,7 +60,7 @@ const Navbar = ({ selectedClass }) => {
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
               <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
                 <FaClock className="text-blue-200" />
-                <span><strong>Schedule:</strong> {selectedClass.time ? new Date(selectedClass.time).toLocaleString() : 'TBA'}</span>
+                <span><strong>Schedule:</strong> {formatClassTimeRange(selectedClass.time, selectedClass.endTime)}</span>
               </div>
               <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
                 <FaCalendarAlt className="text-blue-200" />

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { FaUpload, FaPaste, FaTrash, FaEdit, FaPlus, FaSave, FaTimes, FaFileWord, FaDownload } from 'react-icons/fa';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
+import { formatDateTime } from '../utils/dateTime';
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
@@ -1141,15 +1142,14 @@ export default function CreateQuizz() {
         const score = submission.score || 0;
         const totalQuestions = quiz.questions?.length || 0;
         const percentage = totalQuestions > 0 ? (score / totalQuestions) : 0;
-        const submissionDate = submission.createdAt ? 
-          new Date(submission.createdAt).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          }) : 'N/A';
+        const submissionDate = formatDateTime(submission.createdAt, {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        }, 'N/A');
         const timeTaken = submission.timeTaken ? 
           `${Math.floor(submission.timeTaken / 60)}:${String(submission.timeTaken % 60).padStart(2, '0')}` : 'N/A';
         
@@ -1257,15 +1257,14 @@ export default function CreateQuizz() {
       submissions.forEach(submission => {
         const studentName = submission.studentId?.name || submission.student?.name || submission.studentName || 'Unknown Student';
         const studentEmail = submission.studentId?.email || submission.student?.email || submission.studentEmail || 'N/A';
-        const submissionDate = submission.createdAt ? 
-          new Date(submission.createdAt).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          }) : 'N/A';
+        const submissionDate = formatDateTime(submission.createdAt, {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        }, 'N/A');
         
         quiz.questions?.forEach((question, qIndex) => {
           const studentAnswer = submission.answers?.find(a => a.questionIndex === qIndex);
@@ -1964,14 +1963,14 @@ export default function CreateQuizz() {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
-                            Due: {quiz.dueDate ? new Date(quiz.dueDate).toLocaleString('en-US', { 
-                              year: 'numeric', 
-                              month: 'short', 
-                              day: 'numeric', 
-                              hour: 'numeric', 
+                            Due: {formatDateTime(quiz.dueDate, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: 'numeric',
                               minute: '2-digit',
-                              hour12: true 
-                            }) : 'N/A'}
+                              hour12: true
+                            }, 'N/A')}
                           </div>
                           <div className="text-blue-700 text-sm bg-indigo-100 px-3 py-1 rounded-full inline-flex items-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -2041,7 +2040,7 @@ export default function CreateQuizz() {
                                 <td className="px-3 py-2">{sub.studentId?.name || sub.student?.name || sub.studentName || 'N/A'}</td>
                                 <td className="px-3 py-2">{sub.studentId?.email || sub.student?.email || sub.studentEmail || 'N/A'}</td>
                                 <td className="px-3 py-2">{typeof sub.score === 'number' ? sub.score : 'N/A'}</td>
-                                <td className="px-3 py-2">{sub.submittedAt ? new Date(sub.submittedAt).toLocaleString() : (sub.createdAt ? new Date(sub.createdAt).toLocaleString() : 'N/A')}</td>
+                                <td className="px-3 py-2">{sub.submittedAt ? formatDateTime(sub.submittedAt) : formatDateTime(sub.createdAt, {}, 'N/A')}</td>
                               </tr>
                             ))
                           )}

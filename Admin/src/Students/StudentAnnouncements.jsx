@@ -5,6 +5,7 @@ import { FaBullhorn, FaPaperPlane, FaCommentAlt, FaEye, FaTimes, FaUserCircle, F
 import { availableReactions } from '../constants/reactions';
 import SidebarContext from '../contexts/SidebarContext';
 import { showAlert } from '../utils/swal';
+import { formatDateTime, toTimestamp } from '../utils/dateTime';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -34,7 +35,7 @@ export default function StudentAnnouncements() {
     try {
       setLoading(true);
       const res = await axios.get(`${API_BASE_URL}/announcements?classId=${classId}`);
-      setAnnouncements(res.data.sort((a, b) => new Date(b.date) - new Date(a.date)));
+      setAnnouncements(res.data.sort((a, b) => toTimestamp(b.date, 0) - toTimestamp(a.date, 0)));
       setError(null);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch announcements.");
@@ -343,31 +344,15 @@ export default function StudentAnnouncements() {
                         <FaUserCircle className="text-blue-500 text-base sm:text-lg flex-shrink-0" />
                         <span className="text-gray-500 truncate">
                           <span className="font-medium">{ann.postedBy?.name || 'Teacher'}</span> • {(() => {
-                            const dateToUse = ann.createdAt || ann.date || new Date().toISOString();
-                            const dateObj = new Date(dateToUse);
-                            
-                            if (dateObj && !isNaN(dateObj.getTime())) {
-                              return `${dateObj.toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })} at ${dateObj.toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                              })}`;
-                            } else {
-                              const now = new Date();
-                              return `${now.toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })} at ${now.toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                              })}`;
-                            }
+                            const dateToUse = ann.createdAt || ann.date;
+                            return formatDateTime(dateToUse, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            });
                           })()}
                         </span>
                       </div>
@@ -428,29 +413,14 @@ export default function StudentAnnouncements() {
                                   <span className="font-bold text-gray-900">{comment.postedBy?.name || 'User'}</span>
                                   <span className="text-gray-500 ml-2 text-[10px] sm:text-xs">
                                     {(() => {
-                                      const dateToUse = comment.createdAt || comment.date || new Date().toISOString();
-                                      const dateObj = new Date(dateToUse);
-                                      
-                                      if (dateObj && !isNaN(dateObj.getTime())) {
-                                        return `${dateObj.toLocaleDateString('en-US', {
-                                          month: 'short',
-                                          day: 'numeric'
-                                        })} at ${dateObj.toLocaleTimeString('en-US', {
-                                          hour: '2-digit',
-                                          minute: '2-digit',
-                                          hour12: true
-                                        })}`;
-                                      } else {
-                                        const now = new Date();
-                                        return `${now.toLocaleDateString('en-US', {
-                                          month: 'short',
-                                          day: 'numeric'
-                                        })} at ${now.toLocaleTimeString('en-US', {
-                                          hour: '2-digit',
-                                          minute: '2-digit',
-                                          hour12: true
-                                        })}`;
-                                      }
+                                      const dateToUse = comment.createdAt || comment.date;
+                                      return formatDateTime(dateToUse, {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: true
+                                      });
                                     })()}
                                   </span>
                                 </p>

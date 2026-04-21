@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { FaPlus, FaEdit, FaTrashAlt, FaPaperPlane, FaCommentAlt, FaEye, FaBullhorn, FaFileUpload, FaDownload, FaTimes } from 'react-icons/fa';
 import { availableReactions } from '../constants/reactions';
 import { showAlert, showConfirm } from '../utils/swal';
+import { formatDate } from '../utils/dateTime';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -466,7 +467,7 @@ export default function TeacherAnnouncement() {
 
                     <div className="pt-3 mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs sm:text-sm">
                       <p className="text-gray-600 mb-2 sm:mb-0">
-                        Posted by: <span className="font-semibold text-blue-700">{ann.postedBy?.name || 'You'}</span> on {new Date(ann.datePosted).toLocaleDateString()}
+                        Posted by: <span className="font-semibold text-blue-700">{ann.postedBy?.name || 'You'}</span> on {formatDate(ann.datePosted)}
                       </p>
                       <div className="flex space-x-3">
                         <button onClick={() => handleEdit(ann)} className="flex items-center text-blue-600 hover:text-blue-700 font-medium py-1 px-3 rounded-md hover:bg-blue-50 transition-colors"><FaEdit className="mr-1.5 h-4 w-4" /> Edit</button>
@@ -507,7 +508,7 @@ export default function TeacherAnnouncement() {
                             <div>
                               <p className="text-sm">
                                 <span className="font-bold text-gray-900">{comment.postedBy?.name || 'User'}</span>
-                                <span className="text-gray-500 ml-2 text-xs">{new Date(comment.date).toLocaleDateString()}</span>
+                                <span className="text-gray-500 ml-2 text-xs">{formatDate(comment.date)}</span>
                               </p>
                               <p className="text-gray-700">{comment.text}</p>
                             </div>

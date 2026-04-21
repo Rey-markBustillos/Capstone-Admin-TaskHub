@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx-js-style";
 import { showAlert } from '../utils/swal';
+import { formatClassTimeRange, formatDate, toTimestamp } from '../utils/dateTime';
 import {
   FaFile,
   FaFilePdf,
@@ -30,7 +31,7 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:500
 
 const getActivitySortTime = (activity) => {
   const candidate = activity?.date || activity?.createdAt || activity?.updatedAt;
-  const parsed = candidate ? new Date(candidate).getTime() : 0;
+  const parsed = toTimestamp(candidate, 0);
   return Number.isNaN(parsed) ? 0 : parsed;
 };
 
@@ -39,7 +40,7 @@ const sortActivitiesNewestFirst = (activities = []) =>
 
 const getSubmissionSortTime = (submission) => {
   const candidate = submission?.submissionDate || submission?.submittedAt || submission?.createdAt || submission?.updatedAt;
-  const parsed = candidate ? new Date(candidate).getTime() : 0;
+  const parsed = toTimestamp(candidate, 0);
   return Number.isNaN(parsed) ? 0 : parsed;
 };
 
@@ -393,7 +394,7 @@ export default function ActivityMonitoring() {
     const candidate = submission?.submissionDate || submission?.submittedAt || submission?.createdAt;
     if (!candidate) return false;
 
-    const submittedTime = new Date(candidate).getTime();
+    const submittedTime = toTimestamp(candidate, NaN);
     if (Number.isNaN(submittedTime)) return false;
 
     const NEW_SUBMISSION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
@@ -1208,7 +1209,7 @@ export default function ActivityMonitoring() {
                       </div>
                       <div className="flex items-center gap-3 text-gray-700">
                         <FaClock className="text-blue-600 flex-shrink-0" />
-                        <span className="text-sm"><strong>Time:</strong> {cls.time ? new Date(cls.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "N/A"}</span>
+                        <span className="text-sm"><strong>Time:</strong> {formatClassTimeRange(cls.time, cls.endTime, {}, 'N/A')}</span>
                       </div>
                     </div>
 
@@ -1261,7 +1262,7 @@ export default function ActivityMonitoring() {
                 </div>
                 <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
                   <FaClock />
-                  <span><strong>Time:</strong> {selectedClass.time ? new Date(selectedClass.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "N/A"}</span>
+                  <span><strong>Time:</strong> {formatClassTimeRange(selectedClass.time, selectedClass.endTime, {}, 'N/A')}</span>
                 </div>
               </div>
             </div>
@@ -1292,7 +1293,7 @@ export default function ActivityMonitoring() {
                       {activity.date && (
                         <p className="text-sm text-gray-600 flex items-center gap-2">
                           <FaCalendarAlt className="text-blue-600" />
-                          Due: {new Date(activity.date).toLocaleDateString()}
+                          Due: {formatDate(activity.date)}
                         </p>
                       )}
                     </div>
@@ -1335,7 +1336,7 @@ export default function ActivityMonitoring() {
                     {selectedActivity.date && (
                       <p className="text-blue-100 text-sm flex items-center gap-2 mt-1">
                         <FaCalendarAlt />
-                        Due: {new Date(selectedActivity.date).toLocaleDateString()}
+                        Due: {formatDate(selectedActivity.date)}
                       </p>
                     )}
                   </div>
@@ -1416,9 +1417,9 @@ export default function ActivityMonitoring() {
                           const isValidUrl = fileUrl && (fileUrl.startsWith('http://') || fileUrl.startsWith('https://'));
                           const canShowImage = isValidUrl && /\.(jpg|jpeg|png|gif)$/i.test(sub.fileName);
 
-                          const dueDate = selectedActivity.date ? new Date(selectedActivity.date) : null;
-                          const submissionDate = sub.submissionDate ? new Date(sub.submissionDate) : null;
-                          const isLate = submissionDate && dueDate && submissionDate > dueDate;
+                          const dueDateTimestamp = toTimestamp(selectedActivity.date, NaN);
+                          const submissionTimestamp = toTimestamp(sub.submissionDate, NaN);
+                          const isLate = Number.isFinite(submissionTimestamp) && Number.isFinite(dueDateTimestamp) && submissionTimestamp > dueDateTimestamp;
                           const isNew = !isGraded && isNewSubmission(sub);
 
                           return (
@@ -1441,7 +1442,7 @@ export default function ActivityMonitoring() {
                                 <div className="flex items-center gap-2 text-gray-700">
                                   <FaCalendarAlt className="text-blue-600" />
                                   <span className="text-sm">
-                                    {submissionDate ? submissionDate.toLocaleDateString() : "-"}
+                                    {formatDate(sub.submissionDate, {}, '-')}
                                   </span>
                                 </div>
                               </td>

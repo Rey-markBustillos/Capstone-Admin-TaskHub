@@ -2,32 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaClock, FaCalendarAlt, FaMapMarkerAlt, FaChalkboardTeacher, FaUsers, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { formatClassTimeRange } from '../utils/dateTime';
 
 // Ensure API_BASE_URL ends with a slash
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/$/, '') + '/';
-
-// Helper to format time as hh:mm AM/PM in PH time
-const formatTimePH = (startTimeStr, endTimeStr) => {
-  if (!startTimeStr) return 'TBA';
-  
-  const formatSingleTime = (timeStr) => {
-    const [hour, minute] = timeStr.split(':');
-    if (isNaN(Number(hour)) || isNaN(Number(minute))) return timeStr;
-    const date = new Date(`1970-01-01T${hour}:${minute}:00`);
-    return date.toLocaleTimeString('en-PH', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-      timeZone: 'Asia/Manila'
-    });
-  };
-  
-  const startTime = formatSingleTime(startTimeStr);
-  if (!endTimeStr) return startTime;
-  
-  const endTime = formatSingleTime(endTimeStr);
-  return `${startTime} - ${endTime}`;
-};
 
 const TeacherPortal = () => {
   const [classes, setClasses] = useState([]);
@@ -185,7 +163,7 @@ const TeacherPortal = () => {
                     <div className="flex-1">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Time</p>
                       <p className="text-gray-800 font-medium">
-                        {cls.time ? formatTimePH(cls.time, cls.endTime) : <span className="italic text-gray-400">TBA</span>}
+                        {cls.time ? formatClassTimeRange(cls.time, cls.endTime) : <span className="italic text-gray-400">TBA</span>}
                       </p>
                     </div>
                   </div>

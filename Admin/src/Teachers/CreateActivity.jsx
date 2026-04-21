@@ -4,10 +4,11 @@ import moment from 'moment-timezone';
 import { useParams } from 'react-router-dom';
 import { FaPaperclip, FaListOl, FaPlusCircle, FaBook, FaTimes, FaTasks, FaEdit, FaTrashAlt, FaLock, FaUnlock } from 'react-icons/fa';
 import { showConfirm } from '../utils/swal';
+import { toTimestamp } from '../utils/dateTime';
 
 const getActivitySortTime = (activity) => {
   const candidate = activity?.date || activity?.createdAt || activity?.updatedAt;
-  const parsed = candidate ? new Date(candidate).getTime() : 0;
+  const parsed = toTimestamp(candidate, 0);
   return Number.isNaN(parsed) ? 0 : parsed;
 };
 

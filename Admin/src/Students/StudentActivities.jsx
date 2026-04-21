@@ -4,6 +4,7 @@ import { useParams, useNavigate, NavLink } from 'react-router-dom';
 import { FaArrowLeft, FaPaperclip, FaStar, FaUpload, FaCalendarAlt, FaBookOpen, FaCheckCircle, FaTimesCircle, FaRedoAlt, FaHourglassHalf, FaLock } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
 import { showAlert, showPrompt } from '../utils/swal';
+import { formatDateTime, toTimestamp } from '../utils/dateTime';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -100,15 +101,15 @@ const StudentActivities = () => {
 
   const getStatus = (activity, submission) => {
     if (activity.isLocked) return { text: 'Locked', style: 'bg-gray-100 text-gray-700' };
-    const dueDate = new Date(activity.date);
+    const dueTimestamp = toTimestamp(activity.date, Infinity);
     if (submission) {
-      const submissionDate = new Date(submission.submissionDate);
+      const submissionTimestamp = toTimestamp(submission.submissionDate, -Infinity);
       if (submission.status === 'Needs Resubmission') return { text: 'Needs Resubmission', style: 'bg-purple-100 text-purple-700' };
-      if (submission.score != null) return { text: submissionDate > dueDate ? 'Graded (Late)' : 'Graded', style: 'bg-blue-100 text-blue-700' };
-      if (submissionDate > dueDate) return { text: 'Late', style: 'bg-orange-100 text-orange-700' };
+      if (submission.score != null) return { text: submissionTimestamp > dueTimestamp ? 'Graded (Late)' : 'Graded', style: 'bg-blue-100 text-blue-700' };
+      if (submissionTimestamp > dueTimestamp) return { text: 'Late', style: 'bg-orange-100 text-orange-700' };
       return { text: 'Submitted', style: 'bg-green-100 text-green-700' };
     }
-    return new Date() > dueDate ? { text: 'Missing', style: 'bg-red-100 text-red-700' } : { text: 'Pending', style: 'bg-yellow-100 text-yellow-700' };
+    return Date.now() > dueTimestamp ? { text: 'Missing', style: 'bg-red-100 text-red-700' } : { text: 'Pending', style: 'bg-yellow-100 text-yellow-700' };
   };
 
   const handleSubmission = (activityId) => {
@@ -185,7 +186,7 @@ const StudentActivities = () => {
                         </div>
 
                         <div className="flex items-center text-gray-600 mb-2 gap-2 text-xs sm:text-sm">
-                          <FaCalendarAlt /> Due: {new Date(activity.date).toLocaleString()}
+                          <FaCalendarAlt /> Due: {formatDateTime(activity.date, {}, 'No due date')}
                         </div>
 
                         <div className="flex items-center gap-2 text-xs sm:text-sm">
@@ -210,7 +211,7 @@ const StudentActivities = () => {
                           <span className="text-gray-400 text-xs sm:text-sm">No File</span>
                         )}
 
-                        {!activity.isLocked && ((statusInfo.text !== 'Missing' && new Date() < new Date(activity.date)) || statusInfo.text === 'Needs Resubmission') && (
+                        {!activity.isLocked && ((statusInfo.text !== 'Missing' && Date.now() < toTimestamp(activity.date, -Infinity)) || statusInfo.text === 'Needs Resubmission') && (
                           <button
                             onClick={async (e) => {
                               e.stopPropagation();

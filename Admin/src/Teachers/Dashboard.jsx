@@ -16,6 +16,7 @@ import {
   FaCalendarAlt,
 } from "react-icons/fa";
 import '../Css/Dashboard.css';
+import { formatDate, formatTime, toDate, toTimestamp } from '../utils/dateTime';
 
 // Ensure API_BASE_URL ends with a slash
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/$/, '') + '/';
@@ -52,7 +53,7 @@ export default function TeacherDashboard() {
         { params: { classId } }
       );
       const submissionsData = res.data.submissions || [];
-      const sortedSubmissions = submissionsData.sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate));
+      const sortedSubmissions = submissionsData.sort((a, b) => toTimestamp(b.submissionDate, 0) - toTimestamp(a.submissionDate, 0));
       setSubmissions(sortedSubmissions);
 
       let submissionRate = 0;
@@ -113,8 +114,8 @@ export default function TeacherDashboard() {
       if (Array.isArray(cls.schedule)) {
         cls.schedule.forEach(sch => {
           if (sch.date && sch.time) {
-            const dt = new Date(`${sch.date}T${sch.time}`);
-            if (dt > now && (!soonestDate || dt < soonestDate)) {
+            const dt = toDate(`${sch.date}T${sch.time}`);
+            if (dt && dt > now && (!soonestDate || dt < soonestDate)) {
               soonestDate = dt;
               soonest = cls;
             }
@@ -149,7 +150,7 @@ export default function TeacherDashboard() {
       setSelectedClass({ _id: "ALL_CLASSES", className: "All Classes" });
       const uniqueStudents = getAllUniqueStudents();
       const allSubs = await getAllSubmissions();
-      setSubmissions(allSubs.sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate)));
+      setSubmissions(allSubs.sort((a, b) => toTimestamp(b.submissionDate, 0) - toTimestamp(a.submissionDate, 0)));
       let submissionRate = 0;
       if (uniqueStudents.length > 0) {
         const uniqueSubmitters = new Set(allSubs.map(sub => sub.studentId?._id));
@@ -302,11 +303,11 @@ export default function TeacherDashboard() {
                           <p className="text-sm text-gray-600">
                             <span className="font-medium text-gray-800">{sub.studentId?.name || "Unknown Student"}</span>
                             {" • "}
-                            {new Date(sub.submissionDate).toLocaleDateString()}
+                            {formatDate(sub.submissionDate)}
                           </p>
                           {sub.activityId?.date && (
-                            <p className={`text-xs mt-2 font-semibold flex items-center gap-1 ${new Date(sub.submissionDate) > new Date(sub.activityId.date) ? "text-red-500" : "text-green-500"}`}>
-                              {new Date(sub.submissionDate) > new Date(sub.activityId.date) ? (
+                            <p className={`text-xs mt-2 font-semibold flex items-center gap-1 ${toTimestamp(sub.submissionDate, -Infinity) > toTimestamp(sub.activityId.date, Infinity) ? "text-red-500" : "text-green-500"}`}>
+                              {toTimestamp(sub.submissionDate, -Infinity) > toTimestamp(sub.activityId.date, Infinity) ? (
                                 <>
                                   <FaTimesCircle /> Late Submission
                                 </>
@@ -349,8 +350,8 @@ export default function TeacherDashboard() {
                     const now = new Date();
                     cls.schedule.forEach(sch => {
                       if (sch.date && sch.time) {
-                        const dt = new Date(`${sch.date}T${sch.time}`);
-                        if (dt > now && (!soonestSched || dt < soonestSched.dt)) {
+                        const dt = toDate(`${sch.date}T${sch.time}`);
+                        if (dt && dt > now && (!soonestSched || dt < soonestSched.dt)) {
                           soonestSched = { ...sch, dt };
                         }
                       }
@@ -362,10 +363,10 @@ export default function TeacherDashboard() {
                       {soonestSched ? (
                         <div className="text-sm space-y-1">
                           <p className="flex items-center justify-center gap-2">
-                            <FaCalendarAlt /> {soonestSched.dt.toLocaleDateString()}
+                            <FaCalendarAlt /> {formatDate(soonestSched.dt)}
                           </p>
                           <p className="flex items-center justify-center gap-2">
-                            <FaClock /> {soonestSched.dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            <FaClock /> {formatTime(soonestSched.dt)}
                           </p>
                         </div>
                       ) : (

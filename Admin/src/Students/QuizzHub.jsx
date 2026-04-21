@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FaCalendarAlt, FaCheckCircle, FaTimesCircle, FaListOl, FaPlus, FaEye, FaArrowLeft, FaArrowRight, FaPen, FaSave } from 'react-icons/fa';
 import { useParams, NavLink } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
+import { formatDate } from '../utils/dateTime';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -167,7 +168,7 @@ const QuizzHub = () => {
                 <div>
                   <div className="font-bold text-sm sm:text-base md:text-lg text-blue-900">{qz.title}</div>
                   <div className="text-blue-700 text-xs sm:text-sm mb-0.5 sm:mb-1">{qz.description}</div>
-                  <div className="text-[10px] sm:text-xs text-blue-600 flex items-center gap-1"><FaCalendarAlt className="text-[10px] sm:text-xs" /> Due: {qz.dueDate ? new Date(qz.dueDate).toLocaleDateString() : 'N/A'}</div>
+                  <div className="text-[10px] sm:text-xs text-blue-600 flex items-center gap-1"><FaCalendarAlt className="text-[10px] sm:text-xs" /> Due: {formatDate(qz.dueDate, {}, 'N/A')}</div>
                 </div>
                 {alreadyTaken ? (
                   <div className="flex flex-col items-start">

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaFileUpload, FaArrowLeft, FaPaperclip, FaCalendarAlt, FaStar, FaFileAlt, FaTimesCircle, FaTrash, FaDownload } from 'react-icons/fa';
 import { showConfirm } from '../utils/swal';
+import { formatDateTime } from '../utils/dateTime';
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
@@ -341,7 +342,7 @@ const SubmitActivity = () => {
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600 border-b border-blue-200 mt-3 pb-4">
               <div className="flex items-center gap-1.5">
                 <FaCalendarAlt />
-                <strong>Due:</strong> {new Date(activity.date).toLocaleString()}
+                <strong>Due:</strong> {formatDateTime(activity.date, {}, 'No due date')}
               </div>
               <div className="flex items-center gap-1.5">
                 <FaStar />

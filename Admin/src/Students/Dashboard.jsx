@@ -7,6 +7,7 @@ import VoiceAssistant from './VoiceAssistant';
 import { CheckCircle, Clock, AlertTriangle, Megaphone, Users } from 'lucide-react';
 import useAutoScrollToBottom from '../hooks/useAutoScrollToBottom';
 import { StudentThemeContext } from '../contexts/StudentThemeContext';
+import { formatClassTimeRange, formatDateTime, formatTime, toDate, toTimestamp } from '../utils/dateTime';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -223,6 +224,7 @@ const StudentDashboard = () => {
   // Note: Quiz submissions are fetched through individual quiz endpoints when needed
 
   const now = new Date();
+  const nowTimestamp = Date.now();
   const submissionMap = {};
   submissions.forEach(sub => {
     const actId = sub.activityId && sub.activityId._id ? sub.activityId._id : sub.activityId;
@@ -249,25 +251,25 @@ const StudentDashboard = () => {
   });
 
   // Activity calculations
-  const totalPendingActivities = filteredActivities.filter(a => !submissionMap[a._id] && new Date(a.date) >= now).length;
+  const totalPendingActivities = filteredActivities.filter(a => !submissionMap[a._id] && toTimestamp(a.date, -Infinity) >= nowTimestamp).length;
   const totalLateActivities = filteredActivities.filter(a => {
     const sub = submissionMap[a._id];
-    return sub && new Date(sub.submissionDate) > new Date(a.date);
+    return sub && toTimestamp(sub.submissionDate, -Infinity) > toTimestamp(a.date, Infinity);
   }).length;
   const totalMissingActivities = filteredActivities.filter(a => {
     const sub = submissionMap[a._id];
-    return !sub && new Date(a.date) < now;
+    return !sub && toTimestamp(a.date, Infinity) < nowTimestamp;
   }).length;
 
   // Quiz calculations
-  const totalPendingQuizzes = filteredQuizzes.filter(q => !quizSubmissionMap[q._id] && new Date(q.dueDate) >= now).length;
+  const totalPendingQuizzes = filteredQuizzes.filter(q => !quizSubmissionMap[q._id] && toTimestamp(q.dueDate, -Infinity) >= nowTimestamp).length;
   const totalLateQuizzes = filteredQuizzes.filter(q => {
     const sub = quizSubmissionMap[q._id];
-    return sub && new Date(sub.submissionDate) > new Date(q.dueDate);
+    return sub && toTimestamp(sub.submissionDate, -Infinity) > toTimestamp(q.dueDate, Infinity);
   }).length;
   const totalMissingQuizzes = filteredQuizzes.filter(q => {
     const sub = quizSubmissionMap[q._id];
-    return !sub && new Date(q.dueDate) < now;
+    return !sub && toTimestamp(q.dueDate, Infinity) < nowTimestamp;
   }).length;
 
   return (
@@ -297,7 +299,7 @@ const StudentDashboard = () => {
               <button 
                 onClick={(e) => {
                   e.preventDefault();
-                  const pendingActivities = filteredActivities.filter(a => !submissionMap[a._id] && new Date(a.date) >= now);
+                  const pendingActivities = filteredActivities.filter(a => !submissionMap[a._id] && toTimestamp(a.date, -Infinity) >= nowTimestamp);
                   console.log('Pending Activities button clicked:', pendingActivities.length);
                   openActivityModal('pending', pendingActivities, 'Pending Activities');
                 }}
@@ -312,7 +314,7 @@ const StudentDashboard = () => {
                   e.preventDefault();
                   const lateActivities = filteredActivities.filter(a => {
                     const sub = submissionMap[a._id];
-                    return sub && new Date(sub.submissionDate) > new Date(a.date);
+                    return sub && toTimestamp(sub.submissionDate, -Infinity) > toTimestamp(a.date, Infinity);
                   });
                   console.log('Late Activities button clicked:', lateActivities.length);
                   openActivityModal('late', lateActivities, 'Late Activities');
@@ -328,7 +330,7 @@ const StudentDashboard = () => {
                   e.preventDefault();
                   const missingActivities = filteredActivities.filter(a => {
                     const sub = submissionMap[a._id];
-                    return !sub && new Date(a.date) < now;
+                    return !sub && toTimestamp(a.date, Infinity) < nowTimestamp;
                   });
                   console.log('Missing Activities button clicked:', missingActivities.length);
                   openActivityModal('missing', missingActivities, 'Missing Activities');
@@ -342,7 +344,7 @@ const StudentDashboard = () => {
               <button 
                 onClick={(e) => {
                   e.preventDefault();
-                  const pendingQuizzes = filteredQuizzes.filter(q => !quizSubmissionMap[q._id] && new Date(q.dueDate) >= now);
+                  const pendingQuizzes = filteredQuizzes.filter(q => !quizSubmissionMap[q._id] && toTimestamp(q.dueDate, -Infinity) >= nowTimestamp);
                   console.log('Pending Quizzes button clicked:', pendingQuizzes.length);
                   openActivityModal('pending-quiz', pendingQuizzes, 'Pending Quizzes');
                 }}
@@ -357,7 +359,7 @@ const StudentDashboard = () => {
                   e.preventDefault();
                   const lateQuizzes = filteredQuizzes.filter(q => {
                     const sub = quizSubmissionMap[q._id];
-                    return sub && new Date(sub.submissionDate) > new Date(q.dueDate);
+                    return sub && toTimestamp(sub.submissionDate, -Infinity) > toTimestamp(q.dueDate, Infinity);
                   });
                   console.log('Late Quizzes button clicked:', lateQuizzes.length);
                   openActivityModal('late-quiz', lateQuizzes, 'Late Quizzes');
@@ -373,7 +375,7 @@ const StudentDashboard = () => {
                   e.preventDefault();
                   const missingQuizzes = filteredQuizzes.filter(q => {
                     const sub = quizSubmissionMap[q._id];
-                    return !sub && new Date(q.dueDate) < now;
+                    return !sub && toTimestamp(q.dueDate, Infinity) < nowTimestamp;
                   });
                   console.log('Missing Quizzes button clicked:', missingQuizzes.length);
                   openActivityModal('missing-quiz', missingQuizzes, 'Missing Quizzes');
@@ -406,8 +408,8 @@ const StudentDashboard = () => {
                         const now = new Date();
                         cls.schedule.forEach(sch => {
                           if (sch.date && sch.time) {
-                            const dt = new Date(`${sch.date}T${sch.time}`);
-                            if (dt > now && (!soonestSched || dt < soonestSched.dt)) {
+                            const dt = toDate(`${sch.date}T${sch.time}`);
+                            if (dt && dt > now && (!soonestSched || dt < soonestSched.dt)) {
                               soonestSched = { ...sch, dt };
                             }
                           }
@@ -422,10 +424,8 @@ const StudentDashboard = () => {
                             <p className="text-gray-700 text-xs sm:text-sm md:text-base">
                               <strong>Time:</strong> <span className="truncate">{
                                 soonestSched
-                                  ? soonestSched.dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ` | ${soonestSched.dt.toLocaleString('en-US', { weekday: 'long' })}`
-                                  : (cls.time && !isNaN(new Date(`1970-01-01T${cls.time}`).getTime())
-                                      ? new Date(`1970-01-01T${cls.time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                      : 'TBA')
+                                  ? formatTime(soonestSched.dt) + ` | ${soonestSched.dt.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'Asia/Manila' })}`
+                                  : formatClassTimeRange(cls.time, cls.endTime)
                               }</span>
                             </p>
                           </div>
@@ -450,33 +450,15 @@ const StudentDashboard = () => {
                       <p className="text-xs sm:text-sm md:text-base italic mt-1">
                         {(() => {
                           // Try different date fields in order of preference
-                          const dateToUse = ann.createdAt || ann.date || ann.announcementDate || new Date().toISOString();
-                          const dateObj = new Date(dateToUse);
-                          
-                          // Check if date is valid
-                          if (dateObj && !isNaN(dateObj.getTime())) {
-                            return `Posted on ${dateObj.toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })} at ${dateObj.toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: true
-                            })}`;
-                          } else {
-                            // Fallback to current date
-                            const now = new Date();
-                            return `Posted on ${now.toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })} at ${now.toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              hour12: true
-                            })}`;
-                          }
+                          const dateToUse = ann.createdAt || ann.date || ann.announcementDate;
+                          return `Posted on ${formatDateTime(dateToUse, {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          })}`;
                         })()}
                       </p>
                     </li>
@@ -536,37 +518,23 @@ const StudentDashboard = () => {
                         <div className="grid grid-cols-1 gap-2 text-xs sm:text-sm md:text-base text-gray-600">
                           <p><strong>Class:</strong> {classInfo?.className || 'Unknown Class'}</p>
                           <p><strong>Teacher:</strong> {classInfo?.teacherName || 'Unknown Teacher'}</p>
-                          <p><strong>Due Date:</strong> {(() => {
-                            const dateObj = new Date(activity.date);
-                            if (dateObj && !isNaN(dateObj.getTime())) {
-                              return `${dateObj.toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })} at ${dateObj.toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: true
-                              })}`;
-                            }
-                            return 'No due date';
-                          })()}</p>
+                          <p><strong>Due Date:</strong> {formatDateTime(activity.date, {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          }, 'No due date')}</p>
                           {submission && (
-                            <p><strong>Submitted:</strong> {(() => {
-                              const subDate = new Date(submission.submissionDate);
-                              if (subDate && !isNaN(subDate.getTime())) {
-                                return `${subDate.toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric'
-                                })} at ${subDate.toLocaleTimeString('en-US', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  hour12: true
-                                })}`;
-                              }
-                              return 'Unknown date';
-                            })()}</p>
+                            <p><strong>Submitted:</strong> {formatDateTime(submission.submissionDate, {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            }, 'Unknown date')}</p>
                           )}
                         </div>
                         {activity.description && (

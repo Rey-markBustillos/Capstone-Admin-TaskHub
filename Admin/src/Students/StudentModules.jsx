@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
 import axios from 'axios';
 import { showAlert } from '../utils/swal';
+import { formatDate } from '../utils/dateTime';
 import { 
   FaBook, 
   FaDownload, 
@@ -268,7 +269,7 @@ const StudentModules = () => {
                       </div>
                       <div className="flex items-center gap-1.5">
                         <FaCalendarAlt className="text-blue-500 flex-shrink-0" />
-                        <span>Uploaded: {new Date(module.uploadDate).toLocaleDateString()}</span>
+                        <span>Uploaded: {formatDate(module.uploadDate, {}, 'N/A')}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <FaUser className="text-blue-500 flex-shrink-0" />

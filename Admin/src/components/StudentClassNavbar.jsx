@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import { FaBullhorn, FaTasks, FaUsers, FaArrowLeft, FaBars, FaTimes, FaChalkboardTeacher, FaClock, FaMapMarkerAlt, FaBook, FaCalendarAlt, FaSchool, FaCalendarCheck, FaQuestionCircle } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
+import { formatClassTimeRange } from '../utils/dateTime';
 
 const StudentClassNavbar = ({ selectedClass }) => {
   const [open, setOpen] = useState(false);
@@ -49,7 +50,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-3 text-[9px] sm:text-[10px] md:text-xs w-full lg:w-auto">
               <div className="flex items-center gap-1 sm:gap-1.5 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 rounded shadow-sm">
                 <FaClock className="text-blue-200 text-[10px] sm:text-xs md:text-sm flex-shrink-0" />
-                <span className="font-medium truncate max-w-[80px] sm:max-w-[100px] md:max-w-none text-[9px] sm:text-[10px] md:text-xs"><strong className="text-blue-100">Time:</strong> <span className="sm:hidden">TBA</span><span className="hidden sm:inline">{selectedClass.time ? new Date(selectedClass.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'TBA'}</span></span>
+                <span className="font-medium truncate max-w-[80px] sm:max-w-[100px] md:max-w-none text-[9px] sm:text-[10px] md:text-xs"><strong className="text-blue-100">Time:</strong> <span className="sm:hidden">TBA</span><span className="hidden sm:inline">{formatClassTimeRange(selectedClass.time, selectedClass.endTime)}</span></span>
               </div>
               {selectedClass.day && (
                 <div className="flex items-center gap-1 sm:gap-1.5 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 rounded shadow-sm">

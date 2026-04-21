@@ -22,6 +22,7 @@
 import React, { useState } from "react";
 import { Mic, Loader2 } from "lucide-react";
 import { showAlert } from '../utils/swal';
+import { toTimestamp } from '../utils/dateTime';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -125,7 +126,10 @@ export default function VoiceAssistant({ userId, todaysClassTime }) {
       }
 
       activities.forEach((act) => {
-        const dueDate = new Date(act.date);
+        const dueTimestamp = toTimestamp(act.date, NaN);
+        if (!Number.isFinite(dueTimestamp)) return;
+
+        const dueDate = new Date(dueTimestamp);
         const submission = Array.isArray(submissions)
           ? submissions.find((s) => {
               const subActId =

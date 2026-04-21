@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { showConfirm } from '../utils/swal';
+import { formatDate } from '../utils/dateTime';
 import { 
   FaUpload, 
   FaFileAlt, 
@@ -352,7 +353,7 @@ const UploadModule = () => {
                         {formatFileSize(module.fileSize)}
                       </span>
                       <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
-                        {new Date(module.uploadDate).toLocaleDateString()}
+                        {formatDate(module.uploadDate, {}, 'N/A')}
                       </span>
                       {module.cloudinaryUrl ? (
                         <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded" title="Stored in cloud">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
+import { formatClassTimeRange, formatDateTime, toTimeInputValue } from '../utils/dateTime';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -130,29 +131,6 @@ const ClassManagement = () => {
         setTimeout(() => setImportError(''), 3000);
         console.error('Error auto-enrolling students:', error);
       });
-  };
-
-  // Helper to format time as hh:mm AM/PM in PH time
-  const formatTimePH = (startTimeStr, endTimeStr) => {
-    if (!startTimeStr) return 'N/A';
-    
-    const formatSingleTime = (timeStr) => {
-      const [hour, minute] = timeStr.split(':');
-      if (isNaN(Number(hour)) || isNaN(Number(minute))) return timeStr;
-      const date = new Date(`1970-01-01T${hour}:${minute}:00`);
-      return date.toLocaleTimeString('en-PH', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'Asia/Manila'
-      });
-    };
-    
-    const startTime = formatSingleTime(startTimeStr);
-    if (!endTimeStr) return startTime;
-    
-    const endTime = formatSingleTime(endTimeStr);
-    return `${startTime} - ${endTime}`;
   };
 
   const fetchAllData = useCallback(() => {
@@ -353,12 +331,8 @@ const ClassManagement = () => {
     setEditClass({
       ...classItem,
       teacher: classItem.teacher?._id || classItem.teacher,
-      time: typeof classItem.time === "string"
-        ? classItem.time
-        : (classItem.time ? new Date(classItem.time).toISOString().slice(11, 16) : ''),
-      endTime: typeof classItem.endTime === "string"
-        ? classItem.endTime
-        : (classItem.endTime ? new Date(classItem.endTime).toISOString().slice(11, 16) : ''),
+      time: toTimeInputValue(classItem.time),
+      endTime: toTimeInputValue(classItem.endTime),
       day: classItem.day || '',
       roomNumber: classItem.roomNumber || '',
     });
@@ -515,7 +489,7 @@ const ClassManagement = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
                         <circle cx="12" cy="12" r="9" />
                       </svg>
-                      <b>Time:</b> {formatTimePH(classItem.time, classItem.endTime)}
+                      <b>Time:</b> {formatClassTimeRange(classItem.time, classItem.endTime, {}, 'N/A')}
                     </span>
                   </div>
                   <div className="text-gray-600 mt-2 text-sm">
@@ -531,7 +505,7 @@ const ClassManagement = () => {
                       <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 8l6 6M8 12l-3 3 3 3M15 12l3-3-3-3" />
                       </svg>
-                      Archived on: {new Date(classItem.archivedAt).toLocaleDateString('en-PH', {
+                      Archived on: {formatDateTime(classItem.archivedAt, {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',

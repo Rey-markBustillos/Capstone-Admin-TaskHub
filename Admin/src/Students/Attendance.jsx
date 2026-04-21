@@ -4,6 +4,7 @@ import { FaCalendarCheck, FaPercent, FaArrowLeft, FaFilter, FaCheckCircle, FaTim
 import { NavLink, useParams } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
 import { StudentThemeContext } from '../contexts/StudentThemeContext';
+import { formatDate } from '../utils/dateTime';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -125,7 +126,7 @@ const Attendance = () => {
                         .filter(rec => filter==='All' ? true : rec.status===filter)
                         .map((rec, idx) => (
                           <tr key={idx} className={`border-b border-blue-50 hover:bg-blue-50 transition-colors ${rec.status === 'Present' ? 'bg-green-50/30' : rec.status==='Late' ? 'bg-yellow-50/30' : 'bg-red-50/30'}`}>
-                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 font-medium text-gray-800 text-xs sm:text-sm md:text-base whitespace-nowrap">{new Date(rec.date).toLocaleDateString()}</td>
+                            <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 font-medium text-gray-800 text-xs sm:text-sm md:text-base whitespace-nowrap">{formatDate(rec.date, {}, '-')}</td>
                             <td className="px-2 sm:px-3 md:px-4 py-2 sm:py-3 text-xs sm:text-sm md:text-base">
                               <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full font-bold text-[10px] sm:text-xs md:text-sm ${
                                 rec.status === 'Present' ? 'bg-green-100 text-green-700' : 
