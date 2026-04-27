@@ -161,32 +161,13 @@ const CreateActivity = () => {
     }
   };
 
-  const handleDownloadAttachment = async (attachmentUrl, activityId, activityTitle) => {
+  const handleViewAttachment = async (activityId) => {
     try {
-      // If it's a Cloudinary URL, download directly
-      if (attachmentUrl.startsWith('http://') || attachmentUrl.startsWith('https://')) {
-        window.open(attachmentUrl, '_blank');
-        return;
-      }
-      
-      // Otherwise, fetch through backend with auth headers
-      const response = await axios.get(`${API_BASE_URL}/activities/${activityId}/download`, {
-        responseType: 'blob'
-      });
-      
-      // Create blob URL and trigger download
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${activityTitle}-attachment`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      const inlineUrl = `${API_BASE_URL}/activities/${activityId}/download?disposition=inline`;
+      window.open(inlineUrl, '_blank', 'noopener,noreferrer');
     } catch (err) {
-      console.error('Download error:', err);
-      setError(err.response?.data?.message || 'Failed to download attachment.');
+      console.error('View attachment error:', err);
+      setError(err.response?.data?.message || 'Failed to open attachment.');
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -455,7 +436,7 @@ const CreateActivity = () => {
                     </div>
                     {activity.attachment && (
                       <button
-                        onClick={() => handleDownloadAttachment(activity.attachment, activity._id, activity.title)}
+                        onClick={() => handleViewAttachment(activity._id)}
                         className="inline-flex items-center text-blue-600 hover:text-blue-700 hover:underline mt-2 text-xs font-medium cursor-pointer bg-transparent border-none"
                         title={`View ${activity.title} attachment`}
                       >

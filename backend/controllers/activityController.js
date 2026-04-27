@@ -5,6 +5,28 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 
+const isAbsoluteUrl = (value = '') => /^https?:\/\//i.test(value);
+
+const cloudinaryDownloadUrl = (url = '') => {
+  if (!isAbsoluteUrl(url)) return url;
+  if (url.includes('/upload/fl_attachment/')) return url;
+  if (url.includes('/upload/')) {
+    return url.replace('/upload/', '/upload/fl_attachment/');
+  }
+  return url;
+};
+
+const cloudinaryInlineUrl = (url = '') => {
+  if (!isAbsoluteUrl(url)) return url;
+  return url.replace('/upload/fl_attachment/', '/upload/');
+};
+
+const shouldInlineDisposition = (req) => {
+  const raw = String(req.query?.disposition || '').toLowerCase();
+  const mode = String(req.query?.mode || '').toLowerCase();
+  return raw === 'inline' || mode === 'view';
+};
+
 // Debug function for file uploads
 function logFileDebug(req, context = "") {
   if (!req.file) {
@@ -595,10 +617,11 @@ exports.downloadActivityAttachment = async (req, res) => {
     }
 
     const attachmentUrl = activity.attachment;
+    const inline = shouldInlineDisposition(req);
 
     // If it's a Cloudinary URL, redirect to it
-    if (attachmentUrl.startsWith('http://') || attachmentUrl.startsWith('https://')) {
-      return res.redirect(attachmentUrl);
+    if (isAbsoluteUrl(attachmentUrl)) {
+      return res.redirect(inline ? cloudinaryInlineUrl(attachmentUrl) : cloudinaryDownloadUrl(attachmentUrl));
     }
 
     // For local files (fallback for old data)
@@ -609,8 +632,8 @@ exports.downloadActivityAttachment = async (req, res) => {
     }
 
     const fileName = path.basename(filePath);
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.setHeader('Content-Type', 'application/octet-stream');
+    res.type(fileName);
+    res.setHeader('Content-Disposition', `${inline ? 'inline' : 'attachment'}; filename="${fileName}"`);
     
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
@@ -627,6 +650,7 @@ exports.downloadActivityAttachment = async (req, res) => {
 exports.downloadSubmissionFile = async (req, res) => {
   try {
     const { id } = req.params;
+    const inline = shouldInlineDisposition(req);
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid submission ID' });
     }
@@ -637,7 +661,7 @@ exports.downloadSubmissionFile = async (req, res) => {
     }
 
     if (submission.cloudinaryUrl) {
-      return res.redirect(submission.cloudinaryUrl);
+      return res.redirect(inline ? cloudinaryInlineUrl(submission.cloudinaryUrl) : cloudinaryDownloadUrl(submission.cloudinaryUrl));
     }
     
     if (!submission.filePath) {
@@ -654,7 +678,16 @@ exports.downloadSubmissionFile = async (req, res) => {
     }
 
     if (fs.existsSync(filePath)) {
-      res.download(filePath, submission.fileName || path.basename(filePath));
+      const outputName = submission.fileName || path.basename(filePath);
+
+      if (inline) {
+        res.type(submission.fileType || outputName);
+        res.setHeader('Content-Disposition', `inline; filename="${outputName}"`);
+        const fileStream = fs.createReadStream(filePath);
+        return fileStream.pipe(res);
+      }
+
+      res.download(filePath, outputName);
     } else {
       res.status(404).json({ 
         message: 'File not found on server.',

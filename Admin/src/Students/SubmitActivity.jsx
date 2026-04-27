@@ -6,7 +6,7 @@ import { showConfirm } from '../utils/swal';
 import { formatDateTime } from '../utils/dateTime';
 
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/$/, '');
 
 const SubmitActivity = () => {
   const { classId, activityId } = useParams();
@@ -221,17 +221,10 @@ const SubmitActivity = () => {
     }
   };
 
-  const getAttachmentUrl = (filePath) => {
-    if (!filePath) return '#';
-    // If it's already a full URL (Cloudinary), return as-is with double extension fix
-    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
-      return filePath.replace(/(\.[^./?]+)\1+(?=($|\?))/i, "$1");  // Remove .pdf.pdf
-    }
-    // Otherwise, construct URL from API base
-    const normalizedPath = filePath.replace(/\\/g, '/');
-    const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath;
-    return `${API_BASE_URL}/${cleanPath}`;
-  };
+  const getSubmissionViewUrl = (submissionId) => `${API_BASE_URL}/activities/submission/${submissionId}/download?disposition=inline`;
+  const getSubmissionDownloadUrl = (submissionId) => `${API_BASE_URL}/activities/submission/${submissionId}/download`;
+  const getActivityViewUrl = (id) => `${API_BASE_URL}/activities/${id}/download?disposition=inline`;
+  const getActivityDownloadUrl = (id) => `${API_BASE_URL}/activities/${id}/download`;
 
   if (loading) return <div className="flex justify-center items-center h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">Loading...</div>;
   if (!activity) return <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center"><div className="text-center p-10 text-red-500 bg-white rounded-xl shadow-lg">{error || 'Activity could not be loaded.'}</div></div>;
@@ -264,11 +257,11 @@ const SubmitActivity = () => {
                     </button>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <a href={getAttachmentUrl(previousSubmission.filePath)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 text-sm hover:underline">
+                    <a href={getSubmissionViewUrl(previousSubmission._id)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-600 text-sm hover:underline">
                       <FaFileAlt />
                       <span>{previousSubmission.fileName}</span>
                     </a>
-                    <a href={`${API_BASE_URL}/activities/submission/${previousSubmission._id}/download`} className="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-800">
+                    <a href={getSubmissionDownloadUrl(previousSubmission._id)} className="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-800">
                       <FaDownload /> Download
                     </a>
                   </div>
@@ -359,10 +352,10 @@ const SubmitActivity = () => {
               <div className="mt-6">
                 <h3 className="font-semibold text-gray-800 mb-2">Attachment</h3>
                 <div className="flex flex-wrap items-center gap-3">
-                  <a href={`${API_BASE_URL.replace(/\/$/, '')}/activities/${activity._id}/download`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors shadow-md min-h-[44px]">
+                    <a href={getActivityViewUrl(activity._id)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors shadow-md min-h-[44px]">
                       <FaPaperclip /> View Attachment
                   </a>
-                  <a href={`${API_BASE_URL.replace(/\/$/, '')}/activities/${activity._id}/download`} className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 transition-colors shadow-sm min-h-[44px]">
+                    <a href={getActivityDownloadUrl(activity._id)} className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 transition-colors shadow-sm min-h-[44px]">
                       <FaDownload /> Download
                   </a>
                 </div>

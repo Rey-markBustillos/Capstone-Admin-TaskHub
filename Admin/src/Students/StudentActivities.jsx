@@ -120,16 +120,9 @@ const StudentActivities = () => {
 
   const getAttachmentUrl = (activity) => {
     if (!activity || !activity.attachment) return null;
-    
-    // If attachment is already a Cloudinary URL, use it directly
-    if (activity.attachment.startsWith('http://') || activity.attachment.startsWith('https://')) {
-      console.log('📎 Using Cloudinary URL for activity:', activity.title);
-      return activity.attachment;
-    }
-    
-    // Otherwise, use backend download endpoint for legacy local files
-    console.log('📎 Using backend download for activity:', activity.title);
-    return `${API_BASE_URL}/activities/${activity._id}/download`;
+
+    // Use inline disposition so "View Attachment" opens in-browser instead of forcing a download.
+    return `${API_BASE_URL}/activities/${activity._id}/download?disposition=inline`;
   };
 
   if (loading) return (

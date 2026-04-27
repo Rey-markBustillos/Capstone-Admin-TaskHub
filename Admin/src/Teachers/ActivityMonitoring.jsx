@@ -1405,12 +1405,14 @@ export default function ActivityMonitoring() {
                           
                           // Build proper fileUrl
                           let fileUrl = null;
+                          const submissionDownloadUrl = sub._id ? `${API_BASE_URL}activities/submission/${sub._id}/download` : null;
+                          const submissionViewUrl = submissionDownloadUrl ? `${submissionDownloadUrl}?disposition=inline` : null;
                           if (sub.cloudinaryUrl) {
                             fileUrl = sub.cloudinaryUrl;
                           } else if (sub.filePath && sub.filePath.startsWith('http')) {
                             fileUrl = sub.filePath;
-                          } else if (sub._id) {
-                            fileUrl = `${API_BASE_URL}activities/submission/${sub._id}/download`;
+                          } else if (submissionDownloadUrl) {
+                            fileUrl = submissionDownloadUrl;
                           }
 
                           // Validate that fileUrl is a full URL (not just a filename)
@@ -1468,7 +1470,7 @@ export default function ActivityMonitoring() {
                                     <div className="flex flex-wrap gap-2">
                                       {/* View button */}
                                       <a
-                                        href={isValidUrl ? fileUrl : `${API_BASE_URL}activities/submission/${sub._id}/download`}
+                                        href={submissionViewUrl || fileUrl || '#'}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
@@ -1479,7 +1481,7 @@ export default function ActivityMonitoring() {
                                       {/* Download button */}
                                       <button
                                         onClick={() => handleDownloadFile(
-                                          isValidUrl ? fileUrl : `${API_BASE_URL}activities/submission/${sub._id}/download`,
+                                          isValidUrl ? fileUrl : (submissionDownloadUrl || fileUrl),
                                           sub.fileName
                                         )}
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium cursor-pointer"
