@@ -6,12 +6,14 @@ import { availableReactions } from '../constants/reactions';
 import SidebarContext from '../contexts/SidebarContext';
 import { showAlert } from '../utils/swal';
 import { formatDateTime, toTimestamp } from '../utils/dateTime';
+import { getStudentClassContentClasses } from '../utils/studentClassLayout';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 export default function StudentAnnouncements() {
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
+  const contentClasses = getStudentClassContentClasses(isSidebarOpen);
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const userId = user?._id;
@@ -137,9 +139,7 @@ export default function StudentAnnouncements() {
   // ...availableReactions imported from shared constants...
 
   return (
-    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-28 sm:pt-32 md:pt-36 pb-8 sm:pb-12 md:pb-16 px-3 sm:px-4 md:px-6 transition-all duration-300 ${
-      isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'
-    }`}>
+    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-28 sm:pt-32 md:pt-36 pb-8 sm:pb-12 md:pb-16 px-3 sm:px-4 md:px-6 transition-all duration-300 ${contentClasses}`}>
       <div className="w-full max-w-5xl mx-auto">
         <div className="mb-4 sm:mb-6 mt-2">
         </div>

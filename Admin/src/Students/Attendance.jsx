@@ -5,12 +5,14 @@ import { NavLink, useParams } from 'react-router-dom';
 import SidebarContext from '../contexts/SidebarContext';
 import { StudentThemeContext } from '../contexts/StudentThemeContext';
 import { formatDate } from '../utils/dateTime';
+import { getStudentClassContentClasses } from '../utils/studentClassLayout';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
 const Attendance = () => {
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
+  const contentClasses = getStudentClassContentClasses(isSidebarOpen);
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
   const studentId = user?._id;
@@ -45,7 +47,7 @@ const Attendance = () => {
   }, [studentId, classId]);
 
   return (
-    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${contentClasses}`}>
       <div className="w-full h-full p-2 sm:p-3 md:p-4 lg:p-6">
         {/* Back Button */}
         <div className="mb-3 sm:mb-4 md:mb-6">

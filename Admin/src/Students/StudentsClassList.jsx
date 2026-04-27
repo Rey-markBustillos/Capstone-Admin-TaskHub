@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { FaUserGraduate, FaUsers } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
+import { getStudentClassContentClasses } from '../utils/studentClassLayout';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -12,6 +13,7 @@ const StudentClassList = () => {
   const [error, setError] = useState(null);
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
+  const contentClasses = getStudentClassContentClasses(isSidebarOpen);
 
   useEffect(() => {
     if (!classId) return;
@@ -35,7 +37,7 @@ const StudentClassList = () => {
 
   if (loading) {
     return (
-      <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 md:p-8 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
+      <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 md:p-8 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${contentClasses}`}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center p-10 text-lg font-semibold text-gray-800">Loading class list...</div>
         </div>
@@ -45,7 +47,7 @@ const StudentClassList = () => {
 
   if (error) {
     return (
-      <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 md:p-8 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
+      <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 md:p-8 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${contentClasses}`}>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center p-10 text-red-500 bg-white rounded-xl shadow-lg">{error}</div>
         </div>
@@ -54,7 +56,7 @@ const StudentClassList = () => {
   }
 
   return (
-    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 md:p-8 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'}`}>
+    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 md:p-8 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${contentClasses}`}>
       <div className="w-full">
         <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 border-2 border-blue-200">
           <div className="flex items-center gap-3 mb-6">

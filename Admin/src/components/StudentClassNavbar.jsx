@@ -3,12 +3,15 @@ import { NavLink, useParams } from 'react-router-dom';
 import { FaBullhorn, FaTasks, FaUsers, FaArrowLeft, FaBars, FaTimes, FaChalkboardTeacher, FaClock, FaMapMarkerAlt, FaBook, FaCalendarAlt, FaSchool, FaCalendarCheck, FaQuestionCircle } from 'react-icons/fa';
 import SidebarContext from '../contexts/SidebarContext';
 import { formatClassTimeRange } from '../utils/dateTime';
+import { getStudentClassHeaderPaddingClasses, getStudentClassHeaderPositionClasses } from '../utils/studentClassLayout';
 
 const StudentClassNavbar = ({ selectedClass }) => {
   const [open, setOpen] = useState(false);
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
   const handleHamburgerClick = () => setOpen(!open);
+  const headerPositionClasses = getStudentClassHeaderPositionClasses(isSidebarOpen);
+  const headerPaddingClasses = getStudentClassHeaderPaddingClasses(isSidebarOpen);
 
   if (!classId) return null;
 
@@ -29,9 +32,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
     <>
       {/* Top Class Info Bar */}
       {selectedClass && (
-        <div className={`bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white py-2 sm:py-3 md:py-4 shadow-xl fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-          isSidebarOpen ? 'md:ml-36 lg:ml-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)] md:pl-8 lg:pl-12 xl:pl-16 md:pr-4 lg:pr-6 xl:pr-8 px-2 sm:px-3 md:px-4' : 'md:ml-10 lg:ml-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)] px-2 sm:px-3 md:px-4 lg:px-6'
-        }`}>
+        <div className={`bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white py-2 sm:py-3 md:py-4 shadow-xl fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${headerPositionClasses} ${headerPaddingClasses}`}>
           <div className="flex flex-col lg:flex-row lg:flex-wrap justify-start lg:justify-between items-start lg:items-center gap-2 sm:gap-3 md:gap-4">
             <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
               <div className="bg-white/20 backdrop-blur-sm p-1.5 sm:p-2 md:p-2.5 rounded-md sm:rounded-lg shadow-lg">
@@ -70,12 +71,8 @@ const StudentClassNavbar = ({ selectedClass }) => {
       {/* Main Navigation */}
       <nav className={`bg-white shadow-lg fixed left-0 right-0 z-30 border-b-2 border-blue-100 transition-all duration-300 ${
         selectedClass ? 'top-[84px] sm:top-[94px] md:top-[108px]' : 'top-0'
-      } ${
-        isSidebarOpen ? 'md:left-36 lg:left-44 md:w-[calc(100%-144px)] lg:w-[calc(100%-176px)]' : 'md:left-10 lg:left-12 md:w-[calc(100%-40px)] lg:w-[calc(100%-48px)]'
-      }`}>
-        <div className={`py-2 sm:py-3 md:py-4 transition-all duration-300 ${
-          isSidebarOpen ? 'px-3 sm:px-4 md:pl-8 lg:pl-12 xl:pl-16 md:pr-6 lg:pr-8 xl:pr-10' : 'px-3 sm:px-4 md:px-6 lg:px-8'
-        }`}>
+      } ${headerPositionClasses}`}>
+        <div className={`py-2 sm:py-3 md:py-4 transition-all duration-300 ${headerPaddingClasses}`}>
           {/* Desktop Navigation */}
           <div className="hidden md:flex justify-between items-center gap-3 lg:gap-6 xl:gap-8">
             {/* Back to Classes */}

@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaFileUpload, FaArrowLeft, FaPaperclip, FaCalendarAlt, FaStar, FaFileAlt, FaTimesCircle, FaTrash, FaDownload } from 'react-icons/fa';
+import SidebarContext from '../contexts/SidebarContext';
 import { showConfirm } from '../utils/swal';
 import { formatDateTime } from '../utils/dateTime';
+import { getStudentClassContentClasses } from '../utils/studentClassLayout';
 
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/$/, '');
@@ -25,6 +27,8 @@ const buildViewUrl = (url, fileName = '') => {
 
 const SubmitActivity = () => {
   const { classId, activityId } = useParams();
+  const { isSidebarOpen } = useContext(SidebarContext);
+  const contentClasses = getStudentClassContentClasses(isSidebarOpen);
   
   const [activity, setActivity] = useState(null);
   const [previousSubmission, setPreviousSubmission] = useState(null);
@@ -255,7 +259,7 @@ const SubmitActivity = () => {
   if (!activity) return <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center"><div className="text-center p-10 text-red-500 bg-white rounded-xl shadow-lg">{error || 'Activity could not be loaded.'}</div></div>;
 
   return (
-    <div className="min-h-full p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className={`min-h-full p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-white to-indigo-50 transition-all duration-300 w-full ${contentClasses}`}>
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <Link to={`/student/class/${classId}/activities`} className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all min-h-[44px]">
