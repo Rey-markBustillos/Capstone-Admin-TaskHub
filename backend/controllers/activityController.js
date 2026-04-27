@@ -2,6 +2,7 @@ const Activity = require('../models/Activity');
 const Class = require('../models/Class');
 const Submission = require('../models/Submission');
 const mongoose = require('mongoose');
+const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
@@ -25,6 +26,55 @@ const shouldInlineDisposition = (req) => {
   const raw = String(req.query?.disposition || '').toLowerCase();
   const mode = String(req.query?.mode || '').toLowerCase();
   return raw === 'inline' || mode === 'view';
+};
+
+const getFileNameFromUrl = (url = '', fallback = 'file') => {
+  try {
+    const parsed = new URL(url);
+    const baseName = path.basename(parsed.pathname || '');
+    return baseName || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const setInlineHeaders = (res, {
+  contentType,
+  contentLength,
+  fallbackName = 'file',
+} = {}) => {
+  if (contentType) {
+    res.setHeader('Content-Type', contentType);
+  } else {
+    res.type(fallbackName);
+  }
+
+  if (contentLength) {
+    res.setHeader('Content-Length', contentLength);
+  }
+
+  res.setHeader('Content-Disposition', `inline; filename="${fallbackName}"`);
+};
+
+const streamRemoteFileInline = async (res, remoteUrl, fallbackName = 'file') => {
+  const remoteResponse = await axios.get(remoteUrl, {
+    responseType: 'stream',
+    maxRedirects: 5,
+    timeout: 30000,
+    validateStatus: (status) => status >= 200 && status < 400,
+  });
+
+  setInlineHeaders(res, {
+    contentType: remoteResponse.headers['content-type'],
+    contentLength: remoteResponse.headers['content-length'],
+    fallbackName,
+  });
+
+  return new Promise((resolve, reject) => {
+    remoteResponse.data.on('error', reject);
+    remoteResponse.data.on('end', resolve);
+    remoteResponse.data.pipe(res);
+  });
 };
 
 // Debug function for file uploads
@@ -619,9 +669,22 @@ exports.downloadActivityAttachment = async (req, res) => {
     const attachmentUrl = activity.attachment;
     const inline = shouldInlineDisposition(req);
 
-    // If it's a Cloudinary URL, redirect to it
+    // For remote files, stream with inline headers to avoid forced download behavior.
     if (isAbsoluteUrl(attachmentUrl)) {
-      return res.redirect(inline ? cloudinaryInlineUrl(attachmentUrl) : cloudinaryDownloadUrl(attachmentUrl));
+      if (inline) {
+        const inlineUrl = cloudinaryInlineUrl(attachmentUrl);
+        const fallbackName = getFileNameFromUrl(inlineUrl, 'activity-attachment');
+
+        try {
+          await streamRemoteFileInline(res, inlineUrl, fallbackName);
+          return;
+        } catch (streamError) {
+          console.error('Inline stream failed, falling back to redirect:', streamError.message);
+          return res.redirect(inlineUrl);
+        }
+      }
+
+      return res.redirect(cloudinaryDownloadUrl(attachmentUrl));
     }
 
     // For local files (fallback for old data)
@@ -661,7 +724,20 @@ exports.downloadSubmissionFile = async (req, res) => {
     }
 
     if (submission.cloudinaryUrl) {
-      return res.redirect(inline ? cloudinaryInlineUrl(submission.cloudinaryUrl) : cloudinaryDownloadUrl(submission.cloudinaryUrl));
+      if (inline) {
+        const inlineUrl = cloudinaryInlineUrl(submission.cloudinaryUrl);
+        const fallbackName = submission.fileName || getFileNameFromUrl(inlineUrl, 'submission-file');
+
+        try {
+          await streamRemoteFileInline(res, inlineUrl, fallbackName);
+          return;
+        } catch (streamError) {
+          console.error('Inline stream failed, falling back to redirect:', streamError.message);
+          return res.redirect(inlineUrl);
+        }
+      }
+
+      return res.redirect(cloudinaryDownloadUrl(submission.cloudinaryUrl));
     }
     
     if (!submission.filePath) {
