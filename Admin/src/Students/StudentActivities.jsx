@@ -8,6 +8,10 @@ import { formatDateTime, toTimestamp } from '../utils/dateTime';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
+const normalizeCloudinaryViewUrl = (url = '') => String(url).replace('/upload/fl_attachment/', '/upload/');
+const isImageFile = (value = '') => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(String(value));
+const toDocsViewerUrl = (url = '') => `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+
 const statusIcons = {
   'Graded': <FaCheckCircle className="text-blue-500 mr-1" />,
   'Graded (Late)': <FaCheckCircle className="text-blue-400 mr-1" />,
@@ -120,6 +124,12 @@ const StudentActivities = () => {
 
   const getAttachmentUrl = (activity) => {
     if (!activity || !activity.attachment) return null;
+
+    if (activity.attachment.startsWith('http://') || activity.attachment.startsWith('https://')) {
+      const normalized = normalizeCloudinaryViewUrl(activity.attachment);
+      if (isImageFile(normalized)) return normalized;
+      return toDocsViewerUrl(normalized);
+    }
 
     // Use inline disposition so "View Attachment" opens in-browser instead of forcing a download.
     return `${API_BASE_URL}/activities/${activity._id}/download?disposition=inline`;

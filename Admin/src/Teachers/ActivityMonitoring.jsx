@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import * as XLSX from "xlsx-js-style";
+import * as XLSX from "xlsx-js-style/dist/xlsx.bundle.js";
 import { showAlert } from '../utils/swal';
 import { formatClassTimeRange, formatDate, toTimestamp } from '../utils/dateTime';
 import {
@@ -28,6 +28,21 @@ import {
 
 // Ensure API_BASE_URL ends with a slash
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/$/, '') + '/';
+
+const normalizeCloudinaryViewUrl = (url = '') => String(url).replace('/upload/fl_attachment/', '/upload/');
+const isImageFile = (value = '') => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(String(value));
+const toDocsViewerUrl = (url = '') => `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+
+const buildAttachmentViewUrl = (url, fileName = '') => {
+  if (!url) return null;
+
+  const normalized = normalizeCloudinaryViewUrl(url);
+  if (isImageFile(fileName) || isImageFile(normalized)) {
+    return normalized;
+  }
+
+  return toDocsViewerUrl(normalized);
+};
 
 const getActivitySortTime = (activity) => {
   const candidate = activity?.date || activity?.createdAt || activity?.updatedAt;
@@ -1406,7 +1421,7 @@ export default function ActivityMonitoring() {
                           // Build proper fileUrl
                           let fileUrl = null;
                           const submissionDownloadUrl = sub._id ? `${API_BASE_URL}activities/submission/${sub._id}/download` : null;
-                          const submissionViewUrl = submissionDownloadUrl ? `${submissionDownloadUrl}?disposition=inline` : null;
+                          const fallbackInlineViewUrl = submissionDownloadUrl ? `${submissionDownloadUrl}?disposition=inline` : null;
                           if (sub.cloudinaryUrl) {
                             fileUrl = sub.cloudinaryUrl;
                           } else if (sub.filePath && sub.filePath.startsWith('http')) {
@@ -1414,6 +1429,11 @@ export default function ActivityMonitoring() {
                           } else if (submissionDownloadUrl) {
                             fileUrl = submissionDownloadUrl;
                           }
+
+                          const submissionViewUrl =
+                            (fileUrl && (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')))
+                              ? buildAttachmentViewUrl(fileUrl, sub.fileName)
+                              : fallbackInlineViewUrl;
 
                           // Validate that fileUrl is a full URL (not just a filename)
                           const isValidUrl = fileUrl && (fileUrl.startsWith('http://') || fileUrl.startsWith('https://'));

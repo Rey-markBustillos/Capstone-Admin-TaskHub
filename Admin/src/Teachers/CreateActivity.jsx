@@ -15,6 +15,17 @@ const getActivitySortTime = (activity) => {
 const sortActivitiesNewestFirst = (activities = []) =>
   [...activities].sort((a, b) => getActivitySortTime(b) - getActivitySortTime(a));
 
+const normalizeCloudinaryViewUrl = (url = '') => String(url).replace('/upload/fl_attachment/', '/upload/');
+const isImageFile = (value = '') => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(String(value));
+const toDocsViewerUrl = (url = '') => `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+
+const buildViewUrl = (url) => {
+  if (!url) return null;
+  const normalized = normalizeCloudinaryViewUrl(url);
+  if (isImageFile(normalized)) return normalized;
+  return toDocsViewerUrl(normalized);
+};
+
 const CreateActivity = () => {
   const { classId } = useParams();
   const [activityData, setActivityData] = useState({ title: '', description: '', date: '', score: '', attachment: null });
@@ -161,9 +172,12 @@ const CreateActivity = () => {
     }
   };
 
-  const handleViewAttachment = async (activityId) => {
+  const handleViewAttachment = async (activityObj) => {
     try {
-      const inlineUrl = `${API_BASE_URL}/activities/${activityId}/download?disposition=inline`;
+      const inlineUrl = activityObj?.attachment && /^https?:\/\//i.test(activityObj.attachment)
+        ? buildViewUrl(activityObj.attachment)
+        : `${API_BASE_URL}/activities/${activityObj?._id}/download?disposition=inline`;
+
       window.open(inlineUrl, '_blank', 'noopener,noreferrer');
     } catch (err) {
       console.error('View attachment error:', err);
@@ -436,7 +450,7 @@ const CreateActivity = () => {
                     </div>
                     {activity.attachment && (
                       <button
-                        onClick={() => handleViewAttachment(activity._id)}
+                        onClick={() => handleViewAttachment(activity)}
                         className="inline-flex items-center text-blue-600 hover:text-blue-700 hover:underline mt-2 text-xs font-medium cursor-pointer bg-transparent border-none"
                         title={`View ${activity.title} attachment`}
                       >
