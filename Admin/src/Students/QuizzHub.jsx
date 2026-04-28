@@ -8,6 +8,8 @@ import { getStudentClassContentClasses } from '../utils/studentClassLayout';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
+const getQuizSessionStorageKey = (studentId, classId) => `studentQuizSession:${studentId || 'guest'}:${classId || 'unknown'}`;
+
 
 const QuizzHub = () => {
   // Popup state for quiz start
@@ -30,6 +32,120 @@ const QuizzHub = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [quizzes, setQuizzes] = useState([]);
+  const [fullscreenError, setFullscreenError] = useState('');
+  const [isFullscreenActive, setIsFullscreenActive] = useState(false);
+  const [quizStartTime, setQuizStartTime] = useState(null);
+  const [timerNow, setTimerNow] = useState(Date.now());
+  const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
+  const quizPageRef = useRef(null);
+
+  const isQuizInProgress = Boolean(activeQuizId) && !showScore;
+  const activeQuiz = quizzes.find((quiz) => quiz._id === activeQuizId) || null;
+  const visibleQuizzes = isQuizInProgress
+    ? quizzes.filter((quiz) => quiz._id === activeQuizId)
+    : quizzes;
+  const questionTimeLimit = Math.max(1, Number(activeQuiz?.questionTime) || 30);
+  const questionCount = activeQuiz?.questions?.length || 0;
+  const totalQuizSeconds = questionCount * questionTimeLimit;
+  const elapsedSeconds = quizStartTime ? Math.max(0, Math.floor((timerNow - quizStartTime) / 1000)) : 0;
+  const activeTimedQuestionIndex = questionCount > 0
+    ? Math.min(Math.floor(elapsedSeconds / questionTimeLimit), questionCount - 1)
+    : 0;
+  const timeSpentInCurrentQuestion = questionTimeLimit > 0 ? elapsedSeconds % questionTimeLimit : 0;
+  const remainingSeconds = questionCount > 0 && elapsedSeconds < totalQuizSeconds
+    ? Math.max(0, questionTimeLimit - timeSpentInCurrentQuestion)
+    : 0;
+  const hasTimerExpired = questionCount > 0 && elapsedSeconds >= totalQuizSeconds;
+  const currentQuestionIsLocked = !isQuizInProgress || currentQuestion !== activeTimedQuestionIndex || hasTimerExpired;
+  const quizSessionStorageKey = getQuizSessionStorageKey(studentId, classId);
+  const requiresFullscreenRecovery = isQuizInProgress && !isFullscreenActive;
+
+  const getFullscreenElement = () =>
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.msFullscreenElement ||
+    null;
+
+  const requestQuizFullscreen = async () => {
+    const element = quizPageRef.current;
+
+    if (!element) {
+      return false;
+    }
+
+    try {
+      if (element.requestFullscreen) {
+        await element.requestFullscreen();
+      } else if (element.webkitRequestFullscreen) {
+        element.webkitRequestFullscreen();
+      } else if (element.msRequestFullscreen) {
+        element.msRequestFullscreen();
+      } else {
+        setFullscreenError('Fullscreen is not supported on this browser.');
+        return false;
+      }
+
+      setFullscreenError('');
+      return true;
+    } catch {
+      setFullscreenError('Unable to enter fullscreen automatically. Please allow fullscreen and try again.');
+      return false;
+    }
+  };
+
+  const exitQuizFullscreen = async () => {
+    if (!getFullscreenElement()) {
+      setIsFullscreenActive(false);
+      return;
+    }
+
+    try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    } catch {
+      // Exit failure is non-blocking for the quiz flow.
+    }
+  };
+
+  const clearSavedQuizSession = () => {
+    sessionStorage.removeItem(quizSessionStorageKey);
+  };
+
+  const persistQuizSession = (nextState = {}) => {
+    const sessionPayload = {
+      activeQuizId,
+      quizStartTime,
+      currentQuestion,
+      studentAnswers,
+      ...nextState,
+    };
+
+    if (!sessionPayload.activeQuizId || !sessionPayload.quizStartTime) {
+      clearSavedQuizSession();
+      return;
+    }
+
+    sessionStorage.setItem(quizSessionStorageKey, JSON.stringify(sessionPayload));
+  };
+
+  const advanceToNextTimedQuestion = () => {
+    if (!quizStartTime || !questionCount || activeTimedQuestionIndex >= questionCount - 1) {
+      return;
+    }
+
+    const nextStartTime = quizStartTime - (remainingSeconds * 1000);
+    setQuizStartTime(nextStartTime);
+    setCurrentQuestion(activeTimedQuestionIndex + 1);
+    persistQuizSession({
+      quizStartTime: nextStartTime,
+      currentQuestion: activeTimedQuestionIndex + 1,
+    });
+  };
 
   // Fetch quizzes for this class
   useEffect(() => {
@@ -46,6 +162,37 @@ const QuizzHub = () => {
     };
     if (classId) fetchQuizzes();
   }, [classId, studentId]);
+
+  useEffect(() => {
+    if (!studentId || !classId || quizzes.length === 0 || activeQuizId) {
+      return;
+    }
+
+    try {
+      const savedSessionRaw = sessionStorage.getItem(quizSessionStorageKey);
+      if (!savedSessionRaw) {
+        return;
+      }
+
+      const savedSession = JSON.parse(savedSessionRaw);
+      const savedQuiz = quizzes.find((quiz) => quiz._id === savedSession.activeQuizId);
+      const alreadyTaken = savedQuiz && Array.isArray(savedQuiz.submissions) && savedQuiz.submissions.some((sub) => sub.studentId === studentId);
+
+      if (!savedQuiz || alreadyTaken) {
+        clearSavedQuizSession();
+        return;
+      }
+
+      setActiveQuizId(savedSession.activeQuizId);
+      setStudentAnswers(savedSession.studentAnswers || {});
+      setQuizStartTime(savedSession.quizStartTime || Date.now());
+      setCurrentQuestion(savedSession.currentQuestion || 0);
+      setShowScore(false);
+      setHasAutoSubmitted(false);
+    } catch {
+      clearSavedQuizSession();
+    }
+  }, [activeQuizId, classId, quizzes, quizSessionStorageKey, studentId]);
 
   // Reset timer and question state when quiz is activated
   useEffect(() => {
@@ -70,17 +217,122 @@ const QuizzHub = () => {
     }
   }, [currentQuestion, activeQuizId]);
 
+  useEffect(() => {
+    if (!isQuizInProgress) {
+      return undefined;
+    }
+
+    setTimerNow(Date.now());
+    const intervalId = window.setInterval(() => {
+      setTimerNow(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isQuizInProgress]);
+
+  useEffect(() => {
+    if (!isQuizInProgress || !activeQuiz || !quizStartTime) {
+      return;
+    }
+
+    if (currentQuestion !== activeTimedQuestionIndex) {
+      setCurrentQuestion(activeTimedQuestionIndex);
+    }
+
+    persistQuizSession({
+      activeQuizId,
+      quizStartTime,
+      currentQuestion: activeTimedQuestionIndex,
+      studentAnswers,
+    });
+  }, [activeQuiz, activeQuizId, activeTimedQuestionIndex, currentQuestion, isQuizInProgress, quizStartTime, studentAnswers]);
+
+  useEffect(() => {
+    if (!isQuizInProgress || !activeQuiz || !quizStartTime || !hasTimerExpired || hasAutoSubmitted || loading) {
+      return;
+    }
+
+    setHasAutoSubmitted(true);
+    submitQuiz(activeQuiz._id, { isAutoSubmit: true });
+  }, [activeQuiz, hasAutoSubmitted, hasTimerExpired, isQuizInProgress, loading, quizStartTime]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const fullscreenActive = Boolean(getFullscreenElement());
+      setIsFullscreenActive(fullscreenActive);
+
+      if (fullscreenActive) {
+        setFullscreenError('');
+        return;
+      }
+
+      if (activeQuizId && !showScore) {
+        setFullscreenError('Fullscreen was exited. Tap "Return to Full Screen" to continue the quiz.');
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    handleFullscreenChange();
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, [activeQuizId, showScore]);
+
+  useEffect(() => {
+    if (!isQuizInProgress) {
+      exitQuizFullscreen();
+      return;
+    }
+
+    const historyState = {
+      quizLock: true,
+      quizId: activeQuizId,
+      time: Date.now(),
+    };
+
+    window.history.pushState(historyState, '', window.location.href);
+
+    const handlePopState = () => {
+      window.history.pushState(historyState, '', window.location.href);
+      setFullscreenError('Back navigation is disabled while the quiz is in progress.');
+    };
+
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [activeQuizId, isQuizInProgress]);
+
   // Add question to quiz
   // (Removed unused addQuestion function)
 
   // Handle answer change
   const handleAnswer = (qid, value) => {
-    setStudentAnswers({ ...studentAnswers, [qid]: value });
+    const nextAnswers = { ...studentAnswers, [qid]: value };
+    setStudentAnswers(nextAnswers);
+    persistQuizSession({ studentAnswers: nextAnswers });
   };
 
   // Submit quiz answers
-  const submitQuiz = async (quizId) => {
+  const submitQuiz = async (quizId, options = {}) => {
     setLoading(true);
+    setError('');
     try {
       // Transform studentAnswers object to array of { questionIndex, answer }
       const answersArr = Object.entries(studentAnswers).map(([questionIndex, answer]) => ({
@@ -93,6 +345,9 @@ const QuizzHub = () => {
       });
       setScore(res.data.score);
       setShowScore(true);
+      setFullscreenError('');
+      setQuizStartTime(null);
+      clearSavedQuizSession();
       // Immediately fetch quizzes to update submissions UI
       try {
         const refreshed = await axios.get(`${API_BASE_URL}/quizzes/class/${classId}?studentId=${studentId}`);
@@ -101,7 +356,7 @@ const QuizzHub = () => {
         // Error intentionally ignored
       }
     } catch {
-      setError('Failed to submit quiz.');
+      setError(options.isAutoSubmit ? 'Time is up, but the quiz could not be submitted automatically. Please try again.' : 'Failed to submit quiz.');
     } finally {
       setLoading(false);
     }
@@ -158,10 +413,10 @@ const QuizzHub = () => {
     <div>
       {loading && <div className="text-blue-700">Loading quizzes...</div>}
   {error && <div className="text-red-600">{error}</div>}
-      {quizzes.length === 0 && !loading ? (
+      {visibleQuizzes.length === 0 && !loading ? (
         <div>No quizzes available.</div>
       ) : (
-        quizzes.map((qz, idx) => {
+        visibleQuizzes.map((qz, idx) => {
           // Check if student has already taken this quiz
           const alreadyTaken = Array.isArray(qz.submissions) && qz.submissions.some(sub => sub.studentId === studentId);
           return (
@@ -282,6 +537,7 @@ const QuizzHub = () => {
                                     value="True" 
                                     checked={studentAnswers[i]==='True'} 
                                     onChange={()=>handleAnswer(i,'True')} 
+                                    disabled={currentQuestionIsLocked}
                                     className="accent-green-400 w-4 h-4 sm:w-5 sm:h-5" 
                                   />
                                   <span className="font-bold text-sm sm:text-base">True</span>
@@ -293,6 +549,7 @@ const QuizzHub = () => {
                                     value="False" 
                                     checked={studentAnswers[i]==='False'} 
                                     onChange={()=>handleAnswer(i,'False')} 
+                                    disabled={currentQuestionIsLocked}
                                     className="accent-red-400 w-4 h-4 sm:w-5 sm:h-5" 
                                   />
                                   <span className="font-bold text-sm sm:text-base">False</span>
@@ -315,6 +572,7 @@ const QuizzHub = () => {
                                       value={choice} 
                                       checked={studentAnswers[i]===choice} 
                                       onChange={()=>handleAnswer(i,choice)} 
+                                      disabled={currentQuestionIsLocked}
                                       className="accent-green-400 mt-1 w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" 
                                     />
                                     <span className="font-medium text-xs sm:text-sm md:text-base leading-snug flex-1">{choice}</span>
@@ -338,6 +596,7 @@ const QuizzHub = () => {
                                   onChange={e=>handleAnswer(i,e.target.value)} 
                                   placeholder="Type your answer here..." 
                                   maxLength="200"
+                                  disabled={currentQuestionIsLocked}
                                   title="Case doesn't matter - EDEN, eden, and Eden are all correct"
                                 />
                                 <div className="flex justify-between items-center mt-2 text-[10px] sm:text-xs text-amber-700">
@@ -355,16 +614,21 @@ const QuizzHub = () => {
                         return answerInput;
                       })()}
                     </div>
+                    {currentQuestionIsLocked && (
+                      <div className="mt-3 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-xs sm:text-sm font-semibold text-red-700">
+                        This question is locked. Time is over for this item.
+                      </div>
+                    )}
                     <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-0 mt-3 sm:mt-4">
-                      <button type="button" className="flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-3 py-2 sm:px-5 sm:py-2 rounded-lg sm:rounded-2xl shadow-lg font-semibold text-xs sm:text-base transition disabled:opacity-50 disabled:cursor-not-allowed" onClick={()=>setCurrentQuestion(q=>Math.max(0,q-1))} disabled={currentQuestion===0}>
+                      <button type="button" className="flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-3 py-2 sm:px-5 sm:py-2 rounded-lg sm:rounded-2xl shadow-lg font-semibold text-xs sm:text-base transition disabled:opacity-50 disabled:cursor-not-allowed" onClick={()=>setCurrentQuestion(q=>Math.max(0,q-1))} disabled>
                         <FaArrowLeft className="text-white text-xs sm:text-sm" /> Previous
                       </button>
-                      <button type="button" className="flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-3 py-2 sm:px-5 sm:py-2 rounded-lg sm:rounded-2xl shadow-lg font-semibold text-xs sm:text-base transition disabled:opacity-50 disabled:cursor-not-allowed" onClick={()=>setCurrentQuestion(q=>Math.min(qz.questions.length-1,q+1))} disabled={currentQuestion===qz.questions.length-1}>
+                      <button type="button" className="flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-3 py-2 sm:px-5 sm:py-2 rounded-lg sm:rounded-2xl shadow-lg font-semibold text-xs sm:text-base transition disabled:opacity-50 disabled:cursor-not-allowed" onClick={advanceToNextTimedQuestion} disabled={currentQuestion===qz.questions.length-1 || hasTimerExpired || loading}>
                         Next <FaArrowRight className="text-white text-xs sm:text-sm" />
                       </button>
                     </div>
                     <div className="flex justify-center sm:justify-end mt-4 sm:mt-6">
-                      <button type="submit" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white px-6 sm:px-8 py-3 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg font-bold text-base sm:text-lg transition disabled:opacity-50 disabled:cursor-not-allowed" disabled={Object.keys(studentAnswers).length!==qz.questions.length}>
+                      <button type="submit" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white px-6 sm:px-8 py-3 sm:py-3 rounded-xl sm:rounded-2xl shadow-lg font-bold text-base sm:text-lg transition disabled:opacity-50 disabled:cursor-not-allowed" disabled={loading || (!hasTimerExpired && Object.keys(studentAnswers).length!==qz.questions.length)}>
                         <FaSave className="text-white text-base sm:text-lg" /> Submit Quiz
                       </button>
                     </div>
@@ -414,33 +678,87 @@ const QuizzHub = () => {
               return (
                 <>
                   <h2 className="text-sm sm:text-2xl font-bold text-blue-900 mb-2 sm:mb-4 text-center">Ready to take the quiz?</h2>
-                  <p className="text-blue-700 mb-4 sm:mb-6 text-center text-xs sm:text-base">Click <span className="font-bold text-green-600">Start</span> to begin the quiz or <span className="font-bold text-gray-600">Cancel</span> to go back.</p>
+                  <p className="text-blue-700 mb-4 sm:mb-6 text-center text-xs sm:text-base">Click <span className="font-bold text-green-600">Start</span> to begin the quiz in fullscreen mode with a per-question timer, or <span className="font-bold text-gray-600">Cancel</span> to go back.</p>
                   <div className="flex gap-2 sm:gap-4 flex-col sm:flex-row w-full sm:w-auto">
                     <button
                       className="flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-3 py-1 sm:px-6 sm:py-2 rounded-lg sm:rounded-2xl shadow-lg font-bold text-xs sm:text-lg transition"
-                      onClick={() => {
+                      onClick={async () => {
+                        const startTime = Date.now();
+                        const enteredFullscreen = await requestQuizFullscreen();
+                        if (!enteredFullscreen) {
+                          return;
+                        }
                         setActiveQuizId(pendingQuizId);
                         setShowScore(false);
                         setStudentAnswers({});
+                        setCurrentQuestion(0);
+                        setQuizStartTime(startTime);
+                        setTimerNow(startTime);
+                        setHasAutoSubmitted(false);
+                        setError('');
+                        setPendingQuizId(null);
                         setShowStartModal(false);
+                        sessionStorage.setItem(quizSessionStorageKey, JSON.stringify({
+                          activeQuizId: pendingQuizId,
+                          quizStartTime: startTime,
+                          currentQuestion: 0,
+                          studentAnswers: {},
+                        }));
                       }}
                     >
                       <FaCheckCircle className="text-white text-xs sm:text-base" /> Start
                     </button>
                     <button
                       className="flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700 text-white px-3 py-1 sm:px-6 sm:py-2 rounded-lg sm:rounded-2xl shadow-lg font-bold text-xs sm:text-lg transition"
-                      onClick={() => setShowStartModal(false)}
+                      onClick={() => {
+                        setPendingQuizId(null);
+                        setShowStartModal(false);
+                      }}
                     >
                       <FaTimesCircle className="text-white text-xs sm:text-base" /> Cancel
                     </button>
                   </div>
+                  {fullscreenError && (
+                    <p className="mt-3 text-center text-xs sm:text-sm font-semibold text-red-600">{fullscreenError}</p>
+                  )}
                 </>
               );
             })()}
           </div>
         </div>
       )}
-      <div className={`min-h-full bg-white p-2 sm:p-4 md:p-8 transition-all duration-300 w-full ${contentClasses}`}>
+      <div
+        ref={quizPageRef}
+        className={`${isFullscreenActive ? 'min-h-screen overflow-y-auto bg-white' : 'min-h-full'} bg-white p-2 sm:p-4 md:p-8 transition-all duration-300 w-full ${isQuizInProgress || isFullscreenActive ? '' : contentClasses}`}
+      >
+        {requiresFullscreenRecovery && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/85 p-4">
+            <div className="w-full max-w-lg rounded-2xl border-4 border-red-400 bg-white p-5 sm:p-8 shadow-2xl">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-red-600 text-center">Fullscreen Required</h2>
+              <p className="mt-3 text-center text-sm sm:text-base text-slate-700">
+                The quiz is still running and the timer did not stop. Return to fullscreen to continue answering.
+              </p>
+              <p className="mt-3 text-center text-sm sm:text-base font-bold text-blue-800">
+                Current question time left: {remainingSeconds}s
+              </p>
+              <p className="mt-2 text-center text-xs sm:text-sm font-semibold text-red-600">
+                You cannot continue the quiz outside fullscreen until you submit or the quiz ends.
+              </p>
+              {fullscreenError && (
+                <p className="mt-3 text-center text-xs sm:text-sm font-semibold text-red-600">{fullscreenError}</p>
+              )}
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={requestQuizFullscreen}
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-3 rounded-xl shadow-lg font-bold text-sm sm:text-base transition"
+                >
+                  <FaEye className="text-white" /> Return to Full Screen
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="w-full max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh] px-1 sm:px-2 md:px-4 lg:px-8">
           <div className="mb-4 sm:mb-6 mt-2 sm:mt-4 ml-2 sm:ml-4 self-start">
           </div>
@@ -448,6 +766,52 @@ const QuizzHub = () => {
             <h2 className="text-sm sm:text-lg md:text-2xl font-bold text-blue-900 mb-2 sm:mb-3 md:mb-4 flex items-center gap-1 sm:gap-2">
               <FaListOl className="text-sm sm:text-base md:text-xl" /> <span className="hidden sm:inline">Available Quizzes</span><span className="sm:hidden">Quizzes</span>
             </h2>
+            {isQuizInProgress && (
+              <div className="mb-4 sm:mb-6 rounded-xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-3 sm:px-4 sm:py-4 shadow-md">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm sm:text-base font-bold text-amber-900">Quiz mode is active.</p>
+                    <p className="text-xs sm:text-sm text-amber-800">
+                      Timer keeps running. When a question expires, it is locked and the quiz moves to the next question.
+                    </p>
+                    {activeQuiz && (
+                      <p className="mt-1 text-xs sm:text-sm font-semibold text-blue-800">
+                        Question timer: {remainingSeconds}s left on question {activeTimedQuestionIndex + 1} of {questionCount}
+                      </p>
+                    )}
+                    {fullscreenError && (
+                      <p className="mt-2 text-xs sm:text-sm font-semibold text-red-600">{fullscreenError}</p>
+                    )}
+                    {error && (
+                      <p className="mt-2 text-xs sm:text-sm font-semibold text-red-600">{error}</p>
+                    )}
+                  </div>
+                  {!isFullscreenActive && (
+                    <button
+                      type="button"
+                      onClick={requestQuizFullscreen}
+                      className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-xl shadow-lg font-bold text-xs sm:text-sm transition"
+                    >
+                      <FaEye className="text-white" /> Return to Full Screen
+                    </button>
+                  )}
+                </div>
+                {activeQuiz && (
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between text-[11px] sm:text-xs font-semibold text-blue-900">
+                      <span>Time Remaining</span>
+                      <span>{remainingSeconds}s</span>
+                    </div>
+                    <div className="h-3 overflow-hidden rounded-full bg-blue-100 shadow-inner">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-red-500 via-amber-500 to-green-500 transition-all duration-1000"
+                        style={{ width: `${questionTimeLimit > 0 ? (remainingSeconds / questionTimeLimit) * 100 : 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             {isTeacher && (
               <div className="flex justify-end mb-4 sm:mb-6">
                 <button className="transition bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-3 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-lg text-sm sm:text-lg focus:ring-4 focus:ring-blue-400 flex items-center gap-2" onClick={()=>setShowCreate(!showCreate)}>
