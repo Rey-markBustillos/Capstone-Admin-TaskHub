@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -9,15 +9,12 @@ import {
   ChevronRight,
   ChevronLeft,
   LogOut,
-  Sun,
-  Moon,
   GraduationCap,
   BookOpen,
   BarChart3,
   Menu,
   X,
 } from 'lucide-react';
-import { StudentThemeContext } from '../contexts/StudentThemeContext';
 
 // Menu items for each role with updated icons
 const menuItemsByRole = {
@@ -78,8 +75,6 @@ const colorSchemes = {
 };
 
 export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen: setIsOpenProp, isOverlay = false }) {
-  const studentThemeContext = useContext(StudentThemeContext);
-  const studentTheme = role === 'student' ? studentThemeContext : null;
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -216,23 +211,6 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
         {/* Footer Section */}
         <div className="p-3 border-t-2 border-blue-100 bg-gray-50">
           <div className="flex flex-col gap-2">
-            {/* Theme Toggle for Students */}
-            {role === 'student' && studentTheme && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  studentTheme.toggleLightMode();
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 font-medium
-                  ${studentTheme.isLightMode ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-gray-700 hover:bg-gray-600 text-gray-100'}
-                  ${isActuallyOpen ? 'justify-start' : 'justify-center'}`}
-                title={studentTheme.isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-              >
-                {studentTheme.isLightMode ? <Moon size={20} /> : <Sun size={20} />}
-                {isActuallyOpen && <span className="text-sm">{studentTheme.isLightMode ? 'Dark Mode' : 'Light Mode'}</span>}
-              </button>
-            )}
-            
             {/* Logout Button */}
             <button
               onClick={onLogout}
@@ -330,21 +308,6 @@ export default function Sidebar({ role, onLogout, isOpen: isOpenProp, setIsOpen:
               {/* Footer Buttons */}
               <div className="p-4 border-t-2 border-blue-100 bg-gray-50">
                 <div className="flex flex-col gap-2">
-                  {/* Theme Toggle for Students */}
-                  {role === 'student' && studentTheme && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        studentTheme.toggleLightMode();
-                      }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-medium
-                        ${studentTheme.isLightMode ? 'bg-gray-200 hover:bg-gray-300 text-gray-800' : 'bg-gray-700 hover:bg-gray-600 text-gray-100'}`}
-                    >
-                      {studentTheme.isLightMode ? <Moon size={20} /> : <Sun size={20} />}
-                      <span className="text-sm">{studentTheme.isLightMode ? 'Dark Mode' : 'Light Mode'}</span>
-                    </button>
-                  )}
-                  
                   {/* Logout Button */}
                   <button
                     onClick={() => {
