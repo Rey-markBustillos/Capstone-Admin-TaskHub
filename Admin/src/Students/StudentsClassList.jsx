@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import { FaUserGraduate, FaUsers } from 'react-icons/fa';
@@ -14,6 +14,38 @@ const StudentClassList = () => {
   const { classId } = useParams();
   const { isSidebarOpen } = useContext(SidebarContext);
   const contentClasses = getStudentClassContentClasses(isSidebarOpen);
+
+  // Extract last name from full name (supports "Last, First" or "First Last")
+  const getLastName = (fullName) => {
+    if (!fullName) return '';
+    const trimmed = fullName.trim();
+    if (!trimmed) return '';
+    const commaParts = trimmed.split(',');
+    if (commaParts.length > 1) {
+      return commaParts[0].trim().toLowerCase();
+    }
+    const spaceParts = trimmed.split(/\s+/);
+    return spaceParts[spaceParts.length - 1].toLowerCase();
+  };
+
+  const groupedStudents = useMemo(() => {
+    const sorted = [...students].sort((a, b) => {
+      const lastNameA = getLastName(a.name);
+      const lastNameB = getLastName(b.name);
+      return lastNameA.localeCompare(lastNameB);
+    });
+    return sorted.reduce((groups, student) => {
+      const lastName = getLastName(student.name);
+      const letter = lastName ? lastName[0].toUpperCase() : '#';
+      if (!groups[letter]) groups[letter] = [];
+      groups[letter].push(student);
+      return groups;
+    }, {});
+  }, [students]);
+
+  const groupedLetters = useMemo(() => {
+    return Object.keys(groupedStudents).sort((a, b) => a.localeCompare(b));
+  }, [groupedStudents]);
 
   useEffect(() => {
     if (!classId) return;
@@ -66,13 +98,22 @@ const StudentClassList = () => {
           {students.length > 0 ? (
             <div className="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden">
               <ul className="divide-y divide-slate-200">
-                {students.map((student, index) => (
-                  <li key={student._id} className="p-4 sm:p-5 flex items-center hover:bg-slate-100 transition-colors">
-                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-slate-700 text-white rounded-full mr-4">
-                      <span className="font-bold text-base sm:text-lg">{index + 1}</span>
+                {groupedLetters.map((letter) => (
+                  <li key={letter}>
+                    <div className="px-4 sm:px-5 py-2 bg-slate-100 text-slate-700 font-bold text-sm sm:text-base">
+                      {letter}
                     </div>
-                    <FaUserGraduate className="text-slate-500 mr-3 text-xl sm:text-2xl flex-shrink-0" />
-                    <span className="text-gray-800 font-semibold text-base sm:text-lg">{student.name}</span>
+                    <ul className="divide-y divide-slate-200">
+                      {groupedStudents[letter].map((student, index) => (
+                        <li key={student._id} className="p-4 sm:p-5 flex items-center hover:bg-slate-100 transition-colors">
+                          <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-slate-700 text-white rounded-full mr-4">
+                            <span className="font-bold text-base sm:text-lg">{index + 1}</span>
+                          </div>
+                          <FaUserGraduate className="text-slate-500 mr-3 text-xl sm:text-2xl flex-shrink-0" />
+                          <span className="text-gray-800 font-semibold text-base sm:text-lg">{student.name}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </li>
                 ))}
               </ul>

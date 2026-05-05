@@ -223,7 +223,7 @@ const StudentDashboard = () => {
 
   // Note: Quiz submissions are fetched through individual quiz endpoints when needed
 
-  const now = new Date();
+  
   const nowTimestamp = Date.now();
   const submissionMap = {};
   submissions.forEach(sub => {
@@ -274,13 +274,13 @@ const StudentDashboard = () => {
 
   return (
     // This page is intentionally full width, no sidebar allowed
-    <div className={`relative min-h-full flex flex-col items-center justify-start bg-gradient-to-br from-blue-50 via-white to-indigo-50 w-full min-w-0 mx-0 pt-16 sm:pt-4 md:pt-6 pb-8 sm:pb-12 md:pb-16 px-2 sm:px-4 md:px-6 lg:px-8`}>
+    <div className={`relative min-h-full flex flex-col items-center justify-start bg-slate-50 w-full min-w-0 mx-0 pt-16 sm:pt-4 md:pt-6 pb-8 sm:pb-12 md:pb-16 px-2 sm:px-4 md:px-6 lg:px-8`}>
       {/* Welcome section */}
       <div className="w-full flex items-center justify-center py-4 sm:py-6 md:py-8">
-        <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-blue-900 tracking-tight w-full text-center`}>Welcome, {studentName}!</h1>
+          <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-800 tracking-tight w-full text-center`}>Welcome, {studentName}!</h1>
       </div>
 
-  <div className="relative z-10 w-full max-w-7xl p-0 sm:p-2 md:p-4 mx-auto overflow-x-hidden min-w-0 mb-2 sm:mb-4 md:mb-6">
+        <div className="relative z-10 w-full p-0 sm:p-2 md:p-4 overflow-x-hidden min-w-0 mb-2 sm:mb-4 md:mb-6">
 
 
 
@@ -291,7 +291,7 @@ const StudentDashboard = () => {
           </div>
         )}
 
-  <main className={`rounded-xl p-3 sm:p-4 md:p-6 lg:p-8 shadow-lg bg-white border-2 border-blue-200 w-full max-w-none overflow-x-hidden`}>
+  <main className={`rounded-xl p-3 sm:p-4 md:p-6 lg:p-8 shadow-lg bg-white border border-slate-200 w-full max-w-none overflow-x-hidden`}>
           {/* Summary Section */}
           <section className="mb-4 sm:mb-6 md:mb-8">
             <h2 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-3 sm:mb-4 md:mb-6 text-blue-900`}>Activity Summary</h2>
@@ -399,7 +399,7 @@ const StudentDashboard = () => {
 
               {!loadingClasses && !error && classes.length > 0 && (
                 <>
-                  <h2 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-3 sm:mb-4 md:mb-6 text-blue-900`}>Your Enrolled Classes</h2>
+                  <h2 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-3 sm:mb-4 md:mb-6 text-slate-800`}>Your Enrolled Classes</h2>
                   <ul className="space-y-3 sm:space-y-4 md:space-y-5 pb-4">
                     {classes.map((cls) => {
                       // Find soonest schedule for this class
@@ -416,8 +416,8 @@ const StudentDashboard = () => {
                         });
                       }
                       return (
-                        <li key={cls._id} className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 sm:p-4 md:p-5 rounded-xl shadow-md border-2 border-blue-200 hover:shadow-lg transition-all min-w-0">
-                          <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl text-blue-900 font-bold truncate mb-2">{cls.className}</h3>
+                        <li key={cls._id} className="bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-all min-w-0">
+                          <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl text-slate-800 font-bold truncate mb-2">{cls.className}</h3>
                           <div className="flex flex-col gap-2">
                             <p className="text-gray-700 text-xs sm:text-sm md:text-base"><strong>Teacher:</strong> <span className="truncate">{cls.teacherName}</span></p>
                             <p className="text-gray-700 text-xs sm:text-sm md:text-base"><strong>Room:</strong> <span className="truncate">{cls.roomNumber}</span></p>
@@ -439,13 +439,13 @@ const StudentDashboard = () => {
 
             {/* Announcements Section - Always appears second on mobile */}
             <section className="min-w-0 w-full order-2">
-              <h2 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-3 sm:mb-4 md:mb-6 text-blue-900`}>Recent Announcements</h2>
+              <h2 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold mb-3 sm:mb-4 md:mb-6 text-slate-800`}>Recent Announcements</h2>
               {loadingAnnouncements && <LoadingSpinner />}
               {!loadingAnnouncements && announcements.length === 0 && <p className={`text-gray-700 text-sm sm:text-base`}>No announcements available.</p>}
               {!loadingAnnouncements && announcements.length > 0 && (
                 <ul className="space-y-2 sm:space-y-3 md:space-y-4 pb-4 sm:pb-8">
                   {announcements.map((ann) => (
-                    <li key={ann._id} className="bg-gradient-to-r from-green-50 to-green-100 p-3 sm:p-4 md:p-5 rounded-xl shadow-md border-2 border-green-200 hover:shadow-lg transition-all text-green-900 min-w-0">
+                    <li key={ann._id} className="bg-white p-3 sm:p-4 md:p-5 rounded-xl shadow-md border border-slate-200 hover:shadow-lg transition-all text-slate-800 min-w-0">
                       <p className="font-semibold text-sm sm:text-base md:text-lg truncate">{ann.title}</p>
                       <p className="text-xs sm:text-sm md:text-base italic mt-1">
                         {(() => {
@@ -480,11 +480,11 @@ const StudentDashboard = () => {
           onClick={closeActivityModal}
         >
           <div 
-            className={`bg-white border-blue-200 rounded-xl sm:rounded-2xl shadow-2xl max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl w-full max-h-[85vh] sm:max-h-[80vh] overflow-hidden border-2`}
+            className={`bg-white border-slate-200 rounded-xl sm:rounded-2xl shadow-2xl max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl w-full max-h-[85vh] sm:max-h-[80vh] overflow-hidden border`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-blue-900">{activityModal.title}</h3>
+            <div className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b border-slate-200 bg-slate-50">
+              <h3 className="text-base sm:text-lg md:text-xl font-semibold text-slate-800">{activityModal.title}</h3>
               <button
                 onClick={closeActivityModal}
                 className="text-gray-400 hover:text-gray-600 p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -503,7 +503,7 @@ const StudentDashboard = () => {
                     const classInfo = classes.find(cls => cls._id === (activity.classId?._id || activity.classId));
                     const submission = submissionMap[activity._id];
                     return (
-                      <div key={activity._id} className={`bg-blue-50 p-3 sm:p-4 md:p-5 rounded-lg border-2 border-blue-200`}>
+                      <div key={activity._id} className={`bg-slate-50 p-3 sm:p-4 md:p-5 rounded-lg border border-slate-200`}>
                         <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-3">
                           <h4 className="font-semibold text-gray-900 text-sm sm:text-base md:text-lg">{activity.title}</h4>
                           <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${

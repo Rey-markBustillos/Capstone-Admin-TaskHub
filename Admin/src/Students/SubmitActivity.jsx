@@ -259,10 +259,10 @@ const SubmitActivity = () => {
   if (!activity) return <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center"><div className="text-center p-10 text-red-500 bg-white rounded-xl shadow-lg">{error || 'Activity could not be loaded.'}</div></div>;
 
   return (
-    <div className={`min-h-full p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-white to-indigo-50 transition-all duration-300 w-full ${contentClasses}`}>
+    <div className={`min-h-full p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-white to-indigo-50 w-full ${contentClasses}`}>
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <Link to={`/student/class/${classId}/activities`} className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all min-h-[44px]">
+          <Link to={`/student/class/${classId}/activities`} className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-h-[44px]">
             <FaArrowLeft />
             Back to Class Activities
           </Link>
@@ -270,7 +270,7 @@ const SubmitActivity = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
           <div className="lg:col-span-2">
-            <form onSubmit={handleSubmit} className="relative bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-blue-200 overflow-hidden transition-all duration-300 hover:shadow-xl">
+            <form onSubmit={handleSubmit} className="relative bg-white rounded-xl shadow-lg p-6 sm:p-8 border border-blue-200 overflow-hidden">
               <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-500 to-blue-300 rounded-l-xl" />
               <h2 className="text-xl sm:text-2xl font-bold text-blue-900 mb-6 border-b-2 border-blue-100 pb-4 flex items-center gap-2">
                 <FaFileUpload className="text-blue-600 text-xl sm:text-2xl" />
@@ -317,7 +317,7 @@ const SubmitActivity = () => {
                   </div>
                   <button
                     type="button"
-                    className="mt-4 w-full flex justify-center items-center gap-2 py-3 sm:py-4 rounded-lg bg-blue-600 text-white text-sm sm:text-base font-semibold hover:bg-blue-700 transition shadow-md min-h-[44px]"
+                    className="mt-4 w-full flex justify-center items-center gap-2 py-3 sm:py-4 rounded-lg bg-blue-600 text-white text-sm sm:text-base font-semibold hover:bg-blue-700 shadow-md min-h-[44px]"
                     onClick={openCamera}
                   >
                     <FaFileUpload className="inline-block text-lg" /> Use Camera
@@ -330,7 +330,7 @@ const SubmitActivity = () => {
                         <video ref={videoRef} autoPlay playsInline className="rounded-lg border mb-4 max-w-full" style={{ width: 320, height: 240, background: '#222' }} />
                         <canvas ref={canvasRef} style={{ display: 'none' }} />
                         {cameraError && <p className="text-red-500 mb-2">{cameraError}</p>}
-                        <button type="button" className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md min-h-[44px]" onClick={capturePhoto}>Capture Photo</button>
+                        <button type="button" className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-md min-h-[44px]" onClick={capturePhoto}>Capture Photo</button>
                       </div>
                     </div>
                   )}
@@ -352,7 +352,7 @@ const SubmitActivity = () => {
               {success && <p className="text-green-600 text-sm mt-4 bg-green-50 border border-green-200 rounded-lg p-3">{success}</p>}
 
               <div className="mt-6">
-                <button type="submit" disabled={submitting || !selectedFile} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm sm:text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors min-h-[44px]">
+                <button type="submit" disabled={submitting || !selectedFile} className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-sm sm:text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed min-h-[44px]">
                   {submitting ? 'Submitting...' : (previousSubmission ? 'Submit New Version' : 'Submit Assignment')}
                 </button>
               </div>
@@ -381,10 +381,10 @@ const SubmitActivity = () => {
               <div className="mt-6">
                 <h3 className="font-semibold text-gray-800 mb-2">Attachment</h3>
                 <div className="flex flex-wrap items-center gap-3">
-                    <a href={getActivityViewUrl(activity)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors shadow-md min-h-[44px]">
+                    <a href={getActivityViewUrl(activity)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 rounded-lg px-4 py-2 hover:bg-blue-700 shadow-md min-h-[44px]">
                       <FaPaperclip /> View Attachment
                   </a>
-                    <a href={getActivityDownloadUrl(activity._id)} className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg px-4 py-2 transition-colors shadow-sm min-h-[44px]">
+                    <a href={getActivityDownloadUrl(activity._id)} className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2 shadow-md min-h-[44px]">
                       <FaDownload /> Download
                   </a>
                 </div>

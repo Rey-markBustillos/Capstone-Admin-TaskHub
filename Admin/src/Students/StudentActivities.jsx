@@ -177,7 +177,7 @@ const StudentActivities = () => {
 
                   return (
                     <div key={activity._id} onClick={() => handleSubmission(activity._id)}
-                      className={`bg-white border border-slate-200 rounded-xl shadow-md p-4 flex flex-col justify-between relative transition-all duration-200 ${activity.isLocked ? 'cursor-not-allowed opacity-75' : 'hover:shadow-xl hover:border-slate-300 hover:-translate-y-1 cursor-pointer'}`}
+                      className={`bg-white border border-slate-200 rounded-xl shadow-md p-4 flex flex-col justify-between relative ${activity.isLocked ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'}`}
                       title={activity.isLocked ? 'This activity is locked' : 'Click to view/submit activity'}>
                       <div>
                         <div className="flex justify-between items-start mb-3">
@@ -208,7 +208,7 @@ const StudentActivities = () => {
                             target="_blank" 
                             rel="noopener noreferrer" 
                             onClick={(e) => e.stopPropagation()} 
-                            className="flex items-center text-slate-600 text-xs sm:text-sm hover:underline font-medium"
+                            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-3 py-1.5 shadow-md min-h-[36px]"
                           >
                             <FaPaperclip className="mr-1"/> View Attachment
                           </a>

@@ -291,7 +291,7 @@ const StudentModules = () => {
                   <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">
                     <button
                       onClick={() => handleView(module)}
-                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg min-h-[44px]"
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg min-h-[44px]"
                       title="View Module"
                     >
                       <FaEye />
@@ -299,7 +299,7 @@ const StudentModules = () => {
                     </button>
                     <button
                       onClick={() => handleDownload(module)}
-                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg min-h-[44px]"
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg min-h-[44px]"
                       title="Download Module"
                     >
                       <FaDownload />

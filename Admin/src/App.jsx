@@ -121,7 +121,7 @@ const ProtectedLayout = ({ user, onLogout }) => {
               setIsOpen={setIsSidebarOpen}
               isOverlay={isStudentClass}
             />
-            <main className={`flex-1 transition-all duration-300 overflow-y-auto ${isStudentClass ? 'ml-0' : (isSidebarOpen ? 'md:ml-64' : 'md:ml-20')}`}>
+            <main className={`flex-1 ${isStudentClass ? 'overflow-y-auto ml-0' : `transition-all duration-300 overflow-y-auto ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}`}>
               <Outlet />
             </main>
           </div>
