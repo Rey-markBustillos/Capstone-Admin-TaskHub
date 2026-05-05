@@ -391,8 +391,8 @@ const QuizzHub = () => {
   };
 
   const renderQuizCreation = () => (
-  <div className="mb-4 sm:mb-6 md:mb-8 p-2 sm:p-3 md:p-4 bg-white border-blue-200 rounded-lg sm:rounded-xl shadow-lg w-full max-w-none border">
-  <h2 className="text-sm sm:text-lg font-bold mb-1 sm:mb-2 text-blue-900">Create New Quiz</h2>
+  <div className="mb-4 sm:mb-6 md:mb-8 p-2 sm:p-3 md:p-4 bg-white border-slate-200 rounded-lg sm:rounded-xl shadow-lg w-full max-w-none border">
+  <h2 className="text-sm sm:text-lg font-bold mb-1 sm:mb-2 text-slate-800">Create New Quiz</h2>
       <form onSubmit={handleCreateQuiz}>
         <input className="input mb-2" type="text" placeholder="Title" value={newQuiz.title} onChange={e=>setNewQuiz({ ...newQuiz, title: e.target.value })} required />
         <textarea className="input mb-2" placeholder="Description" value={newQuiz.description} onChange={e=>setNewQuiz({ ...newQuiz, description: e.target.value })} required />
@@ -401,7 +401,7 @@ const QuizzHub = () => {
         <input className="input mb-2" type="text" placeholder="Question" value={newQuiz.questions[0]?.question || ''} onChange={e=>setNewQuiz({ ...newQuiz, questions: [{ ...newQuiz.questions[0], question: e.target.value, type: 'multiple', choices: [], answer: '' }] })} required />
         <input className="input mb-2" type="text" placeholder="Choices (comma separated)" value={newQuiz.questions[0]?.choices?.join(',') || ''} onChange={e=>setNewQuiz({ ...newQuiz, questions: [{ ...newQuiz.questions[0], choices: e.target.value.split(','), type: 'multiple', answer: newQuiz.questions[0]?.answer || '' }] })} required />
         <input className="input mb-2" type="text" placeholder="Correct Answer" value={newQuiz.questions[0]?.answer || ''} onChange={e=>setNewQuiz({ ...newQuiz, questions: [{ ...newQuiz.questions[0], answer: e.target.value, type: 'multiple', choices: newQuiz.questions[0]?.choices || [] }] })} required />
-  <button type="submit" className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-3 sm:px-4 md:px-6 py-1 sm:py-2 rounded-xl sm:rounded-2xl shadow-lg text-xs sm:text-sm md:text-base transition"><FaPlus className="text-white text-xs sm:text-sm" /> <span className="hidden sm:inline">Create Quiz</span><span className="sm:hidden">Create</span></button>
+  <button type="submit" className="flex items-center gap-1 sm:gap-2 bg-slate-700 hover:bg-slate-800 text-white font-bold px-3 sm:px-4 md:px-6 py-1 sm:py-2 rounded-xl sm:rounded-2xl shadow-lg text-xs sm:text-sm md:text-base transition"><FaPlus className="text-white text-xs sm:text-sm" /> <span className="hidden sm:inline">Create Quiz</span><span className="sm:hidden">Create</span></button>
   {createError && <div className="text-red-600 mt-2">{createError}</div>}
   {createSuccess && <div className="text-green-600 mt-2">{createSuccess}</div>}
       </form>
@@ -411,7 +411,7 @@ const QuizzHub = () => {
   // Render quiz list and take quiz
   const renderQuizList = () => (
     <div>
-      {loading && <div className="text-blue-700">Loading quizzes...</div>}
+      {loading && <div className="text-slate-700">Loading quizzes...</div>}
   {error && <div className="text-red-600">{error}</div>}
       {visibleQuizzes.length === 0 && !loading ? (
         <div>No quizzes available.</div>
@@ -420,12 +420,12 @@ const QuizzHub = () => {
           // Check if student has already taken this quiz
           const alreadyTaken = Array.isArray(qz.submissions) && qz.submissions.some(sub => sub.studentId === studentId);
           return (
-            <div key={qz._id || idx} className="mb-3 sm:mb-4 md:mb-6 p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl shadow-lg w-full max-w-none bg-gradient-to-r from-blue-50 via-white to-indigo-50 border-2 border-blue-200">
+            <div key={qz._id || idx} className="mb-3 sm:mb-4 md:mb-6 p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl shadow-lg w-full max-w-none bg-white border border-slate-200">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-1 sm:mb-2">
                 <div>
-                  <div className="font-bold text-sm sm:text-base md:text-lg text-blue-900">{qz.title}</div>
-                  <div className="text-blue-700 text-xs sm:text-sm mb-0.5 sm:mb-1">{qz.description}</div>
-                  <div className="text-[10px] sm:text-xs text-blue-600 flex items-center gap-1"><FaCalendarAlt className="text-[10px] sm:text-xs" /> Due: {formatDate(qz.dueDate, {}, 'N/A')}</div>
+                  <div className="font-bold text-sm sm:text-base md:text-lg text-slate-800">{qz.title}</div>
+                  <div className="text-slate-600 text-xs sm:text-sm mb-0.5 sm:mb-1">{qz.description}</div>
+                  <div className="text-[10px] sm:text-xs text-slate-500 flex items-center gap-1"><FaCalendarAlt className="text-[10px] sm:text-xs" /> Due: {formatDate(qz.dueDate, {}, 'N/A')}</div>
                 </div>
                 {alreadyTaken ? (
                   <div className="flex flex-col items-start">
@@ -451,7 +451,7 @@ const QuizzHub = () => {
                   </div>
                 ) : (
                   <button
-                    className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-3 sm:px-4 md:px-5 py-1 sm:py-2 rounded-xl sm:rounded-2xl shadow-lg font-bold text-xs sm:text-sm md:text-base transition mt-1 sm:mt-2 md:mt-0"
+                    className="flex items-center gap-1 sm:gap-2 bg-slate-700 hover:bg-slate-800 text-white px-3 sm:px-4 md:px-5 py-1 sm:py-2 rounded-xl sm:rounded-2xl shadow-lg font-bold text-xs sm:text-sm md:text-base transition mt-1 sm:mt-2 md:mt-0"
                     onClick={() => {
                       setPendingQuizId(qz._id);
                       setShowStartModal(true);
@@ -657,7 +657,7 @@ const QuizzHub = () => {
     <>
       {showStartModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50">
-          <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg sm:rounded-2xl shadow-2xl p-3 sm:p-8 border-2 sm:border-4 border-blue-400 w-full max-w-sm sm:max-w-md flex flex-col items-center">
+          <div className="bg-white rounded-lg sm:rounded-2xl shadow-2xl p-3 sm:p-8 border-2 border-slate-300 w-full max-w-sm sm:max-w-md flex flex-col items-center">
             {(() => {
               const quiz = quizzes.find(qz => qz._id === pendingQuizId);
               const alreadyTaken = quiz && Array.isArray(quiz.submissions) && quiz.submissions.some(sub => sub.studentId === studentId);
@@ -665,7 +665,7 @@ const QuizzHub = () => {
                 return (
                   <>
                     <h2 className="text-sm sm:text-2xl font-bold text-red-600 mb-2 sm:mb-4">Quiz Already Taken</h2>
-                    <p className="text-blue-700 mb-2 sm:mb-4 text-center text-xs sm:text-base">You have already submitted this quiz. Retaking is not allowed.</p>
+                    <p className="text-slate-600 mb-2 sm:mb-4 text-center text-xs sm:text-base">You have already submitted this quiz. Retaking is not allowed.</p>
                     <button
                       className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-gray-400 to-gray-600 hover:from-gray-500 hover:to-gray-700 text-white px-3 py-1 sm:px-6 sm:py-2 rounded-lg sm:rounded-2xl shadow-lg font-bold text-xs sm:text-lg transition"
                       onClick={() => setShowStartModal(false)}
@@ -677,8 +677,8 @@ const QuizzHub = () => {
               }
               return (
                 <>
-                  <h2 className="text-sm sm:text-2xl font-bold text-blue-900 mb-2 sm:mb-4 text-center">Ready to take the quiz?</h2>
-                  <p className="text-blue-700 mb-4 sm:mb-6 text-center text-xs sm:text-base">Click <span className="font-bold text-green-600">Start</span> to begin the quiz in fullscreen mode with a per-question timer, or <span className="font-bold text-gray-600">Cancel</span> to go back.</p>
+                  <h2 className="text-sm sm:text-2xl font-bold text-slate-800 mb-2 sm:mb-4 text-center">Ready to take the quiz?</h2>
+                  <p className="text-slate-600 mb-4 sm:mb-6 text-center text-xs sm:text-base">Click <span className="font-bold text-green-600">Start</span> to begin the quiz in fullscreen mode with a per-question timer, or <span className="font-bold text-gray-600">Cancel</span> to go back.</p>
                   <div className="flex gap-2 sm:gap-4 flex-col sm:flex-row w-full sm:w-auto">
                     <button
                       className="flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-3 py-1 sm:px-6 sm:py-2 rounded-lg sm:rounded-2xl shadow-lg font-bold text-xs sm:text-lg transition"
@@ -729,7 +729,7 @@ const QuizzHub = () => {
       )}
       <div
         ref={quizPageRef}
-        className={`${isFullscreenActive ? 'min-h-screen overflow-y-auto bg-white' : 'min-h-full'} bg-white p-2 sm:p-4 md:p-8 transition-all duration-300 w-full ${isQuizInProgress || isFullscreenActive ? '' : contentClasses}`}
+        className={`${isFullscreenActive ? 'min-h-screen overflow-y-auto bg-white' : 'min-h-full'} bg-slate-50 p-2 sm:p-4 md:p-8 transition-all duration-300 w-full ${isQuizInProgress || isFullscreenActive ? '' : contentClasses}`}
       >
         {requiresFullscreenRecovery && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/85 p-4">
@@ -738,7 +738,7 @@ const QuizzHub = () => {
               <p className="mt-3 text-center text-sm sm:text-base text-slate-700">
                 The quiz is still running and the timer did not stop. Return to fullscreen to continue answering.
               </p>
-              <p className="mt-3 text-center text-sm sm:text-base font-bold text-blue-800">
+              <p className="mt-3 text-center text-sm sm:text-base font-bold text-slate-800">
                 Current question time left: {remainingSeconds}s
               </p>
               <p className="mt-2 text-center text-xs sm:text-sm font-semibold text-red-600">
@@ -751,7 +751,7 @@ const QuizzHub = () => {
                 <button
                   type="button"
                   onClick={requestQuizFullscreen}
-                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-3 rounded-xl shadow-lg font-bold text-sm sm:text-base transition"
+                  className="flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-5 py-3 rounded-xl shadow-lg font-bold text-sm sm:text-base transition"
                 >
                   <FaEye className="text-white" /> Return to Full Screen
                 </button>
@@ -762,9 +762,9 @@ const QuizzHub = () => {
         <div className="w-full max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh] px-1 sm:px-2 md:px-4 lg:px-8">
           <div className="mb-4 sm:mb-6 mt-2 sm:mt-4 ml-2 sm:ml-4 self-start">
           </div>
-          <div className="bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl p-2 sm:p-3 md:p-6 lg:p-8 xl:p-12 border-l-4 border-blue-400 w-full max-w-none overflow-x-auto">
-            <h2 className="text-sm sm:text-lg md:text-2xl font-bold text-blue-900 mb-2 sm:mb-3 md:mb-4 flex items-center gap-1 sm:gap-2">
-              <FaListOl className="text-sm sm:text-base md:text-xl" /> <span className="hidden sm:inline">Available Quizzes</span><span className="sm:hidden">Quizzes</span>
+          <div className="bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl p-2 sm:p-3 md:p-6 lg:p-8 xl:p-12 border border-slate-200 w-full max-w-none overflow-x-auto">
+            <h2 className="text-sm sm:text-lg md:text-2xl font-bold text-slate-800 mb-2 sm:mb-3 md:mb-4 flex items-center gap-1 sm:gap-2">
+              <FaListOl className="text-sm sm:text-base md:text-xl text-slate-500" /> <span className="hidden sm:inline">Available Quizzes</span><span className="sm:hidden">Quizzes</span>
             </h2>
             {isQuizInProgress && (
               <div className="mb-4 sm:mb-6 rounded-xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 px-3 py-3 sm:px-4 sm:py-4 shadow-md">
@@ -775,7 +775,7 @@ const QuizzHub = () => {
                       Timer keeps running. When a question expires, it is locked and the quiz moves to the next question.
                     </p>
                     {activeQuiz && (
-                      <p className="mt-1 text-xs sm:text-sm font-semibold text-blue-800">
+                      <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-700">
                         Question timer: {remainingSeconds}s left on question {activeTimedQuestionIndex + 1} of {questionCount}
                       </p>
                     )}
@@ -790,7 +790,7 @@ const QuizzHub = () => {
                     <button
                       type="button"
                       onClick={requestQuizFullscreen}
-                      className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-xl shadow-lg font-bold text-xs sm:text-sm transition"
+                      className="flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-xl shadow-lg font-bold text-xs sm:text-sm transition"
                     >
                       <FaEye className="text-white" /> Return to Full Screen
                     </button>
@@ -798,11 +798,11 @@ const QuizzHub = () => {
                 </div>
                 {activeQuiz && (
                   <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between text-[11px] sm:text-xs font-semibold text-blue-900">
+                    <div className="mb-2 flex items-center justify-between text-[11px] sm:text-xs font-semibold text-slate-800">
                       <span>Time Remaining</span>
                       <span>{remainingSeconds}s</span>
                     </div>
-                    <div className="h-3 overflow-hidden rounded-full bg-blue-100 shadow-inner">
+                    <div className="h-3 overflow-hidden rounded-full bg-slate-200 shadow-inner">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-red-500 via-amber-500 to-green-500 transition-all duration-1000"
                         style={{ width: `${questionTimeLimit > 0 ? (remainingSeconds / questionTimeLimit) * 100 : 0}%` }}
@@ -814,7 +814,7 @@ const QuizzHub = () => {
             )}
             {isTeacher && (
               <div className="flex justify-end mb-4 sm:mb-6">
-                <button className="transition bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold px-3 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-lg text-sm sm:text-lg focus:ring-4 focus:ring-blue-400 flex items-center gap-2" onClick={()=>setShowCreate(!showCreate)}>
+                <button className="transition bg-slate-700 hover:bg-slate-800 text-white font-bold px-3 sm:px-6 py-2 sm:py-3 rounded-2xl shadow-lg text-sm sm:text-lg focus:ring-4 focus:ring-slate-300 flex items-center gap-2" onClick={()=>setShowCreate(!showCreate)}>
                   {showCreate ? (<><FaTimesCircle className="text-white" /> <span className="hidden sm:inline">Cancel</span></>) : (<><FaPlus className="text-white" /> <span className="hidden sm:inline">Create Quiz</span><span className="sm:hidden">Create</span></>)}
                 </button>
               </div>

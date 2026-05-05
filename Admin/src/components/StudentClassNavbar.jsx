@@ -36,13 +36,13 @@ const StudentClassNavbar = ({ selectedClass }) => {
           <div className="flex flex-col lg:flex-row lg:flex-wrap justify-start lg:justify-between items-start lg:items-center gap-2 sm:gap-3 md:gap-4">
             <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
               <div className="bg-white/20 backdrop-blur-sm p-1.5 sm:p-2 md:p-2.5 rounded-md sm:rounded-lg shadow-lg">
-                <FaSchool className="text-white text-lg sm:text-xl md:text-2xl" />
+                <FaSchool className="text-slate-200 text-lg sm:text-xl md:text-2xl" />
               </div>
               <div>
                 <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold drop-shadow-md truncate max-w-[160px] sm:max-w-[200px] md:max-w-none">{selectedClass.className}</h1>
                 {getTeacherName(selectedClass) && (
-                  <div className="text-[9px] sm:text-[10px] md:text-xs text-blue-100 mt-0.5 flex items-center gap-1">
-                    <FaChalkboardTeacher className="text-blue-200 text-[10px] sm:text-xs" />
+                  <div className="text-[9px] sm:text-[10px] md:text-xs text-slate-100 mt-0.5 flex items-center gap-1">
+                    <FaChalkboardTeacher className="text-slate-200 text-[10px] sm:text-xs" />
                     <span className="truncate max-w-[140px] sm:max-w-[160px] md:max-w-none"><strong>Teacher:</strong> {getTeacherName(selectedClass)}</span>
                   </div>
                 )}
@@ -50,18 +50,18 @@ const StudentClassNavbar = ({ selectedClass }) => {
             </div>
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 md:gap-3 text-[9px] sm:text-[10px] md:text-xs w-full lg:w-auto">
               <div className="flex items-center gap-1 sm:gap-1.5 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 rounded shadow-sm">
-                <FaClock className="text-blue-200 text-[10px] sm:text-xs md:text-sm flex-shrink-0" />
-                <span className="font-medium truncate max-w-[80px] sm:max-w-[100px] md:max-w-none text-[9px] sm:text-[10px] md:text-xs"><strong className="text-blue-100">Time:</strong> <span className="sm:hidden">TBA</span><span className="hidden sm:inline">{formatClassTimeRange(selectedClass.time, selectedClass.endTime)}</span></span>
+                <FaClock className="text-slate-200 text-[10px] sm:text-xs md:text-sm flex-shrink-0" />
+                <span className="font-medium truncate max-w-[80px] sm:max-w-[100px] md:max-w-none text-[9px] sm:text-[10px] md:text-xs"><strong className="text-slate-100">Time:</strong> <span className="sm:hidden">TBA</span><span className="hidden sm:inline">{formatClassTimeRange(selectedClass.time, selectedClass.endTime)}</span></span>
               </div>
               {selectedClass.day && (
                 <div className="flex items-center gap-1 sm:gap-1.5 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 rounded shadow-sm">
-                  <FaCalendarAlt className="text-blue-200 text-[10px] sm:text-xs md:text-sm flex-shrink-0" />
-                  <span className="font-medium text-[9px] sm:text-[10px] md:text-xs"><strong className="text-blue-100">Day:</strong> {selectedClass.day}</span>
+                  <FaCalendarAlt className="text-slate-200 text-[10px] sm:text-xs md:text-sm flex-shrink-0" />
+                  <span className="font-medium text-[9px] sm:text-[10px] md:text-xs"><strong className="text-slate-100">Day:</strong> {selectedClass.day}</span>
                 </div>
               )}
               <div className="flex items-center gap-1 sm:gap-1.5 bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 rounded shadow-sm">
-                <FaMapMarkerAlt className="text-blue-200 text-[10px] sm:text-xs md:text-sm flex-shrink-0" />
-                <span className="font-medium text-[9px] sm:text-[10px] md:text-xs"><strong className="text-blue-100">Room:</strong> {selectedClass.roomNumber || 'N/A'}</span>
+                <FaMapMarkerAlt className="text-slate-200 text-[10px] sm:text-xs md:text-sm flex-shrink-0" />
+                <span className="font-medium text-[9px] sm:text-[10px] md:text-xs"><strong className="text-slate-100">Room:</strong> {selectedClass.roomNumber || 'N/A'}</span>
               </div>
             </div>
           </div>
@@ -80,7 +80,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
               to="/studentportal"
               className="flex items-center gap-2 py-2 md:py-2.5 px-3 md:px-4 lg:px-5 rounded-lg transition-all duration-200 text-gray-700 hover:bg-blue-600 hover:text-white font-semibold border-2 border-blue-600 hover:border-blue-700 shadow-md hover:shadow-lg hover:scale-105 min-h-[44px] whitespace-nowrap"
             >
-              <FaArrowLeft className="text-sm" />
+              <FaArrowLeft className="text-sm text-slate-500" />
               <span className="text-sm md:text-base">Back</span>
             </NavLink>
 
@@ -94,7 +94,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
                     : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
                 }`}
               >
-                <FaCalendarCheck className="text-lg" />
+                <FaCalendarCheck className="text-lg text-slate-500" />
                 <span className="hidden lg:inline">Attendance</span>
               </NavLink>
               <NavLink
@@ -105,7 +105,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
                     : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
                 }`}
               >
-                <FaBullhorn className="text-lg" />
+                <FaBullhorn className="text-lg text-slate-500" />
                 <span className="hidden lg:inline">Announcements</span>
               </NavLink>
               <NavLink
@@ -116,7 +116,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
                     : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
                 }`}
               >
-                <FaTasks className="text-lg" />
+                <FaTasks className="text-lg text-slate-500" />
                 <span className="hidden lg:inline">Activities</span>
               </NavLink>
               <NavLink
@@ -127,7 +127,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
                     : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
                 }`}
               >
-                <FaQuestionCircle className="text-lg" />
+                <FaQuestionCircle className="text-lg text-slate-500" />
                 <span className="hidden lg:inline">Quiz</span>
               </NavLink>
               <NavLink
@@ -138,7 +138,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
                     : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
                 }`}
               >
-                <FaBook className="text-lg" />
+                <FaBook className="text-lg text-slate-500" />
                 <span className="hidden lg:inline">Modules</span>
               </NavLink>
               <NavLink
@@ -149,8 +149,8 @@ const StudentClassNavbar = ({ selectedClass }) => {
                     : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
                 }`}
               >
-                <FaUsers className="text-lg" />
-                <span className="hidden lg:inline">Class List</span>
+                <FaUsers className="text-lg text-slate-500" />
+                <span className="hidden lg:inline">Student List</span>
               </NavLink>
             </div>
           </div>
@@ -161,7 +161,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
               to="/studentportal"
               className="flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-200 text-white bg-blue-600 hover:bg-blue-700 font-semibold border-2 border-blue-700 shadow-md hover:shadow-lg min-h-[44px] min-w-[80px] sm:min-w-[90px]"
             >
-              <FaArrowLeft className="text-xs sm:text-sm" />
+              <FaArrowLeft className="text-xs sm:text-sm text-slate-500" />
               <span className="text-xs sm:text-sm">Back</span>
             </NavLink>
 
@@ -196,7 +196,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
               }`}
               onClick={() => setOpen(false)}
             >
-              <FaCalendarCheck className="text-3xl" />
+              <FaCalendarCheck className="text-3xl text-slate-500" />
               <span className="text-xs sm:text-sm text-center">Attendance</span>
             </NavLink>
             <NavLink
@@ -208,7 +208,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
               }`}
               onClick={() => setOpen(false)}
             >
-              <FaBullhorn className="text-3xl" />
+              <FaBullhorn className="text-3xl text-slate-500" />
               <span className="text-xs sm:text-sm text-center">Announcements</span>
             </NavLink>
             <NavLink
@@ -220,7 +220,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
               }`}
               onClick={() => setOpen(false)}
             >
-              <FaTasks className="text-3xl" />
+              <FaTasks className="text-3xl text-slate-500" />
               <span className="text-xs sm:text-sm text-center">Activities</span>
             </NavLink>
             <NavLink
@@ -232,7 +232,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
               }`}
               onClick={() => setOpen(false)}
             >
-              <FaQuestionCircle className="text-3xl" />
+              <FaQuestionCircle className="text-3xl text-slate-500" />
               <span className="text-xs sm:text-sm text-center">Quiz</span>
             </NavLink>
             <NavLink
@@ -244,7 +244,7 @@ const StudentClassNavbar = ({ selectedClass }) => {
               }`}
               onClick={() => setOpen(false)}
             >
-              <FaBook className="text-3xl" />
+              <FaBook className="text-3xl text-slate-500" />
               <span className="text-xs sm:text-sm text-center">Modules</span>
             </NavLink>
             <NavLink
@@ -256,8 +256,8 @@ const StudentClassNavbar = ({ selectedClass }) => {
               }`}
               onClick={() => setOpen(false)}
             >
-              <FaUsers className="text-3xl" />
-              <span className="text-xs sm:text-sm text-center">Class List</span>
+              <FaUsers className="text-3xl text-slate-500" />
+              <span className="text-xs sm:text-sm text-center">Student List</span>
             </NavLink>
           </div>
         </div>

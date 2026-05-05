@@ -138,16 +138,16 @@ const StudentActivities = () => {
   };
 
   if (loading) return (
-    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${contentClasses}`}>
+    <div className={`min-h-full bg-slate-50 p-4 sm:p-6 w-full ${contentClasses}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <FaBookOpen className="animate-bounce text-blue-500 mb-4" size={48} />
+        <FaBookOpen className="animate-bounce text-slate-500 mb-4" size={48} />
         <div className="text-center p-10 text-lg font-semibold text-gray-800">Loading activities...</div>
       </div>
     </div>
   );
 
   if (error) return (
-    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${contentClasses}`}>
+    <div className={`min-h-full bg-slate-50 p-4 sm:p-6 w-full ${contentClasses}`}>
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <FaTimesCircle className="text-red-500 mb-4" size={48} />
         <div className="text-center p-10 text-red-500 bg-white rounded-xl shadow-lg">{error}</div>
@@ -156,15 +156,15 @@ const StudentActivities = () => {
   );
 
   return (
-    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4 sm:p-6 w-full ${contentClasses}`}>
+    <div className={`min-h-full bg-slate-50 p-4 sm:p-6 w-full ${contentClasses}`}>
       <div className="max-w-none mx-auto flex flex-col justify-center items-center min-h-[80vh]">
         <div className="mb-4 sm:mb-6 ml-2 self-start">
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-blue-200 w-full overflow-x-auto">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-slate-200 w-full overflow-x-auto">
           <div className="flex items-center gap-2 mb-6">
-            <FaBookOpen className="text-blue-600 text-2xl" />
-            <h1 className="text-2xl font-bold text-blue-900">Class Activities</h1>
+            <FaBookOpen className="text-slate-500 text-2xl" />
+            <h1 className="text-2xl font-bold text-slate-800">Class Activities</h1>
           </div>
 
           <div className="overflow-y-auto" style={{ maxHeight: '70vh', minHeight: '200px' }}>
@@ -177,12 +177,12 @@ const StudentActivities = () => {
 
                   return (
                     <div key={activity._id} onClick={() => handleSubmission(activity._id)}
-                      className={`bg-white border-2 border-blue-200 rounded-xl shadow-md p-4 flex flex-col justify-between relative transition-all duration-200 ${activity.isLocked ? 'cursor-not-allowed opacity-75' : 'hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 cursor-pointer'}`}
+                      className={`bg-white border border-slate-200 rounded-xl shadow-md p-4 flex flex-col justify-between relative transition-all duration-200 ${activity.isLocked ? 'cursor-not-allowed opacity-75' : 'hover:shadow-xl hover:border-slate-300 hover:-translate-y-1 cursor-pointer'}`}
                       title={activity.isLocked ? 'This activity is locked' : 'Click to view/submit activity'}>
                       <div>
                         <div className="flex justify-between items-start mb-3">
-                          <h3 className="text-lg font-bold text-blue-900 flex items-center gap-2 truncate">
-                            <FaBookOpen className="text-blue-500" /> {activity.title}
+                          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 truncate">
+                            <FaBookOpen className="text-slate-500" /> {activity.title}
                             {activity.isLocked && <FaLock className="text-gray-500" title="Locked" />}
                           </h3>
                           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusInfo.style}`}>
@@ -201,14 +201,14 @@ const StudentActivities = () => {
                         </div>
                       </div>
 
-                      <div className="mt-4 border-t border-blue-200 pt-3 flex justify-between items-center">
+                      <div className="mt-4 border-t border-slate-200 pt-3 flex justify-between items-center">
                         {attachmentUrl ? (
                           <a 
                             href={attachmentUrl} 
                             target="_blank" 
                             rel="noopener noreferrer" 
                             onClick={(e) => e.stopPropagation()} 
-                            className="flex items-center text-blue-600 text-xs sm:text-sm hover:underline font-medium"
+                            className="flex items-center text-slate-600 text-xs sm:text-sm hover:underline font-medium"
                           >
                             <FaPaperclip className="mr-1"/> View Attachment
                           </a>
@@ -235,7 +235,7 @@ const StudentActivities = () => {
 
                               submitActivity({ activityId: activity._id, studentId, content: answer.trim() });
                             }}
-                            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs sm:text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm min-h-[36px] ml-2"
+                            className="px-3 py-1.5 bg-slate-700 text-white rounded-lg text-xs sm:text-sm font-semibold hover:bg-slate-800 transition-colors shadow-sm min-h-[36px] ml-2"
                           >
                             Quick Submit
                           </button>
@@ -246,8 +246,8 @@ const StudentActivities = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center p-8 bg-blue-50 rounded-lg border border-blue-200">
-                <FaBookOpen className="mx-auto mb-4 text-blue-500" size={36}/>
+              <div className="text-center p-8 bg-slate-50 rounded-lg border border-slate-200">
+                <FaBookOpen className="mx-auto mb-4 text-slate-500" size={36}/>
                 <p className="text-gray-600">No activities posted for this class yet.</p>
               </div>
             )}

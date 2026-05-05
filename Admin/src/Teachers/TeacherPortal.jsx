@@ -53,7 +53,7 @@ const TeacherPortal = () => {
     return (
       <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <FaSpinner className="animate-spin text-5xl text-blue-600 mx-auto mb-4" />
+          <FaSpinner className="animate-spin text-5xl text-slate-500 mx-auto mb-4" />
           <p className="text-gray-600 font-medium">Loading your classes...</p>
         </div>
       </div>
@@ -77,7 +77,7 @@ const TeacherPortal = () => {
     return (
       <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col justify-center items-center p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-12 max-w-2xl text-center">
-          <FaChalkboardTeacher className="text-6xl text-blue-600 mx-auto mb-4" />
+          <FaChalkboardTeacher className="text-6xl text-slate-500 mx-auto mb-4" />
           <h2 className="text-3xl font-bold text-gray-800 mb-4">No Classes Available</h2>
           <p className="text-lg text-gray-600">You currently have no scheduled classes. Please check with your administrator or add a class to get started.</p>
         </div>
@@ -91,8 +91,8 @@ const TeacherPortal = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-blue-600 p-3 rounded-xl">
-              <FaChalkboardTeacher className="text-3xl text-white" />
+            <div className="bg-slate-100 p-3 rounded-xl">
+              <FaChalkboardTeacher className="text-3xl text-slate-500" />
             </div>
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">My Classes</h1>
@@ -149,7 +149,7 @@ const TeacherPortal = () => {
                 {/* Body with class details */}
                 <div className="p-6 space-y-4">
                   <div className="flex items-start gap-3">
-                    <FaCalendarAlt className="text-blue-600 mt-1 flex-shrink-0" size={16} />
+                    <FaCalendarAlt className="text-slate-500 mt-1 flex-shrink-0" size={16} />
                     <div className="flex-1">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Day</p>
                       <p className="text-gray-800 font-medium">
@@ -159,7 +159,7 @@ const TeacherPortal = () => {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <FaClock className="text-blue-600 mt-1 flex-shrink-0" size={16} />
+                    <FaClock className="text-slate-500 mt-1 flex-shrink-0" size={16} />
                     <div className="flex-1">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Time</p>
                       <p className="text-gray-800 font-medium">
@@ -169,7 +169,7 @@ const TeacherPortal = () => {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <FaMapMarkerAlt className="text-blue-600 mt-1 flex-shrink-0" size={16} />
+                    <FaMapMarkerAlt className="text-slate-500 mt-1 flex-shrink-0" size={16} />
                     <div className="flex-1">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Room</p>
                       <p className="text-gray-800 font-medium">

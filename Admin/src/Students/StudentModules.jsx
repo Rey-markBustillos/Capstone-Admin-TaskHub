@@ -211,15 +211,15 @@ const StudentModules = () => {
   };
 
   return (
-    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${contentClasses}`}>
+    <div className={`min-h-full bg-slate-50 p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 transition-all duration-300 pt-28 sm:pt-32 md:pt-36 w-full ${contentClasses}`}>
       <div className="w-full">
 
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 sm:p-6 rounded-xl shadow-lg border-l-4 border-blue-400">
+      <div className="bg-white text-slate-800 p-4 sm:p-6 rounded-xl shadow-lg border border-slate-200">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold flex items-center gap-3 mb-2">
-          <FaBook className="text-yellow-300 text-2xl sm:text-3xl" />
+          <FaBook className="text-slate-500 text-2xl sm:text-3xl" />
           Learning Modules
         </h1>
-        <p className="text-blue-100 text-sm sm:text-base">Access course materials and resources uploaded by your teacher</p>
+        <p className="text-slate-600 text-sm sm:text-base">Access course materials and resources uploaded by your teacher</p>
       </div>
 
       {error && (
@@ -229,24 +229,24 @@ const StudentModules = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow-lg border-2 border-blue-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-12 sm:py-16">
-            <FaSpinner className="animate-spin text-2xl sm:text-3xl text-blue-500 mr-3" />
+            <FaSpinner className="animate-spin text-2xl sm:text-3xl text-slate-500 mr-3" />
             <span className="text-base sm:text-lg text-gray-700 font-medium">Loading modules...</span>
           </div>
         ) : modules.length === 0 ? (
           <div className="text-center py-12 sm:py-16 text-gray-500 px-4">
-            <FaBook className="text-5xl sm:text-6xl mb-4 mx-auto opacity-40 text-blue-300" />
+            <FaBook className="text-5xl sm:text-6xl mb-4 mx-auto opacity-40 text-slate-300" />
             <h3 className="text-xl sm:text-2xl font-bold mb-2 text-gray-700">No Modules Available</h3>
             <p className="text-sm sm:text-base">Your teacher hasn't uploaded any learning modules yet.</p>
           </div>
         ) : (
-          <div className="divide-y divide-blue-100">
+          <div className="divide-y divide-slate-200">
             {modules.map((module) => (
               <div
                 key={module._id}
-                className="p-4 sm:p-5 md:p-6 hover:bg-blue-50 transition-colors"
+                className="p-4 sm:p-5 md:p-6 hover:bg-slate-50 transition-colors"
               >
                 <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                   <div className="flex-shrink-0">
@@ -254,7 +254,7 @@ const StudentModules = () => {
                   </div>
 
                   <div className="flex-1 min-w-0 w-full">
-                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-blue-900 mb-2 break-words">
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-800 mb-2 break-words">
                       {module.title}
                     </h3>
                     
@@ -266,22 +266,22 @@ const StudentModules = () => {
                     
                     <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm text-gray-600 mb-4">
                       <div className="flex items-center gap-1.5">
-                        <FaFileAlt className="text-blue-500 flex-shrink-0" />
+                        <FaFileAlt className="text-slate-500 flex-shrink-0" />
                         <span className="truncate max-w-[200px] sm:max-w-none">{module.fileName}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <FaCalendarAlt className="text-blue-500 flex-shrink-0" />
+                        <FaCalendarAlt className="text-slate-500 flex-shrink-0" />
                         <span>Uploaded: {formatDate(module.uploadDate, {}, 'N/A')}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <FaUser className="text-blue-500 flex-shrink-0" />
+                        <FaUser className="text-slate-500 flex-shrink-0" />
                         <span>By: {module.uploadedBy?.name || 'Teacher'}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="font-medium">Size: {formatFileSize(module.fileSize)}</span>
                       </div>
                       {module.cloudinaryUrl && (
-                        <div className="flex items-center gap-1.5 bg-purple-100 text-purple-700 px-2 py-1 rounded-md" title="Stored in cloud">
+                        <div className="flex items-center gap-1.5 bg-slate-100 text-slate-700 px-2 py-1 rounded-md" title="Stored in cloud">
                           <span>☁️ Cloud</span>
                         </div>
                       )}
@@ -291,7 +291,7 @@ const StudentModules = () => {
                   <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 w-full sm:w-auto">
                     <button
                       onClick={() => handleView(module)}
-                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg min-h-[44px]"
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg min-h-[44px]"
                       title="View Module"
                     >
                       <FaEye />
@@ -299,7 +299,7 @@ const StudentModules = () => {
                     </button>
                     <button
                       onClick={() => handleDownload(module)}
-                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg min-h-[44px]"
+                      className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors font-semibold text-sm shadow-md hover:shadow-lg min-h-[44px]"
                       title="Download Module"
                     >
                       <FaDownload />
@@ -314,10 +314,10 @@ const StudentModules = () => {
       </div>
 
       {modules.length > 0 && (
-        <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-lg shadow-sm">
+        <div className="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm sm:text-base text-gray-700 font-medium">
-            <span>Total modules: <span className="font-bold text-blue-600">{modules.length}</span></span>
-            <span>Total size: <span className="font-bold text-blue-600">{formatFileSize(modules.reduce((total, module) => total + module.fileSize, 0))}</span></span>
+            <span>Total modules: <span className="font-bold text-slate-700">{modules.length}</span></span>
+            <span>Total size: <span className="font-bold text-slate-700">{formatFileSize(modules.reduce((total, module) => total + module.fileSize, 0))}</span></span>
           </div>
         </div>
       )}

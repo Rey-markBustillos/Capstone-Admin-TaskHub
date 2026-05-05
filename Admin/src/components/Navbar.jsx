@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { NavLink, useParams, useNavigate } from 'react-router-dom';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import { formatClassTimeRange } from '../utils/dateTime';
 import {
@@ -7,7 +7,6 @@ import {
   FaPlusSquare,
   FaUsers,
   FaArrowLeft,
-  FaBars,
   FaTimes,
   FaClock,
   FaCalendarAlt,
@@ -35,12 +34,12 @@ const Navbar = ({ selectedClass }) => {
   const handleHamburgerClick = () => setOpen(!open);
 
   const menuItems = [
-    { to: `/class/${classId}/attendance`, icon: FaCalendarAlt, label: 'Attendance', color: 'green' },
-    { to: `/class/${classId}/announcements`, icon: FaBullhorn, label: 'Announcement', color: 'yellow' },
-    { to: `/class/${classId}/createactivity`, icon: FaPlusSquare, label: 'Create Activity', color: 'orange' },
-    { to: `/class/${classId}/createquiz`, icon: FaQuestionCircle, label: 'Quiz Generator', color: 'blue' },
-    { to: `/class/${classId}/uploadmodule`, icon: FaUpload, label: 'Upload Module', color: 'purple' },
-    { to: `/class/${classId}/studentlist`, icon: FaUsers, label: 'Student List', color: 'indigo' },
+    { to: `/class/${classId}/attendance`, icon: FaCalendarAlt, label: 'Attendance' },
+    { to: `/class/${classId}/announcements`, icon: FaBullhorn, label: 'Announcement' },
+    { to: `/class/${classId}/createactivity`, icon: FaPlusSquare, label: 'Create Activity' },
+    { to: `/class/${classId}/createquiz`, icon: FaQuestionCircle, label: 'Quiz Generator' },
+    { to: `/class/${classId}/uploadmodule`, icon: FaUpload, label: 'Upload Module' },
+    { to: `/class/${classId}/studentlist`, icon: FaUsers, label: 'Student List' },
   ];
 
   if (!classId) return null;
@@ -53,21 +52,21 @@ const Navbar = ({ selectedClass }) => {
           <div className="flex flex-col sm:flex-row sm:flex-wrap justify-start sm:justify-between items-start sm:items-center gap-3">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 p-2 rounded-lg">
-                <FaSchool className="text-white text-xl sm:text-2xl" />
+                <FaSchool className="text-slate-200 text-xl sm:text-2xl" />
               </div>
               <span className="text-xl sm:text-2xl font-bold">{selectedClass.className}</span>
             </div>
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
               <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
-                <FaClock className="text-blue-200" />
+                <FaClock className="text-slate-200" />
                 <span><strong>Schedule:</strong> {formatClassTimeRange(selectedClass.time, selectedClass.endTime)}</span>
               </div>
               <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
-                <FaCalendarAlt className="text-blue-200" />
+                <FaCalendarAlt className="text-slate-200" />
                 <span><strong>Day:</strong> {selectedClass.day || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
-                <FaMapMarkerAlt className="text-blue-200" />
+                <FaMapMarkerAlt className="text-slate-200" />
                 <span><strong>Room:</strong> {selectedClass.roomNumber}</span>
               </div>
             </div>
@@ -85,22 +84,31 @@ const Navbar = ({ selectedClass }) => {
               onClick={() => navigate('/classes')}
               className="flex items-center gap-2 py-2 px-4 rounded-lg transition-all duration-200 text-gray-700 hover:bg-blue-50 font-medium border-2 border-gray-200 hover:border-blue-300 shadow-sm hover:shadow"
             >
-              <FaArrowLeft className="text-blue-600" />
+              <FaArrowLeft className="text-slate-500" />
               <span>Back to Classes</span>
             </button>
 
             {/* Menu Items */}
             <div className="flex items-center gap-2">
-              {/* eslint-disable-next-line no-unused-vars */}
-              {menuItems.map(({ to, icon: IconComponent, label, color }) => (
-                <Link
+              {menuItems.map(({ to, icon: IconComponent, label }) => (
+                <NavLink
                   key={to}
                   to={to}
-                  className={`flex items-center gap-2 py-2 px-4 rounded-lg transition-all duration-200 text-gray-700 hover:bg-${color}-50 font-medium border border-transparent hover:border-${color}-300 hover:shadow-sm`}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 py-2 px-4 rounded-lg transition-all duration-200 font-medium border ${
+                      isActive
+                        ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
+                        : 'text-gray-700 hover:bg-blue-50 border-transparent hover:border-blue-300 hover:shadow-sm'
+                    }`
+                  }
                 >
-                  <IconComponent className={`text-${color}-600`} />
-                  <span className="hidden lg:inline">{label}</span>
-                </Link>
+                  {({ isActive }) => (
+                    <>
+                      <IconComponent className="text-slate-500" />
+                      <span className="hidden lg:inline">{label}</span>
+                    </>
+                  )}
+                </NavLink>
               ))}
               <PWAInstallPrompt />
             </div>
@@ -112,7 +120,7 @@ const Navbar = ({ selectedClass }) => {
               onClick={() => navigate('/classes')}
               className="flex items-center gap-2 py-2 px-3 rounded-lg transition-colors duration-200 text-gray-700 hover:bg-blue-50 font-medium border border-gray-200"
             >
-              <FaArrowLeft className="text-blue-600" />
+              <FaArrowLeft className="text-slate-500" />
               <span className="text-sm">Back</span>
             </button>
 
@@ -122,7 +130,7 @@ const Navbar = ({ selectedClass }) => {
               aria-label="Toggle menu"
             >
               <span className="text-sm font-semibold">Menu</span>
-              {open ? <FaTimes size={20} /> : <FaChevronDown size={16} />}
+              {open ? <FaTimes size={20} className="text-slate-500" /> : <FaChevronDown size={16} className="text-slate-500" />}
             </button>
           </div>
         </div>
@@ -131,17 +139,26 @@ const Navbar = ({ selectedClass }) => {
         {open && isMobile && (
           <div className="md:hidden bg-white border-t-2 border-blue-100 shadow-lg animate-fadeIn">
             <div className="p-4 grid grid-cols-2 gap-2">
-              {/* eslint-disable-next-line no-unused-vars */}
-              {menuItems.map(({ to, icon: IconComponent, label, color }) => (
-                <Link
+              {menuItems.map(({ to, icon: IconComponent, label }) => (
+                <NavLink
                   key={to}
                   to={to}
-                  className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-lg transition-all duration-200 text-gray-700 hover:bg-${color}-50 font-medium border-2 border-gray-100 hover:border-${color}-300 hover:shadow-md`}
+                  className={({ isActive }) =>
+                    `flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-lg transition-all duration-200 font-medium border ${
+                      isActive
+                        ? 'bg-blue-600 text-white border-blue-700 shadow-md'
+                        : 'text-gray-700 hover:bg-blue-50 border-gray-100 hover:border-blue-300 hover:shadow-md'
+                    }`
+                  }
                   onClick={() => setOpen(false)}
                 >
-                  <IconComponent className={`text-${color}-600 text-2xl`} />
-                  <span className="text-xs text-center font-semibold">{label}</span>
-                </Link>
+                  {() => (
+                    <>
+                      <IconComponent className="text-2xl text-slate-500" />
+                      <span className="text-xs text-center font-semibold">{label}</span>
+                    </>
+                  )}
+                </NavLink>
               ))}
             </div>
             <div className="px-4 pb-4">

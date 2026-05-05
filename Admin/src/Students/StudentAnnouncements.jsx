@@ -139,24 +139,26 @@ export default function StudentAnnouncements() {
   // ...availableReactions imported from shared constants...
 
   return (
-    <div className={`min-h-full bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-28 sm:pt-32 md:pt-36 pb-8 sm:pb-12 md:pb-16 px-3 sm:px-4 md:px-6 transition-all duration-300 ${contentClasses}`}>
-      <div className="w-full max-w-5xl mx-auto">
+    <div className={`min-h-full bg-slate-50 pt-28 sm:pt-32 md:pt-36 pb-8 sm:pb-12 md:pb-16 px-3 sm:px-4 md:px-6 transition-all duration-300 ${contentClasses}`}>
+      <div className="w-full">
         <div className="mb-4 sm:mb-6 mt-2">
         </div>
         <div className="w-full">
           {/* Header Section */}
           <div className="mb-4 sm:mb-6">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-blue-900 flex items-center gap-2 sm:gap-3">
-              <FaBullhorn className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-blue-600" />
-              <span>Announcements</span>
-            </h1>
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-5 py-4 sm:px-6 sm:py-5">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 flex items-center gap-2 sm:gap-3">
+                <FaBullhorn className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-slate-500" />
+                <span>Announcements</span>
+              </h1>
+            </div>
           </div>
 
           {/* Main Content */}
           <div className={`transition-all duration-300 ${viewersInfo.isOpen ? 'blur-sm pointer-events-none' : ''}`}>
             {loading ? (
               <div className="flex flex-col items-center justify-center min-h-[40vh] py-8 sm:py-12">
-                <FaBullhorn className="animate-bounce text-blue-400 mb-4" size={40} />
+                <FaBullhorn className="animate-bounce text-slate-400 mb-4" size={40} />
                 <p className="text-center text-base sm:text-lg text-gray-700">Loading announcements...</p>
               </div>
             ) : error ? (
@@ -165,8 +167,8 @@ export default function StudentAnnouncements() {
                 <p className="text-center text-red-600 text-sm sm:text-base px-4">{error}</p>
               </div>
             ) : announcements.length === 0 ? (
-              <div className="text-center py-8 sm:py-12 md:py-16 bg-white border-blue-200 text-gray-700 backdrop-blur-sm rounded-xl shadow-md border-2 p-6 sm:p-8">
-                <FaBullhorn className="mx-auto mb-4 text-blue-400" size={48} />
+              <div className="text-center py-8 sm:py-12 md:py-16 bg-white border-slate-200 text-gray-700 backdrop-blur-sm rounded-xl shadow-md border p-6 sm:p-8">
+                <FaBullhorn className="mx-auto mb-4 text-slate-400" size={48} />
                 <p className="text-sm sm:text-base md:text-lg">No announcements posted yet.</p>
               </div>
             ) : (
@@ -180,11 +182,11 @@ export default function StudentAnnouncements() {
                     key={ann._id}
                     ref={announcementCardRef}
                     data-ann-id={ann._id}
-                    className="bg-white border-blue-200 shadow-lg hover:shadow-xl rounded-xl border-2 overflow-hidden transition-shadow duration-200"
+                    className="bg-white border-slate-200 shadow-lg hover:shadow-xl rounded-xl border overflow-hidden transition-shadow duration-200"
                   >
                     <div className="p-4 sm:p-5 md:p-6">
-                      <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-blue-600 mb-3 sm:mb-4 flex items-center gap-2">
-                        <FaBullhorn className="text-sm sm:text-base md:text-lg flex-shrink-0" /> 
+                      <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-slate-800 mb-3 sm:mb-4 flex items-center gap-2">
+                        <FaBullhorn className="text-sm sm:text-base md:text-lg flex-shrink-0 text-slate-500" /> 
                         <span className="line-clamp-2 break-words">{ann.title}</span>
                       </h2>
                       <p className="text-gray-700 mb-4 sm:mb-5 whitespace-pre-line leading-relaxed text-sm sm:text-base">{ann.content}</p>
@@ -226,7 +228,7 @@ export default function StudentAnnouncements() {
                               // Only images will have preview, other files are download-only
                               
                               return (
-                                <div key={index} className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+                                <div key={index} className="bg-slate-50 p-3 sm:p-4 rounded-lg border border-slate-200">
                                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2">
                                     <span className="text-sm font-medium text-gray-700 break-all line-clamp-2">
                                       {attachment.originalName}
@@ -280,7 +282,7 @@ export default function StudentAnnouncements() {
                                             downloadFile(attachment.filename, attachment.originalName);
                                           }
                                         }}
-                                        className="text-blue-600 hover:text-blue-700 p-1.5 hover:bg-blue-100 rounded transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
+                                        className="text-slate-500 hover:text-slate-700 p-1.5 hover:bg-slate-200 rounded transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
                                         title="Download file"
                                       >
                                         <FaDownload className="text-base sm:text-lg" />
@@ -327,7 +329,7 @@ export default function StudentAnnouncements() {
                                   
                                   {/* Only images have preview, other files are download-only */}
                                   {!isImage && (
-                                    <div className="mt-2 p-3 bg-white rounded border border-blue-200 text-center">
+                                    <div className="mt-2 p-3 bg-white rounded border border-slate-200 text-center">
                                       <p className="text-sm text-gray-600">
                                         Click download to view this file
                                       </p>
@@ -340,8 +342,8 @@ export default function StudentAnnouncements() {
                         </div>
                       )}
 
-                      <div className="pt-3 sm:pt-4 mt-4 border-t-2 border-blue-100 text-xs sm:text-sm flex items-center gap-2">
-                        <FaUserCircle className="text-blue-500 text-base sm:text-lg flex-shrink-0" />
+                      <div className="pt-3 sm:pt-4 mt-4 border-t border-slate-200 text-xs sm:text-sm flex items-center gap-2">
+                        <FaUserCircle className="text-slate-500 text-base sm:text-lg flex-shrink-0" />
                         <span className="text-gray-500 truncate">
                           <span className="font-medium">{ann.postedBy?.name || 'Teacher'}</span> • {(() => {
                             const dateToUse = ann.createdAt || ann.date;
@@ -358,7 +360,7 @@ export default function StudentAnnouncements() {
                       </div>
                     </div>
 
-                    <div className="px-4 sm:px-5 md:px-6 py-3 sm:py-4 border-t-2 border-blue-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                    <div className="px-4 sm:px-5 md:px-6 py-3 sm:py-4 border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap w-full sm:w-auto">
                         {availableReactions.map(emoji => {
                           const userHasReacted = ann.reactions?.some(r => r.user?._id === userId && r.emoji === emoji);
@@ -366,7 +368,7 @@ export default function StudentAnnouncements() {
                             <button
                               key={emoji}
                               onClick={() => handleReaction(ann._id, emoji)}
-                              className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-full transition-all duration-200 text-base sm:text-lg min-w-[40px] min-h-[40px] ${userHasReacted ? 'bg-blue-500/30 scale-110' : 'hover:bg-blue-50 border border-blue-200'}`}
+                              className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-full transition-all duration-200 text-base sm:text-lg min-w-[40px] min-h-[40px] ${userHasReacted ? 'bg-slate-200 scale-110' : 'hover:bg-slate-100 border border-slate-200'}`}
                               title={emoji}
                             >
                               <span>{emoji}</span>
@@ -380,7 +382,7 @@ export default function StudentAnnouncements() {
                       <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-center w-full sm:w-auto justify-end">
                         <button
                           onClick={() => openViewersModal(ann)}
-                          className="flex items-center justify-center gap-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-semibold py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 text-xs sm:text-sm min-h-[44px] border-2 border-blue-200 hover:border-blue-400"
+                          className="flex items-center justify-center gap-2 text-gray-700 hover:text-slate-700 hover:bg-slate-100 font-semibold py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 text-xs sm:text-sm min-h-[44px] border border-slate-200 hover:border-slate-300"
                         >
                           <FaEye className="text-sm flex-shrink-0" />
                           <span className="font-bold">{ann.viewedBy?.length || 0}</span>
@@ -388,7 +390,7 @@ export default function StudentAnnouncements() {
                         </button>
                         <button
                           onClick={() => toggleComments(ann._id)}
-                          className="flex items-center justify-center gap-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 font-semibold py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 text-xs sm:text-sm min-h-[44px] border-2 border-blue-200 hover:border-blue-400"
+                          className="flex items-center justify-center gap-2 text-gray-700 hover:text-slate-700 hover:bg-slate-100 font-semibold py-2 px-3 sm:px-4 rounded-lg transition-all duration-200 text-xs sm:text-sm min-h-[44px] border border-slate-200 hover:border-slate-300"
                         >
                           <FaCommentAlt className="text-sm flex-shrink-0" />
                           <span className="font-bold">{ann.comments?.length || 0}</span>
@@ -398,14 +400,14 @@ export default function StudentAnnouncements() {
                     </div>
 
                     {isCommentsOpen && (
-                      <div className="bg-blue-50 px-4 sm:px-5 md:px-6 py-4 sm:py-5 border-t-2 border-blue-200 animate-fadeIn">
+                      <div className="bg-slate-50 px-4 sm:px-5 md:px-6 py-4 sm:py-5 border-t border-slate-200 animate-fadeIn">
                         <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-sm sm:text-base">
-                          <FaCommentAlt className="text-blue-600 text-sm flex-shrink-0" /> Comments ({ann.comments?.length || 0})
+                          <FaCommentAlt className="text-slate-500 text-sm flex-shrink-0" /> Comments ({ann.comments?.length || 0})
                         </h4>
                         <div className="space-y-3 sm:space-y-4 max-h-60 sm:max-h-80 overflow-y-auto pr-2 custom-scrollbar">
                           {ann.comments?.length > 0 ? ann.comments.map(comment => (
                             <div key={comment._id} className="flex items-start gap-2 sm:gap-3">
-                              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-200 text-blue-700 flex-shrink-0 flex items-center justify-center font-bold text-xs sm:text-sm">
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-200 text-slate-700 flex-shrink-0 flex items-center justify-center font-bold text-xs sm:text-sm">
                                 {comment.postedBy?.name?.charAt(0).toUpperCase() || <FaUserCircle />}
                               </div>
                               <div className="flex-1 min-w-0">
@@ -437,11 +439,11 @@ export default function StudentAnnouncements() {
                             value={commentInputs[ann._id] || ''}
                             onChange={(e) => handleCommentChange(ann._id, e.target.value)}
                             placeholder="Write a comment..."
-                            className="flex-1 min-w-0 border-2 border-blue-300 rounded-lg px-3 py-2 sm:py-2.5 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
+                            className="flex-1 min-w-0 border border-slate-300 rounded-lg px-3 py-2 sm:py-2.5 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 text-sm transition-all"
                           />
                           <button
                             type="submit"
-                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center justify-center px-4 sm:px-5 min-h-[44px] transition-all shadow-md hover:shadow-lg"
+                            className="bg-slate-700 hover:bg-slate-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg flex items-center justify-center px-4 sm:px-5 min-h-[44px] transition-all shadow-md hover:shadow-lg"
                             disabled={!commentInputs[ann._id] || !commentInputs[ann._id].trim()}
                           >
                             <FaPaperPlane className="text-sm" />
@@ -470,7 +472,7 @@ export default function StudentAnnouncements() {
               <div className="p-4 sm:p-5 md:p-6">
                 <div className="flex justify-between items-start mb-3 sm:mb-4">
                   <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 flex items-center gap-2">
-                    <FaEye className="text-blue-600 text-lg sm:text-xl flex-shrink-0" /> Viewed By
+                    <FaEye className="text-slate-500 text-lg sm:text-xl flex-shrink-0" /> Viewed By
                   </h3>
                   <button
                     onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}
@@ -483,8 +485,8 @@ export default function StudentAnnouncements() {
                 <div className="max-h-[55vh] sm:max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                   <ul className="space-y-2 sm:space-y-3">
                     {viewersInfo.viewers.length > 0 ? viewersInfo.viewers.map(viewer => (
-                      <li key={viewer._id} className="flex items-center gap-3 text-gray-700 bg-blue-50 hover:bg-blue-100 p-3 rounded-lg transition-colors">
-                        <FaUserCircle className="text-blue-600 text-lg sm:text-xl flex-shrink-0" /> 
+                      <li key={viewer._id} className="flex items-center gap-3 text-gray-700 bg-slate-50 hover:bg-slate-100 p-3 rounded-lg transition-colors">
+                        <FaUserCircle className="text-slate-500 text-lg sm:text-xl flex-shrink-0" /> 
                         <span className="text-sm sm:text-base font-medium truncate">{viewer.name}</span>
                       </li>
                     )) : (
