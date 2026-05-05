@@ -1433,22 +1433,22 @@ export default function CreateQuizz() {
 
   // Wrap the whole return in a single centered div
   return (
-    <div className="flex flex-col items-center justify-start min-h-full bg-white py-4 sm:py-6 lg:py-10 px-2 sm:px-4">{/* Improved responsive padding */}
-      <div className="w-full max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] p-2 sm:p-6 lg:p-10 bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-xl sm:rounded-3xl shadow-lg border-l-4 border-blue-400 overflow-hidden max-h-[85vh] sm:max-h-[88vh] lg:max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-500 hover:scrollbar-thumb-blue-600 scrollbar-track-blue-100 relative scroll-smooth">
-        <div className="bg-gradient-to-r from-blue-50 via-white to-indigo-50 px-4 sm:px-8 py-4 sm:py-6 flex flex-col gap-4 border-b-2 sm:border-b-4 border-blue-200 shadow-md sticky top-0 z-10">{/* Made header sticky */}
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-blue-900 drop-shadow tracking-wide flex items-center gap-3 justify-center">
-            <svg className="w-10 h-10 text-blue-500 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v1.5m9 0v1.5m0-1.5h-9m9 0a2.25 2.25 0 012.25 2.25v8.25A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V9a2.25 2.25 0 012.25-2.25h9z" /></svg>
+    <div className="flex flex-col items-center justify-start min-h-full bg-slate-50 py-8 px-2 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] p-2 sm:p-6 lg:p-10 bg-white rounded-xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden max-h-[85vh] sm:max-h-[88vh] lg:max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-400 hover:scrollbar-thumb-slate-500 scrollbar-track-slate-200 relative scroll-smooth">
+        <div className="bg-white px-4 sm:px-8 py-4 sm:py-6 flex flex-col gap-4 border-b-2 border-slate-200 sticky top-0 z-10">{/* Made header sticky */}
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-wide flex items-center gap-3 justify-center">
+            <svg className="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v1.5m9 0v1.5m0-1.5h-9m9 0a2.25 2.25 0 012.25 2.25v8.25A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V9a2.25 2.25 0 012.25-2.25h9z" /></svg>
             Quiz Generator
           </h2>
           <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
             <button
-              className="w-full sm:w-auto rounded-xl border-2 border-blue-300 bg-white px-4 py-3 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
+              className="w-full sm:w-auto rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
               onClick={() => setShowAnalyticsModal(true)}
             >
               Quiz Analytics
             </button>
             <button
-              className="w-full sm:w-auto rounded-xl border-2 border-indigo-300 bg-white px-4 py-3 text-sm font-semibold text-indigo-900 shadow-sm transition hover:bg-indigo-50"
+              className="w-full sm:w-auto rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50"
               onClick={() => setShowSubModal(true)}
             >
               View Submissions
@@ -1457,22 +1457,22 @@ export default function CreateQuizz() {
         </div>
         <div className="px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-20 sm:pb-24 min-h-full">
           <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6 mb-6">
-            <div className="bg-white rounded-3xl border border-blue-200 shadow-lg p-5 sm:p-6">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-6">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-5">
                 <div>
-                  <h3 className="text-xl font-bold text-blue-900">Quiz Setup</h3>
+                  <h3 className="text-xl font-bold text-slate-900">Quiz Setup</h3>
                   <p className="text-sm text-gray-600">Topic is required. Focus details and reference material help the generator stay accurate and relevant.</p>
                 </div>
-                <div className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                   Exact-count generation
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-blue-900">Topic / Subject</span>
+                  <span className="text-sm font-semibold text-slate-900">Topic / Subject</span>
                   <input
-                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border border-slate-300 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-400"
                     placeholder="Example: Computer Fundamentals"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
@@ -1481,12 +1481,12 @@ export default function CreateQuizz() {
                 </label>
 
                 <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-blue-900">Number of Questions</span>
+                  <span className="text-sm font-semibold text-slate-900">Number of Questions</span>
                   <input
                     type="number"
                     min={1}
                     max={100}
-                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border border-slate-300 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-400"
                     value={count}
                     onChange={(e) => setCount(Math.max(1, Number(e.target.value) || 1))}
                     required
@@ -1494,9 +1494,9 @@ export default function CreateQuizz() {
                 </label>
 
                 <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-blue-900">Difficulty Level</span>
+                  <span className="text-sm font-semibold text-slate-900">Difficulty Level</span>
                   <select
-                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border border-slate-300 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-400"
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value)}
                   >
@@ -1507,9 +1507,9 @@ export default function CreateQuizz() {
                 </label>
 
                 <label className="flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-blue-900">Type of Quiz</span>
+                  <span className="text-sm font-semibold text-slate-900">Type of Quiz</span>
                   <select
-                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border border-slate-300 bg-white text-gray-900 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-slate-400"
                     value={quizType}
                     onChange={(e) => setQuizType(e.target.value)}
                   >
@@ -1521,9 +1521,9 @@ export default function CreateQuizz() {
                 </label>
 
                 <label className="md:col-span-2 flex flex-col gap-2">
-                  <span className="text-sm font-semibold text-blue-900">Description / Focus</span>
+                  <span className="text-sm font-semibold text-slate-900">Description / Focus</span>
                   <textarea
-                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-2xl px-4 py-3 min-h-[110px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border border-slate-300 bg-white text-gray-900 rounded-2xl px-4 py-3 min-h-[110px] focus:outline-none focus:ring-2 focus:ring-slate-400"
                     placeholder="Optional: add the exact competencies, subtopics, or lesson focus you want the quiz to cover."
                     value={focusDescription}
                     onChange={(e) => setFocusDescription(e.target.value)}
@@ -1532,41 +1532,41 @@ export default function CreateQuizz() {
               </div>
 
               {quizType === 'mixed' && (
-                <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                    <h4 className="text-sm font-bold text-blue-900">Mixed Type Distribution</h4>
-                    <span className="text-sm text-blue-700">Current total: {mcqCount + trueFalseCount + identificationCount} / {count}</span>
+                    <h4 className="text-sm font-bold text-slate-900">Mixed Type Distribution</h4>
+                    <span className="text-sm text-slate-700">Current total: {mcqCount + trueFalseCount + identificationCount} / {count}</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <label className="flex items-center justify-between gap-3 rounded-xl bg-white border border-blue-200 px-4 py-3">
-                      <span className="text-sm font-medium text-blue-900">Multiple Choice</span>
+                    <label className="flex items-center justify-between gap-3 rounded-xl bg-white border border-slate-200 px-4 py-3">
+                      <span className="text-sm font-medium text-slate-900">Multiple Choice</span>
                       <input
                         type="number"
                         min={0}
                         max={50}
-                        className="w-20 border border-blue-200 rounded-lg px-2 py-1 text-gray-900 focus:ring-2 focus:ring-blue-500"
+                        className="w-20 border border-slate-300 rounded-lg px-2 py-1 text-gray-900 focus:ring-2 focus:ring-slate-400"
                         value={mcqCount}
                         onChange={(e) => setMcqCount(Math.max(0, Number(e.target.value) || 0))}
                       />
                     </label>
-                    <label className="flex items-center justify-between gap-3 rounded-xl bg-white border border-blue-200 px-4 py-3">
-                      <span className="text-sm font-medium text-blue-900">True/False</span>
+                    <label className="flex items-center justify-between gap-3 rounded-xl bg-white border border-slate-200 px-4 py-3">
+                      <span className="text-sm font-medium text-slate-900">True/False</span>
                       <input
                         type="number"
                         min={0}
                         max={50}
-                        className="w-20 border border-blue-200 rounded-lg px-2 py-1 text-gray-900 focus:ring-2 focus:ring-blue-500"
+                        className="w-20 border border-slate-300 rounded-lg px-2 py-1 text-gray-900 focus:ring-2 focus:ring-slate-400"
                         value={trueFalseCount}
                         onChange={(e) => setTrueFalseCount(Math.max(0, Number(e.target.value) || 0))}
                       />
                     </label>
-                    <label className="flex items-center justify-between gap-3 rounded-xl bg-white border border-blue-200 px-4 py-3">
-                      <span className="text-sm font-medium text-blue-900">Identification</span>
+                    <label className="flex items-center justify-between gap-3 rounded-xl bg-white border border-slate-200 px-4 py-3">
+                      <span className="text-sm font-medium text-slate-900">Identification</span>
                       <input
                         type="number"
                         min={0}
                         max={50}
-                        className="w-20 border border-blue-200 rounded-lg px-2 py-1 text-gray-900 focus:ring-2 focus:ring-blue-500"
+                        className="w-20 border border-slate-300 rounded-lg px-2 py-1 text-gray-900 focus:ring-2 focus:ring-slate-400"
                         value={identificationCount}
                         onChange={(e) => setIdentificationCount(Math.max(0, Number(e.target.value) || 0))}
                       />
@@ -1576,23 +1576,23 @@ export default function CreateQuizz() {
               )}
             </div>
 
-            <div className="bg-white rounded-3xl border border-blue-200 shadow-lg p-5 sm:p-6">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-6">
               <div className="mb-5">
-                <h3 className="text-xl font-bold text-blue-900">Reference Material</h3>
+                <h3 className="text-xl font-bold text-slate-900">Reference Material</h3>
                 <p className="text-sm text-gray-600 mt-1">Optional, but strongly recommended when you want questions based on a module, handout, reviewer, or extracted file text.</p>
               </div>
 
               <div className="flex flex-col gap-3 mb-4">
-                <label className="inline-flex items-center justify-center gap-2 cursor-pointer bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 px-4 py-3 rounded-2xl shadow-sm transition group">
-                  <FaUpload className="text-blue-600 group-hover:text-blue-700 transition" />
+                <label className="inline-flex items-center justify-center gap-2 cursor-pointer bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 py-3 rounded-2xl shadow-sm transition group">
+                  <FaUpload className="text-slate-600 group-hover:text-slate-700 transition" />
                   <input type="file" accept=".txt,.pdf,.jpg,.jpeg,.png,.docx,.doc,.pptx,.ppt" className="hidden" onChange={handleFileChange} />
-                  <span className="font-medium text-blue-800">Upload source file</span>
+                  <span className="font-medium text-slate-800">Upload source file</span>
                 </label>
 
                 <label className="flex items-start gap-3">
-                  <FaPaste className="mt-3 text-blue-600 shrink-0" />
+                  <FaPaste className="mt-3 text-slate-600 shrink-0" />
                   <textarea
-                    className="border-2 border-blue-200 bg-white text-gray-900 rounded-2xl p-3 w-full min-h-[210px] focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 shadow-sm"
+                    className="border border-slate-300 bg-white text-gray-900 rounded-2xl p-3 w-full min-h-[210px] focus:outline-none focus:ring-2 focus:ring-slate-400 placeholder:text-gray-400 shadow-sm"
                     placeholder="Paste lesson notes, reviewer content, or source text here..."
                     value={moduleText}
                     onChange={(e) => setModuleText(e.target.value)}
@@ -1631,7 +1631,7 @@ export default function CreateQuizz() {
           </div>
 
           <button
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:from-blue-700 hover:to-indigo-700 transition mb-4 w-full text-lg disabled:opacity-60 tracking-wider focus:ring-4 focus:ring-blue-400"
+            className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-bold shadow-sm hover:bg-slate-800 transition mb-4 w-full text-lg disabled:opacity-60 tracking-wider focus:ring-4 focus:ring-slate-300"
             onClick={questions.length > 0 ? handleRegenerate : handleGenerate}
             disabled={loading || !topic.trim()}
           >
@@ -1649,7 +1649,7 @@ export default function CreateQuizz() {
           </button>
 
           {loading && (
-            <div className="mb-8 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-900 shadow-sm">
+            <div className="mb-8 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-900 shadow-sm">
               Creating exactly {count} {DIFFICULTY_LABELS[difficulty]?.toLowerCase() || difficulty} {count === 1 ? 'question' : 'questions'} for <span className="font-bold">{topic.trim()}</span>{focusDescription.trim() ? ` with focus on ${focusDescription.trim()}.` : '.'}
             </div>
           )}
@@ -1660,33 +1660,33 @@ export default function CreateQuizz() {
 
               <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4 mb-5">
                 <div>
-                  <h3 className="text-2xl font-bold text-blue-900">Generated Quiz</h3>
+                  <h3 className="text-2xl font-bold text-slate-900">Generated Quiz</h3>
                   <p className="text-sm text-gray-600 mt-1">Review the questions below, edit anything manually, then export or save the final version to class.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">{questions.length} Questions</span>
-                  <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-800">{QUIZ_TYPE_LABELS[quizType] || QUIZ_TYPE_LABELS[normalizeQuestionType(quizType)]}</span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-800">{questions.length} Questions</span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-800">{QUIZ_TYPE_LABELS[quizType] || QUIZ_TYPE_LABELS[normalizeQuestionType(quizType)]}</span>
                   <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800">{DIFFICULTY_LABELS[difficulty] || difficulty}</span>
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-3 mb-6">
                 <button
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold shadow transition"
+                  className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 rounded-xl font-semibold shadow-sm transition"
                   onClick={handleRegenerate}
                   disabled={loading}
                 >
                   Regenerate Quiz
                 </button>
                 <button
-                  className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition"
+                  className="bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition"
                   onClick={handleExportToPdf}
                   disabled={loading}
                 >
                   Download PDF
                 </button>
                 <button
-                  className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition"
+                  className="bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition"
                   onClick={handleExportToExcel}
                   disabled={loading}
                 >
@@ -2288,4 +2288,3 @@ export default function CreateQuizz() {
   </div>
 );
 }
-

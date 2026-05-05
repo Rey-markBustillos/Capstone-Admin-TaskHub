@@ -206,23 +206,23 @@ export default function TeacherAnnouncement() {
   // ...availableReactions imported from shared constants...
 
   return (
-    <div className="min-h-full bg-white py-8 px-2 sm:px-6">
+    <div className="min-h-full bg-slate-50 py-8 px-2 sm:px-6 lg:px-8">
       {/* Header Section with Icon */}
-      <div className="flex items-center justify-between mb-8 bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-xl shadow-lg px-6 py-5 border-l-4 border-blue-400">
+      <div className="flex items-center justify-between mb-8 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
         <div className="flex items-center gap-4">
-          <FaBullhorn className="text-blue-500 text-4xl drop-shadow-lg animate-pulse" />
-          <h1 className="text-3xl sm:text-4xl font-bold text-blue-900 drop-shadow">Announcements for <span className="text-indigo-600">{className}</span></h1>
+          <FaBullhorn className="text-slate-500 text-4xl" />
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Announcements for <span className="text-slate-600">{className}</span></h1>
         </div>
-        <button onClick={openModalForCreate} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center" aria-label="Create New Announcement">
+        <button onClick={openModalForCreate} className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-5 rounded-2xl shadow-sm transition-all duration-300 flex items-center" aria-label="Create New Announcement">
           <FaPlus className="mr-2 h-5 w-5" /> New Announcement
         </button>
       </div>
 
       <div className={`${isModalOpen || viewersInfo.isOpen ? 'blur-sm pointer-events-none' : ''} transition-all duration-300`}>
         {loading ? <p className="text-center text-lg text-gray-700">Loading...</p> : error && announcements.length === 0 ? <p className="text-center text-red-600">{error}</p> : !loading && announcements.length === 0 ? (
-          <div className="text-center py-10 bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-lg shadow-md p-8 flex flex-col items-center justify-center gap-4">
-            <FaBullhorn className="text-blue-500 text-4xl mb-2 animate-bounce" />
-            <p className="text-lg text-gray-700">No announcements posted yet.</p>
+          <div className="text-center py-10 bg-white rounded-3xl border border-slate-200 shadow-sm p-8 flex flex-col items-center justify-center gap-4">
+            <FaBullhorn className="text-slate-400 text-4xl mb-2" />
+            <p className="text-lg text-slate-600">No announcements posted yet.</p>
           </div>
         ) : (
           <div className="max-h-screen overflow-y-auto pr-2">
@@ -232,18 +232,18 @@ export default function TeacherAnnouncement() {
               const isCommentsOpen = openComments[ann._id];
 
               return (
-                <li key={ann._id} data-ann-id={ann._id} className="bg-white shadow-xl rounded-2xl border border-blue-200 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
+                <li key={ann._id} data-ann-id={ann._id} className="bg-white shadow-sm rounded-3xl border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-md">
                   <div className="p-6">
                     <div className="flex items-center gap-3 mb-2">
-                      <FaBullhorn className="text-blue-500 text-xl" />
-                      <h2 className="text-xl sm:text-2xl font-bold text-blue-900 mb-0 drop-shadow">{ann.title}</h2>
+                      <FaBullhorn className="text-slate-500 text-xl" />
+                      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-0">{ann.title}</h2>
                     </div>
-                    <p className="text-gray-700 mb-3 whitespace-pre-line leading-relaxed text-base">{ann.content}</p>
+                    <p className="text-slate-700 mb-3 whitespace-pre-line leading-relaxed text-base">{ann.content}</p>
                     
                     {/* Display attachments if any */}
                     {ann.attachments && ann.attachments.length > 0 && (
                       <div className="mb-4">
-                        <p className="text-sm font-medium text-blue-700 mb-3">
+                        <p className="text-sm font-medium text-slate-700 mb-3">
                           <FaFileUpload className="inline mr-1" />
                           Attached Files ({ann.attachments.length})
                         </p>
@@ -291,7 +291,7 @@ export default function TeacherAnnouncement() {
 
                             
                             return (
-                              <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                              <div key={index} className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
                                 <div className="flex justify-between items-center mb-2">
                                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     {attachment.originalName}

@@ -177,14 +177,14 @@ const UploadModule = () => {
   };
 
   return (
-    <div className="min-h-full bg-white py-8 px-2 sm:px-6">
+    <div className="min-h-full bg-slate-50 py-8 px-2 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg px-6 py-5 border border-blue-300 mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow flex items-center gap-4">
-          <FaUpload className="text-blue-100 text-4xl drop-shadow-lg animate-pulse" />
+      <div className="rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm mb-8">
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 flex items-center gap-4">
+          <FaUpload className="text-slate-500 text-4xl" />
           Upload Learning Modules
         </h1>
-        <p className="text-blue-50 mt-2">Upload and manage learning materials for your students</p>
+        <p className="text-slate-500 mt-2">Upload and manage learning materials for your students</p>
       </div>
 
       {/* Success/Error Alerts */}
@@ -205,10 +205,10 @@ const UploadModule = () => {
       {/* Main Content - Side by Side Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upload Form */}
-        <div className="bg-white shadow-xl rounded-2xl border border-blue-200 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
+        <div className="bg-white shadow-sm rounded-3xl border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-md">
           <div className="p-6">
-        <h2 className="text-xl font-semibold mb-4 text-blue-900 flex items-center gap-2">
-          <FaUpload className="text-blue-600" />
+        <h2 className="text-xl font-semibold mb-4 text-slate-900 flex items-center gap-2">
+          <FaUpload className="text-slate-500" />
           Upload New Module
         </h2>
         
@@ -221,7 +221,7 @@ const UploadModule = () => {
               type="text"
               value={moduleTitle}
               onChange={(e) => setModuleTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 bg-white text-gray-900"
               placeholder="Enter module title"
               required
             />
@@ -235,7 +235,7 @@ const UploadModule = () => {
               value={moduleDescription}
               onChange={(e) => setModuleDescription(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 bg-white text-gray-900"
               placeholder="Enter module description (optional)"
             />
           </div>
@@ -249,7 +249,7 @@ const UploadModule = () => {
               type="file"
               onChange={handleFileSelect}
               accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
-              className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 bg-white text-gray-900"
               required
             />
             <p className="text-sm text-gray-600 mt-1">
@@ -258,7 +258,7 @@ const UploadModule = () => {
           </div>
 
           {selectedFile && (
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
               {getFileIcon(selectedFile.name)}
               <div>
                 <p className="font-medium text-gray-900">{selectedFile.name}</p>
@@ -273,7 +273,7 @@ const UploadModule = () => {
             className={`w-full py-2 px-4 rounded-md font-medium flex items-center justify-center gap-2 ${
               uploading || !selectedFile || !moduleTitle.trim()
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
+                : 'bg-slate-900 hover:bg-slate-800 text-white shadow-sm'
             }`}
           >
             {uploading ? (
@@ -293,15 +293,15 @@ const UploadModule = () => {
         </div>
 
         {/* Modules List */}
-        <div className="bg-white shadow-xl rounded-2xl border border-blue-200 overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl">
+        <div className="bg-white shadow-sm rounded-3xl border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-md">
           <div className="p-6">
-        <h2 className="text-xl font-semibold mb-4 text-blue-900 flex items-center justify-between">
+        <h2 className="text-xl font-semibold mb-4 text-slate-900 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FaFileAlt className="text-blue-600" />
+            <FaFileAlt className="text-slate-500" />
             Uploaded Modules
           </div>
           {modules.length > 0 && (
-            <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+            <span className="text-sm bg-slate-100 text-slate-700 px-3 py-1 rounded-full">
               {modules.length} module{modules.length !== 1 ? 's' : ''}
             </span>
           )}
@@ -309,7 +309,7 @@ const UploadModule = () => {
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <FaSpinner className="animate-spin text-2xl text-blue-600 mr-3" />
+            <FaSpinner className="animate-spin text-2xl text-slate-500 mr-3" />
             <span className="text-gray-700">Loading modules...</span>
           </div>
         ) : modules.length === 0 ? (
@@ -325,7 +325,7 @@ const UploadModule = () => {
               </div>
             )}
             <div 
-              className="max-h-96 overflow-y-auto pr-2 space-y-3 border border-blue-200 rounded-lg p-3"
+              className="max-h-96 overflow-y-auto pr-2 space-y-3 border border-slate-200 rounded-2xl p-3"
               style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: '#3b82f6 #dbeafe'
@@ -334,7 +334,7 @@ const UploadModule = () => {
               {modules.map((module) => (
               <div
                 key={module._id}
-                className="flex items-start justify-between p-4 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors shadow-sm hover:shadow-md"
+                className="flex items-start justify-between p-4 border border-slate-200 rounded-2xl hover:bg-slate-50 transition-colors shadow-sm hover:shadow-md"
               >
                 <div className="flex items-start gap-4 flex-1 min-w-0">
                   <div className="flex-shrink-0 mt-1">

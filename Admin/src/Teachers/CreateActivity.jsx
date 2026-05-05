@@ -226,7 +226,7 @@ const CreateActivity = () => {
   };
 
   return (
-    <div>
+    <div className="min-h-full bg-slate-50 py-8 px-2 sm:px-6 lg:px-8">
       {/* Global Success/Error Messages */}
       {success && !isCreateModalOpen && !isEditModalOpen && (
         <div className="fixed top-4 right-4 z-50 bg-green-500 text-white p-4 rounded-lg shadow-lg">
@@ -240,16 +240,16 @@ const CreateActivity = () => {
       )}
       
       {/* Header Section with Icon */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 bg-gradient-to-r from-blue-50 via-white to-indigo-50 rounded-xl shadow-lg px-6 py-5 border-l-4 border-blue-400">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
         <div className="flex items-center gap-4">
-          <FaTasks className="text-blue-500 text-4xl drop-shadow-lg animate-pulse" />
-          <h2 className="text-3xl sm:text-4xl font-bold text-blue-900 drop-shadow text-center sm:text-left">
-            Activities for <span className="text-indigo-600">{className}</span>
+          <FaTasks className="text-slate-500 text-4xl" />
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 text-center sm:text-left">
+            Activities for <span className="text-slate-600">{className}</span>
           </h2>
         </div>
         <button
           onClick={openCreateModal}
-          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150"
+          className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-2xl flex items-center justify-center transition-colors duration-150"
         >
           <FaPlusCircle className="mr-2" /> Create New Activity
         </button>
@@ -257,10 +257,10 @@ const CreateActivity = () => {
 
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border border-blue-200">
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-blue-200">
-              <h3 className="text-xl sm:text-2xl font-semibold text-blue-900 flex items-center">
-                <FaPlusCircle className="mr-3 text-blue-600" /> Create Activity
+          <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col border border-slate-200">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+              <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 flex items-center">
+                <FaPlusCircle className="mr-3 text-slate-500" /> Create Activity
               </h3>
               <button onClick={closeCreateModal} className="text-gray-500 hover:text-gray-700 transition-colors" aria-label="Close modal">
                 <FaTimes size={20} />
@@ -275,7 +275,7 @@ const CreateActivity = () => {
                 <input
                   id="activity-title"
                   type="text"
-                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 rounded-xl bg-white text-gray-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                   value={activityData.title}
                   onChange={e => setActivityData({ ...activityData, title: e.target.value })}
                   required
@@ -285,7 +285,7 @@ const CreateActivity = () => {
                 <label className="block text-gray-700 mb-2 font-medium" htmlFor="activity-description">Instruction</label>
                 <textarea
                   id="activity-description"
-                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 rounded-xl bg-white text-gray-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                   value={activityData.description}
                   onChange={e => setActivityData({ ...activityData, description: e.target.value })}
                   rows={3}
@@ -296,7 +296,7 @@ const CreateActivity = () => {
                 <input
                   id="activity-date"
                   type="datetime-local"
-                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 rounded-xl bg-white text-gray-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                   value={activityData.date}
                   onChange={e => setActivityData({ ...activityData, date: e.target.value })}
                   required
@@ -307,7 +307,7 @@ const CreateActivity = () => {
                 <input
                   id="activity-score"
                   type="number"
-                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 rounded-xl bg-white text-gray-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                   value={activityData.score}
                   onChange={e => setActivityData({ ...activityData, score: e.target.value })}
                   min={0}
@@ -326,7 +326,7 @@ const CreateActivity = () => {
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150 mt-4"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-2xl flex items-center justify-center transition-colors duration-150 mt-4"
               >
                 <FaPlusCircle className="mr-2" /> Create Activity
               </button>
@@ -338,10 +338,10 @@ const CreateActivity = () => {
       {/* Edit Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col border border-blue-200">
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-blue-200">
-              <h3 className="text-xl sm:text-2xl font-semibold text-blue-900 flex items-center">
-                <FaEdit className="mr-3 text-blue-600" /> Edit Activity
+          <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col border border-slate-200">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+              <h3 className="text-xl sm:text-2xl font-semibold text-slate-900 flex items-center">
+                <FaEdit className="mr-3 text-slate-500" /> Edit Activity
               </h3>
               <button onClick={closeEditModal} className="text-gray-500 hover:text-gray-700 transition-colors" aria-label="Close modal">
                 <FaTimes size={20} />
@@ -355,7 +355,7 @@ const CreateActivity = () => {
                 <input
                   id="edit-activity-title"
                   type="text"
-                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 rounded-xl bg-white text-gray-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                   value={activityData.title}
                   onChange={e => setActivityData({ ...activityData, title: e.target.value })}
                   required
@@ -365,7 +365,7 @@ const CreateActivity = () => {
                 <label className="block text-gray-700 mb-2 font-medium" htmlFor="edit-activity-description">Description</label>
                 <textarea
                   id="edit-activity-description"
-                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 rounded-xl bg-white text-gray-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                   value={activityData.description}
                   onChange={e => setActivityData({ ...activityData, description: e.target.value })}
                   rows={3}
@@ -376,7 +376,7 @@ const CreateActivity = () => {
                 <input
                   id="edit-activity-date"
                   type="datetime-local"
-                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 rounded-xl bg-white text-gray-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                   value={activityData.date}
                   onChange={e => setActivityData({ ...activityData, date: e.target.value })}
                   required
@@ -387,7 +387,7 @@ const CreateActivity = () => {
                 <input
                   id="edit-activity-score"
                   type="number"
-                  className="w-full p-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-2 rounded-xl bg-white text-gray-900 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-400"
                   value={activityData.score}
                   onChange={e => setActivityData({ ...activityData, score: e.target.value })}
                   min={0}
@@ -408,7 +408,7 @@ const CreateActivity = () => {
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center transition-colors duration-150 mt-4"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-2xl flex items-center justify-center transition-colors duration-150 mt-4"
               >
                 <FaEdit className="mr-2" /> Update Activity
               </button>
@@ -417,9 +417,9 @@ const CreateActivity = () => {
         </div>
       )}
 
-      <div className="w-full bg-gradient-to-r from-blue-50 via-white to-indigo-50 p-6 sm:p-8 rounded-xl shadow-lg border-l-4 border-blue-400">
-        <h3 className="text-2xl font-semibold mb-6 text-center text-blue-900 flex items-center justify-center">
-          <FaListOl className="mr-3 text-blue-600" /> Activities List
+      <div className="w-full bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
+        <h3 className="text-2xl font-semibold mb-6 text-center text-slate-900 flex items-center justify-center">
+          <FaListOl className="mr-3 text-slate-500" /> Activities List
         </h3>
         <div className="overflow-y-auto max-h-[calc(100vh-22rem)]">
           {loadingActivities ? (
@@ -428,15 +428,15 @@ const CreateActivity = () => {
             <div className="text-red-600 text-center py-4">{activitiesError}</div>
           ) : activitiesList.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 text-gray-600 text-center py-8">
-              <FaTasks className="text-blue-500 text-4xl mb-2 animate-bounce" />
+              <FaTasks className="text-slate-400 text-4xl mb-2" />
               <span className="text-lg">No activities found.</span>
             </div>
           ) : (
             <ul className="space-y-4">
               {activitiesList.map((activity) => (
-                <li key={activity._id} className="bg-white rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-md border border-blue-200 hover:shadow-lg transition-shadow">
+                <li key={activity._id} className="bg-slate-50 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
                   <div>
-                    <div className="font-semibold text-blue-700 text-lg flex items-center">
+                    <div className="font-semibold text-slate-800 text-lg flex items-center">
                       <FaBook className="mr-2" /> {activity.title}
                       {activity.isLocked && (
                         <span className="ml-2 text-amber-600 text-sm flex items-center">
