@@ -31,6 +31,8 @@ const ClassManagement = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [studentSearchTerm, setStudentSearchTerm] = useState('');
+  const [classSearchTerm, setClassSearchTerm] = useState('');
+  const [teacherFilter, setTeacherFilter] = useState('all');
   const [user, setUser] = useState(null);
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState('');
@@ -432,6 +434,22 @@ const ClassManagement = () => {
       });
   };
 
+  const displayedClasses = (showArchived ? archivedClasses : classes).filter((classItem) => {
+    const teacherId = classItem.teacher?._id || classItem.teacher || '';
+    const teacherName = classItem.teacher?.name || '';
+    const searchLower = classSearchTerm.toLowerCase();
+
+    const matchesSearch =
+      classItem.className?.toLowerCase().includes(searchLower) ||
+      classItem.roomNumber?.toLowerCase().includes(searchLower) ||
+      classItem.day?.toLowerCase().includes(searchLower) ||
+      teacherName.toLowerCase().includes(searchLower);
+
+    const matchesTeacher = teacherFilter === 'all' || teacherId === teacherFilter;
+
+    return matchesSearch && matchesTeacher;
+  });
+
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[40vh]">
       <svg className="animate-spin h-10 w-10 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -486,11 +504,37 @@ const ClassManagement = () => {
           </svg>
           {showArchived ? 'Archived Classes' : 'Active Classes'}
           <span className="text-lg font-normal text-gray-500">
-            ({showArchived ? archivedClasses.length : classes.length})
+            ({displayedClasses.length})
           </span>
         </h2>
+        <div className="mb-5 flex flex-col lg:flex-row gap-3 lg:items-center">
+          <input
+            id="classSearch"
+            name="classSearch"
+            type="text"
+            placeholder="Search class, room, day, or teacher..."
+            value={classSearchTerm}
+            onChange={(e) => setClassSearchTerm(e.target.value)}
+            className="w-full lg:w-80 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500"
+            autoComplete="off"
+          />
+          <select
+            id="teacherFilter"
+            name="teacherFilter"
+            value={teacherFilter}
+            onChange={(e) => setTeacherFilter(e.target.value)}
+            className="w-full lg:w-72 p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="all">All Teachers</option>
+            {teachers.map((teacher) => (
+              <option key={teacher._id} value={teacher._id}>
+                {teacher.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="max-h-[500px] overflow-y-scroll pr-2">
-          {(showArchived ? archivedClasses : classes).length === 0 ? (
+          {displayedClasses.length === 0 ? (
             <div className="text-center py-12">
               <svg className={`w-16 h-16 mx-auto mb-4 ${showArchived ? 'text-orange-300' : 'text-gray-300'}`} fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -499,14 +543,16 @@ const ClassManagement = () => {
                 {showArchived ? 'No archived classes found' : 'No active classes found'}
               </h3>
               <p className="text-gray-400">
-                {showArchived 
-                  ? 'Classes that have been archived will appear here.' 
-                  : 'Create your first class to get started.'}
+                {classSearchTerm || teacherFilter !== 'all'
+                  ? 'Try changing the search text or teacher filter.'
+                  : showArchived
+                    ? 'Classes that have been archived will appear here.'
+                    : 'Create your first class to get started.'}
               </p>
             </div>
           ) : (
             <ul className="space-y-5">
-              {(showArchived ? archivedClasses : classes).map((classItem) => (
+              {displayedClasses.map((classItem) => (
               <li key={classItem._id} className={`border p-5 rounded-2xl shadow-md hover:shadow-xl transition-shadow flex flex-col md:flex-row justify-between items-start gap-4 ${
                 showArchived 
                   ? 'border-orange-200 bg-orange-50/80' 

@@ -21,6 +21,7 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState('all');
+  const [roleSort, setRoleSort] = useState('admin-teacher-student');
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [editUser, setEditUser] = useState(null);
@@ -336,6 +337,16 @@ const UserManagement = () => {
   };
 
   const visibleUsers = users.filter(user => roleFilter === 'all' ? true : user.role === roleFilter);
+  const roleSortOrders = {
+    'admin-teacher-student': { admin: 0, teacher: 1, student: 2 },
+    'student-teacher-admin': { student: 0, teacher: 1, admin: 2 },
+  };
+  const sortedUsers = [...visibleUsers].sort((a, b) => {
+    const activeOrder = roleSortOrders[roleSort] || roleSortOrders['admin-teacher-student'];
+    const roleDiff = (activeOrder[a.role] ?? 99) - (activeOrder[b.role] ?? 99);
+    if (roleDiff !== 0) return roleDiff;
+    return String(a.name || '').localeCompare(String(b.name || ''));
+  });
   const selectableVisibleUsers = visibleUsers.filter(user => ['student', 'teacher'].includes(user.role));
   const selectableVisibleUserIds = selectableVisibleUsers.map(user => user._id || user.id);
   const areAllSelectableVisibleUsersSelected =
@@ -504,6 +515,15 @@ const UserManagement = () => {
               <option value="teacher">Teacher</option>
               <option value="admin">Admin</option>
             </select>
+            <label className="font-medium text-gray-700">Sort:</label>
+            <select
+              className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              value={roleSort}
+              onChange={e => setRoleSort(e.target.value)}
+            >
+              <option value="admin-teacher-student">Admin, Teacher, Student</option>
+              <option value="student-teacher-admin">Student, Teacher, Admin</option>
+            </select>
             <button
               type="button"
               className={`${isSelectionMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} text-white px-3 py-1.5 rounded text-sm font-semibold transition-colors`}
@@ -559,7 +579,7 @@ const UserManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {visibleUsers
+                {sortedUsers
                   .map((user, idx) => (
                     <tr key={user._id || user.id} className={"transition-all " + (idx % 2 === 1 ? "bg-gray-50" : "bg-white") + " hover:bg-blue-50"}>
                       {isSelectionMode && (
