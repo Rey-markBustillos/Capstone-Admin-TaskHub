@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
-import { showAlert, showConfirm } from '../utils/swal';
+import { showAlert, showConfirm, showPrompt } from '../utils/swal';
 import '../Css/usermanagement.css'
 
 const UserManagement = () => {
@@ -21,6 +21,16 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState('all');
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [editUser, setEditUser] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    lrn: '',
+    teacherId: '',
+    adminId: '',
+  });
   
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
@@ -29,6 +39,7 @@ const UserManagement = () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/users`);
       setUsers(res.data);
+      setSelectedUserIds((prev) => prev.filter((id) => res.data.some((user) => (user._id || user.id) === id)));
       setError(null);
     } catch {
       setError("Failed to fetch users");
@@ -49,6 +60,28 @@ const UserManagement = () => {
   const closeModal = () => {
     setShowModal({ open: false, role: null });
     setNewUser({ name: '', email: '', password: '', role: 'student', lrn: '', teacherId: '', adminId: '' });
+  };
+
+  const openEditModal = (user) => {
+    setEditUser(user);
+    setEditForm({
+      name: user.name || '',
+      email: user.email || '',
+      lrn: user.lrn || '',
+      teacherId: user.teacherId || '',
+      adminId: user.adminId || '',
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditUser(null);
+    setEditForm({
+      name: '',
+      email: '',
+      lrn: '',
+      teacherId: '',
+      adminId: '',
+    });
   };
 
   const handleAddUser = async () => {
@@ -222,6 +255,7 @@ const UserManagement = () => {
     setLoading(true);
     try {
       await axios.delete(`${API_BASE_URL}/users/${id}`);
+      setSelectedUserIds((prev) => prev.filter((selectedId) => selectedId !== id));
       fetchUsers();
       setError(null);
     } catch (err) {
@@ -229,6 +263,151 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditUser = async () => {
+    if (!editUser) return;
+    if (!editForm.name.trim() || !editForm.email.trim()) {
+      await showAlert('warning', 'Missing Fields', 'Please enter name and email.');
+      return;
+    }
+
+    const payload = {
+      name: editForm.name.trim(),
+      email: editForm.email.trim().toLowerCase(),
+      lrn: editUser.role === 'student' ? (editForm.lrn.trim() || null) : null,
+      teacherId: editUser.role === 'teacher' ? (editForm.teacherId.trim() || null) : null,
+      adminId: editUser.role === 'admin' ? (editForm.adminId.trim() || null) : null,
+    };
+
+    setLoading(true);
+    try {
+      await axios.put(`${API_BASE_URL}/users/${editUser._id || editUser.id}`, payload);
+      await fetchUsers();
+      closeEditModal();
+      await showAlert('success', 'User Updated', `${payload.name} was updated successfully.`);
+    } catch (err) {
+      await showAlert('error', 'Update Failed', err.response?.data?.message || 'Failed to update user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getSuggestedPassword = (user) => {
+    const namePart = String(user.name || '')
+      .replace(/\s+/g, '')
+      .substring(0, 3)
+      .toLowerCase();
+
+    if (user.role === 'student') return `${namePart}${user.lrn || ''}`;
+    if (user.role === 'teacher') return `${namePart}${user.teacherId || ''}`;
+    if (user.role === 'admin') return `${namePart}${user.adminId || ''}`;
+
+    return namePart;
+  };
+
+  const handleForgotPassword = async (user) => {
+    const suggestedPassword = getSuggestedPassword(user);
+    const newPassword = await showPrompt(
+      'Reset Password',
+      `Enter a new password for ${user.name}.`,
+      {
+        inputLabel: `${user.role.charAt(0).toUpperCase() + user.role.slice(1)} password`,
+        inputPlaceholder: 'Enter new password',
+        inputValue: suggestedPassword,
+        confirmButtonText: 'Reset Password',
+        required: true,
+      }
+    );
+
+    if (newPassword === null) return;
+
+    setLoading(true);
+    try {
+      await axios.put(`${API_BASE_URL}/users/${user._id || user.id}`, {
+        password: newPassword,
+      });
+      await showAlert('success', 'Password Reset', `Password updated for ${user.name}.`);
+    } catch (err) {
+      await showAlert('error', 'Reset Failed', err.response?.data?.message || 'Failed to reset password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const visibleUsers = users.filter(user => roleFilter === 'all' ? true : user.role === roleFilter);
+  const selectableVisibleUsers = visibleUsers.filter(user => ['student', 'teacher'].includes(user.role));
+  const selectableVisibleUserIds = selectableVisibleUsers.map(user => user._id || user.id);
+  const areAllSelectableVisibleUsersSelected =
+    selectableVisibleUserIds.length > 0 &&
+    selectableVisibleUserIds.every((id) => selectedUserIds.includes(id));
+
+  const toggleUserSelection = (id) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((selectedId) => selectedId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleToggleSelectAllUsers = () => {
+    if (!isSelectionMode) return;
+    if (selectableVisibleUserIds.length === 0) return;
+
+    setSelectedUserIds((prev) => {
+      if (areAllSelectableVisibleUsersSelected) {
+        return prev.filter((id) => !selectableVisibleUserIds.includes(id));
+      }
+
+      return Array.from(new Set([...prev, ...selectableVisibleUserIds]));
+    });
+  };
+
+  const handleBulkDeleteUsers = async () => {
+    if (selectedUserIds.length === 0) {
+      await showAlert('warning', 'No Users Selected', 'Select student or teacher accounts first.');
+      return;
+    }
+
+    const selectedSelectableUsers = users.filter((user) =>
+      selectedUserIds.includes(user._id || user.id) && ['student', 'teacher'].includes(user.role)
+    );
+
+    if (selectedSelectableUsers.length === 0) {
+      await showAlert('warning', 'Invalid Selection', 'Only student and teacher accounts can be bulk deleted.');
+      return;
+    }
+
+    const confirmed = await showConfirm(
+      'Delete Selected Users?',
+      `Delete ${selectedSelectableUsers.length} selected user(s)?`,
+      { confirmButtonText: 'Delete Selected' }
+    );
+
+    if (!confirmed) return;
+
+    setLoading(true);
+    try {
+      await Promise.all(
+        selectedSelectableUsers.map((user) => axios.delete(`${API_BASE_URL}/users/${user._id || user.id}`))
+      );
+      setSelectedUserIds([]);
+      await fetchUsers();
+      await showAlert('success', 'Users Deleted', `${selectedSelectableUsers.length} user(s) deleted successfully.`);
+    } catch (err) {
+      await showAlert('error', 'Bulk Delete Failed', err.response?.data?.message || 'Failed to delete selected users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleSelectionMode = () => {
+    setIsSelectionMode((prev) => {
+      if (prev) {
+        setSelectedUserIds([]);
+      }
+      return !prev;
+    });
   };
 
   if (loading) return (
@@ -244,8 +423,7 @@ const UserManagement = () => {
   if (error) return <p className="text-center text-red-600 mt-10">{error}</p>;
 
   return (
-    <div className="w-full min-h-full bg-white">
-      <div className="max-w-5xl mx-auto p-2 sm:p-4 md:p-6 pt-16 md:pt-2 font-sans w-full">
+    <div className="min-h-full bg-white p-4 sm:p-8 pt-16 md:pt-8 font-sans w-full">
         <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center flex items-center justify-center gap-2">
           <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0zM4.5 19.5a7.5 7.5 0 1115 0v.75A2.25 2.25 0 0117.75 22.5h-11.5A2.25 2.25 0 0 1 4.5 20.25v-.75z" />
@@ -326,11 +504,53 @@ const UserManagement = () => {
               <option value="teacher">Teacher</option>
               <option value="admin">Admin</option>
             </select>
+            <button
+              type="button"
+              className={`${isSelectionMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} text-white px-3 py-1.5 rounded text-sm font-semibold transition-colors`}
+              onClick={handleToggleSelectionMode}
+            >
+              {isSelectionMode ? 'Cancel Select' : 'Select'}
+            </button>
+            {isSelectionMode && (
+              <>
+                <button
+                  type="button"
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-sm font-semibold transition-colors disabled:opacity-60"
+                  onClick={handleBulkDeleteUsers}
+                  disabled={selectedUserIds.length === 0}
+                >
+                  Delete Selected
+                </button>
+                <button
+                  type="button"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1.5 rounded text-sm font-semibold transition-colors disabled:opacity-60"
+                  onClick={() => setSelectedUserIds([])}
+                  disabled={selectedUserIds.length === 0}
+                >
+                  Clear Selected
+                </button>
+                <span className="text-sm text-gray-600">
+                  {selectedUserIds.length} selected
+                </span>
+              </>
+            )}
           </div>
           <div className="overflow-x-auto w-full max-h-[40vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
             <table className="min-w-[600px] w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden text-xs sm:text-sm">
               <thead className="sticky top-0 z-10 bg-white">
                 <tr className="bg-gradient-to-r from-blue-200 via-green-100 to-yellow-100">
+                  {isSelectionMode && (
+                    <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">
+                      <input
+                        type="checkbox"
+                        checked={areAllSelectableVisibleUsersSelected}
+                        onChange={handleToggleSelectAllUsers}
+                        disabled={selectableVisibleUserIds.length === 0}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                        aria-label="Select all students and teachers"
+                      />
+                    </th>
+                  )}
                   <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Name</th>
                   <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Email</th>
                   <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Role</th>
@@ -339,10 +559,24 @@ const UserManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {users
-                  .filter(user => roleFilter === 'all' ? true : user.role === roleFilter)
+                {visibleUsers
                   .map((user, idx) => (
                     <tr key={user._id || user.id} className={"transition-all " + (idx % 2 === 1 ? "bg-gray-50" : "bg-white") + " hover:bg-blue-50"}>
+                      {isSelectionMode && (
+                        <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
+                          {['student', 'teacher'].includes(user.role) ? (
+                            <input
+                              type="checkbox"
+                              checked={selectedUserIds.includes(user._id || user.id)}
+                              onChange={() => toggleUserSelection(user._id || user.id)}
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              aria-label={`Select ${user.name}`}
+                            />
+                          ) : (
+                            <span className="text-gray-300">-</span>
+                          )}
+                        </td>
+                      )}
                       <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle font-medium text-gray-900 break-words max-w-[120px] sm:max-w-none">{user.name}</td>
                       <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle text-gray-700 break-words max-w-[140px] sm:max-w-none">{user.email}</td>
                       <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
@@ -363,15 +597,35 @@ const UserManagement = () => {
                          (user.adminId || 'N/A')}
                       </td>
                       <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
-                        <button
-                          className="inline-block bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-red-300 text-xs sm:text-sm"
-                          onClick={() => handleDeleteUser(user._id || user.id)}
-                        >
-                          <span className="inline-flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                            Delete
-                          </span>
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            className="inline-block bg-amber-500 hover:bg-amber-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-300 text-xs sm:text-sm"
+                            onClick={() => openEditModal(user)}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a4 4 0 01-2.828 1.172H7v-2a4 4 0 011.172-2.828z" /></svg>
+                              Edit
+                            </span>
+                          </button>
+                          <button
+                            className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-300 text-xs sm:text-sm"
+                            onClick={() => handleForgotPassword(user)}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v6a2 2 0 002 2zm3-10V9a3 3 0 116 0v2H9z" /></svg>
+                              Forgot Password
+                            </span>
+                          </button>
+                          <button
+                            className="inline-block bg-red-500 hover:bg-red-600 text-white px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-red-300 text-xs sm:text-sm"
+                            onClick={() => handleDeleteUser(user._id || user.id)}
+                          >
+                            <span className="inline-flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                              Delete
+                            </span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -525,7 +779,81 @@ const UserManagement = () => {
             </div>
           </div>
         )}
-      </div>
+
+        {editUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/10 px-2 sm:px-0">
+            <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-sm relative">
+              <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={closeEditModal}>&times;</button>
+              <h3 className="text-xl font-bold mb-4 text-center flex items-center justify-center gap-2">
+                <span className="text-2xl">
+                  {editUser.role === 'student' ? '👨‍🎓' : editUser.role === 'teacher' ? '👨‍🏫' : '🧑‍💼'}
+                </span>
+                Edit {editUser.role.charAt(0).toUpperCase() + editUser.role.slice(1)}
+              </h3>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Name"
+                  value={editForm.name}
+                  onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                  className="block w-full px-3 py-2 border border-blue-300 bg-blue-50 rounded focus:border-blue-500 focus:bg-white transition"
+                  required
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={editForm.email}
+                  onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                  className="block w-full px-3 py-2 border border-green-300 bg-green-50 rounded focus:border-green-500 focus:bg-white transition"
+                  required
+                />
+                {editUser.role === 'student' && (
+                  <input
+                    type="text"
+                    placeholder="LRN"
+                    value={editForm.lrn}
+                    onChange={e => setEditForm({ ...editForm, lrn: e.target.value })}
+                    className="block w-full px-3 py-2 border border-blue-300 bg-blue-50 rounded focus:border-blue-500 focus:bg-white transition"
+                  />
+                )}
+                {editUser.role === 'teacher' && (
+                  <input
+                    type="text"
+                    placeholder="Teacher ID"
+                    value={editForm.teacherId}
+                    onChange={e => setEditForm({ ...editForm, teacherId: e.target.value })}
+                    className="block w-full px-3 py-2 border border-purple-300 bg-purple-50 rounded focus:border-purple-500 focus:bg-white transition"
+                  />
+                )}
+                {editUser.role === 'admin' && (
+                  <input
+                    type="text"
+                    placeholder="Admin ID"
+                    value={editForm.adminId}
+                    onChange={e => setEditForm({ ...editForm, adminId: e.target.value })}
+                    className="block w-full px-3 py-2 border border-orange-300 bg-orange-50 rounded focus:border-orange-500 focus:bg-white transition"
+                  />
+                )}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    className="w-full bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300 transition"
+                    onClick={closeEditModal}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full bg-amber-500 text-white py-2 rounded hover:bg-amber-600 transition"
+                    onClick={handleEditUser}
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };

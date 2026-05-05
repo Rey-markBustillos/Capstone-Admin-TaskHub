@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { formatClassTimeRange, formatDateTime, toTimeInputValue } from '../utils/dateTime';
+import { showConfirm } from '../utils/swal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -372,6 +373,65 @@ const ClassManagement = () => {
     student.email.toLowerCase().includes(studentSearchTerm.toLowerCase())
   );
 
+  const filteredStudentIds = filteredStudents.map((student) => student._id);
+  const areAllFilteredStudentsSelected =
+    filteredStudentIds.length > 0 &&
+    filteredStudentIds.every((studentId) => selectedStudentIds.includes(studentId));
+
+  const handleSelectAllFilteredStudents = () => {
+    if (filteredStudentIds.length === 0) return;
+
+    setSelectedStudentIds((prev) => {
+      if (areAllFilteredStudentsSelected) {
+        return prev.filter((id) => !filteredStudentIds.includes(id));
+      }
+
+      return Array.from(new Set([...prev, ...filteredStudentIds]));
+    });
+  };
+
+  const handleClearSelectedStudents = () => {
+    setSelectedStudentIds([]);
+  };
+
+  const handleRemoveAllStudentsFromClass = async () => {
+    if (!selectedClassId) return;
+
+    const targetClass = classes.find((cls) => cls._id === selectedClassId);
+    const enrolledCount = targetClass?.students?.length || 0;
+
+    if (enrolledCount === 0) {
+      setError('This class has no enrolled students to remove.');
+      setTimeout(() => setError(''), 2500);
+      return;
+    }
+
+    const confirmed = await showConfirm(
+      'Remove All Students?',
+      `This will remove all ${enrolledCount} student(s) from the class.`,
+      { confirmButtonText: 'Remove All' }
+    );
+
+    if (!confirmed) return;
+
+    axios.put(`${API_BASE_URL}/class/${selectedClassId}/students`, {
+      studentIds: [],
+    })
+      .then((response) => {
+        setClasses(classes.map((cls) =>
+          cls._id === selectedClassId ? response.data : cls
+        ));
+        setSelectedStudentIds([]);
+        setSuccess('All students were removed from the class.');
+        setTimeout(() => setSuccess(''), 2500);
+      })
+      .catch((error) => {
+        setError('Error removing all students.');
+        setTimeout(() => setError(''), 2500);
+        console.error('Error removing all students:', error);
+      });
+  };
+
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[40vh]">
       <svg className="animate-spin h-10 w-10 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -383,7 +443,7 @@ const ClassManagement = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6 pt-16 md:pt-6 min-h-full">
+    <div className="min-h-full bg-white p-4 sm:p-8 pt-16 md:pt-8 w-full">
       {success && <div className="bg-green-100 text-green-800 p-3 rounded mb-4 text-center font-semibold">{success}</div>}
       {error && <div className="bg-red-100 text-red-800 p-3 rounded mb-4 text-center font-semibold">{error}</div>}
       <h1 className="text-3xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-2">
@@ -849,6 +909,35 @@ const ClassManagement = () => {
                   className="hidden"
                 />
               </label>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <button
+                type="button"
+                className="bg-indigo-600 text-white font-semibold text-sm px-4 py-2 rounded transition-colors hover:bg-indigo-700 disabled:opacity-60"
+                onClick={handleSelectAllFilteredStudents}
+                disabled={filteredStudentIds.length === 0}
+              >
+                {areAllFilteredStudentsSelected ? 'Unselect All' : 'Select All'}
+              </button>
+              <button
+                type="button"
+                className="bg-gray-200 text-gray-800 font-semibold text-sm px-4 py-2 rounded transition-colors hover:bg-gray-300 disabled:opacity-60"
+                onClick={handleClearSelectedStudents}
+                disabled={selectedStudentIds.length === 0}
+              >
+                Clear Selection
+              </button>
+              <button
+                type="button"
+                className="bg-red-600 text-white font-semibold text-sm px-4 py-2 rounded transition-colors hover:bg-red-700 disabled:opacity-60"
+                onClick={handleRemoveAllStudentsFromClass}
+                disabled={!classes.find((cls) => cls._id === selectedClassId)?.students?.length}
+              >
+                Remove All Students
+              </button>
+              <span className="text-sm text-gray-600">
+                {selectedStudentIds.length} selected
+              </span>
             </div>
             <div className="bg-blue-50 text-blue-700 p-2 rounded mb-2 text-xs">
               💡 <strong>Tip:</strong> Import Excel with Name, Email, and LRN columns to automatically enroll students in the selected class.
