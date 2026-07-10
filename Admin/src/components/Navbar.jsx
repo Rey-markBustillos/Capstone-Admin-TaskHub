@@ -26,6 +26,9 @@ const Navbar = ({ selectedClass }) => {
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setOpen(false);
+      }
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -49,25 +52,29 @@ const Navbar = ({ selectedClass }) => {
       {/* Top Class Info Bar */}
       {selectedClass && (
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 sm:px-6 py-4 shadow-lg">
-          <div className="flex flex-col sm:flex-row sm:flex-wrap justify-start sm:justify-between items-start sm:items-center gap-3">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
               <div className="bg-white/20 p-2 rounded-lg">
                 <FaSchool className="text-slate-200 text-xl sm:text-2xl" />
               </div>
-              <span className="text-xl sm:text-2xl font-bold">{selectedClass.className}</span>
+              <span className="break-words text-xl font-bold leading-tight sm:text-2xl">
+                {selectedClass.className}
+              </span>
             </div>
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
-              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
+            <div className="grid w-full grid-cols-1 gap-2 text-xs sm:grid-cols-2 sm:text-sm xl:w-auto xl:grid-cols-3">
+              <div className="flex min-w-0 items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
                 <FaClock className="text-slate-200" />
-                <span><strong>Schedule:</strong> {formatClassTimeRange(selectedClass.time, selectedClass.endTime)}</span>
+                <span className="break-words">
+                  <strong>Schedule:</strong> {formatClassTimeRange(selectedClass.time, selectedClass.endTime)}
+                </span>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
+              <div className="flex min-w-0 items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
                 <FaCalendarAlt className="text-slate-200" />
-                <span><strong>Day:</strong> {selectedClass.day || 'N/A'}</span>
+                <span className="break-words"><strong>Day:</strong> {selectedClass.day || 'N/A'}</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
+              <div className="flex min-w-0 items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
                 <FaMapMarkerAlt className="text-slate-200" />
-                <span><strong>Room:</strong> {selectedClass.roomNumber}</span>
+                <span className="break-words"><strong>Room:</strong> {selectedClass.roomNumber || 'N/A'}</span>
               </div>
             </div>
           </div>
@@ -89,7 +96,7 @@ const Navbar = ({ selectedClass }) => {
             </button>
 
             {/* Menu Items */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               {menuItems.map(({ to, icon: IconComponent, label }) => (
                 <NavLink
                   key={to}
@@ -104,7 +111,7 @@ const Navbar = ({ selectedClass }) => {
                 >
                   {({ isActive }) => (
                     <>
-                      <IconComponent className="text-slate-500" />
+                      <IconComponent className={isActive ? 'text-white' : 'text-slate-500'} />
                       <span className="hidden lg:inline">{label}</span>
                     </>
                   )}
@@ -138,7 +145,7 @@ const Navbar = ({ selectedClass }) => {
         {/* Mobile Dropdown Menu */}
         {open && isMobile && (
           <div className="md:hidden bg-white border-t-2 border-blue-100 shadow-lg animate-fadeIn">
-            <div className="p-4 grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2">
               {menuItems.map(({ to, icon: IconComponent, label }) => (
                 <NavLink
                   key={to}
@@ -152,9 +159,9 @@ const Navbar = ({ selectedClass }) => {
                   }
                   onClick={() => setOpen(false)}
                 >
-                  {() => (
+                  {({ isActive }) => (
                     <>
-                      <IconComponent className="text-2xl text-slate-500" />
+                      <IconComponent className={`text-2xl ${isActive ? 'text-white' : 'text-slate-500'}`} />
                       <span className="text-xs text-center font-semibold">{label}</span>
                     </>
                   )}

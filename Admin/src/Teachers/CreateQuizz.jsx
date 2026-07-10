@@ -1433,10 +1433,10 @@ export default function CreateQuizz() {
 
   // Wrap the whole return in a single centered div
   return (
-    <div className="flex flex-col items-center justify-start min-h-full bg-slate-50 py-8 px-2 sm:px-6 lg:px-8">
-      <div className="w-full max-w-[95vw] sm:max-w-[90vw] xl:max-w-[1600px] p-2 sm:p-6 lg:p-10 bg-white rounded-xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden max-h-[85vh] sm:max-h-[88vh] lg:max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-400 hover:scrollbar-thumb-slate-500 scrollbar-track-slate-200 relative scroll-smooth">
-        <div className="bg-white px-4 sm:px-8 py-4 sm:py-6 flex flex-col gap-4 border-b-2 border-slate-200 sticky top-0 z-10">{/* Made header sticky */}
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-wide flex items-center gap-3 justify-center">
+    <div className="flex min-h-full flex-col items-center justify-start bg-slate-50 px-2 py-8 sm:px-6 lg:px-8">
+      <div className="relative w-full max-w-[1600px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm scroll-smooth sm:rounded-3xl lg:max-h-[90vh] lg:overflow-y-auto lg:scrollbar-thin lg:scrollbar-track-slate-200 lg:scrollbar-thumb-slate-400 lg:hover:scrollbar-thumb-slate-500">
+        <div className="sticky top-0 z-10 flex flex-col gap-4 border-b-2 border-slate-200 bg-white px-4 py-4 sm:px-8 sm:py-6">{/* Made header sticky */}
+          <h2 className="flex items-center gap-3 text-2xl font-extrabold tracking-wide text-slate-900 sm:text-3xl">
             <svg className="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 8.25V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v1.5m9 0v1.5m0-1.5h-9m9 0a2.25 2.25 0 012.25 2.25v8.25A2.25 2.25 0 0116.5 20.25h-9A2.25 2.25 0 015.25 18V9a2.25 2.25 0 012.25-2.25h9z" /></svg>
             Quiz Generator
           </h2>
@@ -1602,7 +1602,7 @@ export default function CreateQuizz() {
 
               <div className="space-y-3 rounded-2xl border border-blue-200 bg-slate-50 p-4">
                 <h4 className="text-sm font-bold text-slate-900">Optional Generation Controls</h4>
-                <label className="flex items-center justify-between gap-4 rounded-xl bg-white px-4 py-3 border border-slate-200">
+                <label className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold text-slate-900">Shuffle generated questions</div>
                     <div className="text-xs text-slate-600">Mix the final order after generation.</div>
@@ -1614,7 +1614,7 @@ export default function CreateQuizz() {
                     onChange={(e) => setShuffleQuestions(e.target.checked)}
                   />
                 </label>
-                <label className="flex items-center justify-between gap-4 rounded-xl bg-white px-4 py-3 border border-slate-200">
+                <label className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold text-slate-900">Include answer explanations</div>
                     <div className="text-xs text-slate-600">Show a short explanation under each generated answer.</div>
@@ -1670,30 +1670,30 @@ export default function CreateQuizz() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-3 mb-6">
+              <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:flex xl:flex-wrap">
                 <button
-                  className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 rounded-xl font-semibold shadow-sm transition"
+                  className="rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-slate-800 xl:w-auto"
                   onClick={handleRegenerate}
                   disabled={loading}
                 >
                   Regenerate Quiz
                 </button>
                 <button
-                  className="bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition"
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 xl:w-auto"
                   onClick={handleExportToPdf}
                   disabled={loading}
                 >
                   Download PDF
                 </button>
                 <button
-                  className="bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition"
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 xl:w-auto"
                   onClick={handleExportToExcel}
                   disabled={loading}
                 >
                   Download Excel
                 </button>
                 <button
-                  className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition flex items-center gap-2"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-3 font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50 xl:w-auto"
                   onClick={handleExportToWord}
                   disabled={loading}
                 >
@@ -1701,7 +1701,7 @@ export default function CreateQuizz() {
                   Export Test Paper
                 </button>
                 <button
-                  className="bg-white hover:bg-blue-50 text-blue-900 border border-blue-200 px-4 py-3 rounded-xl font-semibold shadow-sm transition flex items-center gap-2"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-4 py-3 font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50 xl:w-auto"
                   onClick={handleAddQuestion}
                 >
                   <FaPlus className="w-4 h-4" />
@@ -1805,9 +1805,9 @@ export default function CreateQuizz() {
                             />
                           )}
 
-                          <div className="flex gap-2 mt-2">
-                            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl shadow" onClick={handleSaveEdit}><FaSave /></button>
-                            <button className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-xl shadow" onClick={() => { setEditingIdx(null); setEditQ({}); }}><FaTimes /></button>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-white shadow hover:bg-blue-700" onClick={handleSaveEdit}><FaSave /> Save</button>
+                            <button className="flex items-center gap-2 rounded-xl bg-gray-600 px-4 py-2 text-white shadow hover:bg-gray-700" onClick={() => { setEditingIdx(null); setEditQ({}); }}><FaTimes /> Cancel</button>
                           </div>
                         </>
                       ) : (
@@ -1818,9 +1818,9 @@ export default function CreateQuizz() {
                               <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-800">{QUIZ_TYPE_LABELS[resolvedType] || normalizedQuestion.displayType || resolvedType}</span>
                               <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-800">{DIFFICULTY_LABELS[normalizedQuestion.difficulty] || normalizedQuestion.difficulty || difficulty}</span>
                             </div>
-                            <div className="flex gap-2">
-                              <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl shadow" onClick={() => handleEdit(idx)}><FaEdit /></button>
-                              <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl shadow" onClick={() => handleDelete(idx)}><FaTrash /></button>
+                            <div className="flex flex-wrap gap-2">
+                              <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-white shadow hover:bg-blue-700" onClick={() => handleEdit(idx)}><FaEdit /> <span className="text-sm">Edit</span></button>
+                              <button className="flex items-center gap-2 rounded-xl bg-red-600 px-3 py-2 text-white shadow hover:bg-red-700" onClick={() => handleDelete(idx)}><FaTrash /> <span className="text-sm">Delete</span></button>
                             </div>
                           </div>
 
@@ -1856,9 +1856,9 @@ export default function CreateQuizz() {
             </>
           )}
         {questions.length > 0 && (
-          <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
+          <div className="mt-6 flex flex-col gap-3 rounded-3xl border border-blue-100 bg-white/95 p-3 shadow-lg backdrop-blur sm:flex-row sm:justify-end">
             <button
-              className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white px-8 py-3 rounded-2xl font-bold shadow-2xl hover:from-blue-800 hover:to-indigo-900 transition text-lg border-4 border-blue-400 hover:border-indigo-500 focus:ring-4 focus:ring-blue-300 focus:outline-none group overflow-hidden"
+              className="group relative overflow-hidden rounded-2xl border-2 border-blue-300 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 px-6 py-3 text-base font-bold text-white shadow-xl transition hover:from-blue-800 hover:to-indigo-900 focus:outline-none focus:ring-4 focus:ring-blue-300 sm:w-auto"
               onClick={handleExportToWord}
               disabled={loading}
               title="Export as Word Test Paper"
@@ -1870,13 +1870,13 @@ export default function CreateQuizz() {
               </span>
             </button>
             <button
-              className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 text-white px-10 py-4 rounded-3xl font-extrabold shadow-2xl hover:from-blue-700 hover:to-indigo-800 transition text-xl border-4 border-blue-400 hover:border-indigo-500 focus:ring-4 focus:ring-blue-300 focus:outline-none group overflow-hidden"
+              className="group relative overflow-hidden rounded-2xl border-2 border-blue-300 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 px-6 py-3 text-base font-extrabold text-white shadow-xl transition hover:from-blue-700 hover:to-indigo-800 focus:outline-none focus:ring-4 focus:ring-blue-300 sm:w-auto"
               onClick={() => setShowSaveModal(true)}
               disabled={loading}
             >
               <span className="absolute left-0 top-0 w-full h-full bg-blue-400 opacity-0 group-hover:opacity-10 transition-all rounded-3xl"></span>
               <span className="flex items-center gap-2">
-                <svg className="w-7 h-7 text-white drop-shadow-lg" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                <svg className="h-6 w-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
                 Save Quiz to Class
               </span>
             </button>
@@ -1888,7 +1888,7 @@ export default function CreateQuizz() {
             onClick={() => setShowSaveModal(false)}
           >
             <div
-              className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-2xl p-8 shadow-2xl w-full max-w-md border-4 border-indigo-500 animate-fadeIn relative"
+              className="relative w-full max-w-md rounded-2xl border-4 border-indigo-500 bg-gradient-to-br from-indigo-900 to-blue-900 p-5 shadow-2xl animate-fadeIn sm:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -1924,7 +1924,7 @@ export default function CreateQuizz() {
                   if (val > 0) setQuestionTime(val);
                 }}
               />
-              <div className="flex gap-4 justify-end">
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button
                   className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded shadow"
                   onClick={() => setShowSaveModal(false)}
@@ -2004,7 +2004,7 @@ export default function CreateQuizz() {
             onClick={() => setShowSubModal(false)}
           >
             <div
-              className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-4xl border-4 border-blue-400 animate-fadeIn relative"
+              className="relative w-full max-w-4xl rounded-2xl border-4 border-blue-400 bg-white p-5 shadow-2xl animate-fadeIn sm:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -2015,7 +2015,7 @@ export default function CreateQuizz() {
                 ×
               </button>
               <h2 className="text-2xl font-extrabold text-blue-900 mb-4">All Student Submissions</h2>
-              <div className="overflow-x-auto max-h-[70vh]">
+              <div className="max-h-[70vh] overflow-auto">
                 {createdQuizzes.length === 0 ? (
                   <div className="text-gray-700">No quizzes created yet.</div>
                 ) : (
@@ -2061,7 +2061,7 @@ export default function CreateQuizz() {
             onClick={() => setShowAnalyticsModal(false)}
           >
             <div
-              className="bg-white rounded-2xl p-8 shadow-2xl w-full max-w-6xl border-4 border-blue-400 animate-fadeIn relative max-h-[90vh] overflow-y-auto"
+              className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-2xl border-4 border-blue-400 bg-white p-5 shadow-2xl animate-fadeIn sm:p-8"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -2071,8 +2071,8 @@ export default function CreateQuizz() {
               >
                 ×
               </button>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-extrabold text-blue-900 flex items-center gap-3">
+              <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <h2 className="flex items-center gap-3 text-2xl font-extrabold text-blue-900">
                   <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                   </svg>
@@ -2080,9 +2080,9 @@ export default function CreateQuizz() {
                 </h2>
                 
                 {/* Export Buttons */}
-                <div className="flex gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <button
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition flex items-center gap-2 text-sm"
+                    className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-green-700"
                     onClick={handleExportAnalyticsToExcel}
                     title="Export student scores to Excel"
                   >
@@ -2090,7 +2090,7 @@ export default function CreateQuizz() {
                     Export Scores
                   </button>
                   <button
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition flex items-center gap-2 text-sm"
+                    className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:bg-blue-700"
                     onClick={handleExportDetailedAnalytics}
                     title="Export detailed question-by-question analysis"
                   >

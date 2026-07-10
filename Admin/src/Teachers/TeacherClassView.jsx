@@ -61,9 +61,9 @@ const TeacherClassView = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 via-white to-indigo-50 min-h-full text-gray-900">
+    <div className="min-h-full overflow-x-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50 text-gray-900">
       <Navbar selectedClass={selectedClass} />
-      <main className="p-4 md:p-6 lg:p-8">
+      <main className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4 md:px-6 lg:px-8 lg:py-6">
         {/* Dito lalabas ang content ng Announcements, Create Activity, atbp. */}
         <Outlet /> 
       </main>

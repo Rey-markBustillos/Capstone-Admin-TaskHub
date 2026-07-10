@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { FaCheckCircle, FaTimesCircle, FaClock, FaCalendarCheck, FaArrowLeft, FaFilter } from 'react-icons/fa';
 import { useParams, NavLink } from 'react-router-dom';
-import SidebarContext from '../contexts/SidebarContext';
 
 const API_BASE_URL = (() => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
@@ -57,7 +56,6 @@ const formatDisplayDate = (dateValue) => {
 
 const TeacherAttendance = () => {
   const { classId } = useParams();
-  const { isSidebarOpen } = useContext(SidebarContext);
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -217,7 +215,52 @@ const TeacherAttendance = () => {
                 </div>
               )}
 
-              <div className="overflow-x-auto max-h-[560px] overflow-y-auto rounded-2xl border border-slate-200">
+              <div className="space-y-3 md:hidden">
+                {students.map((student) => {
+                  const stats = attendanceStats[student._id] || { Present: 0, Late: 0, Absent: 0 };
+
+                  return (
+                    <article key={student._id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-base font-semibold text-slate-800">{student.name}</span>
+                          {stats.Absent >= 6 && (
+                            <span className="rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-semibold text-rose-700">
+                              6+ absences
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <span className={`rounded-full px-2.5 py-1 font-medium ${statusStyles.Present.badge}`}>Present: {stats.Present}</span>
+                          <span className={`rounded-full px-2.5 py-1 font-medium ${statusStyles.Late.badge}`}>Late: {stats.Late}</span>
+                          <span className={`rounded-full px-2.5 py-1 font-medium ${statusStyles.Absent.badge}`}>Absent: {stats.Absent}</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-2">
+                          {statusOptions.map((option) => (
+                            <button
+                              key={option.label}
+                              className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold transition-all duration-150 ${
+                                attendance[student._id] === option.label
+                                  ? statusStyles[option.label].selected
+                                  : statusStyles[option.label].idle
+                              }`}
+                              onClick={() => handleMark(student._id, option.label)}
+                              type="button"
+                            >
+                              {option.icon}
+                              <span>{option.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
                 <table className="min-w-full bg-white">
                   <thead className="sticky top-0 bg-slate-100/95 backdrop-blur">
                     <tr className="border-b border-slate-200">
@@ -372,7 +415,29 @@ const TeacherAttendance = () => {
                 <button onClick={() => setFilter('Absent')} className={`rounded-full px-3 py-1.5 text-xs sm:text-sm font-semibold transition ${filter === 'Absent' ? statusStyles.Absent.selected : statusStyles.Absent.badge}`}>Absent</button>
               </div>
 
-              <div className="mt-4 overflow-x-auto max-h-[430px] overflow-y-auto rounded-2xl border border-slate-200">
+              <div className="mt-4 space-y-3 md:hidden">
+                {filteredRecords.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-400">
+                    No attendance records found.
+                  </div>
+                ) : (
+                  filteredRecords.map((record, idx) => (
+                    <article key={`${record.student?._id || record.student?.name || 'student'}-${record.date}-${idx}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">{record.student.name}</p>
+                          <p className="mt-1 text-xs text-slate-500">{formatDisplayDate(record.date)}</p>
+                        </div>
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[record.status]?.badge || 'bg-slate-100 text-slate-700'}`}>
+                          {record.status}
+                        </span>
+                      </div>
+                    </article>
+                  ))
+                )}
+              </div>
+
+              <div className="mt-4 hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
                 <table className="min-w-full bg-white">
                   <thead className="sticky top-0 bg-slate-100/95 backdrop-blur">
                     <tr className="border-b border-slate-200">

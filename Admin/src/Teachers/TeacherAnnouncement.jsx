@@ -208,12 +208,14 @@ export default function TeacherAnnouncement() {
   return (
     <div className="min-h-full bg-slate-50 py-8 px-2 sm:px-6 lg:px-8">
       {/* Header Section with Icon */}
-      <div className="flex items-center justify-between mb-8 rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm">
-        <div className="flex items-center gap-4">
+      <div className="mb-8 flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
           <FaBullhorn className="text-slate-500 text-4xl" />
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Announcements for <span className="text-slate-600">{className}</span></h1>
+          <h1 className="break-words text-2xl font-bold leading-tight text-slate-900 sm:text-3xl lg:text-4xl">
+            Announcements for <span className="text-slate-600">{className}</span>
+          </h1>
         </div>
-        <button onClick={openModalForCreate} className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-5 rounded-2xl shadow-sm transition-all duration-300 flex items-center" aria-label="Create New Announcement">
+        <button onClick={openModalForCreate} className="flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 font-bold text-white shadow-sm transition-all duration-300 hover:bg-slate-800 sm:w-auto" aria-label="Create New Announcement">
           <FaPlus className="mr-2 h-5 w-5" /> New Announcement
         </button>
       </div>
@@ -225,7 +227,7 @@ export default function TeacherAnnouncement() {
             <p className="text-lg text-slate-600">No announcements posted yet.</p>
           </div>
         ) : (
-          <div className="max-h-screen overflow-y-auto pr-2">
+          <div className="overflow-visible">
             <ul className="space-y-8">
               {announcements.map((ann) => {
               const reactionCounts = getReactionCounts(ann.reactions);
@@ -291,12 +293,12 @@ export default function TeacherAnnouncement() {
 
                             
                             return (
-                              <div key={index} className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
-                                <div className="flex justify-between items-center mb-2">
-                                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              <div key={index} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                                <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                  <span className="break-all text-sm font-medium text-gray-700 dark:text-gray-300">
                                     {attachment.originalName}
                                   </span>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex flex-wrap items-center gap-2">
                                     <span className="text-xs text-gray-500 dark:text-gray-400">
                                       {(attachment.fileSize / 1024 / 1024).toFixed(1)}MB
                                     </span>
@@ -465,18 +467,18 @@ export default function TeacherAnnouncement() {
                       </div>
                     )}
 
-                    <div className="pt-3 mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs sm:text-sm">
-                      <p className="text-gray-600 mb-2 sm:mb-0">
+                    <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-3 text-xs sm:text-sm lg:flex-row lg:items-center lg:justify-between">
+                      <p className="break-words text-gray-600">
                         Posted by: <span className="font-semibold text-blue-700">{ann.postedBy?.name || 'You'}</span> on {formatDate(ann.datePosted)}
                       </p>
-                      <div className="flex space-x-3">
+                      <div className="flex flex-wrap gap-2">
                         <button onClick={() => handleEdit(ann)} className="flex items-center text-blue-600 hover:text-blue-700 font-medium py-1 px-3 rounded-md hover:bg-blue-50 transition-colors"><FaEdit className="mr-1.5 h-4 w-4" /> Edit</button>
                         <button onClick={() => handleDelete(ann._id)} className="flex items-center text-red-600 hover:text-red-700 font-medium py-1 px-3 rounded-md hover:bg-red-50 transition-colors"><FaTrashAlt className="mr-1.5 h-4 w-4" /> Delete</button>
                       </div>
                     </div>
                   </div>
-                  <div className="px-6 pt-2 pb-4 border-t border-blue-100 flex items-center justify-between flex-wrap gap-y-2">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-3 border-t border-blue-100 px-4 pb-4 pt-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
                       {availableReactions.map(emoji => {
                         const userHasReacted = ann.reactions?.some(r => r.user?._id === userId && r.emoji === emoji);
                         return (
@@ -487,12 +489,12 @@ export default function TeacherAnnouncement() {
                         );
                       })}
                     </div>
-                    <div className="flex items-center gap-4">
-                      <button onClick={() => openViewersModal(ann._id)} className="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-medium py-1 px-3 rounded-md hover:bg-blue-50 transition-colors">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <button onClick={() => openViewersModal(ann._id)} className="flex items-center gap-2 rounded-md px-3 py-2 font-medium text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600">
                         <FaEye />
                         <span>{ann.viewedBy?.length || 0} Views</span>
                       </button>
-                      <button onClick={() => toggleComments(ann._id)} className="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-medium py-1 px-3 rounded-md hover:bg-blue-50 transition-colors">
+                      <button onClick={() => toggleComments(ann._id)} className="flex items-center gap-2 rounded-md px-3 py-2 font-medium text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600">
                         <FaCommentAlt />
                         <span>{ann.comments?.length || 0} Comments</span>
                       </button>
@@ -515,7 +517,7 @@ export default function TeacherAnnouncement() {
                           </div>
                         )) : <p className="text-sm text-gray-500">No comments yet. Be the first to comment!</p>}
                       </div>
-                      <form onSubmit={(e) => handleCommentSubmit(e, ann._id)} className="mt-4 flex gap-3">
+                      <form onSubmit={(e) => handleCommentSubmit(e, ann._id)} className="mt-4 flex flex-col gap-3 sm:flex-row">
                         <input
                           type="text"
                           value={commentInputs[ann._id] || ''}
@@ -523,7 +525,7 @@ export default function TeacherAnnouncement() {
                           placeholder="Write a comment..."
                           className="w-full border border-gray-300 rounded-lg p-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
-                        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold p-2 rounded-lg flex items-center justify-center px-4">
+                        <button type="submit" className="flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 sm:w-auto">
                           <FaPaperPlane />
                         </button>
                       </form>
@@ -538,8 +540,8 @@ export default function TeacherAnnouncement() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 flex justify-center items-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-lg relative border border-blue-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
+          <div className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-y-auto rounded-2xl border border-blue-200 bg-white p-5 shadow-xl sm:p-8">
             <h2 className="text-2xl font-bold mb-6 text-blue-900">{form.id ? 'Edit' : 'Create'} Announcement</h2>
             <form onSubmit={handleSubmit}>
               {error && <p className="text-red-600 mb-4">{error}</p>}
@@ -569,7 +571,7 @@ export default function TeacherAnnouncement() {
                   />
                   <p className="text-xs text-gray-500 mt-1">Max 10MB per file. Allowed: images (JPG, PNG, GIF), documents (PDF, Word, PowerPoint), videos, audio, archives</p>
                 </div>
-              )})
+              )}
 
               {/* Selected Files Display */}
               {selectedFiles.length > 0 && (
@@ -577,12 +579,12 @@ export default function TeacherAnnouncement() {
                   <p className="text-sm text-gray-700 mb-2">Selected Files:</p>
                   <div className="space-y-2">
                     {selectedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between bg-blue-50 p-2 rounded border border-blue-200">
-                        <span className="text-sm text-gray-700 truncate">{file.name}</span>
+                      <div key={index} className="flex flex-col gap-2 rounded border border-blue-200 bg-blue-50 p-2 sm:flex-row sm:items-center sm:justify-between">
+                        <span className="break-all text-sm text-gray-700">{file.name}</span>
                         <button
                           type="button"
                           onClick={() => removeFile(index)}
-                          className="text-red-600 hover:text-red-700 ml-2"
+                          className="text-red-600 hover:text-red-700 sm:ml-2"
                         >
                           <FaTimes />
                         </button>
@@ -592,9 +594,9 @@ export default function TeacherAnnouncement() {
                 </div>
               )}
 
-              <div className="flex justify-end space-x-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors">Cancel</button>
-                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">{form.id ? 'Update' : 'Create'}</button>
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-lg bg-gray-200 px-4 py-2 font-semibold text-gray-800 transition-colors hover:bg-gray-300">Cancel</button>
+                <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700">{form.id ? 'Update' : 'Create'}</button>
               </div>
             </form>
           </div>
@@ -602,10 +604,10 @@ export default function TeacherAnnouncement() {
       )}
 
       {viewersInfo.isOpen && (
-        <div className="fixed inset-0 flex justify-center items-center z-50 p-4" onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}>
-          <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-md relative border border-blue-200" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" onClick={() => setViewersInfo({ isOpen: false, viewers: [], title: '' })}>
+          <div className="relative w-full max-w-md rounded-2xl border border-blue-200 bg-white p-5 shadow-xl sm:p-8" onClick={e => e.stopPropagation()}>
             <h3 className="text-xl font-bold mb-4 text-blue-900">Viewed By</h3>
-            <p className="text-sm text-gray-600 mb-4 truncate">For: "{viewersInfo.title}"</p>
+            <p className="mb-4 break-words text-sm text-gray-600">For: "{viewersInfo.title}"</p>
             <ul className="space-y-3 max-h-60 overflow-y-auto pr-2">
               {Array.isArray(viewersInfo.viewers) && viewersInfo.viewers.length > 0 ? viewersInfo.viewers.map(viewer => (
                 <li key={viewer._id || viewer.name} className="text-gray-700 bg-blue-50 p-2 rounded-md border border-blue-200">{viewer.name}</li>

@@ -179,8 +179,8 @@ const UploadModule = () => {
   return (
     <div className="min-h-full bg-slate-50 py-8 px-2 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-sm mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 flex items-center gap-4">
+      <div className="mb-8 rounded-3xl border border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-6 sm:py-6">
+        <h1 className="flex items-start gap-4 text-2xl font-bold leading-tight text-slate-900 sm:text-3xl lg:text-4xl">
           <FaUpload className="text-slate-500 text-4xl" />
           Upload Learning Modules
         </h1>
@@ -203,7 +203,7 @@ const UploadModule = () => {
       )}
 
       {/* Main Content - Side by Side Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         {/* Upload Form */}
         <div className="bg-white shadow-sm rounded-3xl border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-md">
           <div className="p-6">
@@ -325,7 +325,7 @@ const UploadModule = () => {
               </div>
             )}
             <div 
-              className="max-h-96 overflow-y-auto pr-2 space-y-3 border border-slate-200 rounded-2xl p-3"
+              className="max-h-96 space-y-3 overflow-y-auto rounded-2xl border border-slate-200 p-3 pr-1 sm:pr-2"
               style={{
                 scrollbarWidth: 'thin',
                 scrollbarColor: '#3b82f6 #dbeafe'
@@ -334,19 +334,19 @@ const UploadModule = () => {
               {modules.map((module) => (
               <div
                 key={module._id}
-                className="flex items-start justify-between p-4 border border-slate-200 rounded-2xl hover:bg-slate-50 transition-colors shadow-sm hover:shadow-md"
+                className="flex flex-col gap-4 rounded-2xl border border-slate-200 p-4 shadow-sm transition-colors hover:bg-slate-50 hover:shadow-md sm:flex-row sm:items-start sm:justify-between"
               >
                 <div className="flex items-start gap-4 flex-1 min-w-0">
                   <div className="flex-shrink-0 mt-1">
                     {getFileIcon(module.fileName)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate">{module.title}</h3>
+                    <h3 className="break-words font-semibold text-gray-900">{module.title}</h3>
                     {module.description && (
                       <p className="text-sm text-gray-700 line-clamp-2 mt-1">{module.description}</p>
                     )}
                     <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600 mt-2">
-                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                      <span className="break-all rounded bg-gray-100 px-2 py-1 text-gray-700">
                         {module.fileName}
                       </span>
                       <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
@@ -373,7 +373,7 @@ const UploadModule = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 ml-4 flex-shrink-0">
+                <div className="flex w-full items-center justify-end gap-1 sm:ml-4 sm:w-auto sm:flex-shrink-0">
                   <button
                     onClick={() => {
                       console.log('📋 Download module:', module.title, module._id);
