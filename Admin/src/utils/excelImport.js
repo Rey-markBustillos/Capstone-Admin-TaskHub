@@ -60,7 +60,7 @@ export const normalizeLrn = (value) => {
 
   if (!raw) return '';
   const digitsOnly = raw.replace(/\D/g, '');
-  return (digitsOnly || raw).replace(/^0+/, '') || '0';
+  return digitsOnly || raw;
 };
 
 export const findHeaderRow = (data, requiredAliases) => {

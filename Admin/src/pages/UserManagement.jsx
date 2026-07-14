@@ -86,22 +86,37 @@ const UserManagement = () => {
     });
   };
 
+  const getStudentDefaultPassword = (name, lrn) =>
+    `${String(name || '').trim().slice(0, 2).toLowerCase()}${String(lrn || '').trim()}`;
+
   const handleAddUser = async () => {
-    if (!newUser.name || !newUser.email || !newUser.password) {
-      await showAlert('warning', 'Missing Fields', 'Please enter name, email, and password');
+    const isStudent = newUser.role === 'student';
+    if (!newUser.name.trim() || !newUser.email.trim() || (!isStudent && !newUser.password)) {
+      await showAlert('warning', 'Missing Fields', isStudent
+        ? 'Please enter name, email, and LRN.'
+        : 'Please enter name, email, and password.');
       return;
     }
+
+    if (isStudent && !newUser.lrn.trim()) {
+      await showAlert('warning', 'Missing LRN', 'Please enter the student LRN.');
+      return;
+    }
+
     setLoading(true);
     try {
-      await axios.post(`${API_BASE_URL}/users`, {
-        name: newUser.name,
-        email: newUser.email,
-        password: newUser.password,
+      const lrn = newUser.lrn.trim();
+      const payload = {
+        name: newUser.name.trim(),
+        email: newUser.email.trim(),
         role: newUser.role,
-        lrn: newUser.lrn || null,
+        lrn: lrn || null,
         teacherId: newUser.teacherId || null,
         adminId: newUser.adminId || null,
-      });
+      };
+      if (!isStudent) payload.password = newUser.password;
+
+      await axios.post(`${API_BASE_URL}/users`, payload);
       setNewUser({
         name: "",
         email: "",
@@ -111,8 +126,9 @@ const UserManagement = () => {
         teacherId: "",
         adminId: "",
       });
-      fetchUsers();
+      await fetchUsers();
       setError(null);
+      closeModal();
     } catch (err) {
       await showAlert('error', 'Add User Failed', err.response?.data?.message || 'Failed to add user');
     } finally {
@@ -145,22 +161,20 @@ const UserManagement = () => {
             return;
           }
 
-          const stripLeadingZeros = (s) => String(s).replace(/^0+/, '').trim() || '0';
-          const existingLRNs = users.filter(u => u.role === 'student' && u.lrn).map(u => stripLeadingZeros(u.lrn));
+          const existingLRNs = users
+            .filter(u => u.role === 'student' && u.lrn)
+            .map(u => String(u.lrn).trim());
 
           let added = 0, skipped = 0;
           for (const row of parsed.rows) {
-            const lrn = stripLeadingZeros(row.lrn);
+            const lrn = String(row.lrn).trim();
             const name = row.name;
-            const namePart = name.replace(/\s+/g, '').substring(0, 3).toLowerCase();
-            const password = namePart + lrn;
 
             if (!existingLRNs.includes(lrn)) {
               try {
                 await axios.post(`${API_BASE_URL}/users`, {
                   name,
                   email: row.email,
-                  password,
                   role: 'student',
                   lrn,
                 });
@@ -286,7 +300,7 @@ const UserManagement = () => {
       .substring(0, 3)
       .toLowerCase();
 
-    if (user.role === 'student') return `${namePart}${user.lrn || ''}`;
+    if (user.role === 'student') return getStudentDefaultPassword(user.name, user.lrn);
     if (user.role === 'teacher') return `${namePart}${user.teacherId || ''}`;
     if (user.role === 'admin') return `${namePart}${user.adminId || ''}`;
 
@@ -651,7 +665,7 @@ const UserManagement = () => {
                 {showModal.role === 'admin' && <span className="text-2xl">🧑‍💼</span>}
                 Register {showModal.role.charAt(0).toUpperCase() + showModal.role.slice(1)}
               </h3>
-              <form onSubmit={e => { e.preventDefault(); handleAddUser(); closeModal(); }}>
+              <form onSubmit={e => { e.preventDefault(); handleAddUser(); }}>
                 {/* Import Excel button for Student */}
                 {showModal.role === 'student' && (
                   <div className="mb-4 text-center">
@@ -664,7 +678,7 @@ const UserManagement = () => {
                         className="hidden"
                       />
                     </label>
-                    <div className="text-xs text-gray-500 mt-1">Or fill form below for single add</div>
+                    <div className="text-xs text-gray-500 mt-1">Required Excel columns: Name, Email, and LRN. Password is created automatically.</div>
                   </div>
                 )}
                 {/* Import Excel button for Teacher */}
@@ -713,7 +727,8 @@ const UserManagement = () => {
                     required
                   />
                 </div>
-                <div className="relative mb-3">
+                {showModal.role !== 'student' && (
+                  <div className="relative mb-3">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-yellow-500 text-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75A2.25 2.25 0 0014.25 4.5h-4.5A2.25 2.25 0 007.5 6.75v3.75m9 0v6.75A2.25 2.25 0 0114.25 19.5h-4.5A2.25 2.25 0 0 1 7.5 17.25V10.5m9 0H7.5" />
@@ -728,6 +743,7 @@ const UserManagement = () => {
                     required
                   />
                 </div>
+                )}
                 {showModal.role === 'student' && (
                   <div className="relative mb-3">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 text-lg">
@@ -741,7 +757,9 @@ const UserManagement = () => {
                       value={newUser.lrn}
                       onChange={e => setNewUser({ ...newUser, lrn: e.target.value })}
                       className="block w-full pl-10 px-3 py-2 border border-blue-300 bg-blue-50 rounded focus:border-blue-500 focus:bg-white transition"
+                      required
                     />
+                    <p className="mt-1 text-xs text-gray-500">Default password: first 2 letters of name + full LRN</p>
                   </div>
                 )}
                 {showModal.role === 'teacher' && (
