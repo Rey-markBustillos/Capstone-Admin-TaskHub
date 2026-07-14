@@ -3,6 +3,7 @@ import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { formatClassTimeRange, formatDateTime, toTimeInputValue } from '../utils/dateTime';
 import { showConfirm } from '../utils/swal';
+import { EMAIL_ALIASES, findColumnIndex } from '../utils/excelImport';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/";
 
@@ -60,10 +61,10 @@ const ClassManagement = () => {
       const wb = XLSX.read(bstr, { type: 'binary' });
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-      // Assume first row is header, look for required columns
-      const header = data[0].map(h => h.toLowerCase());
-      const emailIdx = header.indexOf('email');
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      const headerRowIndex = data.findIndex((row) => findColumnIndex(row, EMAIL_ALIASES) !== -1);
+      const header = headerRowIndex >= 0 ? data[headerRowIndex] : (data[0] || []);
+      const emailIdx = findColumnIndex(header, EMAIL_ALIASES);
       
       if (emailIdx === -1) {
         setImportError('Excel must have an Email column.');
@@ -71,7 +72,10 @@ const ClassManagement = () => {
         return;
       }
       
-      const emails = data.slice(1).map(row => row[emailIdx]).filter(Boolean);
+      const emails = data
+        .slice(headerRowIndex >= 0 ? headerRowIndex + 1 : 1)
+        .map(row => String(row[emailIdx] || '').trim().toLowerCase())
+        .filter(Boolean);
       // Find matching students by email
       const matched = students.filter(s => emails.includes(s.email));
       if (matched.length === 0) {

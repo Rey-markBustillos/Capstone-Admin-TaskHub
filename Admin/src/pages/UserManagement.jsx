@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import { showAlert, showConfirm, showPrompt } from '../utils/swal';
+import { parseStudentImportRows, parseTeacherImportRows } from '../utils/excelImport';
 import '../Css/usermanagement.css'
 
 const UserManagement = () => {
@@ -134,47 +135,34 @@ const UserManagement = () => {
         const wb = XLSX.read(bstr, { type: 'binary' });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-        
-        if (!data.length) {
-          setImportError('Excel file is empty.');
-          setTimeout(() => setImportError(''), 3000);
-          return;
-        }
-        
-        const header = data[0].map(h => h && h.toLowerCase && h.toLowerCase());
-        const nameIdx = header.indexOf('name');
-        const emailIdx = header.indexOf('email');
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
         
         if (role === 'student') {
-          const lrnIdx = header.indexOf('lrn');
-          if (lrnIdx === -1 || nameIdx === -1 || emailIdx === -1) {
-            setImportError('Excel must have columns: Name, Email, LRN.');
+          const parsed = parseStudentImportRows(data);
+          if (parsed.error) {
+            setImportError(parsed.error);
             setTimeout(() => setImportError(''), 4000);
             return;
           }
-          
-          // Helper to remove leading zeros
-          const stripLeadingZeros = s => String(s).replace(/^0+/, '').trim();
+
+          const stripLeadingZeros = (s) => String(s).replace(/^0+/, '').trim() || '0';
           const existingLRNs = users.filter(u => u.role === 'student' && u.lrn).map(u => stripLeadingZeros(u.lrn));
-          const newRows = data.slice(1).filter(row => row[nameIdx] && row[emailIdx] && row[lrnIdx]);
-          
+
           let added = 0, skipped = 0;
-          for (const row of newRows) {
-            const lrn = stripLeadingZeros(row[lrnIdx]);
-            const name = String(row[nameIdx]).trim();
-            // Auto-generate password: first 3 letters of name (no spaces, lowercase) + full LRN
+          for (const row of parsed.rows) {
+            const lrn = stripLeadingZeros(row.lrn);
+            const name = row.name;
             const namePart = name.replace(/\s+/g, '').substring(0, 3).toLowerCase();
             const password = namePart + lrn;
-            
+
             if (!existingLRNs.includes(lrn)) {
               try {
                 await axios.post(`${API_BASE_URL}/users`, {
-                  name: name,
-                  email: row[emailIdx],
-                  password: password,
+                  name,
+                  email: row.email,
+                  password,
                   role: 'student',
-                  lrn: lrn
+                  lrn,
                 });
                 added++;
               } catch {
@@ -184,7 +172,7 @@ const UserManagement = () => {
               skipped++;
             }
           }
-          
+
           fetchUsers();
           if (added === 0) {
             setImportError('No new students imported. All LRNs already exist or failed.');
@@ -193,34 +181,32 @@ const UserManagement = () => {
             setImportSuccess(`${added} student(s) imported. ${skipped > 0 ? skipped + ' duplicate(s) skipped.' : ''}`);
             setTimeout(() => setImportSuccess(''), 4000);
           }
-          
+
         } else if (role === 'teacher') {
-          const teacherIdIdx = header.indexOf('teacherid') || header.indexOf('teacher_id') || header.indexOf('id');
-          if (teacherIdIdx === -1 || nameIdx === -1 || emailIdx === -1) {
-            setImportError('Excel must have columns: Name, Email, TeacherID (or ID).');
+          const parsed = parseTeacherImportRows(data);
+          if (parsed.error) {
+            setImportError(parsed.error);
             setTimeout(() => setImportError(''), 4000);
             return;
           }
-          
+
           const existingTeacherIDs = users.filter(u => u.role === 'teacher' && u.teacherId).map(u => u.teacherId);
-          const newRows = data.slice(1).filter(row => row[nameIdx] && row[emailIdx] && row[teacherIdIdx]);
-          
+
           let added = 0, skipped = 0;
-          for (const row of newRows) {
-            const teacherId = String(row[teacherIdIdx]).trim();
-            const name = String(row[nameIdx]).trim();
-            // Auto-generate password: first 3 letters of name (no spaces, lowercase) + teacher ID
+          for (const row of parsed.rows) {
+            const teacherId = row.teacherId;
+            const name = row.name;
             const namePart = name.replace(/\s+/g, '').substring(0, 3).toLowerCase();
             const password = namePart + teacherId;
-            
+
             if (!existingTeacherIDs.includes(teacherId)) {
               try {
                 await axios.post(`${API_BASE_URL}/users`, {
-                  name: name,
-                  email: row[emailIdx],
-                  password: password,
+                  name,
+                  email: row.email,
+                  password,
                   role: 'teacher',
-                  teacherId: teacherId
+                  teacherId,
                 });
                 added++;
               } catch {
@@ -230,7 +216,7 @@ const UserManagement = () => {
               skipped++;
             }
           }
-          
+
           fetchUsers();
           if (added === 0) {
             setImportError('No new teachers imported. All Teacher IDs already exist or failed.');
