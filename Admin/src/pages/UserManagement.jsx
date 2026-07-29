@@ -18,6 +18,9 @@ const UserManagement = () => {
     lrn: "",
     teacherId: "",
     adminId: "",
+    address: "",
+    age: "",
+    schoolName: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -56,12 +59,12 @@ const UserManagement = () => {
 
   const openModal = (role) => {
     setShowModal({ open: true, role });
-    setNewUser({ name: '', email: '', password: '', role, lrn: '', teacherId: '', adminId: '' });
+    setNewUser({ name: '', email: '', password: '', role, lrn: '', teacherId: '', adminId: '', address: '', age: '', schoolName: '' });
   };
 
   const closeModal = () => {
     setShowModal({ open: false, role: null });
-    setNewUser({ name: '', email: '', password: '', role: 'student', lrn: '', teacherId: '', adminId: '' });
+    setNewUser({ name: '', email: '', password: '', role: 'student', lrn: '', teacherId: '', adminId: '', address: '', age: '', schoolName: '' });
   };
 
   const openEditModal = (user) => {
@@ -91,9 +94,11 @@ const UserManagement = () => {
 
   const handleAddUser = async () => {
     const isStudent = newUser.role === 'student';
-    if (!newUser.name.trim() || !newUser.email.trim() || (!isStudent && !newUser.password)) {
+    const requiresProfile = isStudent || newUser.role === 'teacher';
+    if (!newUser.name.trim() || !newUser.email.trim() || (!isStudent && !newUser.password) ||
+      (requiresProfile && (!newUser.address.trim() || !newUser.age || !newUser.schoolName.trim()))) {
       await showAlert('warning', 'Missing Fields', isStudent
-        ? 'Please enter name, email, and LRN.'
+        ? 'Please enter name, email, LRN, address, age, and name of school.'
         : 'Please enter name, email, and password.');
       return;
     }
@@ -113,6 +118,9 @@ const UserManagement = () => {
         lrn: lrn || null,
         teacherId: newUser.teacherId || null,
         adminId: newUser.adminId || null,
+        address: newUser.address.trim() || null,
+        age: newUser.age || null,
+        schoolName: newUser.schoolName.trim() || null,
       };
       if (!isStudent) payload.password = newUser.password;
 
@@ -125,6 +133,9 @@ const UserManagement = () => {
         lrn: "",
         teacherId: "",
         adminId: "",
+        address: "",
+        age: "",
+        schoolName: "",
       });
       await fetchUsers();
       setError(null);
@@ -177,6 +188,9 @@ const UserManagement = () => {
                   email: row.email,
                   role: 'student',
                   lrn,
+                  address: row.address,
+                  age: row.age,
+                  schoolName: row.schoolName,
                 });
                 added++;
               } catch {
@@ -221,6 +235,9 @@ const UserManagement = () => {
                   password,
                   role: 'teacher',
                   teacherId,
+                  address: row.address,
+                  age: row.age,
+                  schoolName: row.schoolName,
                 });
                 added++;
               } catch {
@@ -657,7 +674,7 @@ const UserManagement = () => {
         {/* Modal for Add User */}
         {showModal.open && (
           <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/10 px-2 sm:px-0">
-            <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-sm relative">
+            <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto relative">
               <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl" onClick={closeModal}>&times;</button>
               <h3 className="text-xl font-bold mb-4 text-center flex items-center justify-center gap-2">
                 {showModal.role === 'student' && <span className="text-2xl">👨‍🎓</span>}
@@ -678,7 +695,7 @@ const UserManagement = () => {
                         className="hidden"
                       />
                     </label>
-                    <div className="text-xs text-gray-500 mt-1">Required Excel columns: Name, Email, and LRN. Password is created automatically.</div>
+                    <div className="text-xs text-gray-500 mt-1">Required columns: Name, Email, LRN, Address, Age, and Name of School. Password is created automatically.</div>
                   </div>
                 )}
                 {/* Import Excel button for Teacher */}
@@ -693,9 +710,10 @@ const UserManagement = () => {
                         className="hidden"
                       />
                     </label>
-                    <div className="text-xs text-gray-500 mt-1">Or fill form below for single add</div>
+                    <div className="text-xs text-gray-500 mt-1">Required columns: Name, Email, Teacher ID, Address, Age, and Name of School.</div>
                   </div>
                 )}
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Personal information</p>
                 <div className="relative mb-3">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 text-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -727,7 +745,7 @@ const UserManagement = () => {
                     required
                   />
                 </div>
-                {showModal.role !== 'student' && (
+                {showModal.role === 'admin' && (
                   <div className="relative mb-3">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-yellow-500 text-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -743,6 +761,9 @@ const UserManagement = () => {
                     required
                   />
                 </div>
+                )}
+                {(showModal.role === 'student' || showModal.role === 'teacher') && (
+                  <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-wider text-slate-500">School information</p>
                 )}
                 {showModal.role === 'student' && (
                   <div className="relative mb-3">
@@ -776,6 +797,50 @@ const UserManagement = () => {
                       value={newUser.teacherId}
                       onChange={e => setNewUser({ ...newUser, teacherId: e.target.value })}
                       className="block w-full pl-10 px-3 py-2 border border-purple-300 bg-purple-50 rounded focus:border-purple-500 focus:bg-white transition"
+                      required
+                    />
+                  </div>
+                )}
+                {(showModal.role === 'student' || showModal.role === 'teacher') && (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Address"
+                      value={newUser.address}
+                      onChange={e => setNewUser({ ...newUser, address: e.target.value })}
+                      className="block w-full px-3 py-2 mb-3 border border-gray-300 bg-gray-50 rounded focus:border-blue-500 focus:bg-white transition"
+                      required
+                    />
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="Age"
+                        value={newUser.age}
+                        onChange={e => setNewUser({ ...newUser, age: e.target.value })}
+                        className="col-span-1 block w-full px-3 py-2 border border-gray-300 bg-gray-50 rounded focus:border-blue-500 focus:bg-white transition"
+                        required
+                      />
+                      <input
+                        type="text"
+                        placeholder="Name of School"
+                        value={newUser.schoolName}
+                        onChange={e => setNewUser({ ...newUser, schoolName: e.target.value })}
+                        className="col-span-2 block w-full px-3 py-2 border border-gray-300 bg-gray-50 rounded focus:border-blue-500 focus:bg-white transition"
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+                {showModal.role === 'teacher' && (
+                  <div className="relative mb-4">
+                    <input
+                      type="password"
+                      placeholder="Temporary password"
+                      value={newUser.password}
+                      onChange={e => setNewUser({ ...newUser, password: e.target.value })}
+                      className="block w-full px-3 py-2 border border-yellow-300 bg-yellow-50 rounded focus:border-yellow-500 focus:bg-white transition"
                       required
                     />
                   </div>

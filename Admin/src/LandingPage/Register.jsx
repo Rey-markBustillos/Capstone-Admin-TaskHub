@@ -19,6 +19,9 @@ function Register({ onBackToLogin }) {
     password: "",
     confirmPassword: "",
     lrn: "",
+    address: "",
+    age: "",
+    schoolName: "",
   });
 
   const [error, setError] = useState("");
@@ -56,6 +59,9 @@ function Register({ onBackToLogin }) {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         lrn: formData.lrn.trim(),
+        address: formData.address.trim(),
+        age: formData.age,
+        schoolName: formData.schoolName.trim(),
         role: "student",
       };
 
@@ -79,6 +85,9 @@ function Register({ onBackToLogin }) {
         password: "",
         confirmPassword: "",
         lrn: "",
+        address: "",
+        age: "",
+        schoolName: "",
       });
 
       setTimeout(() => onBackToLogin(), 2000);
@@ -212,7 +221,8 @@ function Register({ onBackToLogin }) {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-y-3 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:col-span-2">Personal information</p>
             {/* Name */}
             <div className="space-y-1 sm:space-y-1.5">
               <label
@@ -291,6 +301,7 @@ function Register({ onBackToLogin }) {
               </div>
             </div>
 
+            <p className="pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:col-span-2">Student and school information</p>
             {/* LRN */}
             <div className="space-y-1 sm:space-y-1.5">
               <label
@@ -304,7 +315,7 @@ function Register({ onBackToLogin }) {
                   color: focusedField === "lrn" ? "#3b82f6" : undefined,
                 }}
               >
-                Learner Reference Number
+                LRN
               </label>
               <div className="relative group">
                 <div
@@ -319,7 +330,7 @@ function Register({ onBackToLogin }) {
                 <input
                   type="text"
                   name="lrn"
-                  placeholder="Enter your LRN"
+                  placeholder="Enter LRN"
                   value={formData.lrn}
                   onChange={handleChange}
                   onFocus={() => setFocusedField("lrn")}
@@ -330,6 +341,47 @@ function Register({ onBackToLogin }) {
               </div>
             </div>
 
+            {/* Address, Age, and School */}
+            <div className="space-y-1 sm:space-y-1.5">
+              <label className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1">Address</label>
+              <input
+                type="text"
+                name="address"
+                placeholder="Enter your address"
+                value={formData.address}
+                onChange={handleChange}
+                className={inputBaseClass}
+                required
+              />
+            </div>
+            <div className="space-y-1 sm:space-y-1.5">
+              <label className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1">Age</label>
+              <input
+                type="number"
+                name="age"
+                min="1"
+                step="1"
+                placeholder="Enter your age"
+                value={formData.age}
+                onChange={handleChange}
+                className={inputBaseClass}
+                required
+              />
+            </div>
+            <div className="space-y-1 sm:space-y-1.5">
+              <label className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1">Name of School</label>
+              <input
+                type="text"
+                name="schoolName"
+                placeholder="Enter your school name"
+                value={formData.schoolName}
+                onChange={handleChange}
+                className={inputBaseClass}
+                required
+              />
+            </div>
+
+            <p className="pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:col-span-2">Account security</p>
             {/* Password */}
             <div className="space-y-1 sm:space-y-1.5">
               <label
@@ -504,7 +556,7 @@ function Register({ onBackToLogin }) {
             {/* Error Message */}
             {error && (
               <div
-                className="
+                className="sm:col-span-2
                   flex items-center gap-2
                   bg-red-50 border border-red-100
                   rounded-xl sm:rounded-2xl
@@ -522,7 +574,7 @@ function Register({ onBackToLogin }) {
             {/* Success Message */}
             {success && (
               <div
-                className="
+                className="sm:col-span-2
                   flex items-center gap-2
                   bg-emerald-50 border border-emerald-100
                   rounded-xl sm:rounded-2xl
@@ -541,7 +593,7 @@ function Register({ onBackToLogin }) {
               type="submit"
               disabled={loading}
               className="
-                w-full
+                sm:col-span-2 w-full
                 bg-gradient-to-r from-blue-600 to-indigo-600
                 hover:from-blue-700 hover:to-indigo-700
                 active:scale-[0.98]

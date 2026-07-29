@@ -114,21 +114,28 @@ export const TEACHER_ID_ALIASES = [
   'id',
 ];
 
+export const ADDRESS_ALIASES = ['address', 'home address', 'residential address', 'tirahan'];
+export const AGE_ALIASES = ['age', 'edad'];
+export const SCHOOL_NAME_ALIASES = ['name of school', 'school name', 'school', 'paaralan'];
+
 export const parseStudentImportRows = (data) => {
   if (!data?.length) {
     return { error: 'Excel file is empty.' };
   }
 
-  const headerRowIndex = findHeaderRow(data, [NAME_ALIASES, EMAIL_ALIASES, LRN_ALIASES]);
+  const headerRowIndex = findHeaderRow(data, [NAME_ALIASES, EMAIL_ALIASES, LRN_ALIASES, ADDRESS_ALIASES, AGE_ALIASES, SCHOOL_NAME_ALIASES]);
   const header = data[headerRowIndex] || [];
 
   const nameIdx = findColumnIndex(header, NAME_ALIASES);
   const emailIdx = findColumnIndex(header, EMAIL_ALIASES);
   const lrnIdx = findColumnIndex(header, LRN_ALIASES);
+  const addressIdx = findColumnIndex(header, ADDRESS_ALIASES);
+  const ageIdx = findColumnIndex(header, AGE_ALIASES);
+  const schoolNameIdx = findColumnIndex(header, SCHOOL_NAME_ALIASES);
 
-  if (nameIdx === -1 || emailIdx === -1 || lrnIdx === -1) {
+  if (nameIdx === -1 || emailIdx === -1 || lrnIdx === -1 || addressIdx === -1 || ageIdx === -1 || schoolNameIdx === -1) {
     return {
-      error: 'Excel must have Name, Email, and LRN columns. Column order does not matter.',
+      error: 'Excel must have Name, Email, LRN, Address, Age, and Name of School columns. Column order does not matter.',
     };
   }
 
@@ -138,10 +145,13 @@ export const parseStudentImportRows = (data) => {
       name: getCellString(row, nameIdx),
       email: getCellString(row, emailIdx).toLowerCase(),
       lrn: normalizeLrn(row[lrnIdx]),
+      address: getCellString(row, addressIdx),
+      age: getCellString(row, ageIdx),
+      schoolName: getCellString(row, schoolNameIdx),
     }))
-    .filter((row) => row.name && row.email && row.lrn);
+    .filter((row) => row.name && row.email && row.lrn && row.address && row.age && row.schoolName);
 
-  return { rows, nameIdx, emailIdx, lrnIdx, headerRowIndex };
+  return { rows, nameIdx, emailIdx, lrnIdx, addressIdx, ageIdx, schoolNameIdx, headerRowIndex };
 };
 
 export const parseTeacherImportRows = (data) => {
@@ -149,16 +159,19 @@ export const parseTeacherImportRows = (data) => {
     return { error: 'Excel file is empty.' };
   }
 
-  const headerRowIndex = findHeaderRow(data, [NAME_ALIASES, EMAIL_ALIASES, TEACHER_ID_ALIASES]);
+  const headerRowIndex = findHeaderRow(data, [NAME_ALIASES, EMAIL_ALIASES, TEACHER_ID_ALIASES, ADDRESS_ALIASES, AGE_ALIASES, SCHOOL_NAME_ALIASES]);
   const header = data[headerRowIndex] || [];
 
   const nameIdx = findColumnIndex(header, NAME_ALIASES);
   const emailIdx = findColumnIndex(header, EMAIL_ALIASES);
   const teacherIdIdx = findColumnIndex(header, TEACHER_ID_ALIASES);
+  const addressIdx = findColumnIndex(header, ADDRESS_ALIASES);
+  const ageIdx = findColumnIndex(header, AGE_ALIASES);
+  const schoolNameIdx = findColumnIndex(header, SCHOOL_NAME_ALIASES);
 
-  if (nameIdx === -1 || emailIdx === -1 || teacherIdIdx === -1) {
+  if (nameIdx === -1 || emailIdx === -1 || teacherIdIdx === -1 || addressIdx === -1 || ageIdx === -1 || schoolNameIdx === -1) {
     return {
-      error: 'Excel must have Name, Email, and TeacherID (or ID) columns. Column order does not matter.',
+      error: 'Excel must have Name, Email, TeacherID (or ID), Address, Age, and Name of School columns. Column order does not matter.',
     };
   }
 
@@ -168,8 +181,11 @@ export const parseTeacherImportRows = (data) => {
       name: getCellString(row, nameIdx),
       email: getCellString(row, emailIdx).toLowerCase(),
       teacherId: getCellString(row, teacherIdIdx),
+      address: getCellString(row, addressIdx),
+      age: getCellString(row, ageIdx),
+      schoolName: getCellString(row, schoolNameIdx),
     }))
-    .filter((row) => row.name && row.email && row.teacherId);
+    .filter((row) => row.name && row.email && row.teacherId && row.address && row.age && row.schoolName);
 
-  return { rows, nameIdx, emailIdx, teacherIdIdx, headerRowIndex };
+  return { rows, nameIdx, emailIdx, teacherIdIdx, addressIdx, ageIdx, schoolNameIdx, headerRowIndex };
 };

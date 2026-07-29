@@ -28,13 +28,18 @@ exports.getUsers = async (req, res) => {
 // POST /api/users - Create a new user (password will be hashed by model)
 exports.createUser = async (req, res) => {
   try {
-   const { name, email, password, role, lrn, teacherId, adminId } = req.body;
+   const { name, email, password, role, lrn, teacherId, adminId, address, age, schoolName } = req.body;
    const normalizedLrn = String(lrn || "").trim();
    const studentPassword = `${String(name || "").trim().slice(0, 2).toLowerCase()}${normalizedLrn}`;
+   const normalizedAddress = String(address || "").trim();
+   const normalizedSchoolName = String(schoolName || "").trim();
+   const normalizedAge = Number(age);
+   const requiresProfile = role === "student" || role === "teacher";
 
-    if (!name || !email || !role || (role === "student" ? !normalizedLrn : !password)) {
-      const message = role === "student"
-        ? "Name, email, role, and LRN are required for students"
+    if (!name || !email || !role || (role === "student" ? !normalizedLrn : !password) ||
+      (requiresProfile && (!normalizedAddress || !normalizedSchoolName || !Number.isInteger(normalizedAge) || normalizedAge < 1))) {
+      const message = requiresProfile
+        ? `Name, email, ${role === "student" ? "LRN, " : "password, "}address, age, and name of school are required for ${role}s`
         : "Name, email, password, and role are required";
       return res.status(400).json({ message });
     }
@@ -55,6 +60,9 @@ exports.createUser = async (req, res) => {
       lrn: role === "student" ? normalizedLrn : null,
       teacherId: role === "teacher" ? teacherId : null,
       adminId: role === "admin" ? adminId : null,
+      address: requiresProfile ? normalizedAddress : null,
+      age: requiresProfile ? normalizedAge : null,
+      schoolName: requiresProfile ? normalizedSchoolName : null,
       active: true,
     });
 

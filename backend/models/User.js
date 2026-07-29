@@ -9,6 +9,9 @@ const UserSchema = new mongoose.Schema({
   lrn: { type: String, default: null }, // Learner Reference Number for students
   teacherId: { type: String, default: null },
   adminId: { type: String, default: null },
+  address: { type: String, default: null },
+  age: { type: Number, default: null, min: 1 },
+  schoolName: { type: String, default: null },
   active: { type: Boolean, default: true }
    // studentId removed, use lrn instead
 });
