@@ -1,5 +1,5 @@
 const Announcement = require('../models/Announcement');
-const mongoose = require('mongoose');
+const mongoose = require('../config/mongooseCompat');
 
 // Helper function para i-populate ang lahat ng necessary fields
 const populateFields = (query) => {

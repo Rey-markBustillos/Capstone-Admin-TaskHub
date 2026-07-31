@@ -1,5 +1,5 @@
 require('dotenv').config();
-const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
 const ADMIN = {
@@ -13,14 +13,11 @@ const ADMIN = {
 
 async function seedAdmin() {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('Connected to MongoDB');
-
     let user = await User.findOne({ email: ADMIN.email.toLowerCase() });
 
     if (user) {
       user.name = ADMIN.name;
-      user.password = ADMIN.password;
+      user.password = await bcrypt.hash(ADMIN.password, 10);
       user.role = ADMIN.role;
       user.adminId = ADMIN.adminId;
       user.active = ADMIN.active;
@@ -29,6 +26,7 @@ async function seedAdmin() {
     } else {
       user = new User({
         ...ADMIN,
+        password: await bcrypt.hash(ADMIN.password, 10),
         email: ADMIN.email.toLowerCase(),
       });
       await user.save();
@@ -37,9 +35,6 @@ async function seedAdmin() {
   } catch (err) {
     console.error('Failed to seed admin:', err.message);
     process.exit(1);
-  } finally {
-    await mongoose.disconnect();
-    process.exit(0);
   }
 }
 

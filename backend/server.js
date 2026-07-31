@@ -7,10 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 // Debug environment variables
 console.log('Environment variables loaded:');
 console.log('- PORT:', process.env.PORT || 'undefined');
-console.log('- MONGO_URI exists:', !!process.env.MONGO_URI);
-if (process.env.MONGO_URI) {
-  console.log('- MONGO_URI preview:', process.env.MONGO_URI.substring(0, 30) + '...');
-}
+console.log('- SUPABASE_URL exists:', !!(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL));
 
 const express = require('express');
 const cors = require('cors');
@@ -30,16 +27,15 @@ const moduleRoutes = require('./routes/moduleRoutes');
 const submissionRoutes = require('./routes/submissionRoutes');
 const visitRoutes = require('./routes/visitRoutes');
 
-// Connect to MongoDB
+// Verify Supabase is reachable before serving database-backed endpoints.
 connectDB().then((connected) => {
   if (connected) {
-    console.log('Database: MongoDB connected - using full database functionality');
+    console.log('Database: Supabase connected - using full database functionality');
   } else {
-    console.log('Database: Running in fallback mode with mock data');
+    console.log('Database: Supabase is unavailable; database endpoints will return errors');
   }
 }).catch((err) => {
   console.error('Database connection error:', err);
-  console.log('Continuing in fallback mode...');
 });
 
 // ...existing code...

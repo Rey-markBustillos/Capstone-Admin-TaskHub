@@ -1,7 +1,7 @@
 const Class = require('../models/Class');
 const User = require('../models/User');
 const Announcement = require('../models/Announcement');
-const mongoose = require('mongoose');
+const mongoose = require('../config/mongooseCompat');
 
 // GET /api/class - Kunin lahat ng klase, optional filter by teacherId
 const getAllClasses = async (req, res) => {

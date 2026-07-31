@@ -64,7 +64,9 @@ export const normalizeLrn = (value) => {
 };
 
 export const findHeaderRow = (data, requiredAliases) => {
-  const maxScan = Math.min(10, data.length);
+  // Official ALS reports frequently place titles and school details before
+  // the actual headers, so scan the first 30 rows instead of only 10.
+  const maxScan = Math.min(30, data.length);
 
   for (let rowIndex = 0; rowIndex < maxScan; rowIndex++) {
     const row = data[rowIndex];
@@ -88,6 +90,10 @@ export const NAME_ALIASES = [
   'complete name',
   'pangalan',
 ];
+
+export const SURNAME_ALIASES = ['surname', 'last name', 'family name', 'apelyido'];
+export const GIVEN_NAME_ALIASES = ['given name', 'first name', 'name', 'student name', 'learner name', 'pangalan'];
+export const MIDDLE_INITIAL_ALIASES = ['mi', 'm i', 'm.i', 'middle initial', 'middle name'];
 
 export const EMAIL_ALIASES = [
   'email',
@@ -116,7 +122,7 @@ export const TEACHER_ID_ALIASES = [
 
 export const ADDRESS_ALIASES = ['address', 'home address', 'residential address', 'tirahan'];
 export const AGE_ALIASES = ['age', 'edad'];
-export const SCHOOL_NAME_ALIASES = ['name of school', 'school name', 'school', 'paaralan'];
+export const SCHOOL_NAME_ALIASES = ['name of school', 'school name', 'school', 'paaralan', 'als program'];
 
 export const parseStudentImportRows = (data) => {
   if (!data?.length) {
@@ -127,6 +133,9 @@ export const parseStudentImportRows = (data) => {
   const header = data[headerRowIndex] || [];
 
   const nameIdx = findColumnIndex(header, NAME_ALIASES);
+  const surnameIdx = findColumnIndex(header, SURNAME_ALIASES);
+  const givenNameIdx = findColumnIndex(header, GIVEN_NAME_ALIASES);
+  const middleInitialIdx = findColumnIndex(header, MIDDLE_INITIAL_ALIASES);
   const emailIdx = findColumnIndex(header, EMAIL_ALIASES);
   const lrnIdx = findColumnIndex(header, LRN_ALIASES);
   const addressIdx = findColumnIndex(header, ADDRESS_ALIASES);
@@ -141,15 +150,30 @@ export const parseStudentImportRows = (data) => {
 
   const rows = data
     .slice(headerRowIndex + 1)
-    .map((row) => ({
-      name: getCellString(row, nameIdx),
+    .map((row) => {
+      const surname = getCellString(row, surnameIdx);
+      const givenName = getCellString(row, givenNameIdx);
+      const middleInitial = getCellString(row, middleInitialIdx);
+      // Supports both a single Full Name column and separate Surname, Name,
+      // and M.I. columns. A period is added to a one-letter middle initial.
+      const hasSeparateNameColumns = surnameIdx !== -1 && givenNameIdx !== -1 && surnameIdx !== givenNameIdx;
+      const separatedName = [surname, givenName, middleInitial && middleInitial.length === 1 ? `${middleInitial}.` : middleInitial]
+        .filter(Boolean)
+        .join(' ');
+      return {
+      // "Surname,Name ,M.I." is a single report column and should be kept as
+      // is; join values only when Surname and Name are separate columns.
+      name: hasSeparateNameColumns ? separatedName : getCellString(row, nameIdx),
       email: getCellString(row, emailIdx).toLowerCase(),
       lrn: normalizeLrn(row[lrnIdx]),
       address: getCellString(row, addressIdx),
       age: getCellString(row, ageIdx),
       schoolName: getCellString(row, schoolNameIdx),
-    }))
-    .filter((row) => row.name && row.email && row.lrn && row.address && row.age && row.schoolName);
+      };
+    })
+    .filter((row) => row.name && row.email && row.lrn && row.address && row.age && row.schoolName)
+    // Ignore repeated report headers such as "LRN | Surname,Name,M.I. | ...".
+    .filter((row) => row.lrn.toLowerCase() !== 'lrn' && row.email.toLowerCase() !== 'email');
 
   return { rows, nameIdx, emailIdx, lrnIdx, addressIdx, ageIdx, schoolNameIdx, headerRowIndex };
 };
@@ -159,7 +183,7 @@ export const parseTeacherImportRows = (data) => {
     return { error: 'Excel file is empty.' };
   }
 
-  const headerRowIndex = findHeaderRow(data, [NAME_ALIASES, EMAIL_ALIASES, TEACHER_ID_ALIASES, ADDRESS_ALIASES, AGE_ALIASES, SCHOOL_NAME_ALIASES]);
+  const headerRowIndex = findHeaderRow(data, [NAME_ALIASES, EMAIL_ALIASES, TEACHER_ID_ALIASES, ADDRESS_ALIASES, AGE_ALIASES]);
   const header = data[headerRowIndex] || [];
 
   const nameIdx = findColumnIndex(header, NAME_ALIASES);
@@ -167,11 +191,10 @@ export const parseTeacherImportRows = (data) => {
   const teacherIdIdx = findColumnIndex(header, TEACHER_ID_ALIASES);
   const addressIdx = findColumnIndex(header, ADDRESS_ALIASES);
   const ageIdx = findColumnIndex(header, AGE_ALIASES);
-  const schoolNameIdx = findColumnIndex(header, SCHOOL_NAME_ALIASES);
 
-  if (nameIdx === -1 || emailIdx === -1 || teacherIdIdx === -1 || addressIdx === -1 || ageIdx === -1 || schoolNameIdx === -1) {
+  if (nameIdx === -1 || emailIdx === -1 || teacherIdIdx === -1 || addressIdx === -1 || ageIdx === -1) {
     return {
-      error: 'Excel must have Name, Email, TeacherID (or ID), Address, Age, and Name of School columns. Column order does not matter.',
+      error: 'Excel must have Name, Email, TeacherID (or ID), Address, and Age columns. Column order does not matter.',
     };
   }
 
@@ -183,9 +206,8 @@ export const parseTeacherImportRows = (data) => {
       teacherId: getCellString(row, teacherIdIdx),
       address: getCellString(row, addressIdx),
       age: getCellString(row, ageIdx),
-      schoolName: getCellString(row, schoolNameIdx),
     }))
-    .filter((row) => row.name && row.email && row.teacherId && row.address && row.age && row.schoolName);
+    .filter((row) => row.name && row.email && row.teacherId && row.address && row.age);
 
-  return { rows, nameIdx, emailIdx, teacherIdIdx, addressIdx, ageIdx, schoolNameIdx, headerRowIndex };
+  return { rows, nameIdx, emailIdx, teacherIdIdx, addressIdx, ageIdx, headerRowIndex };
 };

@@ -94,12 +94,13 @@ const UserManagement = () => {
 
   const handleAddUser = async () => {
     const isStudent = newUser.role === 'student';
-    const requiresProfile = isStudent || newUser.role === 'teacher';
+    const requiresPersonalDetails = isStudent || newUser.role === 'teacher';
     if (!newUser.name.trim() || !newUser.email.trim() || (!isStudent && !newUser.password) ||
-      (requiresProfile && (!newUser.address.trim() || !newUser.age || !newUser.schoolName.trim()))) {
+      (requiresPersonalDetails && (!newUser.address.trim() || !newUser.age)) ||
+      (isStudent && !newUser.schoolName.trim())) {
       await showAlert('warning', 'Missing Fields', isStudent
         ? 'Please enter name, email, LRN, address, age, and name of school.'
-        : 'Please enter name, email, and password.');
+        : 'Please enter name, email, password, address, and age.');
       return;
     }
 
@@ -120,7 +121,7 @@ const UserManagement = () => {
         adminId: newUser.adminId || null,
         address: newUser.address.trim() || null,
         age: newUser.age || null,
-        schoolName: newUser.schoolName.trim() || null,
+        schoolName: isStudent ? (newUser.schoolName.trim() || null) : null,
       };
       if (!isStudent) payload.password = newUser.password;
 
@@ -237,7 +238,6 @@ const UserManagement = () => {
                   teacherId,
                   address: row.address,
                   age: row.age,
-                  schoolName: row.schoolName,
                 });
                 added++;
               } catch {
@@ -710,7 +710,7 @@ const UserManagement = () => {
                         className="hidden"
                       />
                     </label>
-                    <div className="text-xs text-gray-500 mt-1">Required columns: Name, Email, Teacher ID, Address, Age, and Name of School.</div>
+                    <div className="text-xs text-gray-500 mt-1">Required columns: Name, Email, Teacher ID, Address, and Age.</div>
                   </div>
                 )}
                 <p className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Personal information</p>
@@ -819,17 +819,17 @@ const UserManagement = () => {
                         placeholder="Age"
                         value={newUser.age}
                         onChange={e => setNewUser({ ...newUser, age: e.target.value })}
-                        className="col-span-1 block w-full px-3 py-2 border border-gray-300 bg-gray-50 rounded focus:border-blue-500 focus:bg-white transition"
+                        className={`${showModal.role === 'student' ? 'col-span-1' : 'col-span-3'} block w-full px-3 py-2 border border-gray-300 bg-gray-50 rounded focus:border-blue-500 focus:bg-white transition`}
                         required
                       />
-                      <input
+                      {showModal.role === 'student' && <input
                         type="text"
                         placeholder="Name of School"
                         value={newUser.schoolName}
                         onChange={e => setNewUser({ ...newUser, schoolName: e.target.value })}
                         className="col-span-2 block w-full px-3 py-2 border border-gray-300 bg-gray-50 rounded focus:border-blue-500 focus:bg-white transition"
                         required
-                      />
+                      />}
                     </div>
                   </>
                 )}

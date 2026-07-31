@@ -44,7 +44,7 @@ exports.submitQuiz = async (req, res) => {
 };
 const Quiz = require('../models/Quiz');
 const QuizSubmission = require('../models/QuizSubmission');
-const { ObjectId } = require('mongoose').Types;
+const { ObjectId } = require('../config/mongooseCompat').Types;
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Add this function to list available models

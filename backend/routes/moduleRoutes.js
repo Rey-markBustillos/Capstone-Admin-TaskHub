@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const mongoose = require('mongoose');
+const mongoose = require('../config/mongooseCompat');
 const Module = require('../models/Module');
 
 // --- Cloudinary Setup for Modules ---

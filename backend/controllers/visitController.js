@@ -105,41 +105,22 @@ const getVisitStatistics = async (req, res) => {
   try {
     const totalVisits = await Visit.countDocuments();
     
-    // Get visits by page
-    const visitsByPage = await Visit.aggregate([
-      {
-        $group: {
-          _id: '$page',
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $sort: { count: -1 }
-      }
-    ]);
+    // Group in JavaScript. This replaces the MongoDB aggregate pipeline.
+    const allVisits = await Visit.find({});
+    const byPage = new Map();
+    allVisits.forEach((visit) => byPage.set(visit.page, (byPage.get(visit.page) || 0) + 1));
+    const visitsByPage = [...byPage].map(([_id, count]) => ({ _id, count })).sort((a, b) => b.count - a.count);
 
     // Get visits by date (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const recentVisits = await Visit.aggregate([
-      {
-        $match: {
-          timestamp: { $gte: sevenDaysAgo }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$timestamp" }
-          },
-          count: { $sum: 1 }
-        }
-      },
-      {
-        $sort: { _id: 1 }
-      }
-    ]);
+    const byDate = new Map();
+    allVisits.filter((visit) => new Date(visit.timestamp) >= sevenDaysAgo).forEach((visit) => {
+      const day = new Date(visit.timestamp).toISOString().slice(0, 10);
+      byDate.set(day, (byDate.get(day) || 0) + 1);
+    });
+    const recentVisits = [...byDate].map(([_id, count]) => ({ _id, count })).sort((a, b) => a._id.localeCompare(b._id));
 
     res.json({
       totalVisits,

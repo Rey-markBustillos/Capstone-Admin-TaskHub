@@ -1,10 +1,2 @@
-const mongoose = require('mongoose');
-
-const attendanceSchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true },
-  status: { type: String, enum: ['Present', 'Absent', 'Late'], required: true },
-  date: { type: Date, required: true },
-}, { timestamps: true });
-
-module.exports = mongoose.model('Attendance', attendanceSchema);
+const createModel = require('../config/supabaseModel');
+module.exports = createModel('attendance', { relations: { studentId: { table: 'users' }, classId: { table: 'classes' } } });
