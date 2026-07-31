@@ -82,22 +82,42 @@ function createModel(table, { defaults = {}, relations = {} } = {}) {
     }
     then(resolve, reject) { return this.exec().then(resolve, reject); }
   }
+  // Existing controllers chain Mongoose operations such as
+  // `findByIdAndUpdate(...).populate(...)` and `.select(...)`. Preserve that
+  // API shape while executing the update through Supabase.
+  class MutationQuery {
+    constructor(filters, update, options = {}) {
+      this.filters = filters;
+      this.update = update;
+      this.options = options;
+      this.populates = [];
+      this.fields = null;
+    }
+    select(fields) { this.fields = fields; return this; }
+    populate(path, select) { this.populates.push([typeof path === 'string' ? path : path.path, select || (typeof path === 'object' ? path.select : undefined)]); return this; }
+    async exec() {
+      const existing = await Document.findOne(this.filters);
+      if (!existing && !this.options.upsert) return null;
+      const doc = existing || new Document({ ...this.filters });
+      Object.entries(this.update).forEach(([key, value]) => {
+        if (key === '$unset') Object.keys(value).forEach((field) => { delete doc[field]; });
+        else if (key === '$push') Object.entries(value).forEach(([field, item]) => { doc[field] = [...(doc[field] || []), item]; });
+        else if (key === '$addToSet') Object.entries(value).forEach(([field, item]) => { doc[field] = (doc[field] || []).some((v) => JSON.stringify(v) === JSON.stringify(item)) ? doc[field] : [...(doc[field] || []), item]; });
+        else doc[key] = value;
+      });
+      await doc.save();
+      for (const [path, select] of this.populates) await populateDocs(doc, path, select);
+      if (this.fields?.startsWith('-')) delete doc[this.fields.slice(1)];
+      return doc;
+    }
+    then(resolve, reject) { return this.exec().then(resolve, reject); }
+  }
   Document.find = (filters = {}) => new Query(filters);
   Document.findOne = (filters = {}) => new Query(filters, true);
   Document.findById = (id) => new Query({ _id: id }, true);
   Document.create = async (data) => new Document(data).save();
-  Document.findByIdAndUpdate = async (id, update, options = {}) => Document.findOneAndUpdate({ _id: id }, update, options);
-  Document.findOneAndUpdate = async (filters, update, options = {}) => {
-    const existing = await Document.findOne(filters); if (!existing && !options.upsert) return null;
-    const doc = existing || new Document({ ...filters });
-    Object.entries(update).forEach(([key, value]) => {
-      if (key === '$unset') Object.keys(value).forEach((field) => { delete doc[field]; });
-      else if (key === '$push') Object.entries(value).forEach(([field, item]) => { doc[field] = [...(doc[field] || []), item]; });
-      else if (key === '$addToSet') Object.entries(value).forEach(([field, item]) => { doc[field] = (doc[field] || []).some((v) => JSON.stringify(v) === JSON.stringify(item)) ? doc[field] : [...(doc[field] || []), item]; });
-      else doc[key] = value;
-    });
-    return doc.save();
-  };
+  Document.findByIdAndUpdate = (id, update, options = {}) => new MutationQuery({ _id: id }, update, options);
+  Document.findOneAndUpdate = (filters, update, options = {}) => new MutationQuery(filters, update, options);
   Document.findByIdAndDelete = async (id) => { const doc = await Document.findById(id); if (!doc) return null; const { error } = await supabase.from(table).delete().eq('id', id); if (error) throw error; return doc; };
   Document.deleteMany = async (filters = {}) => { let query = applyFilters(supabase.from(table).delete(), filters); const { error } = await query; if (error) throw error; };
   Document.countDocuments = async (filters = {}) => { let query = applyFilters(supabase.from(table).select('*', { count: 'exact', head: true }), filters); const { count, error } = await query; if (error) throw error; return count || 0; };
