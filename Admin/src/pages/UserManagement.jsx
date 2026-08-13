@@ -26,6 +26,8 @@ const UserManagement = () => {
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState('all');
   const [roleSort, setRoleSort] = useState('admin-teacher-student');
+  const [createdDateFilter, setCreatedDateFilter] = useState('all');
+  const [selectedCreatedDate, setSelectedCreatedDate] = useState('');
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [editUser, setEditUser] = useState(null);
@@ -355,7 +357,44 @@ const UserManagement = () => {
     }
   };
 
-  const visibleUsers = users.filter(user => roleFilter === 'all' ? true : user.role === roleFilter);
+  const isWithinCreatedDateFilter = (user) => {
+    if (createdDateFilter === 'all') return true;
+
+    const createdAt = new Date(user.createdAt);
+    if (Number.isNaN(createdAt.getTime())) return false;
+
+    if (createdDateFilter === 'custom') {
+      const localCreatedDate = new Date(createdAt.getTime() - createdAt.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 10);
+      return selectedCreatedDate && localCreatedDate === selectedCreatedDate;
+    }
+
+    const now = new Date();
+    const startDate = new Date(now);
+    startDate.setHours(0, 0, 0, 0);
+    const sixDaysAgo = new Date(startDate);
+    sixDaysAgo.setDate(startDate.getDate() - 6);
+
+    if (createdDateFilter === 'new') {
+      return createdAt >= sixDaysAgo && createdAt <= now;
+    }
+
+    if (createdDateFilter === 'last-week') {
+      const thirteenDaysAgo = new Date(startDate);
+      thirteenDaysAgo.setDate(startDate.getDate() - 13);
+      return createdAt >= thirteenDaysAgo && createdAt < sixDaysAgo;
+    }
+
+    if (createdDateFilter === 'last-month') startDate.setMonth(now.getMonth() - 1);
+    if (createdDateFilter === 'last-year') startDate.setFullYear(now.getFullYear() - 1);
+
+    return createdAt >= startDate && createdAt <= now;
+  };
+
+  const visibleUsers = users.filter((user) =>
+    (roleFilter === 'all' || user.role === roleFilter) && isWithinCreatedDateFilter(user)
+  );
   const roleSortOrders = {
     'admin-teacher-student': { admin: 0, teacher: 1, student: 2 },
     'student-teacher-admin': { student: 0, teacher: 1, admin: 2 },
@@ -543,6 +582,28 @@ const UserManagement = () => {
               <option value="admin-teacher-student">Admin, Teacher, Student</option>
               <option value="student-teacher-admin">Student, Teacher, Admin</option>
             </select>
+            <label className="font-medium text-gray-700">Created:</label>
+            <select
+              className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              value={createdDateFilter}
+              onChange={(e) => setCreatedDateFilter(e.target.value)}
+            >
+              <option value="all">All Dates</option>
+              <option value="new">New (Last 6 Days)</option>
+              <option value="last-week">Last Week (7-13 Days Ago)</option>
+              <option value="last-month">Last Month</option>
+              <option value="last-year">Last Year</option>
+              <option value="custom">Select Date</option>
+            </select>
+            {createdDateFilter === 'custom' && (
+              <input
+                type="date"
+                value={selectedCreatedDate}
+                onChange={(e) => setSelectedCreatedDate(e.target.value)}
+                className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                aria-label="Select account creation date"
+              />
+            )}
             <button
               type="button"
               className={`${isSelectionMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} text-white px-3 py-1.5 rounded text-sm font-semibold transition-colors`}
