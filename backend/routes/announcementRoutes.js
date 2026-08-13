@@ -16,7 +16,7 @@ const {
 
 // --- Multer / Cloudinary Setup for Announcements ---
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const { uploadToCloudinary } = require('../middleware/cloudinaryUpload');
 
 // Configure cloudinary
 cloudinary.config({
@@ -26,19 +26,8 @@ cloudinary.config({
 });
 
 // Cloudinary storage configuration for announcements
-const announcementCloudinaryStorage = new CloudinaryStorage({
-  cloudinary,
-  params: async (req, file) => ({
-    folder: "taskhub/announcements",
-    public_id: `announcement-${Date.now()}`,
-    resource_type: 'auto', // ⭐ REQUIRED: Handles images + documents
-    access_mode: "public",  // ✅ Ensure files are publicly accessible
-    type: "upload",
-  }),
-});
-
 const upload = multer({
-  storage: announcementCloudinaryStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit
   },
@@ -55,6 +44,7 @@ const upload = multer({
     }
   }
 });
+const uploadAnnouncementsToCloudinary = uploadToCloudinary(cloudinary, 'taskhub/announcements');
 
 // Keep legacy uploads directory for backward compatibility (if needed)
 const uploadsDir = path.join(__dirname, '../uploads/announcements');
@@ -65,7 +55,7 @@ if (!fs.existsSync(uploadsDir)) {
 // Routes for creating and getting all announcements
 router.route('/')
   .get(getAllAnnouncements)
-  .post(upload.array('attachments', 5), createAnnouncement); // Allow up to 5 files
+  .post(upload.array('attachments', 5), uploadAnnouncementsToCloudinary, createAnnouncement); // Allow up to 5 files
 
 // Routes for a specific announcement by ID
 router.route('/:id')

@@ -7,7 +7,7 @@ const path = require('path');
 // --- Multer / Cloudinary Setup ---
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const { uploadToCloudinary } = require('../middleware/cloudinaryUpload');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -22,21 +22,8 @@ console.log('- API Key:', process.env.CLOUDINARY_API_KEY ? '✅ Loaded' : 'MISSI
 console.log('- API Secret:', process.env.CLOUDINARY_API_SECRET ? '✅ Loaded' : 'MISSING ❌');
 
 // filepath: c:\xampp\htdocs\Capstone-Admin-TaskHub\backend\routes\activityRoutes.js
-const activityCloudinaryStorage = new CloudinaryStorage({
-  cloudinary,
-  params: async (req, file) => {
-    return {
-      folder: "taskhub/activities",
-      public_id: `activity-${Date.now()}`,  // ✅ Cloudinary adds extension automatically
-      resource_type: 'auto',  // ✅ Auto-detect: handles PDFs, images, and all document types
-      access_mode: "public",  // ✅ Ensure files are publicly accessible
-      type: "upload",
-    };
-  },
-});
-
 const uploadActivity = multer({
-  storage: activityCloudinaryStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, 
   fileFilter: (req, file, cb) => {
     // Allow common file types including images, documents, videos, audio, and archives
@@ -51,11 +38,12 @@ const uploadActivity = multer({
     }
   },
 });
+const uploadActivityToCloudinary = uploadToCloudinary(cloudinary, 'taskhub/activities');
 
 // ------------------------------------------------------
 // 📌 SUBMISSIONS — MUST BE FIRST (prevents /:id conflicts)
 // ------------------------------------------------------
-router.post('/submit', verifyToken, uploadActivity.single('file'), activityController.submitActivity);
+router.post('/submit', verifyToken, uploadActivity.single('file'), uploadActivityToCloudinary, activityController.submitActivity);
 router.get("/submission", verifyToken, activityController.getSubmissionForActivity);
 router.get("/submissions", verifyToken, activityController.getSubmissionsForStudentInClass);
 router.get("/submissions/teacher/:teacherId", verifyToken, activityController.getActivitySubmissionsByTeacher);
@@ -70,8 +58,8 @@ router.get("/submission/:id/info", verifyToken, activityController.getSubmission
 // 📌 ACTIVITY CRUD
 // ------------------------------------------------------
 router.get("/", activityController.getActivities); // Get all activities
-router.post("/", verifyToken, uploadActivity.single("attachment"), activityController.createActivity); // Create new activity
-router.put("/:id", verifyToken, uploadActivity.single("attachment"), activityController.updateActivity); // Update activity
+router.post("/", verifyToken, uploadActivity.single("attachment"), uploadActivityToCloudinary, activityController.createActivity); // Create new activity
+router.put("/:id", verifyToken, uploadActivity.single("attachment"), uploadActivityToCloudinary, activityController.updateActivity); // Update activity
 router.delete("/:id", verifyToken, activityController.deleteActivity); // Delete activity
 
 // ------------------------------------------------------
@@ -100,7 +88,7 @@ router.options("/resubmit/:id", (req, res) => {
   res.sendStatus(204);
 });
 
-router.put("/resubmit/:id", verifyToken, uploadActivity.single("file"), activityController.resubmitActivity);
+router.put("/resubmit/:id", verifyToken, uploadActivity.single("file"), uploadActivityToCloudinary, activityController.resubmitActivity);
 
 // ------------------------------------------------------
 // 📌 Get single activity (MUST BE LAST to avoid route conflicts)
