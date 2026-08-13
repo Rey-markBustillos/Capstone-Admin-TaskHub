@@ -236,7 +236,7 @@ function Register({ onBackToLogin }) {
                   color: focusedField === "name" ? "#3b82f6" : undefined,
                 }}
               >
-                Full Name
+                Full Name (Last, First, Middle)
               </label>
               <div className="relative group">
                 <div
@@ -251,7 +251,8 @@ function Register({ onBackToLogin }) {
                 <input
                   type="text"
                   name="name"
-                  placeholder="John Doe"
+                  placeholder="Dela Cruz, Juan, Santos"
+                  title="Enter your name as Last Name, First Name, Middle Name"
                   value={formData.name}
                   onChange={handleChange}
                   onFocus={() => setFocusedField("name")}

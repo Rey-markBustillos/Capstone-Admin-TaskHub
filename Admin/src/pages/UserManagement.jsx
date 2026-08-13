@@ -123,6 +123,7 @@ const UserManagement = () => {
         age: newUser.age || null,
         schoolName: isStudent ? (newUser.schoolName.trim() || null) : null,
       };
+      if (isStudent) payload.useDefaultStudentPassword = true;
       if (!isStudent) payload.password = newUser.password;
 
       await axios.post(`${API_BASE_URL}/users`, payload);
@@ -189,6 +190,7 @@ const UserManagement = () => {
                   email: row.email,
                   role: 'student',
                   lrn,
+                  useDefaultStudentPassword: true,
                   address: row.address,
                   age: row.age,
                   schoolName: row.schoolName,
