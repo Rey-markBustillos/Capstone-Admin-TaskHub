@@ -590,6 +590,7 @@ const UserManagement = () => {
                       />
                     </th>
                   )}
+                  <th className="w-12 px-2 sm:px-3 py-2 sm:py-3 text-center text-gray-700 font-bold">No.</th>
                   <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Name</th>
                   <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Email</th>
                   <th className="px-2 sm:px-5 py-2 sm:py-3 text-left text-gray-700 font-bold">Role</th>
@@ -616,6 +617,7 @@ const UserManagement = () => {
                           )}
                         </td>
                       )}
+                      <td className="w-12 px-2 sm:px-3 py-2 sm:py-3 text-center align-middle font-semibold text-gray-600">{idx + 1}</td>
                       <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle font-medium text-gray-900 break-words max-w-[120px] sm:max-w-none">{user.name}</td>
                       <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle text-gray-700 break-words max-w-[140px] sm:max-w-none">{user.email}</td>
                       <td className="px-2 sm:px-5 py-2 sm:py-3 align-middle">
