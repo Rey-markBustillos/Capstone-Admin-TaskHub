@@ -56,7 +56,7 @@ const createClass = async (req, res) => {
     const savedClass = await newClass.save();
     const populatedClass = await Class.findById(savedClass._id)
       .populate('teacher', 'name email')
-      .populate('students', 'name email');
+      .populate('students', 'name email lrn');
     res.status(201).json(populatedClass);
   } catch (error) {
     console.error('Error creating class:', error);
@@ -117,7 +117,7 @@ const updateClassStudents = async (req, res) => {
 
     const populatedClass = await Class.findById(classId)
       .populate('teacher', 'name email')
-      .populate('students', 'name email');
+      .populate('students', 'name email lrn');
     res.json(populatedClass);
   } catch (error) {
     console.error('Error updating students in class:', error);
@@ -134,7 +134,7 @@ const getClassById = async (req, res) => {
     }
     const classData = await Class.findById(classId)
       .populate('teacher', 'name email')
-      .populate('students', 'name email');
+      .populate('students', 'name email lrn');
     if (!classData) {
       return res.status(404).json({ message: 'Class not found' });
     }

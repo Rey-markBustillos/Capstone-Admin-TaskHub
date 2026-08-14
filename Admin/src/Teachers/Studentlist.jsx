@@ -89,7 +89,7 @@ const StudentList = () => {
                     <p className="mt-1 break-all text-sm text-slate-600">{student.email}</p>
                   </div>
                   <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                    {student.studentId || 'N/A'}
+                    {student.lrn || 'N/A'}
                   </span>
                 </div>
               </article>
@@ -102,7 +102,7 @@ const StudentList = () => {
                 <tr>
                   <th className="px-6 py-3 text-left font-semibold">Name</th>
                   <th className="px-6 py-3 text-left font-semibold">Email</th>
-                  <th className="px-6 py-3 text-left font-semibold">Student ID</th>
+                  <th className="px-6 py-3 text-left font-semibold">LRN</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -110,7 +110,7 @@ const StudentList = () => {
                   <tr key={student._id} className="hover:bg-slate-50 transition-colors duration-150">
                     <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">{student.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-700">{student.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">{student.studentId || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">{student.lrn || 'N/A'}</td>
                   </tr>
                 ))}
               </tbody>
