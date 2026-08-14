@@ -3,6 +3,7 @@ const supabase = require('./supabase');
 const camelToSnake = (key) => key === '_id' ? 'id' : key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 const snakeToCamel = (key) => key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 const toDb = (data) => Object.fromEntries(Object.entries(data || {}).filter(([k, v]) => v !== undefined && k !== '_id').map(([k, v]) => [camelToSnake(k), v instanceof Date ? v.toISOString() : v]));
+const isUuid = (value) => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
 function createModel(table, { defaults = {}, relations = {} } = {}) {
   class Document {
@@ -39,7 +40,9 @@ function createModel(table, { defaults = {}, relations = {} } = {}) {
     const relation = relations[path];
     if (!relation) return docs;
     const list = Array.isArray(docs) ? docs : [docs];
-    const ids = [...new Set(list.flatMap((d) => Array.isArray(d[path]) ? d[path] : [d[path]]).filter((v) => typeof v === 'string'))];
+    // Relation columns use UUIDs. Older imported records can still contain
+    // Mongo ObjectIds, which PostgreSQL rejects in an `id IN (...)` filter.
+    const ids = [...new Set(list.flatMap((d) => Array.isArray(d[path]) ? d[path] : [d[path]]).filter(isUuid))];
     if (!ids.length) return docs;
     const { data, error } = await supabase.from(relation.table).select(select ? `id,${select.split(' ').join(',')}` : '*').in('id', ids);
     if (error) throw error;

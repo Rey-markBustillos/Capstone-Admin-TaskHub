@@ -241,13 +241,15 @@ const getClassesByStudent = async (req, res) => {
     }
     
     console.log('🔎 [getClassesByStudent] Searching for classes with student:', studentId);
-    const classes = await Class.find({ 
-      students: studentId,
+    // Legacy rows may contain Mongo ObjectIds in the JSON student list.
+    // Filtering in PostgreSQL with those mixed values rejects the whole request.
+    const classes = (await Class.find({
       isArchived: { $ne: true } // Exclude archived classes
     })
       .populate('teacher', 'name email')
       .populate('students', 'name email')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 }))
+      .filter((classItem) => (classItem.students || []).some((student) => (student?._id || student) === studentId));
     
     console.log('✅ [getClassesByStudent] Found classes:', classes.length);
     res.json(classes);

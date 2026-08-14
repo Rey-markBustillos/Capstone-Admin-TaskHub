@@ -21,6 +21,10 @@ router.route('/')
   .get(getAllClasses)
   .post(createClass);
 
+// This must be registered before `/:id`; otherwise Express treats
+// "my-classes" as a class ID and the student endpoint never runs.
+router.get('/my-classes/:studentId', getClassesByStudent);
+
 // Get, update, or delete a class by ID
 router.route('/:id')
   .get(getClassById)
@@ -34,12 +38,5 @@ router.route('/:id/students')
 // Archive and restore class
 router.put('/:id/archive', archiveClass);
 router.put('/:id/restore', restoreClass);
-
-// GET all classes for a student (student view only)
-router.get('/my-classes/:studentId', getClassesByStudent);
-
-// REMOVE the duplicate and inline async route below!
-// (delete this block)
-// router.get('/my-classes/:studentId', async (req, res) => { ... });
 
 module.exports = router;
