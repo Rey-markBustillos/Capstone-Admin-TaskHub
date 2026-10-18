@@ -20,7 +20,10 @@ const QuizzHub = () => {
   const contentClasses = getStudentClassContentClasses(isSidebarOpen);
   const storedUser = localStorage.getItem('user');
   const user = storedUser ? JSON.parse(storedUser) : null;
-  const studentId = user?._id;
+  // API responses may use either the legacy `_id` field or Supabase's `id`.
+  // Supporting both prevents submissions with an empty studentId after a
+  // session is restored from localStorage.
+  const studentId = user?._id || user?.id;
 
   // Quiz info
   const [showScore, setShowScore] = useState(false);
@@ -334,6 +337,9 @@ const QuizzHub = () => {
     setLoading(true);
     setError('');
     try {
+      if (!studentId) {
+        throw new Error('Your session does not include a student ID. Please log out and sign in again.');
+      }
       // Transform studentAnswers object to array of { questionIndex, answer }
       const answersArr = Object.entries(studentAnswers).map(([questionIndex, answer]) => ({
         questionIndex: Number(questionIndex),
@@ -344,7 +350,13 @@ const QuizzHub = () => {
         answers: answersArr,
       });
       setScore(res.data.score);
-      setShowScore(true);
+      // End the quiz naturally after a successful submission and return the
+      // student to the available-quizzes list. The refreshed list marks it
+      // as taken, preventing another attempt.
+      setShowScore(false);
+      setActiveQuizId(null);
+      setCurrentQuestion(0);
+      setStudentAnswers({});
       setFullscreenError('');
       setQuizStartTime(null);
       clearSavedQuizSession();
@@ -355,8 +367,11 @@ const QuizzHub = () => {
       } catch {
         // Error intentionally ignored
       }
-    } catch {
-      setError(options.isAutoSubmit ? 'Time is up, but the quiz could not be submitted automatically. Please try again.' : 'Failed to submit quiz.');
+    } catch (err) {
+      const serverMessage = err.response?.data?.message || err.message;
+      setError(options.isAutoSubmit
+        ? `Time is up, but the quiz could not be submitted automatically${serverMessage ? `: ${serverMessage}` : '. Please try again.'}`
+        : (serverMessage || 'Failed to submit quiz.'));
     } finally {
       setLoading(false);
     }

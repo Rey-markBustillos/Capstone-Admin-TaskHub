@@ -3,6 +3,15 @@ exports.submitQuiz = async (req, res) => {
   try {
     const { quizId } = req.params;
     const { studentId, answers } = req.body;
+
+    if (!studentId) {
+      return res.status(400).json({ message: 'Student ID is required to submit a quiz.' });
+    }
+
+    if (!Array.isArray(answers)) {
+      return res.status(400).json({ message: 'Quiz answers must be provided as a list.' });
+    }
+
     // Fetch the quiz to get correct answers
     const quiz = await Quiz.findById(quizId);
     if (!quiz) {
@@ -39,6 +48,9 @@ exports.submitQuiz = async (req, res) => {
     res.json({ message: 'Quiz submitted successfully', score });
   } catch (err) {
     console.error('[ERROR] Quiz submission failed:', err);
+    if (err.code === '23505') {
+      return res.status(409).json({ message: 'You have already submitted this quiz.' });
+    }
     res.status(500).json({ message: 'Quiz submission failed', error: err.message });
   }
 };

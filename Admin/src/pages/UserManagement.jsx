@@ -26,6 +26,7 @@ const UserManagement = () => {
   const [error, setError] = useState(null);
   const [roleFilter, setRoleFilter] = useState('all');
   const [roleSort, setRoleSort] = useState('admin-teacher-student');
+  const [searchTerm, setSearchTerm] = useState('');
   const [createdDateFilter, setCreatedDateFilter] = useState('all');
   const [selectedCreatedDate, setSelectedCreatedDate] = useState('');
   const [selectedUserIds, setSelectedUserIds] = useState([]);
@@ -392,9 +393,20 @@ const UserManagement = () => {
     return createdAt >= startDate && createdAt <= now;
   };
 
-  const visibleUsers = users.filter((user) =>
-    (roleFilter === 'all' || user.role === roleFilter) && isWithinCreatedDateFilter(user)
-  );
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const visibleUsers = users.filter((user) => {
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesSearch = !normalizedSearchTerm || [
+      user.name,
+      user.email,
+      user.role,
+      user.lrn,
+      user.teacherId,
+      user.adminId,
+    ].some((value) => String(value || '').toLowerCase().includes(normalizedSearchTerm));
+
+    return matchesRole && matchesSearch && isWithinCreatedDateFilter(user);
+  });
   const roleSortOrders = {
     'admin-teacher-student': { admin: 0, teacher: 1, student: 2 },
     'student-teacher-admin': { student: 0, teacher: 1, admin: 2 },
@@ -562,6 +574,30 @@ const UserManagement = () => {
         <section className="mb-8 sm:mb-12">
           <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">User List</h2>
           <div className="mb-3 flex flex-wrap gap-2 items-center">
+            <div className="relative w-full sm:w-72">
+              <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" />
+                <path strokeLinecap="round" d="m20 20-3.5-3.5" />
+              </svg>
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search name, email, or ID..."
+                aria-label="Search user list"
+                className="w-full rounded border border-gray-300 py-1.5 pl-9 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-lg leading-none text-gray-400 hover:text-gray-700"
+                  aria-label="Clear user search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
             <label className="font-medium text-gray-700">Filter by Role:</label>
             <select
               className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
