@@ -44,7 +44,10 @@ function createModel(table, { defaults = {}, relations = {} } = {}) {
     // Mongo ObjectIds, which PostgreSQL rejects in an `id IN (...)` filter.
     const ids = [...new Set(list.flatMap((d) => Array.isArray(d[path]) ? d[path] : [d[path]]).filter(isUuid))];
     if (!ids.length) return docs;
-    const { data, error } = await supabase.from(relation.table).select(select ? `id,${select.split(' ').join(',')}` : '*').in('id', ids);
+    const selectedColumns = select
+      ? select.split(' ').filter(Boolean).map(camelToSnake).join(',')
+      : '*';
+    const { data, error } = await supabase.from(relation.table).select(select ? `id,${selectedColumns}` : '*').in('id', ids);
     if (error) throw error;
     const map = new Map((data || []).map((row) => [row.id, fromDb(row)]));
     list.forEach((d) => { d[path] = Array.isArray(d[path]) ? d[path].map((id) => map.get(id) || id) : (map.get(d[path]) || d[path]); });

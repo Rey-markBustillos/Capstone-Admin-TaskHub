@@ -438,147 +438,12 @@ const StatsSection = () => {
 
 // ─── WelcomeScreen Component ────────────────────────────────────────
 const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallable }) => {
-  const [activeTab, setActiveTab] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 100);
     return () => clearTimeout(timer);
   }, []);
-
-  const tabs = [
-    {
-      key: "vision",
-      label: "Vision",
-      icon: <FaEye />,
-      gradient: "from-blue-500 to-cyan-500",
-      bg: "bg-blue-50",
-      ring: "ring-blue-200",
-    },
-    {
-      key: "mission",
-      label: "Mission",
-      icon: <FaBullseye />,
-      gradient: "from-indigo-500 to-purple-500",
-      bg: "bg-indigo-50",
-      ring: "ring-indigo-200",
-    },
-    {
-      key: "values",
-      label: "Core Values",
-      icon: <FaHeart />,
-      gradient: "from-pink-500 to-rose-500",
-      bg: "bg-pink-50",
-      ring: "ring-pink-200",
-    },
-  ];
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "vision":
-        return (
-          <div className="animate-fadeIn">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25">
-                <FaEye className="text-lg" />
-              </span>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
-                Our Vision
-              </h3>
-            </div>
-            <p className="text-gray-600 leading-relaxed text-sm sm:text-base lg:text-lg">
-              We will have nation-loving and competent lifelong learners who are
-              able to respond to challenges and opportunities through quality,
-              accessible, relevant, and liberating K to 12 Program delivered by a
-              modern, professional, pro-active, nimble, trusted and nurturing
-              DepEd.
-            </p>
-          </div>
-        );
-      case "mission":
-        return (
-          <div className="animate-fadeIn">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25">
-                <FaBullseye className="text-lg" />
-              </span>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
-                Our Mission
-              </h3>
-            </div>
-            <p className="text-gray-600 leading-relaxed text-sm sm:text-base lg:text-lg">
-              To develop exemplary programs and open learning opportunities for
-              out-of-school youth and adults to achieve multiple competencies and
-              skills for Industry 4.0.
-            </p>
-          </div>
-        );
-      case "values":
-        return (
-          <div className="animate-fadeIn">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25">
-                <FaHeart className="text-lg" />
-              </span>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
-                Core Values
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              {[
-                {
-                  title: "Inclusivity & Equity",
-                  desc: "Education for all, leaving no one behind",
-                },
-                {
-                  title: "Lifelong Learning",
-                  desc: "Continuous growth and development",
-                },
-                {
-                  title: "Community Empowerment",
-                  desc: "Strengthening communities through knowledge",
-                },
-                {
-                  title: "Flexibility & Adaptability",
-                  desc: "Responsive to learners' diverse needs",
-                },
-              ].map((val, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-3 p-4 rounded-xl bg-white border border-gray-100 hover:shadow-lg hover:border-transparent transition-all duration-300 group"
-                >
-                  <span className="mt-0.5 w-9 h-9 flex-shrink-0 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-white text-xs shadow-lg shadow-amber-500/25 group-hover:scale-110 transition-transform duration-300">
-                    <FaBookOpen />
-                  </span>
-                  <div>
-                    <p className="font-semibold text-gray-800 text-sm">
-                      {val.title}
-                    </p>
-                    <p className="text-gray-500 text-xs mt-0.5 leading-relaxed">
-                      {val.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      default:
-        return (
-          <div className="flex flex-col items-center justify-center py-10 text-center animate-fadeIn">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center mb-5 shadow-inner">
-              <FaBookOpen className="text-3xl text-gray-300" />
-            </div>
-            <p className="text-gray-400 font-semibold text-base">
-              Select a category above to learn more
-            </p>
-            <p className="text-gray-300 text-sm mt-1.5">
-              Discover our vision, mission, and values
-            </p>
-          </div>
-        );
-    }
-  };
 
   return (
     <div className="relative min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-x-hidden">
@@ -609,7 +474,7 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
 
         {/* Hero Content */}
         <div
-          className={`relative z-10 max-w-4xl mx-auto px-4 sm:px-6 text-center transition-all duration-1000 ${
+          className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center transition-all duration-1000 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
@@ -666,7 +531,7 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
           {/* ─── Interactive Tabs Card ─────────────────────── */}
           <div
             id="about"
-            className={`bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100/80 p-6 sm:p-8 lg:p-10 max-w-3xl mx-auto transition-all duration-1000 delay-300 ${
+            className={`w-full bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100/80 p-6 sm:p-8 lg:p-10 mx-auto transition-all duration-1000 delay-300 ${
               isVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-8"
@@ -679,35 +544,58 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
               </span>
             </div>
 
-            {/* Tab Buttons */}
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`group flex items-center gap-2 px-5 py-3 sm:px-6 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 ${
-                    activeTab === tab.key
-                      ? `bg-gradient-to-r ${tab.gradient} text-white shadow-xl scale-105 ring-4 ${tab.ring}`
-                      : `${tab.bg} text-gray-600 hover:text-gray-800 hover:shadow-lg hover:scale-105 border border-transparent hover:border-gray-200`
-                  }`}
-                >
-                  <span
-                    className={`text-base transition-all duration-300 ${
-                      activeTab === tab.key
-                        ? "scale-110"
-                        : "group-hover:scale-110"
-                    }`}
-                  >
-                    {tab.icon}
+            {/* Static Vision, Mission, and Core Values column */}
+            <div className="space-y-4 text-left">
+              <article className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 sm:p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25">
+                    <FaEye className="text-lg" />
                   </span>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Our Vision</h3>
+                </div>
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+                  We will have nation-loving and competent lifelong learners who are able to respond to challenges and opportunities through quality, accessible, relevant, and liberating K to 12 Program delivered by a modern, professional, pro-active, nimble, trusted and nurturing DepEd.
+                </p>
+              </article>
 
-            {/* Tab Content */}
-            <div className="text-left min-h-[220px] p-5 sm:p-7 bg-gradient-to-br from-gray-50/80 via-white to-blue-50/50 rounded-2xl border border-gray-100/80 transition-all duration-500">
-              {renderContent()}
+              <article className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-5 sm:p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25">
+                    <FaBullseye className="text-lg" />
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Our Mission</h3>
+                </div>
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+                  To develop exemplary programs and open learning opportunities for out-of-school youth and adults to achieve multiple competencies and skills for Industry 4.0.
+                </p>
+              </article>
+
+              <article className="rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50 to-white p-5 sm:p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25">
+                    <FaHeart className="text-lg" />
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Core Values</h3>
+                </div>
+                <div className="space-y-2.5">
+                  {[
+                    ['Inclusivity & Equity', 'Education for all, leaving no one behind'],
+                    ['Lifelong Learning', 'Continuous growth and development'],
+                    ['Community Empowerment', 'Strengthening communities through knowledge'],
+                    ['Flexibility & Adaptability', "Responsive to learners' diverse needs"],
+                  ].map(([title, description]) => (
+                    <div key={title} className="flex items-start gap-3 rounded-xl border border-pink-100 bg-white/80 p-3.5">
+                      <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-amber-500 text-xs text-white shadow-sm">
+                        <FaBookOpen />
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">{title}</p>
+                        <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </article>
             </div>
 
             {/* Continue Button */}

@@ -6,8 +6,14 @@ exports.getTodaySchedule = async (req, res) => {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ message: "Missing userId" });
 
-    // Hanapin lahat ng klase na enrolled ang user
-    const classes = await Class.find({ students: userId });
+    // `students` is a JSONB array in Supabase. Filter it in JavaScript so
+    // UUID values are not sent to PostgREST as malformed JSON filter input.
+    const allClasses = await Class.find({});
+    const classes = allClasses.filter((classItem) =>
+      Array.isArray(classItem.students) && classItem.students.some((student) =>
+        String(student?._id || student?.id || student) === String(userId)
+      )
+    );
 
     // Kunin lahat ng classId
     const classIds = classes.map(cls => cls._id);
