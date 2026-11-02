@@ -448,6 +448,12 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
   const [isVisible, setIsVisible] = useState(false);
   const [tourStep, setTourStep] = useState(() => {
     try {
+      const savedUser = localStorage.getItem("user");
+      const savedToken = localStorage.getItem("token");
+      if (savedUser && savedToken) {
+        localStorage.setItem("als-landing-tour-v2-complete", "true");
+        return null;
+      }
       return localStorage.getItem("als-landing-tour-v2-complete") === "true" ? null : 0;
     } catch {
       return 0;
