@@ -182,12 +182,18 @@ const Footer = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 300);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    const scrollPanel = document.querySelector(".als-landing-left");
+    const scrollTarget = scrollPanel || window;
+    const handleScroll = () => setShowScrollTop(scrollPanel ? scrollPanel.scrollTop > 300 : window.scrollY > 300);
+    scrollTarget.addEventListener("scroll", handleScroll);
+    return () => scrollTarget.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  const scrollToTop = () => {
+    const scrollPanel = document.querySelector(".als-landing-left");
+    if (scrollPanel) scrollPanel.scrollTo({ top: 0, behavior: "smooth" });
+    else window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <footer
@@ -445,268 +451,96 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
     return () => clearTimeout(timer);
   }, []);
 
+  const values = [
+    ["Inclusivity & Equity", "Education for all, leaving no learner behind."],
+    ["Lifelong Learning", "Building skills and confidence at every stage of life."],
+    ["Community Empowerment", "Strengthening communities through accessible learning."],
+    ["Flexibility & Adaptability", "Learning that responds to different needs and situations."],
+  ];
+  const programs = [
+    { title: "Basic Literacy Program", desc: "Build foundational reading, writing, and numeracy skills.", icon: <FaBookOpen />, tone: "blue" },
+    { title: "A&E Elementary", desc: "Work toward elementary-level accreditation and equivalency.", icon: <FaGraduationCap />, tone: "indigo" },
+    { title: "A&E Secondary", desc: "Continue learning toward secondary-level equivalency.", icon: <FaLightbulb />, tone: "violet" },
+  ];
+
   return (
-    <div className="relative min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-x-hidden">
-      {/* Header */}
-      <Header
-        onContinue={onContinue}
-        onCreateAccount={onCreateAccount}
-        onInstallApp={onInstallApp}
-        isInstallable={isInstallable}
-      />
+    <div className="als-landing min-h-screen bg-slate-50 text-slate-900">
+      <Header onContinue={onContinue} onCreateAccount={onCreateAccount} onInstallApp={onInstallApp} isInstallable={isInstallable} />
 
-      {/* ─── Hero Section ──────────────────────────────────── */}
-      <section
-        id="home"
-        className="relative flex-1 flex flex-col items-center justify-center pt-32 pb-16 sm:pt-40 sm:pb-24 overflow-hidden"
-      >
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 pointer-events-none select-none z-0">
-          <div className="absolute top-20 left-[10%] w-72 h-72 rounded-full bg-blue-200/20 blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-[10%] w-96 h-96 rounded-full bg-indigo-200/15 blur-3xl animate-pulse"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-gradient-to-br from-blue-50/30 to-indigo-50/30 blur-3xl"></div>
-          {/* Floating dots */}
-          <div className="absolute top-32 right-[20%] w-2 h-2 rounded-full bg-blue-400/40 animate-bounce"></div>
-          <div className="absolute top-48 left-[25%] w-3 h-3 rounded-full bg-indigo-400/30 animate-bounce delay-300"></div>
-          <div className="absolute bottom-40 left-[15%] w-2 h-2 rounded-full bg-violet-400/40 animate-bounce delay-700"></div>
-          <div className="absolute top-60 right-[35%] w-2.5 h-2.5 rounded-full bg-pink-400/30 animate-bounce delay-500"></div>
-        </div>
-
-        {/* Hero Content */}
-        <div
-          className={`relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center transition-all duration-1000 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          {/* ─── Logo Area with Distinct Background ─────────── */}
-          <div className="flex flex-col items-center mb-10">
-            <div className="relative p-8 sm:p-10 rounded-[2rem] bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900 shadow-2xl shadow-gray-900/30 mb-8 border border-gray-700/50">
-              {/* Inner glow effects */}
-              <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"></div>
-                <div className="absolute bottom-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-indigo-400/50 to-transparent"></div>
-                <div className="absolute top-1/4 left-0 w-px h-1/2 bg-gradient-to-b from-transparent via-blue-400/30 to-transparent"></div>
-                <div className="absolute top-1/4 right-0 w-px h-1/2 bg-gradient-to-b from-transparent via-indigo-400/30 to-transparent"></div>
-              </div>
-
-              {/* Logo Image */}
-              <div className="relative mb-5 flex justify-center">
-                <div className="relative">
-                  <span className="inline-flex items-center justify-center w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-700 shadow-2xl shadow-blue-500/40 overflow-hidden ring-4 ring-blue-400/20">
-                    <img
-                      src="/taskhublogos.png"
-                      alt="ALS Logo"
-                      className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-2xl"
-                    />
-                  </span>
-                  <span className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-400 rounded-xl border-4 border-gray-900 flex items-center justify-center shadow-lg shadow-emerald-400/30">
-                    <span className="w-2 h-2 bg-white rounded-full"></span>
-                  </span>
+      <main className="als-landing-columns">
+        <div className="als-landing-left">
+          <section id="home" className={`als-home relative flex min-h-[620px] items-center overflow-hidden px-6 py-16 transition-all duration-700 sm:px-10 lg:px-14 ${isVisible ? "opacity-100" : "translate-y-4 opacity-0"}`}>
+            <div className="pointer-events-none absolute -right-20 top-8 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
+            <div className="relative mx-auto w-full max-w-3xl">
+              <div className="mb-8 flex items-center gap-5">
+                <div className="rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 shadow-xl shadow-blue-900/20">
+                  <img src="/taskhublogos.png" alt="ALS Portal logo" className="h-20 w-20 rounded-2xl object-cover sm:h-24 sm:w-24" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[.22em] text-blue-700">Welcome to</p>
+                  <h1 className="text-4xl font-black tracking-tight sm:text-6xl">ALS <span className="text-indigo-700">Portal</span></h1>
+                  <p className="mt-1 text-sm font-medium text-slate-500 sm:text-base">Alternative Learning System</p>
                 </div>
               </div>
-
-              {/* ALS Letters on dark background */}
-              <div className="flex items-center justify-center gap-3 sm:gap-5 mb-3">
-                <span className="text-blue-400 text-6xl sm:text-7xl lg:text-8xl font-black drop-shadow-[0_0_20px_rgba(96,165,250,0.3)]">
-                  A
-                </span>
-                <span className="text-red-400 text-6xl sm:text-7xl lg:text-8xl font-black drop-shadow-[0_0_20px_rgba(248,113,113,0.3)]">
-                  L
-                </span>
-                <span className="text-yellow-400 text-6xl sm:text-7xl lg:text-8xl font-black drop-shadow-[0_0_20px_rgba(250,204,21,0.3)]">
-                  S
-                </span>
+              <p className="max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">A welcoming place to learn, grow, and work toward new opportunities through the Alternative Learning System.</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <button onClick={onContinue} className="inline-flex items-center gap-3 rounded-xl bg-blue-700 px-6 py-3.5 font-bold text-white shadow-lg shadow-blue-700/20 transition hover:-translate-y-0.5 hover:bg-blue-800">Continue to Login <FaArrowRight /></button>
+                <a href="#programs" className="rounded-xl border border-slate-300 bg-white px-6 py-3.5 font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700">Explore Programs</a>
               </div>
-
-              <h2 className="text-gray-300 font-bold tracking-widest text-lg sm:text-xl lg:text-2xl uppercase">
-                Alternative Learning System
-              </h2>
-              <p className="text-gray-500 text-xs sm:text-sm mt-2 max-w-md mx-auto leading-relaxed">
-                Empowering Filipino learners through accessible, quality
-                education — bridging opportunities for a brighter tomorrow.
-              </p>
-            </div>
-          </div>
-
-          {/* ─── Interactive Tabs Card ─────────────────────── */}
-          <div
-            id="about"
-            className={`w-full bg-white/90 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-200/60 border border-gray-100/80 p-6 sm:p-8 lg:p-10 mx-auto transition-all duration-1000 delay-300 ${
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-8"
-            }`}
-          >
-            {/* Section Label */}
-            <div className="text-center mb-6">
-              <span className="inline-block px-4 py-1.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest">
-                About Us
-              </span>
-            </div>
-
-            {/* Static Vision, Mission, and Core Values column */}
-            <div className="space-y-4 text-left">
-              <article className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 sm:p-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25">
-                    <FaEye className="text-lg" />
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Our Vision</h3>
-                </div>
-                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-                  We will have nation-loving and competent lifelong learners who are able to respond to challenges and opportunities through quality, accessible, relevant, and liberating K to 12 Program delivered by a modern, professional, pro-active, nimble, trusted and nurturing DepEd.
-                </p>
-              </article>
-
-              <article className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-5 sm:p-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25">
-                    <FaBullseye className="text-lg" />
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Our Mission</h3>
-                </div>
-                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-                  To develop exemplary programs and open learning opportunities for out-of-school youth and adults to achieve multiple competencies and skills for Industry 4.0.
-                </p>
-              </article>
-
-              <article className="rounded-2xl border border-pink-100 bg-gradient-to-br from-pink-50 to-white p-5 sm:p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25">
-                    <FaHeart className="text-lg" />
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Core Values</h3>
-                </div>
-                <div className="space-y-2.5">
-                  {[
-                    ['Inclusivity & Equity', 'Education for all, leaving no one behind'],
-                    ['Lifelong Learning', 'Continuous growth and development'],
-                    ['Community Empowerment', 'Strengthening communities through knowledge'],
-                    ['Flexibility & Adaptability', "Responsive to learners' diverse needs"],
-                  ].map(([title, description]) => (
-                    <div key={title} className="flex items-start gap-3 rounded-xl border border-pink-100 bg-white/80 p-3.5">
-                      <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-yellow-400 to-amber-500 text-xs text-white shadow-sm">
-                        <FaBookOpen />
-                      </span>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">{title}</p>
-                        <p className="mt-0.5 text-xs leading-relaxed text-gray-500">{description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            </div>
-
-            {/* Continue Button */}
-            <div className="mt-9 flex justify-center">
-              <button
-                onClick={onContinue}
-                className="group relative w-full sm:w-auto flex items-center justify-center gap-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white py-4 px-10 sm:px-14 rounded-2xl text-lg font-bold shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40 hover:scale-[1.03] transition-all duration-300 overflow-hidden"
-                aria-label="Continue to login"
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                <span className="relative flex items-center gap-3">
-                  Continue to Login
-                  <FaArrowRight className="group-hover:translate-x-1.5 transition-transform duration-300" />
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Stats Section ─────────────────────────────────── */}
-      <StatsSection />
-
-      {/* ─── Programs Section ──────────────────────────────── */}
-      <section id="programs" className="py-16 sm:py-24 bg-white relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-0 w-72 h-72 bg-indigo-50/50 rounded-full blur-3xl -translate-y-1/2"></div>
-          <div className="absolute top-1/2 right-0 w-72 h-72 bg-blue-50/50 rounded-full blur-3xl -translate-y-1/2"></div>
-        </div>
-
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="inline-block px-5 py-2 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-widest mb-4">
-              What We Offer
-            </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900">
-              Our{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">
-                Programs
-              </span>
-            </h2>
-            <p className="mt-4 text-gray-500 max-w-lg mx-auto text-sm sm:text-base">
-              Comprehensive learning programs designed for every Filipino learner
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {[
-              {
-                title: "Basic Literacy Program",
-                desc: "Foundational reading, writing, and numeracy skills for out-of-school youth and adults.",
-                icon: <FaBookOpen />,
-                gradient: "from-blue-500 to-blue-600",
-                shadow: "shadow-blue-500/15",
-              },
-              {
-                title: "A&E Elementary Level",
-                desc: "Accreditation and Equivalency program for elementary level completion.",
-                icon: <FaGraduationCap />,
-                gradient: "from-indigo-500 to-indigo-600",
-                shadow: "shadow-indigo-500/15",
-              },
-              {
-                title: "A&E Secondary Level",
-                desc: "High school equivalency program for learners pursuing secondary education.",
-                icon: <FaLightbulb />,
-                gradient: "from-violet-500 to-violet-600",
-                shadow: "shadow-violet-500/15",
-              },
-            ].map((program, i) => (
-              <div
-                key={i}
-                className={`group relative bg-white rounded-2xl p-7 sm:p-8 border border-gray-100 hover:border-transparent hover:shadow-2xl ${program.shadow} transition-all duration-500 hover:-translate-y-2`}
-              >
-                {/* Top gradient accent */}
-                <div
-                  className={`absolute top-0 left-6 right-6 h-1 bg-gradient-to-r ${program.gradient} rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
-                ></div>
-
-                <div
-                  className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${program.gradient} text-white text-2xl mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}
-                >
-                  {program.icon}
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-3">
-                  {program.title}
-                </h3>
-                <p className="text-gray-500 text-sm leading-relaxed">
-                  {program.desc}
-                </p>
+              <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
+                {[[<FaBookOpen />, "Flexible learning"], [<FaUsers />, "Learner focused"], [<FaGraduationCap />, "New opportunities"]].map(([icon, label]) => <div key={label} className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-center shadow-sm"><span className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700">{icon}</span><span className="text-xs font-semibold text-slate-600 sm:text-sm">{label}</span></div>)}
               </div>
-            ))}
-          </div>
+            </div>
+          </section>
+
+          <section id="programs" className="bg-white px-6 py-16 sm:px-10 lg:px-14">
+            <div className="mx-auto max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[.2em] text-indigo-700">Learning pathways</p>
+              <h2 className="mt-2 text-3xl font-extrabold sm:text-4xl">Programs for every learner</h2>
+              <p className="mt-3 max-w-2xl text-slate-600">Explore learning options designed to help out-of-school youth and adults build skills and continue their education.</p>
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                {programs.map((program) => <article key={program.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"><span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-xl text-blue-700">{program.icon}</span><h3 className="mt-4 font-bold">{program.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{program.desc}</p></article>)}
+              </div>
+            </div>
+          </section>
+          <Footer />
         </div>
-      </section>
 
-      {/* Footer */}
-      <Footer />
+        <aside id="about" className="als-landing-right">
+          <div className="mx-auto w-full max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[.2em] text-blue-700">Who we are</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Our purpose, our promise</h2>
+            <p className="mt-3 leading-7 text-slate-600">The Alternative Learning System opens learning opportunities for people whose needs are not met by the formal education system.</p>
+            <article className="mt-7 rounded-3xl bg-gradient-to-br from-blue-700 to-indigo-800 p-6 text-white shadow-xl shadow-blue-900/15 sm:p-8">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-xl"><FaEye /></span>
+              <h3 className="mt-5 text-2xl font-bold">Our Vision</h3>
+              <p className="mt-3 text-sm leading-7 text-blue-50 sm:text-base">We will have nation-loving and competent lifelong learners who are able to respond to challenges and opportunities through quality, accessible, relevant, and liberating K to 12 Program delivered by a modern, professional, pro-active, nimble, trusted and nurturing DepEd.</p>
+            </article>
+            <article className="mt-4 rounded-3xl border border-indigo-100 bg-white p-6 shadow-sm sm:p-8">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-100 text-xl text-indigo-700"><FaBullseye /></span>
+              <h3 className="mt-5 text-2xl font-bold">Our Mission</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">To develop exemplary programs and open learning opportunities for out-of-school youth and adults to achieve multiple competencies and skills for Industry 4.0.</p>
+            </article>
+            <section className="mt-7 rounded-3xl border border-rose-100 bg-white p-6 shadow-sm sm:p-8">
+              <div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-100 text-rose-700"><FaHeart /></span><div><p className="text-xs font-bold uppercase tracking-[.18em] text-rose-700">What guides us</p><h3 className="text-2xl font-extrabold">Core Values</h3></div></div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">{values.map(([title, description], index) => <article key={title} className="rounded-2xl bg-slate-50 p-4"><span className="text-xs font-bold text-blue-700">0{index + 1}</span><h4 className="mt-1 font-bold">{title}</h4><p className="mt-1 text-sm leading-6 text-slate-600">{description}</p></article>)}</div>
+            </section>
+            <button onClick={onContinue} className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-6 py-4 font-bold text-white transition hover:bg-blue-800">Enter the Portal <FaArrowRight /></button>
+            <p className="pb-8 pt-4 text-center text-xs text-slate-500">Accessible learning. Stronger communities. Brighter futures.</p>
+          </div>
+        </aside>
+      </main>
 
-      {/* Global Animation Styles */}
       <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.4s ease-out;
-        }
-        .delay-300 { animation-delay: 300ms; }
-        .delay-500 { animation-delay: 500ms; }
-        .delay-700 { animation-delay: 700ms; }
+        .als-landing-columns { display:grid; grid-template-columns:minmax(0, 1.08fr) minmax(390px, .92fr); height:calc(100vh - 84px); margin-top:84px; overflow:hidden; }
+        .als-landing-left, .als-landing-right { min-width:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#cbd5e1 transparent; }
+        .als-landing-left { background:#f8fafc; }
+        .als-landing-right { padding:2rem clamp(1.25rem, 3vw, 3rem); background:linear-gradient(155deg,#eff6ff 0%,#f8fafc 48%,#eef2ff 100%); border-left:1px solid #e2e8f0; }
+        .als-landing-left::-webkit-scrollbar,.als-landing-right::-webkit-scrollbar { width:8px; }
+        .als-landing-left::-webkit-scrollbar-thumb,.als-landing-right::-webkit-scrollbar-thumb { background:#cbd5e1; border:2px solid transparent; background-clip:padding-box; border-radius:999px; }
+        @media(min-width:901px) { .als-landing .fixed.bottom-6.right-6 { right:calc(46vw + 1.5rem); } }
+        @media(max-width:900px) { .als-landing-columns { display:block; height:auto; margin-top:80px; overflow:visible; } .als-landing-left,.als-landing-right { overflow:visible; } .als-landing-right { border-left:0; border-top:1px solid #e2e8f0; padding:2.5rem 1.25rem; } .als-home { min-height:560px; } }
+        @media(max-width:520px) { .als-home { min-height:0; padding-top:4rem; padding-bottom:4rem; } }
       `}</style>
     </div>
   );
