@@ -86,7 +86,7 @@ const Header = ({ onContinue, onCreateAccount, onInstallApp, isInstallable }) =>
           </nav>
 
           {/* Right side buttons */}
-          <div className="flex items-center gap-3">
+          <div id="landing-auth-actions" className="flex items-center gap-3">
             {/* Install Button */}
             <button
               onClick={onInstallApp}
@@ -115,9 +115,10 @@ const Header = ({ onContinue, onCreateAccount, onInstallApp, isInstallable }) =>
 
             <button
               onClick={onCreateAccount}
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-indigo-100 bg-indigo-500/25 border border-indigo-400/40 hover:bg-indigo-500/35 hover:text-white transition-all duration-300"
+              className="inline-flex items-center gap-2 px-2.5 py-2.5 rounded-xl text-xs font-semibold text-indigo-100 bg-indigo-500/25 border border-indigo-400/40 hover:bg-indigo-500/35 hover:text-white transition-all duration-300 sm:px-4 sm:text-sm"
             >
-              Create Account
+              <span className="sm:hidden">Sign up</span>
+              <span className="hidden sm:inline">Create Account</span>
             </button>
 
             {/* Mobile Menu Toggle */}
@@ -257,7 +258,7 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-white font-semibold mb-5 text-sm uppercase tracking-wider flex items-center gap-2">
+            <h4 id="landing-contact-target" className="text-white font-semibold mb-5 text-sm uppercase tracking-wider flex items-center gap-2">
               <span className="w-8 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"></span>
               Quick Links
             </h4>
@@ -445,6 +446,14 @@ const StatsSection = () => {
 // ─── WelcomeScreen Component ────────────────────────────────────────
 const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallable }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [tourStep, setTourStep] = useState(() => {
+    try {
+      return localStorage.getItem("als-landing-tour-v2-complete") === "true" ? null : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [spotlight, setSpotlight] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 100);
@@ -462,17 +471,59 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
     { title: "A&E Elementary", desc: "Work toward elementary-level accreditation and equivalency.", icon: <FaGraduationCap />, tone: "indigo" },
     { title: "A&E Secondary", desc: "Continue learning toward secondary-level equivalency.", icon: <FaLightbulb />, tone: "violet" },
   ];
+  const tour = [
+    { selector: "#landing-home-target", title: "Magsimula rito", body: "Ito ang home page ng ALS Portal. Ituturo namin ang pangunahing bahagi nito bago ka magpatuloy." },
+    { selector: "#landing-programs-target", title: "Tingnan ang Programs", body: "Dito makikita ang mga learning program. I-scroll ang kaliwang column para makita ang bawat opsyon." },
+    { selector: "#landing-contact-target", title: "Hanapin ang Contact", body: "Nasa ibaba ng page ang contact information kung kailangan mo ng tulong." },
+    { selector: "#landing-about-target", title: "Kilalanin ang ALS", body: "Dito matatagpuan ang Mission, Vision, at Core Values. I-scroll ang column kung gusto mong makita ang buong detalye." },
+    { selector: "#landing-auth-actions", title: "Gumawa ng account o mag-login", body: "Bagong user? Pindutin ang Create Account. May account ka na? Pindutin ang Login. Pagkatapos, dadalhin ka sa portal ayon sa role mo." },
+  ];
+
+  const finishTour = (nextAction) => {
+    try { localStorage.setItem("als-landing-tour-v2-complete", "true"); } catch { /* Continue if storage is unavailable. */ }
+    setTourStep(null);
+    nextAction();
+  };
+  const runAction = (action) => tourStep !== null ? finishTour(action) : action();
+  const handleContinue = () => runAction(onContinue);
+  const handleCreateAccount = () => runAction(onCreateAccount);
+
+  useEffect(() => {
+    if (tourStep === null) return undefined;
+    const targetSelector = tour[tourStep]?.selector;
+    let targetElement;
+    let frame;
+    const updateSpotlight = () => {
+      if (!targetElement) return;
+      const rect = targetElement.getBoundingClientRect();
+      setSpotlight({ x: rect.left, y: rect.top, width: rect.width, height: rect.height, viewportWidth: window.innerWidth, viewportHeight: window.innerHeight });
+    };
+    const timer = setTimeout(() => {
+      targetElement = document.querySelector(targetSelector);
+      if (!targetElement) return;
+      targetElement.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      frame = requestAnimationFrame(updateSpotlight);
+      window.addEventListener("scroll", updateSpotlight, true);
+      window.addEventListener("resize", updateSpotlight);
+    }, 120);
+    return () => {
+      clearTimeout(timer);
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", updateSpotlight, true);
+      window.removeEventListener("resize", updateSpotlight);
+    };
+  }, [tourStep]);
 
   return (
     <div className="als-landing min-h-screen bg-slate-50 text-slate-900">
-      <Header onContinue={onContinue} onCreateAccount={onCreateAccount} onInstallApp={onInstallApp} isInstallable={isInstallable} />
+      <Header onContinue={handleContinue} onCreateAccount={handleCreateAccount} onInstallApp={onInstallApp} isInstallable={isInstallable} />
 
       <main className="als-landing-columns">
         <div className="als-landing-left">
           <section id="home" className={`als-home relative flex min-h-[620px] items-center overflow-hidden px-6 py-16 transition-all duration-700 sm:px-10 lg:px-14 ${isVisible ? "opacity-100" : "translate-y-4 opacity-0"}`}>
             <div className="pointer-events-none absolute -right-20 top-8 h-80 w-80 rounded-full bg-blue-200/40 blur-3xl" />
             <div className="relative mx-auto w-full max-w-3xl">
-              <div className="mb-8 flex items-center gap-5">
+              <div id="landing-home-target" className="mb-8 flex items-center gap-5 rounded-2xl">
                 <div className="rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 p-2.5 shadow-xl shadow-blue-900/20">
                   <img src="/taskhublogos.png" alt="ALS Portal logo" className="h-20 w-20 rounded-2xl object-cover sm:h-24 sm:w-24" />
                 </div>
@@ -484,7 +535,7 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
               </div>
               <p className="max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">A welcoming place to learn, grow, and work toward new opportunities through the Alternative Learning System.</p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <button onClick={onContinue} className="inline-flex items-center gap-3 rounded-xl bg-blue-700 px-6 py-3.5 font-bold text-white shadow-lg shadow-blue-700/20 transition hover:-translate-y-0.5 hover:bg-blue-800">Continue to Login <FaArrowRight /></button>
+                <button onClick={handleContinue} className="inline-flex items-center gap-3 rounded-xl bg-blue-700 px-6 py-3.5 font-bold text-white shadow-lg shadow-blue-700/20 transition hover:-translate-y-0.5 hover:bg-blue-800">Continue to Login <FaArrowRight /></button>
                 <a href="#programs" className="rounded-xl border border-slate-300 bg-white px-6 py-3.5 font-semibold text-slate-700 transition hover:border-blue-400 hover:text-blue-700">Explore Programs</a>
               </div>
               <div className="mt-10 grid max-w-xl grid-cols-3 gap-3">
@@ -496,7 +547,7 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
           <section id="programs" className="bg-white px-6 py-16 sm:px-10 lg:px-14">
             <div className="mx-auto max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[.2em] text-indigo-700">Learning pathways</p>
-              <h2 className="mt-2 text-3xl font-extrabold sm:text-4xl">Programs for every learner</h2>
+              <h2 id="landing-programs-target" className="mt-2 text-3xl font-extrabold sm:text-4xl">Programs for every learner</h2>
               <p className="mt-3 max-w-2xl text-slate-600">Explore learning options designed to help out-of-school youth and adults build skills and continue their education.</p>
               <div className="mt-8 grid gap-4 md:grid-cols-3">
                 {programs.map((program) => <article key={program.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"><span className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-xl text-blue-700">{program.icon}</span><h3 className="mt-4 font-bold">{program.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600">{program.desc}</p></article>)}
@@ -508,9 +559,11 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
 
         <aside id="about" className="als-landing-right">
           <div className="mx-auto w-full max-w-2xl">
+            <div id="landing-about-target" className="rounded-2xl">
             <p className="text-xs font-bold uppercase tracking-[.2em] text-blue-700">Who we are</p>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">Our purpose, our promise</h2>
             <p className="mt-3 leading-7 text-slate-600">The Alternative Learning System opens learning opportunities for people whose needs are not met by the formal education system.</p>
+            </div>
             <article className="mt-7 rounded-3xl bg-gradient-to-br from-blue-700 to-indigo-800 p-6 text-white shadow-xl shadow-blue-900/15 sm:p-8">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-xl"><FaEye /></span>
               <h3 className="mt-5 text-2xl font-bold">Our Vision</h3>
@@ -525,7 +578,7 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
               <div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-100 text-rose-700"><FaHeart /></span><div><p className="text-xs font-bold uppercase tracking-[.18em] text-rose-700">What guides us</p><h3 className="text-2xl font-extrabold">Core Values</h3></div></div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">{values.map(([title, description], index) => <article key={title} className="rounded-2xl bg-slate-50 p-4"><span className="text-xs font-bold text-blue-700">0{index + 1}</span><h4 className="mt-1 font-bold">{title}</h4><p className="mt-1 text-sm leading-6 text-slate-600">{description}</p></article>)}</div>
             </section>
-            <button onClick={onContinue} className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-6 py-4 font-bold text-white transition hover:bg-blue-800">Enter the Portal <FaArrowRight /></button>
+            <button onClick={handleContinue} className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-6 py-4 font-bold text-white transition hover:bg-blue-800">Enter the Portal <FaArrowRight /></button>
             <p className="pb-8 pt-4 text-center text-xs text-slate-500">Accessible learning. Stronger communities. Brighter futures.</p>
           </div>
         </aside>
@@ -542,6 +595,35 @@ const WelcomeScreen = ({ onContinue, onCreateAccount, onInstallApp, isInstallabl
         @media(max-width:900px) { .als-landing-columns { display:block; height:auto; margin-top:80px; overflow:visible; } .als-landing-left,.als-landing-right { overflow:visible; } .als-landing-right { border-left:0; border-top:1px solid #e2e8f0; padding:5rem 1.25rem 2.5rem; scroll-margin-top:5.5rem; } .als-home { min-height:560px; } }
         @media(max-width:520px) { .als-home { min-height:0; padding-top:4rem; padding-bottom:4rem; } }
       `}</style>
+
+      {tourStep !== null && spotlight && (() => {
+        const pad = 9;
+        const x = Math.max(0, spotlight.x - pad);
+        const y = Math.max(0, spotlight.y - pad);
+        const right = Math.min(spotlight.viewportWidth, spotlight.x + spotlight.width + pad);
+        const bottom = Math.min(spotlight.viewportHeight, spotlight.y + spotlight.height + pad);
+        const cutWidth = right - x;
+        const cutHeight = bottom - y;
+        const tooltipWidth = Math.min(360, spotlight.viewportWidth - 32);
+        const tooltipLeft = Math.max(16, Math.min(x, spotlight.viewportWidth - tooltipWidth - 16));
+        const tooltipTop = bottom + 16 + 190 < spotlight.viewportHeight ? bottom + 16 : Math.max(16, y - 206);
+        const finalStep = tourStep === tour.length - 1;
+        return <div className="pointer-events-none fixed inset-0 z-[100]" aria-live="polite">
+          <div className="pointer-events-auto absolute inset-x-0 top-0 bg-slate-950/65" style={{ height: y }} />
+          <div className="pointer-events-auto absolute inset-x-0 bg-slate-950/65" style={{ top: bottom, bottom: 0 }} />
+          <div className="pointer-events-auto absolute bg-slate-950/65" style={{ top: y, left: 0, width: x, height: cutHeight }} />
+          <div className="pointer-events-auto absolute bg-slate-950/65" style={{ top: y, left: right, right: 0, height: cutHeight }} />
+          {!finalStep && <div className="pointer-events-auto absolute bg-transparent" style={{ left: x, top: y, width: cutWidth, height: cutHeight }} />}
+          <div className="pointer-events-none fixed rounded-2xl ring-4 ring-blue-400 ring-offset-4 ring-offset-blue-500/30" style={{ left: x, top: y, width: cutWidth, height: cutHeight, animation: "tourPulse 1.6s ease-in-out infinite" }} />
+          <div id="landing-tour-tip" className="pointer-events-auto fixed w-[calc(100vw-2rem)] max-w-[360px] rounded-2xl border border-white/70 bg-white p-5 shadow-2xl sm:p-6" style={{ left: tooltipLeft, top: tooltipTop }}>
+            <div className="mb-3 flex items-center justify-between gap-3"><span className="text-[11px] font-bold uppercase tracking-[.16em] text-blue-700">Sundan ang gabay</span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">{tourStep + 1}/{tour.length}</span></div>
+            <h2 className="text-xl font-extrabold text-slate-900">{tour[tourStep].title}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{tour[tourStep].body}</p>
+            {!finalStep && <button onClick={() => setTourStep((step) => step + 1)} className="mt-4 flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-800">Susunod <FaArrowRight /></button>}
+          </div>
+          <style>{`@keyframes tourPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(59,130,246,.45); } 50% { box-shadow: 0 0 0 9px rgba(59,130,246,.08); } }`}</style>
+        </div>;
+      })()}
     </div>
   );
 };
