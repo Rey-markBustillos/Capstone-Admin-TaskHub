@@ -46,8 +46,8 @@ function Register({ onBackToLogin }) {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+    if (formData.password.length < 8 || !/[A-Z]/.test(formData.password) || !/[0-9]/.test(formData.password) || !/[^A-Za-z0-9\s]/.test(formData.password)) {
+      setError("Use at least 8 characters, including one uppercase letter, one number, and one special character.");
       return;
     }
 
@@ -99,25 +99,18 @@ function Register({ onBackToLogin }) {
     }
   };
 
-  // Password strength indicator
-  const getPasswordStrength = (password) => {
-    if (!password) return { level: 0, label: "", color: "" };
-    if (password.length < 4)
-      return { level: 1, label: "Weak", color: "bg-red-400" };
-    if (password.length < 6)
-      return { level: 2, label: "Fair", color: "bg-yellow-400" };
-    if (password.length < 8)
-      return { level: 3, label: "Good", color: "bg-blue-400" };
-    return { level: 4, label: "Strong", color: "bg-emerald-400" };
-  };
-
-  const passwordStrength = getPasswordStrength(formData.password);
+  const passwordRules = [
+    { label: "8+ chars", valid: formData.password.length >= 8 },
+    { label: "A-Z", valid: /[A-Z]/.test(formData.password) },
+    { label: "0-9", valid: /[0-9]/.test(formData.password) },
+    { label: "Symbol", valid: /[^A-Za-z0-9\s]/.test(formData.password) },
+  ];
 
   const inputBaseClass = `
-    w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 md:py-3.5
+    w-full pl-10 sm:pl-11 pr-3 py-2 sm:py-2.5
     bg-slate-50/80 border border-slate-200/80
     rounded-xl sm:rounded-2xl
-    text-xs sm:text-sm md:text-base text-slate-700
+    text-xs sm:text-sm text-slate-700
     placeholder:text-slate-300 placeholder:text-xs placeholder:sm:text-sm
     transition-all duration-300 ease-out
     focus:outline-none focus:ring-2 focus:ring-blue-500/30
@@ -126,7 +119,7 @@ function Register({ onBackToLogin }) {
   `;
 
   return (
-    <div className="min-h-screen flex items-start sm:items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 relative overflow-y-auto px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
+    <div className="h-dvh w-full flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 relative overflow-hidden px-3 py-2 sm:px-5 sm:py-3 lg:px-8">
       {/* Background decorations */}
       <div className="hidden sm:block absolute top-[-15%] left-[-10%] w-[45%] h-[45%] bg-gradient-to-br from-blue-100 to-blue-200/50 rounded-full blur-3xl opacity-40 animate-pulse" />
       <div className="hidden sm:block absolute bottom-[-15%] right-[-10%] w-[45%] h-[45%] bg-gradient-to-tl from-indigo-100 to-purple-200/50 rounded-full blur-3xl opacity-40 animate-pulse" />
@@ -136,7 +129,7 @@ function Register({ onBackToLogin }) {
       <div
         className="
           relative z-10 bg-white/95 backdrop-blur-2xl
-          rounded-2xl sm:rounded-3xl
+          rounded-2xl sm:rounded-3xl max-h-full
           shadow-[0_8px_30px_rgba(0,0,0,0.04)] sm:shadow-[0_20px_60px_rgba(0,0,0,0.06)]
           w-full max-w-[420px] sm:max-w-md md:max-w-2xl lg:max-w-5xl
           border border-white/80
@@ -146,7 +139,7 @@ function Register({ onBackToLogin }) {
         "
       >
         {/* ─── Left Panel (Desktop) ─── */}
-        <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-10 xl:p-12 text-white relative overflow-hidden">
+        <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-6 xl:p-8 text-white relative overflow-hidden">
           {/* Decorative circles */}
           <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] bg-white/5 rounded-full" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/5 rounded-full" />
@@ -192,17 +185,12 @@ function Register({ onBackToLogin }) {
         </div>
 
         {/* ─── Right Panel (Form) ─── */}
-        <div className="p-5 sm:p-7 md:p-8 lg:p-10 xl:p-12">
+        <div className="p-4 sm:p-5 md:p-6 lg:p-7 xl:p-8">
           {/* Header */}
-          <div className="text-center mb-5 sm:mb-6 lg:mb-8">
-            {/* Mobile icon */}
-            <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/25 mb-3 sm:mb-4 transform -rotate-6 lg:hidden">
-              <FaIdCard className="text-white text-lg sm:text-xl rotate-6" />
-            </div>
-
+          <div className="text-center mb-3 sm:mb-4 lg:mb-4">
             <h2
               className="
-                text-xl sm:text-2xl md:text-3xl lg:text-2xl xl:text-3xl
+                text-lg sm:text-xl md:text-2xl lg:text-xl xl:text-2xl
                 font-black text-slate-800 tracking-tight
               "
             >
@@ -211,8 +199,8 @@ function Register({ onBackToLogin }) {
 
             <p
               className="
-                text-slate-400 mt-1.5 sm:mt-2
-                text-[11px] sm:text-xs md:text-sm lg:text-xs xl:text-sm
+                text-slate-400 mt-1
+                text-[10px] sm:text-[11px] md:text-xs
                 font-medium tracking-wide
               "
             >
@@ -221,14 +209,13 @@ function Register({ onBackToLogin }) {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-y-3 sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:col-span-2">Personal information</p>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-y-1">
             {/* Name */}
-            <div className="space-y-1 sm:space-y-1.5">
+            <div className="grid grid-cols-[100px_minmax(0,1fr)] items-center gap-2">
               <label
                 className="
-                  text-[9px] sm:text-[10px] md:text-[11px]
-                  font-bold uppercase tracking-[0.15em]
+                  text-[8px] sm:text-[9px]
+                  font-bold uppercase tracking-[0.08em]
                   text-slate-400 ml-1
                   transition-colors duration-200
                 "
@@ -236,7 +223,7 @@ function Register({ onBackToLogin }) {
                   color: focusedField === "name" ? "#3b82f6" : undefined,
                 }}
               >
-                Full Name (Last, First, Middle)
+                Full Name
               </label>
               <div className="relative group">
                 <div
@@ -264,11 +251,11 @@ function Register({ onBackToLogin }) {
             </div>
 
             {/* Email */}
-            <div className="space-y-1 sm:space-y-1.5">
+            <div className="grid grid-cols-[100px_minmax(0,1fr)] items-center gap-2">
               <label
                 className="
-                  text-[9px] sm:text-[10px] md:text-[11px]
-                  font-bold uppercase tracking-[0.15em]
+                  text-[8px] sm:text-[9px]
+                  font-bold uppercase tracking-[0.08em]
                   text-slate-400 ml-1
                   transition-colors duration-200
                 "
@@ -302,13 +289,12 @@ function Register({ onBackToLogin }) {
               </div>
             </div>
 
-            <p className="pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:col-span-2">Student and school information</p>
             {/* LRN */}
-            <div className="space-y-1 sm:space-y-1.5">
+            <div className="grid grid-cols-[100px_minmax(0,1fr)] items-center gap-2">
               <label
                 className="
-                  text-[9px] sm:text-[10px] md:text-[11px]
-                  font-bold uppercase tracking-[0.15em]
+                  text-[8px] sm:text-[9px]
+                  font-bold uppercase tracking-[0.08em]
                   text-slate-400 ml-1
                   transition-colors duration-200
                 "
@@ -343,8 +329,8 @@ function Register({ onBackToLogin }) {
             </div>
 
             {/* Address, Age, and School */}
-            <div className="space-y-1 sm:space-y-1.5">
-              <label className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1">Address</label>
+            <div className="grid grid-cols-[100px_minmax(0,1fr)] items-center gap-2">
+              <label className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.08em] text-slate-400 ml-1">Address</label>
               <input
                 type="text"
                 name="address"
@@ -355,8 +341,8 @@ function Register({ onBackToLogin }) {
                 required
               />
             </div>
-            <div className="space-y-1 sm:space-y-1.5">
-              <label className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1">Age</label>
+            <div className="grid grid-cols-[100px_minmax(0,1fr)] items-center gap-2">
+              <label className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.08em] text-slate-400 ml-1">Age</label>
               <input
                 type="number"
                 name="age"
@@ -369,8 +355,8 @@ function Register({ onBackToLogin }) {
                 required
               />
             </div>
-            <div className="space-y-1 sm:space-y-1.5">
-              <label className="text-[9px] sm:text-[10px] md:text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400 ml-1">Name of School</label>
+            <div className="grid grid-cols-[100px_minmax(0,1fr)] items-center gap-2">
+              <label className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.08em] text-slate-400 ml-1">School Name</label>
               <input
                 type="text"
                 name="schoolName"
@@ -382,13 +368,12 @@ function Register({ onBackToLogin }) {
               />
             </div>
 
-            <p className="pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 sm:col-span-2">Account security</p>
             {/* Password */}
-            <div className="space-y-1 sm:space-y-1.5">
+            <div className="grid grid-cols-[100px_minmax(0,1fr)] items-center gap-2">
               <label
                 className="
-                  text-[9px] sm:text-[10px] md:text-[11px]
-                  font-bold uppercase tracking-[0.15em]
+                  text-[8px] sm:text-[9px]
+                  font-bold uppercase tracking-[0.08em]
                   text-slate-400 ml-1
                   transition-colors duration-200
                 "
@@ -411,7 +396,7 @@ function Register({ onBackToLogin }) {
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  placeholder="Min. 6 characters"
+                  placeholder="8+ chars, A-Z, 0-9, symbol"
                   value={formData.password}
                   onChange={handleChange}
                   onFocus={() => setFocusedField("password")}
@@ -438,46 +423,17 @@ function Register({ onBackToLogin }) {
                 </button>
               </div>
 
-              {/* Password strength bar */}
-              {formData.password && (
-                <div className="flex items-center gap-2 mt-1.5 px-1">
-                  <div className="flex-1 flex gap-1">
-                    {[1, 2, 3, 4].map((level) => (
-                      <div
-                        key={level}
-                        className={`
-                          h-1 rounded-full flex-1 transition-all duration-300
-                          ${passwordStrength.level >= level ? passwordStrength.color : "bg-slate-200"}
-                        `}
-                      />
-                    ))}
-                  </div>
-                  <span
-                    className={`
-                      text-[9px] sm:text-[10px] font-semibold tracking-wide
-                      ${
-                        passwordStrength.level <= 1
-                          ? "text-red-400"
-                          : passwordStrength.level === 2
-                            ? "text-yellow-500"
-                            : passwordStrength.level === 3
-                              ? "text-blue-500"
-                              : "text-emerald-500"
-                      }
-                    `}
-                  >
-                    {passwordStrength.label}
-                  </span>
-                </div>
-              )}
+              <div className="col-start-2 -mt-1 flex flex-wrap gap-x-2 text-[8px] font-semibold" aria-live="polite">
+                {passwordRules.map((rule) => <span key={rule.label} className={rule.valid ? "text-emerald-600" : "text-slate-400"}>{rule.valid ? "✓" : "•"} {rule.label}</span>)}
+              </div>
             </div>
 
             {/* Confirm Password */}
-            <div className="space-y-1 sm:space-y-1.5">
+            <div className="grid grid-cols-[100px_minmax(0,1fr)] items-center gap-2">
               <label
                 className="
-                  text-[9px] sm:text-[10px] md:text-[11px]
-                  font-bold uppercase tracking-[0.15em]
+                  text-[8px] sm:text-[9px]
+                  font-bold uppercase tracking-[0.08em]
                   text-slate-400 ml-1
                   transition-colors duration-200
                 "
@@ -534,7 +490,7 @@ function Register({ onBackToLogin }) {
 
               {/* Password match indicator */}
               {formData.confirmPassword && (
-                <div className="flex items-center gap-1.5 mt-1 px-1">
+                <div className="col-span-2 flex items-center gap-1.5 px-1">
                   {formData.password === formData.confirmPassword ? (
                     <>
                       <FaCheckCircle className="text-emerald-400 text-[10px]" />
@@ -557,7 +513,7 @@ function Register({ onBackToLogin }) {
             {/* Error Message */}
             {error && (
               <div
-                className="sm:col-span-2
+                className="col-span-1
                   flex items-center gap-2
                   bg-red-50 border border-red-100
                   rounded-xl sm:rounded-2xl
@@ -575,7 +531,7 @@ function Register({ onBackToLogin }) {
             {/* Success Message */}
             {success && (
               <div
-                className="sm:col-span-2
+                className="col-span-1
                   flex items-center gap-2
                   bg-emerald-50 border border-emerald-100
                   rounded-xl sm:rounded-2xl
@@ -594,13 +550,13 @@ function Register({ onBackToLogin }) {
               type="submit"
               disabled={loading}
               className="
-                sm:col-span-2 w-full
+                col-span-1 w-full
                 bg-gradient-to-r from-blue-600 to-indigo-600
                 hover:from-blue-700 hover:to-indigo-700
                 active:scale-[0.98]
                 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100
                 text-white
-                py-2.5 sm:py-3 md:py-3.5
+                py-2 sm:py-2.5
                 rounded-xl sm:rounded-2xl
                 text-xs sm:text-sm md:text-base
                 font-bold tracking-wide
@@ -658,7 +614,7 @@ function Register({ onBackToLogin }) {
                 bg-slate-50 hover:bg-slate-100
                 border border-slate-200/80 hover:border-slate-300
                 text-slate-600 hover:text-blue-600
-                py-2.5 sm:py-3
+                py-2 sm:py-2.5
                 rounded-xl sm:rounded-2xl
                 text-[11px] sm:text-xs md:text-sm
                 font-semibold tracking-wide

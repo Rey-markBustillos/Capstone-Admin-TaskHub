@@ -46,6 +46,13 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ message });
     }
 
+    if (role === "student" && !useDefaultStudentPassword &&
+      (String(password).length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9\s]/.test(password))) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters and include an uppercase letter, a number, and a special character",
+      });
+    }
+
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(409).json({ message: "Email already exists" });
