@@ -204,7 +204,7 @@ export default function TeacherDashboard() {
 
   return (
     <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-blue-50">
-      <div className="p-4 sm:p-6 lg:p-8 pt-16 md:pt-4 max-w-7xl mx-auto">
+      <div className="w-full min-w-0 p-4 sm:p-6 lg:p-8 pt-16 md:pt-4">
         {/* Welcome Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl shadow-xl p-6 sm:p-8 mb-8 text-white">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">

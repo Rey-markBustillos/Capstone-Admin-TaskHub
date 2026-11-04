@@ -29,7 +29,6 @@ import CreateQuizz from './Teachers/CreateQuizz';
 import StudentList from './Teachers/Studentlist';
 import UploadModule from './Teachers/UploadModule';
 import TeacherClassView from './Teachers/TeacherClassView'; // AYOS: Import ng bagong layout
-import LandingPage from './LandingPage/LandingPage';
 import Login from './LandingPage/Login';
 import Register from './LandingPage/Register';
 
@@ -212,8 +211,8 @@ export default function App() {
       <PWAStatus />
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<RedirectIfLoggedIn user={user}><LandingPage onContinue={() => navigate('/login')} /></RedirectIfLoggedIn>} />
-        <Route path="/login" element={<RedirectIfLoggedIn user={user}><Login onLoginSuccess={handleLoginSuccess} onBack={() => navigate('/')} onRegister={() => navigate('/register')} /></RedirectIfLoggedIn>} />
+        <Route path="/" element={<RedirectIfLoggedIn user={user}><Navigate to="/login" replace /></RedirectIfLoggedIn>} />
+        <Route path="/login" element={<RedirectIfLoggedIn user={user}><Login onLoginSuccess={handleLoginSuccess} onRegister={() => navigate('/register')} /></RedirectIfLoggedIn>} />
         <Route path="/register" element={<RedirectIfLoggedIn user={user}><Register onBackToLogin={() => navigate('/login')} /></RedirectIfLoggedIn>} />
         <Route path="/unauthorized" element={<div className="flex justify-center items-center h-screen"><h1 className="text-2xl">Unauthorized Access</h1></div>} />
 

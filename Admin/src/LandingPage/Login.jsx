@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { FaUserCircle, FaLock, FaSignInAlt, FaArrowLeft } from "react-icons/fa";
+import { FaUserCircle, FaLock, FaSignInAlt } from "react-icons/fa";
 import { recordApplicationVisit, recordPageVisit, recordUserLogin } from '../utils/visitTracker';
 import { buildApiUrl } from '../config/api';
 
-export default function Login({ onBack, onLoginSuccess, onRegister }) {
+export default function Login({ onLoginSuccess, onRegister }) {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -63,79 +63,33 @@ export default function Login({ onBack, onLoginSuccess, onRegister }) {
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center p-2 sm:p-4 overflow-hidden">
-      {/* Decorative subtle blue circles for background */}
-      <div aria-hidden="true" className="absolute top-8 left-8 pointer-events-none select-none">
-        <div className="w-12 h-12 rounded-full bg-blue-100 opacity-40"></div>
-      </div>
-      <div aria-hidden="true" className="absolute top-24 left-32 pointer-events-none select-none">
-        <div className="w-20 h-20 rounded-full bg-blue-200 opacity-30"></div>
-      </div>
-      <div aria-hidden="true" className="absolute top-1/2 left-16 -translate-y-1/2 pointer-events-none select-none">
-        <div className="w-32 h-32 rounded-full bg-blue-300 opacity-25"></div>
-      </div>
-      <div aria-hidden="true" className="absolute bottom-24 right-32 pointer-events-none select-none">
-        <div className="w-40 h-40 rounded-full bg-indigo-200 opacity-20"></div>
-      </div>
-      <div aria-hidden="true" className="absolute bottom-8 right-8 pointer-events-none select-none">
-        <div className="w-56 h-56 rounded-full bg-blue-300 opacity-15"></div>
-      </div>
-      <div aria-hidden="true" className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
-        <div className="w-72 h-72 rounded-full bg-indigo-100 opacity-15"></div>
-      </div>
-      {/* 3D Bubble with studying.png and up-down animation */}
-      <div aria-hidden="true" className="absolute top-1/4 left-20 pointer-events-none select-none z-10 hidden lg:block">
-        <div className="relative w-40 h-40 animate-float">
-          {/* Outer bubble with 3D effect */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-100/40 via-blue-200/30 to-blue-300/20 backdrop-blur-sm border border-blue-200/40 shadow-xl">
-            {/* Inner glow */}
-            <div className="absolute inset-2 rounded-full bg-gradient-to-tr from-white/30 to-transparent"></div>
-            {/* Highlight for 3D effect */}
-            <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-white/50 blur-sm"></div>
-          </div>
-          {/* studying.png inside the bubble */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img 
-              src="/studying.png" 
-              alt="Studying" 
-              className="w-24 h-24 object-contain drop-shadow-xl"
-              style={{ imageRendering: 'crisp-edges' }}
-            />
-          </div>
-        </div>
-      </div>
-      {/* Additional subtle blue circles for background */}
-      <div aria-hidden="true" className="absolute top-40 left-1/2 -translate-x-1/2 pointer-events-none select-none">
-        <div className="w-10 h-10 rounded-full bg-blue-50 opacity-40"></div>
-      </div>
-      <div aria-hidden="true" className="absolute top-1/4 right-24 pointer-events-none select-none">
-        <div className="w-16 h-16 rounded-full bg-indigo-100 opacity-30"></div>
-      </div>
-      <div aria-hidden="true" className="absolute bottom-1/3 left-1/3 pointer-events-none select-none">
-        <div className="w-24 h-24 rounded-full bg-blue-200 opacity-25"></div>
-      </div>
-      <div aria-hidden="true" className="absolute bottom-32 left-1/4 pointer-events-none select-none">
-        <div className="w-36 h-36 rounded-full bg-indigo-200 opacity-20"></div>
-      </div>
-      <div aria-hidden="true" className="absolute top-3/4 right-1/4 pointer-events-none select-none">
-        <div className="w-48 h-48 rounded-full bg-blue-100 opacity-15"></div>
-      </div>
-      <div aria-hidden="true" className="absolute bottom-1/4 right-1/2 translate-x-1/2 pointer-events-none select-none">
-        <div className="w-64 h-64 rounded-full bg-indigo-100 opacity-15"></div>
-      </div>
       {/* Centered container that becomes two-column on xl screens */}
-      <div className="relative z-40 w-full max-w-6xl mx-auto grid grid-cols-1 xl:grid-cols-2 gap-12 items-center px-4">
-        {/* Left column: illustration & intro (visible on xl and up) */}
-        <div className="hidden xl:flex flex-col items-start gap-6 pl-6">
-          <div className="w-full max-w-md">
-            <div className="relative w-full h-72 flex items-center justify-center">
-              <div className="w-full h-full rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-50 border border-blue-200/40 shadow-xl flex items-center justify-center">
-                <img src="/studying.png" alt="Studying" className="w-40 h-40 object-contain" />
-              </div>
-            </div>
-            <h2 className="mt-6 text-3xl font-bold text-blue-900">Welcome to TaskHub</h2>
-            <p className="mt-2 text-lg text-gray-600">Manage classes, announcements and submissions from a single dashboard.</p>
+      <div className="relative z-40 w-full max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-[1.15fr_.85fr] gap-8 xl:gap-12 items-center px-4 py-8">
+        {/* ALS purpose and values */}
+        <section aria-labelledby="als-purpose-title" className="w-full max-w-3xl mx-auto xl:pr-4">
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-blue-700">Alternative Learning System</p>
+          <h2 id="als-purpose-title" className="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-blue-950">Our purpose, our promise</h2>
+          <p className="mt-3 leading-7 text-gray-600">The Alternative Learning System opens learning opportunities for people whose needs are not met by the formal education system.</p>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <article className="rounded-2xl bg-gradient-to-br from-blue-700 to-indigo-800 p-5 text-white shadow-lg md:col-span-2">
+              <h3 className="text-xl font-bold">Our Vision</h3>
+              <p className="mt-3 text-sm leading-6 text-blue-50">We will have nation-loving and competent lifelong learners who are able to respond to challenges and opportunities through quality, accessible, relevant, and liberating K to 12 Program delivered by a modern, professional, pro-active, nimble, trusted and nurturing DepEd.</p>
+            </article>
+            <article className="rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm md:col-span-2">
+              <h3 className="text-xl font-bold text-indigo-700">Our Mission</h3>
+              <p className="mt-3 text-sm leading-6 text-gray-600">To develop exemplary programs and open learning opportunities for out-of-school youth and adults to achieve multiple competencies and skills for Industry 4.0.</p>
+            </article>
+            <article className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm md:col-span-2">
+              <h3 className="text-xl font-bold text-rose-700">Core Values</h3>
+              <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+                <li className="rounded-xl bg-slate-50 p-3"><strong className="text-gray-800">Inclusivity &amp; Equity</strong><p className="mt-1 text-sm text-gray-600">Education for all, leaving no learner behind.</p></li>
+                <li className="rounded-xl bg-slate-50 p-3"><strong className="text-gray-800">Lifelong Learning</strong><p className="mt-1 text-sm text-gray-600">Building skills and confidence at every stage of life.</p></li>
+                <li className="rounded-xl bg-slate-50 p-3"><strong className="text-gray-800">Community Empowerment</strong><p className="mt-1 text-sm text-gray-600">Strengthening communities through accessible learning.</p></li>
+                <li className="rounded-xl bg-slate-50 p-3"><strong className="text-gray-800">Flexibility &amp; Adaptability</strong><p className="mt-1 text-sm text-gray-600">Learning that responds to different needs and situations.</p></li>
+              </ul>
+            </article>
           </div>
-        </div>
+        </section>
 
         {/* Right column: login form */}
         <div className="flex justify-center">
@@ -246,20 +200,6 @@ export default function Login({ onBack, onLoginSuccess, onRegister }) {
               </button>
             </div>
 
-            <div className="text-center mt-2">
-              <button
-                onClick={onBack}
-                tabIndex={0}
-                type="button"
-                className="inline-flex items-center gap-2 text-base font-medium text-blue-600 hover:text-blue-800 cursor-pointer transition-all duration-200 px-4 py-2 rounded-lg hover:bg-blue-50"
-                aria-label="Back to Welcome"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") onBack();
-                }}
-              >
-                <FaArrowLeft /> Back to Welcome
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -268,7 +208,6 @@ export default function Login({ onBack, onLoginSuccess, onRegister }) {
 }
 
 Login.propTypes = {
-  onBack: PropTypes.func.isRequired,
   onLoginSuccess: PropTypes.func.isRequired,
   onRegister: PropTypes.func.isRequired,
 };
